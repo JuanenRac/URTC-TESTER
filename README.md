@@ -19,7 +19,7 @@ nothing here that can leave the board any less working than it started.
 
 ## 1. Relationship to the flasher
 
-This tool and `tools/flasher/V1.1/` share the same transport layer (SLCAN and
+This tool and `tools/flasher/` share the same transport layer (SLCAN and
 SocketCAN classes are identical) since both ultimately just need to get
 CAN frames on and off the same kind of adapter, but they do fundamentally
 different jobs:
@@ -106,7 +106,7 @@ sorted out.
 
 **Linux SLCAN/SocketCAN setup** (adapter reflash, serial permissions,
 `ip link` bring-up) is exactly the same as the flasher's section 1 - see
-`tools/flasher/V1.1/README.md` sections 1 and 2 rather than duplicating it
+`tools/flasher/README.md` sections 1 and 2 rather than duplicating it
 here.
 
 ## 3. How it works
@@ -257,7 +257,7 @@ one-shot send.
 ## 5. Logs and debug bundles
 
 Same as the flasher: a timestamped session log is written automatically
-to `tools/tester/V1.1/logs/` (safe to delete), and **Export Debug Bundle**
+to `tools/tester/logs/` (safe to delete), and **Export Debug Bundle**
 saves a `.zip` with the current on-screen log plus basic system
 diagnostics (OS, Python version, current transport/port/bitrate, detected
 tool) for handing to whoever's debugging a tool head issue.

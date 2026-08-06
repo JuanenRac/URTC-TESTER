@@ -22,7 +22,7 @@ begonnen hat.
 
 ## 1. Beziehung zum Flasher
 
-Dieses Tool und `tools/flasher/V1.1/` teilen sich denselben
+Dieses Tool und `tools/flasher/` teilen sich denselben
 Transport-Layer (die SLCAN- und SocketCAN-Klassen sind identisch), da
 beide letztlich nur CAN-Frames auf denselben Adaptertyp bringen und von
 ihm holen müssen, aber sie erledigen grundlegend unterschiedliche
@@ -119,7 +119,7 @@ nutzbar, während die Unstimmigkeit behoben wird.
 
 **SLCAN/SocketCAN-Einrichtung unter Linux** (Adapter-Reflash, serielle
 Berechtigungen, Aktivierung mit `ip link`) ist genau dieselbe wie
-Abschnitt 1 des Flashers - siehe `tools/flasher/V1.1/README.md`
+Abschnitt 1 des Flashers - siehe `tools/flasher/README.md`
 Abschnitte 1 und 2, statt es hier zu duplizieren.
 
 ## 3. Wie es funktioniert
@@ -301,7 +301,7 @@ einfaches einmaliges Senden.
 ## 5. Protokolle und Debug-Pakete
 
 Wie beim Flasher: ein zeitgestempeltes Sitzungsprotokoll wird
-automatisch nach `tools/tester/V1.1/logs/` geschrieben (sicher zu
+automatisch nach `tools/tester/logs/` geschrieben (sicher zu
 löschen), und **Debug-Paket exportieren** speichert eine `.zip`-Datei
 mit dem aktuellen Bildschirmprotokoll plus grundlegender Systemdiagnose
 (Betriebssystem, Python-Version, aktueller Transport/Port/Bitrate,

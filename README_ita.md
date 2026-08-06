@@ -21,7 +21,7 @@ iniziato.
 
 ## 1. Relazione con il flasher
 
-Questo strumento e `tools/flasher/V1.1/` condividono lo stesso layer di
+Questo strumento e `tools/flasher/` condividono lo stesso layer di
 trasporto (le classi SLCAN e SocketCAN sono identiche) poiché entrambi
 in definitiva devono solo far entrare e uscire trame CAN dallo stesso
 tipo di adattatore, ma svolgono compiti fondamentalmente diversi:
@@ -115,7 +115,7 @@ disallineamento.
 
 **Configurazione SLCAN/SocketCAN su Linux** (reflash dell'adattatore,
 permessi seriali, attivazione con `ip link`) è esattamente uguale alla
-sezione 1 del flasher - vedi `tools/flasher/V1.1/README.md` sezioni 1 e
+sezione 1 del flasher - vedi `tools/flasher/README.md` sezioni 1 e
 2 invece di duplicarlo qui.
 
 ## 3. Come funziona
@@ -289,7 +289,7 @@ invece - vedi `docs/CANBUS.TXT`), quindi è un semplice invio singolo.
 ## 5. Registri e pacchetti di debug
 
 Come il flasher: un registro di sessione con marca temporale viene
-scritto automaticamente in `tools/tester/V1.1/logs/` (sicuro da
+scritto automaticamente in `tools/tester/logs/` (sicuro da
 eliminare), ed **Esporta Pacchetto Debug** salva uno `.zip` con il
 registro attuale a schermo più diagnostica di base del sistema (SO,
 versione Python, trasporto/porta/bitrate attuale, strumento rilevato)

@@ -21,7 +21,7 @@ puisse laisser la carte moins fonctionnelle qu'au départ.
 
 ## 1. Relation avec le flasher
 
-Cet outil et `tools/flasher/V1.1/` partagent la même couche de transport
+Cet outil et `tools/flasher/` partagent la même couche de transport
 (les classes SLCAN et SocketCAN sont identiques) puisque les deux ont
 finalement juste besoin de faire entrer et sortir des trames CAN du
 même type d'adaptateur, mais ils font des travaux fondamentalement
@@ -118,7 +118,7 @@ pendant que le décalage se règle.
 
 **Configuration SLCAN/SocketCAN sous Linux** (reflash de l'adaptateur,
 permissions série, activation avec `ip link`) est exactement la même
-que la section 1 du flasher - voir `tools/flasher/V1.1/README.md`
+que la section 1 du flasher - voir `tools/flasher/README.md`
 sections 1 et 2 plutôt que de la dupliquer ici.
 
 ## 3. Comment ça fonctionne
@@ -297,7 +297,7 @@ envoi unique.
 ## 5. Journaux et paquets de débogage
 
 Comme le flasher : un journal de session horodaté est écrit
-automatiquement dans `tools/tester/V1.1/logs/` (sûr à supprimer), et
+automatiquement dans `tools/tester/logs/` (sûr à supprimer), et
 **Exporter le Paquet de Débogage** enregistre un `.zip` avec le journal
 actuel à l'écran plus des diagnostics système de base (OS, version
 Python, transport/port/débit binaire actuel, outil détecté) pour
