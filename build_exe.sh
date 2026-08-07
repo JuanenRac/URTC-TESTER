@@ -92,11 +92,6 @@ fi
 # entries (tester_config.base_dir - next to the executable, same
 # reasoning as language above). Missing from dist/ meant those menu
 # entries had nothing to open in a built binary, even though they
-# worked fine running from source.
-# README.md and LICENSE: read directly by the Help menu's Readme/License
-# entries (tester_config.base_dir - next to the executable, same
-# reasoning as language above). Missing from dist/ meant those menu
-# entries had nothing to open in a built binary, even though they
 # worked fine running from source. README_*.md (README_spa.md,
 # README_ita.md, etc.) are the per-language versions the Readme menu
 # entry picks up automatically based on the active language - copied via

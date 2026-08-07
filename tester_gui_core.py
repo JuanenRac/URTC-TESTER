@@ -713,7 +713,14 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
 
     def _menu_show_github(self):
         import webbrowser
-        webbrowser.open("https://github.com/JuanenRac/URTC")
+        # This tool's own future dedicated repository, per the user's own
+        # explicit URL - not this project's monorepo (github.com/
+        # JuanenRac/URTC), which is where this tool's own source still
+        # physically lives as of this comment (the split described in
+        # this project's own audit trail hasn't happened yet). Pointing
+        # here now means this link is already correct the moment that
+        # split lands, rather than needing a separate follow-up change.
+        webbrowser.open("https://github.com/JuanenRac/URTC-TESTER")
 
     def _show_text_window(self, title, text, width=90, height=30):
         """Shared plain-text viewer window - used by both the Readme and

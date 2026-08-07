@@ -10,9 +10,9 @@ License: **GPL-3.0**, same as the URTC firmware and the flasher tool - see
 `LICENSE` in the repository root.
 
 A live CAN bus exerciser for the URTC board. It connects over the same
-USB-CAN adapter the flasher uses, asks the board which of its 12 tool
+USB-CAN adapter the flasher uses, asks the board which of its 25 tool
 profiles it's currently jumpered for, and shows only that tool's own
-controls and telemetry - not one window trying to represent all 12 at
+controls and telemetry - not one window trying to represent all 25 at
 once. Everything it does is a runtime command or a telemetry read against
 the currently-running application; it never touches flash, so there's
 nothing here that can leave the board any less working than it started.
@@ -81,8 +81,10 @@ detection, window lifecycle, and the menu bar) plus 3 mixins it
 combines: `tester_common_panels.py` (global/F-RAM/expansion/self-test/
 bus-monitor/custom-frame panels), `tester_panel_helpers.py` (shared
 utilities every tool panel builder uses), and `tester_tool_panels.py`
-(the 8 tool-specific panel builders). `urtc_tester.py` is now just the
-entry point - CLI-free startup and the splash screen.
+(19 tool-specific panel builders covering all 25 tool profiles - several
+tools share one builder, e.g. `_build_motion_panel` alone covers 7 of
+them). `urtc_tester.py` is now just the entry point - CLI-free startup
+and the splash screen.
 
 **Language**: English by default. Switched via the **Language** menu
 (in the menu bar at the top of the window) rather than a dropdown in
@@ -118,7 +120,7 @@ changes based on what's detected. Splitting the always-visible sections
 across two columns instead of stacking them all in one keeps the window
 from growing tall enough to not fit on an ordinary screen as more of
 these sections were added over time. The 3D printer's own tool panel
-(the tallest of the 12) goes a step further and splits its own controls
+(the tallest of the 25) goes a step further and splits its own controls
 into 2 sub-columns internally, for the same reason.
 
 **Connect** (section 1, identical to the flasher): pick Serial/SLCAN or
@@ -128,7 +130,7 @@ Connect.
 **Detection happens automatically on connect** (or click **Detect** to
 redo it): the tool sends `0x110` (query active tool) and `0x7F8` (query
 version), and uses the response to:
-- Show which of the 12 tool profiles is active, and the board's overall
+- Show which of the 25 tool profiles is active, and the board's overall
   state (any declared error, CAN bus fault, still-in-boot-splash).
 - Show the reporting HardwareID and firmware version, flagging a mismatch
   if it doesn't match this project's own `THIS_HARDWARE_ID`.
@@ -144,7 +146,13 @@ the ring's on/off here is ignored in favor of that tool's own strobe
 control (per `docs/CANBUS.TXT`) - color still applies either way.
 
 **Expansion Board** (section 3, always visible): `CONN_EXPANSION`'s own
-SPI bus and DIAG0 line - nothing else lives on this connector today -
+generic SPI bus and DIAG0 line - the raw passthrough every driver-
+carrying expansion board variant shares. The ADS1115 and MLX9064x
+sensors, and the crimping actuator's own driver, aren't controlled from
+here - they live inside their own tool's own panel instead (Flying
+Probe, PCB Advanced Inspection, Crimping Actuator - see section 4
+below), since which of those actually applies depends on which tool
+profile is jumpered.
 
 **Persistence F-RAM** (section 4, also always visible, but deliberately
 separate from Expansion Board above): the FM24CL64B shares the OLED's
@@ -167,11 +175,16 @@ nothing non-volatile on it.
   the setpoint, whether a critical error was active at the time.
   **Erase F-RAM...** wipes it (`0x192`, with a confirmation dialog first
   - this can't be undone).
-- **Expansion board type**: **Query** shows which of the 5 possible
+- **Expansion board type**: **Query** shows which of the 7 possible
   `CONN_EXPANSION` configurations is currently set (`0x1A1` - see
   `EXPANSION.TXT`). Read-only here - set it from `URTC Flasher`'s own CAN
   OTA section instead, since it's a one-time hardware-configuration step,
   not something to change casually from a live diagnostic tool.
+- **MLX9064x sensor variant**: **Query** shows which of the 3 MLX9064x
+  family members (or none at all) is currently configured (`0x1A7` -
+  see `CANBUS.TXT`) - only meaningful when the expansion board type
+  above is an Advanced variant or Basic+MLX9064x. Read-only here, same
+  reasoning as expansion board type above.
 - **Free tool configuration**: **Query** shows the raw ID-jumper reading
   (0-31) alongside what the F-RAM's `free_tool_selection` register
   currently says (`0x1A3` - see `EEPROM.TXT` section 5) - only actually
@@ -230,29 +243,41 @@ needing to modify this tool's source.
 
 ## 4. Tool coverage
 
-Every one of the 12 profiles has its own panel, built directly from
+Every one of the 25 profiles has its own panel, built directly from
 `docs/CANBUS.TXT`:
 
 | Tool | Controls | Live telemetry |
 |---|---|---|
 | Soldering Iron | Setpoint temperature, on/off | Actual temperature, endstop |
-| Paste/Liquid Dispenser, Screwdriver, both Grippers | Direction + step count (one-shot move) | none (shared 0x120, no telemetry for any of these 5) |
+| Paste/Liquid Dispenser, Screwdriver, both Grippers, SMT Pick & Place, Vacuum Gripper (LG) | Direction + step count (one-shot move) | none (shared 0x120, no telemetry for any of these 7) |
 | Vacuum Pickup | none | Analog reading, part-detected |
 | Drill | Speed + direction | Actual RPM, endstop |
 | AOI Inspection | Ring mode (off/strobe/continuous) + strobe period | Endstop |
 | Laser Engraver | Power + interlock arm/safe | Endstop |
 | 3D Printer | Nozzle setpoint, extruder direction/steps, layer fan power, hotend fan power | Hotend temperature, layer fan RPM, hotend fan RPM |
 | Scan Probe | none | Impact event count + timestamp (max-priority `0x095`) |
+| Electromagnet | Energize/release checkbox | none |
+| Spot Welder | Pulse duration + Fire | none (fires only if the contact sensor reads HIGH first - see `docs/CANBUS.TXT`'s own `0x1C0`) |
+| Conformal Coating, Press-Fit Inserter | none - informational panel only | none - both tool IDs have no CAN handler at all, their own actuator and sensor live on the robot's own mainboard, see `docs/TOOLS.TXT` |
+| Flying Probe | Basic reading is automatic; advanced reading needs a raw ADS1115 config word (hex) + Trigger Conversion + Read Result | Basic onboard-ADC reading (automatic, `0x243`) |
+| UV Curing | Power slider (0-255) + Send/Off | none |
+| Hot Air Rework | Setpoint temperature, blower power, on/off | Live temperature (shares the soldering iron's own `0x135` telemetry and live graph - same physical thermal loop) |
+| Press-Fit Inserter | *(see Conformal Coating above)* | |
+| Crimping Actuator | Direction + step count (one-shot move, same shape as the shared motion tools above, but reaches an expansion board's own driver via `0x1F0` instead of the onboard `0x120`) | none |
+| PCB Advanced Inspection | Trigger Capture, Check Status, Read Thermal Image | 32x24 pixel heat-map canvas (blue-to-red gradient), pulled chunk-by-chunk over CAN on request - not a live video feed, see section 6 below |
+| Solder Paste Jetting | PWM channel + frequency (Configure), then duty + duration (Fire Pulse) | none |
+| Ultrasonic Welder | Pulse duration + Fire | none (same shape as Spot Welder, but no contact-sensor gate) |
 
 **Communication watchdogs are handled for you.** The soldering iron,
-laser, and 3D-printer nozzle each have a 250ms watchdog in firmware; the
-layer fan has a 1000ms one. Checking the relevant "Active" box doesn't
-just send the command once - it resends automatically (150ms for the
-250ms-watchdog tools, 400ms for the layer fan) for as long as the box
-stays checked, the same way a real master controller has to. Unchecking
-it sends a single zero/off frame and stops. The hotend fan has no
-watchdog (a stall detector instead - see `docs/CANBUS.TXT`), so it's a plain
-one-shot send.
+Hot Air Rework (shares the same thermal loop and watchdog as the
+soldering iron), laser, and 3D-printer nozzle each have a 250ms
+watchdog in firmware; the layer fan has a 1000ms one. Checking the
+relevant "Active" box doesn't just send the command once - it resends
+automatically (150ms for the 250ms-watchdog tools, 400ms for the layer
+fan) for as long as the box stays checked, the same way a real master
+controller has to. Unchecking it sends a single zero/off frame and
+stops. The hotend fan has no watchdog (a stall detector instead - see
+`docs/CANBUS.TXT`), so it's a plain one-shot send.
 
 ## 5. Logs and debug bundles
 
@@ -275,3 +300,11 @@ tool) for handing to whoever's debugging a tool head issue.
 - **Global LED colors are a straight override**, not a live readback -
   there's no telemetry for what the status/ring LEDs are actually
   currently showing, only what was last commanded.
+- **PCB Advanced Inspection's own thermal image is pull-based, not a
+  live feed.** Reading a full frame means requesting all 48 chunks
+  sequentially over CAN (worst case, MLX90640/MLX90642's own
+  resolution) - this can take a few seconds, and there's no streaming
+  push mode in this tool's own CAN protocol to make it faster. A
+  capture has to already be triggered and reported ready (Check Status)
+  before Read Thermal Image returns real data - reading too early just
+  paints whatever the sensor's own buffer happened to hold last.

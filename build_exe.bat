@@ -85,11 +85,6 @@ REM README.md and LICENSE: read directly by the Help menu's Readme/License
 REM entries (tester_config.base_dir - next to the .exe, same reasoning as
 REM language above). Missing from dist/ meant those menu entries had
 REM nothing to open in a built .exe, even though they worked fine running
-REM from source.
-REM README.md and LICENSE: read directly by the Help menu's Readme/License
-REM entries (tester_config.base_dir - next to the .exe, same reasoning as
-REM language above). Missing from dist/ meant those menu entries had
-REM nothing to open in a built .exe, even though they worked fine running
 REM from source. README_*.md (README_spa.md, README_ita.md, etc.) are the
 REM per-language versions the Readme menu entry picks up automatically
 REM based on the active language - copied via a for loop rather than
