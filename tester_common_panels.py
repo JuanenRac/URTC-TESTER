@@ -20,6 +20,7 @@ from tester_config import (
     CAN_ID_QUERY_ACTIVE_TOOL, CAN_ID_QUERY_DIAG0, CAN_ID_QUERY_FRAM_STATE,
     CAN_ID_QUERY_VERSION, CAN_ID_SOLDER_SETPOINT, CAN_ID_SOLDER_TELEMETRY,
     CAN_ID_VACUUM_TELEMETRY, CAN_ID_VERSION_RESPONSE, CUSTOM_ID_NAMES, ERASE_FRAM_MAGIC,
+    CAN_ID_MLX_VARIANT_RESP, MLX_SENSOR_VARIANTS,
     EXPANSION_BOARD_TYPES, TOOL_NAMES,
 )
 
@@ -152,7 +153,25 @@ class CommonPanelsMixin:
             foreground="gray", wraplength=380, justify="left",
         ).grid(row=6, column=0, columnspan=2, sticky="w", padx=4, pady=(2, 4))
 
-        ttk.Separator(parent, orient="horizontal").grid(row=7, column=0, columnspan=2, sticky="ew", pady=4)
+        # Same read-only display as expansion_board_type above, for the
+        # currently-configured MLX9064x sensor variant (0x1A6/0x1A7) -
+        # only meaningful when expansion_board_type is 3, 4, or 6, but
+        # shown unconditionally, same reasoning as the equivalent
+        # control in urtc_flasher.py.
+        ttk.Label(parent, text=_("LBL_MLX_SENSOR_VARIANT")).grid(
+            row=7, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 2))
+        mlx_variant_row = ttk.Frame(parent)
+        mlx_variant_row.grid(row=8, column=0, columnspan=2, sticky="w", padx=4)
+        ttk.Button(mlx_variant_row, text=_("BTN_QUERY"), command=self._query_mlx_sensor_variant).pack(side="left")
+        self.mlx_sensor_variant_var = tk.StringVar(value="(not queried yet)")
+        ttk.Label(mlx_variant_row, textvariable=self.mlx_sensor_variant_var).pack(side="left", padx=(8, 0))
+        ttk.Label(
+            parent,
+            text=_("HELP_READONLY_SET_VIA_FLASHER"),
+            foreground="gray", wraplength=380, justify="left",
+        ).grid(row=9, column=0, columnspan=2, sticky="w", padx=4, pady=(2, 4))
+
+        ttk.Separator(parent, orient="horizontal").grid(row=10, column=0, columnspan=2, sticky="ew", pady=4)
         # Free tool configuration (0x1A2/0x1A3) - relevant only when the
         # ID-jumper reading is 0x1F (11111b, all 5 installed); see
         # EEPROM.TXT section 5 for the full mechanism. Two values shown,
@@ -162,9 +181,9 @@ class CommonPanelsMixin:
         # reasoning as expansion board type above - the Flasher is the
         # only tool that writes it.
         ttk.Label(parent, text=_("LBL_FREE_TOOL_CONFIG")).grid(
-            row=8, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 2))
+            row=11, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 2))
         free_tool_row = ttk.Frame(parent)
-        free_tool_row.grid(row=9, column=0, columnspan=2, sticky="w", padx=4)
+        free_tool_row.grid(row=12, column=0, columnspan=2, sticky="w", padx=4)
         ttk.Button(free_tool_row, text=_("BTN_QUERY"), command=self._query_free_tool_config).pack(side="left")
         self.free_tool_config_var = tk.StringVar(value="(not queried yet)")
         ttk.Label(free_tool_row, textvariable=self.free_tool_config_var, wraplength=300, justify="left").pack(
@@ -173,9 +192,9 @@ class CommonPanelsMixin:
             parent,
             text=_("HELP_READONLY_SET_VIA_FLASHER"),
             foreground="gray", wraplength=380, justify="left",
-        ).grid(row=10, column=0, columnspan=2, sticky="w", padx=4, pady=(2, 4))
+        ).grid(row=13, column=0, columnspan=2, sticky="w", padx=4, pady=(2, 4))
 
-        ttk.Separator(parent, orient="horizontal").grid(row=11, column=0, columnspan=2, sticky="ew", pady=4)
+        ttk.Separator(parent, orient="horizontal").grid(row=14, column=0, columnspan=2, sticky="ew", pady=4)
         # Peripheral type + device serial number (0x1A4/0x1A5) - see
         # EEPROM.TXT section 6. Exists so multiple otherwise-identical
         # URTC boards on the same CAN bus can be told apart; read-only
@@ -183,9 +202,9 @@ class CommonPanelsMixin:
         # is the only tool that writes the serial (the type itself is a
         # fixed constant, never writable by anything).
         ttk.Label(parent, text=_("LBL_PERIPHERAL_INFO")).grid(
-            row=12, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 2))
+            row=15, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 2))
         peripheral_row = ttk.Frame(parent)
-        peripheral_row.grid(row=13, column=0, columnspan=2, sticky="w", padx=4)
+        peripheral_row.grid(row=16, column=0, columnspan=2, sticky="w", padx=4)
         ttk.Button(peripheral_row, text=_("BTN_QUERY"), command=self._query_peripheral_info).pack(side="left")
         self.peripheral_info_var = tk.StringVar(value="(not queried yet)")
         ttk.Label(peripheral_row, textvariable=self.peripheral_info_var, wraplength=300, justify="left").pack(
@@ -194,7 +213,7 @@ class CommonPanelsMixin:
             parent,
             text=_("HELP_READONLY_SET_VIA_FLASHER"),
             foreground="gray", wraplength=380, justify="left",
-        ).grid(row=14, column=0, columnspan=2, sticky="w", padx=4, pady=(2, 4))
+        ).grid(row=17, column=0, columnspan=2, sticky="w", padx=4, pady=(2, 4))
 
     # Tool-specific self-test steps: (description, cmd_id_or_None, cmd_data,
     # expect_id_or_None). Every command here is a safe, at-rest value
@@ -676,13 +695,30 @@ class CommonPanelsMixin:
             return
         response = self.bus.wait_for_one(CAN_ID_EXPANSION_TYPE_RESP, timeout=1.0,
                                           send_after_register=lambda: self.bus.send(CAN_ID_EXPANSION_TYPE_RESP, b""))
-        if response is None or len(response) < 1 or response[0] > 4:
+        if response is None or len(response) < 1 or response[0] > 6:
             self.expansion_board_type_var.set("No response (older firmware, or not connected)")
             self.log(_("LOG_QUERIED_0X1A1_NO_RESPONSE"))
             return
         label = EXPANSION_BOARD_TYPES[response[0]]
         self.expansion_board_type_var.set(label)
         self.log(_("LOG_EXPANSION_BOARD_TYPE", label=label))
+
+    # Same read-only pattern as _query_expansion_board_type above, for
+    # CAN_ID_MLX_VARIANT_RESP (0x1A7) instead - see MLX_SENSOR_VARIANTS's
+    # own comment (tester_config.py) for when this actually matters.
+    def _query_mlx_sensor_variant(self):
+        if self.bus is None:
+            messagebox.showerror(_("TITLE_NOT_CONNECTED"), _("MSG_CONNECT_FIRST"))
+            return
+        response = self.bus.wait_for_one(CAN_ID_MLX_VARIANT_RESP, timeout=1.0,
+                                          send_after_register=lambda: self.bus.send(CAN_ID_MLX_VARIANT_RESP, b""))
+        if response is None or len(response) < 1 or response[0] > 2:
+            self.mlx_sensor_variant_var.set("No response (older firmware, or not connected)")
+            self.log(_("LOG_QUERIED_0X1A7_NO_RESPONSE"))
+            return
+        label = MLX_SENSOR_VARIANTS[response[0]]
+        self.mlx_sensor_variant_var.set(label)
+        self.log(_("LOG_MLX_SENSOR_VARIANT", label=label))
 
     def _query_free_tool_config(self):
         if self.bus is None:

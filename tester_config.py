@@ -217,6 +217,24 @@ CAN_ID_3DP_HOTEND_TELEM   = 0x175  # Hotend actual temperature
 CAN_ID_3DP_LAYER_FAN_RPM  = 0x177  # Layer fan actual RPM
 CAN_ID_3DP_HOTEND_FAN_CMD = 0x178  # Hotend fan PWM
 CAN_ID_3DP_HOTEND_FAN_RPM = 0x179  # Hotend fan actual RPM
+CAN_ID_ELECTROMAGNET_CMD  = 0x1B0  # Coil energize/release (nonzero=on)
+CAN_ID_SPOT_WELD_CMD      = 0x1C0  # Timed pulse, gated on the contact sensor
+CAN_ID_UV_CURING_CMD      = 0x1D0  # LED driver duty cycle, 0-255
+CAN_ID_HOTAIR_CMD         = 0x1E0  # Setpoint temp + blower duty (shares 0x135 telemetry with the soldering iron)
+CAN_ID_CRIMPING_CMD       = 0x1F0  # Same byte layout as 0x120, drives the expansion board's own driver instead
+CAN_ID_ULTRASONIC_WELD_CMD = 0x200  # Timed pulse, same as Spot Welder but no contact-sensor gate
+CAN_ID_ADS1115_CONFIG     = 0x240  # Functional Testing Head - ADS1115 16-bit config register [BIG-ENDIAN]
+CAN_ID_ADS1115_TRIGGER    = 0x241  # Functional Testing Head - trigger a single-shot conversion
+CAN_ID_ADS1115_RESULT     = 0x242  # Functional Testing Head - query (empty payload), or the 2-byte raw result
+CAN_ID_FLYING_PROBE_BASIC = 0x243  # Functional Testing Head - basic onboard-ADC reading, automatic telemetry
+CAN_ID_PASTE_JETTING_CONFIG = 0x230  # Local PWM channel + frequency config
+CAN_ID_PASTE_JETTING_PULSE  = 0x231  # Local PWM channel + duty + duration pulse
+CAN_ID_THERMAL_TRIGGER    = 0x250  # PCB Advanced Inspection - trigger a new capture
+CAN_ID_THERMAL_STATUS     = 0x251  # PCB Advanced Inspection - query (empty payload), or the 1-byte status
+CAN_ID_THERMAL_RAW_CHUNK_REQ = 0x252  # PCB Advanced Inspection - request a raw pixel chunk (1 byte, chunk index)
+CAN_ID_THERMAL_RAW_CHUNK  = 0x253  # PCB Advanced Inspection - raw pixel chunk data, 4 frames of 8 bytes
+CAN_ID_THERMAL_CALIB_CHUNK_REQ = 0x254  # PCB Advanced Inspection - request a calibrated temperature chunk
+CAN_ID_THERMAL_CALIB_CHUNK = 0x255  # PCB Advanced Inspection - calibrated temperature chunk data, 4 frames of 8 bytes
 CAN_ID_EXP_SPI_CMD        = 0x180  # Generic SPI passthrough request, for CONN_EXPANSION
 CAN_ID_EXP_SPI_RESP       = 0x181  # Answers CAN_ID_EXP_SPI_CMD
 CAN_ID_QUERY_DIAG0        = 0x182  # Query TMC_DIAG0's current level
@@ -227,15 +245,26 @@ CAN_ID_ERASE_FRAM       = 0x192  # Magic-payload erase - see ERASE_FRAM_MAGIC be
 CAN_ID_EXPANSION_TYPE_RESP = 0x1A1  # Query (empty payload), or the response - see EXPANSION.TXT
 CAN_ID_FREE_TOOL_CONFIG_RESP = 0x1A3  # Query (empty payload), or the response - see EEPROM.TXT section 5
 CAN_ID_PERIPHERAL_INFO_RESP = 0x1A5  # Query (empty payload), or the response - see EEPROM.TXT section 6
+CAN_ID_MLX_VARIANT_RESP = 0x1A7  # Query (empty payload), or the response - see CANBUS.TXT
 
-# Same 5 configurations as urtc_flasher.py's own list - kept in sync manually
+# Same 7 configurations as urtc_flasher.py's own list - kept in sync manually
 # since these two tools don't share a module.
 EXPANSION_BOARD_TYPES = [
     "0 - None installed",
     "1 - Basic, TMC2209",
     "2 - Basic, TMC5160A",
-    "3 - Advanced, TMC2209 + STM32F051T8",
-    "4 - Advanced, TMC5160A + STM32F051T8",
+    "3 - Advanced, TMC2209 + STM32F303CBT6",
+    "4 - Advanced, TMC5160A + STM32F303CBT6",
+    "5 - Basic, ADS1115 only (direct connection)",
+    "6 - Basic, MLX9064x only (direct connection)",
+]
+
+# Same list as urtc_flasher.py's own MLX_SENSOR_VARIANTS - see that
+# file's own comment for what this controls.
+MLX_SENSOR_VARIANTS = [
+    "0 - MLX90640 (32x24)",
+    "1 - MLX90641 (16x12)",
+    "2 - MLX90642 (32x24, onboard calc)",
 ]
 ERASE_FRAM_MAGIC = bytes([0xE3, 0xA5, 0xE0, 0xFF])
 CAN_ID_QUERY_VERSION     = 0x7F8  # Answered by app or bootloader, whichever's running
@@ -258,11 +287,16 @@ TOOL_NAMES = {
     3: "Screwdriver", 4: "Vacuum Pickup", 5: "Drill",
     6: "Gripper (Gimbal)", 7: "Gripper (NEMA)", 8: "AOI Inspection",
     9: "Laser Engraver", 10: "3D Printer", 11: "Scan Probe",
+    12: "SMT Pick & Place", 13: "Electromagnet", 14: "Spot Welder",
+    15: "Conformal Coating", 16: "Vacuum Gripper (LG)", 17: "Flying Probe",
+    18: "UV Curing", 19: "Hot Air Rework", 20: "Press-Fit Inserter",
+    21: "Crimping Actuator", 22: "Thermal Inspection", 23: "Paste Jetting",
+    24: "Ultrasonic Welder",
 }
-# 5 tool IDs all share the exact same motion command (0x120) - a plain
+# 7 tool IDs all share the exact same motion command (0x120) - a plain
 # stepper with direction + step count, differing only in what's physically
 # attached, not in the protocol.
-MOTION_TOOL_IDS = {1, 2, 3, 6, 7}
+MOTION_TOOL_IDS = {1, 2, 3, 6, 7, 12, 16}
 
 
 

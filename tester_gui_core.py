@@ -601,6 +601,19 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             9: self._build_laser_panel,
             10: self._build_3dprinter_panel,
             11: self._build_scan_probe_panel,
+            12: self._build_motion_panel,
+            13: self._build_electromagnet_panel,
+            14: self._build_spot_welder_panel,
+            15: lambda p: self._build_no_handler_panel(p, "HELP_NO_HANDLER_CONFORMAL_COATING"),
+            16: self._build_motion_panel,
+            17: self._build_flying_probe_panel,
+            18: self._build_uv_curing_panel,
+            19: self._build_hotair_rework_panel,
+            20: lambda p: self._build_no_handler_panel(p, "HELP_NO_HANDLER_PRESSFIT_INSERTER"),
+            21: lambda p: self._build_crimping_actuator_panel(p, tool_id, name),
+            22: self._build_thermal_inspection_panel,
+            23: self._build_paste_jetting_panel,
+            24: self._build_ultrasonic_welder_panel,
         }.get(tool_id)
         if builder is None:
             ttk.Label(
