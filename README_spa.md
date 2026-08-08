@@ -11,9 +11,9 @@ flasheo - ver `LICENSE` en la raíz del repositorio.
 
 Un ejercitador en vivo de bus CAN para la placa URTC. Se conecta por el
 mismo adaptador USB-CAN que usa el flasher, le pregunta a la placa para
-cuál de sus 12 perfiles de herramienta está configurada actualmente
+cuál de sus 25 perfiles de herramienta está configurada actualmente
 mediante jumpers, y muestra solo los controles y la telemetría propios
-de esa herramienta - no una sola ventana intentando representar las 12 a
+de esa herramienta - no una sola ventana intentando representar las 25 a
 la vez. Todo lo que hace es un comando en tiempo de ejecución o una
 lectura de telemetría contra la aplicación en ejecución; nunca toca la
 flash, así que no hay nada aquí que pueda dejar la placa menos operativa
@@ -88,8 +88,10 @@ vida de la ventana, y la barra de menú) más 3 mixins que combina:
 `tester_common_panels.py` (paneles de controles globales/F-RAM/
 expansión/autoprueba/monitor de bus/trama personalizada),
 `tester_panel_helpers.py` (utilidades compartidas que usa todo
-constructor de panel de herramienta), y `tester_tool_panels.py` (los 8
-constructores de paneles específicos de herramienta). `urtc_tester.py`
+constructor de panel de herramienta), y `tester_tool_panels.py` (19
+constructores de paneles específicos de herramienta, cubriendo los 25
+perfiles - varias herramientas comparten un mismo constructor, p. ej.
+`_build_motion_panel` por sí solo cubre 7 de ellas). `urtc_tester.py`
 ahora es solo el punto de entrada - arranque sin CLI y la pantalla de
 bienvenida.
 
@@ -131,7 +133,7 @@ las secciones siempre visibles en 2 columnas en vez de apilarlas todas
 en una mantiene la ventana sin crecer tanto en altura como para no caber
 en una pantalla ordinaria, a medida que se fueron añadiendo más de estas
 secciones con el tiempo. El propio panel de la impresora 3D (el más
-alto de los 12) va un paso más allá y divide sus propios controles en 2
+alto de los 25) va un paso más allá y divide sus propios controles en 2
 subcolumnas internamente, por el mismo motivo.
 
 **Conectar** (sección 1, idéntica al flasher): elige Serie/SLCAN o
@@ -142,7 +144,7 @@ luego Conectar.
 **Detectar** para repetirla): la herramienta envía `0x110` (consulta
 herramienta activa) y `0x7F8` (consulta versión), y usa la respuesta
 para:
-- Mostrar cuál de los 12 perfiles de herramienta está activo, y el
+- Mostrar cuál de los 25 perfiles de herramienta está activo, y el
   estado general de la placa (cualquier error declarado, fallo de bus
   CAN, todavía en la pantalla de arranque).
 - Mostrar el HardwareID y la versión de firmware que reporta, marcando
@@ -163,8 +165,14 @@ de estrobo de esa herramienta (según `docs/CANBUS.TXT`) - el color sigue
 aplicando de cualquier forma.
 
 **Placa de Expansión** (sección 3, siempre visible): el propio bus SPI
-de `CONN_EXPANSION` y la línea DIAG0 - nada más vive en este conector
-hoy -
+genérico y la línea DIAG0 de `CONN_EXPANSION` - el paso a través en
+bruto que comparten todas las variantes de placa de expansión con
+driver. El ADS1115 y los sensores MLX9064x, y el driver propio del
+actuador de crimpado, no se controlan desde aquí - viven dentro del
+panel de su propia herramienta en su lugar (Sonda Voladora, Inspección
+Avanzada de PCB, Actuador de Crimpado - ver sección 4 abajo), ya que
+cuál de ellos aplica realmente depende de qué perfil de herramienta
+está configurado por jumpers.
 
 **F-RAM de Persistencia** (sección 4, también siempre visible, pero
 deliberadamente separada de Placa de Expansión de arriba): la FM24CL64B
@@ -190,13 +198,19 @@ en él.
   error crítico activo en ese momento. **Borrar F-RAM...** la borra
   (`0x192`, con un diálogo de confirmación primero - esto no se puede
   deshacer).
-- **Tipo de placa de expansión**: **Consultar** muestra cuál de las 5
+- **Tipo de placa de expansión**: **Consultar** muestra cuál de las 7
   configuraciones posibles de `CONN_EXPANSION` está establecida
   actualmente (`0x1A1` - ver `EXPANSION.TXT`). Solo lectura aquí -
   establécela desde la propia sección CAN OTA de `URTC Flasher` en su
   lugar, ya que es un paso de configuración de hardware de una sola vez,
   no algo para cambiar casualmente desde una herramienta de diagnóstico
   en vivo.
+- **Variante de sensor MLX9064x**: **Consultar** muestra cuál de los 3
+  sensores térmicos de la familia MLX9064x (o ninguno) está configurado
+  actualmente (`0x1A7` - ver `CANBUS.TXT`) - solo relevante cuando el
+  tipo de placa de expansión de arriba es una variante Advanced o
+  Basic+MLX9064x. Solo lectura aquí, mismo razonamiento que el tipo de
+  placa de expansión de arriba.
 - **Configuración libre de herramienta**: **Consultar** muestra la
   lectura cruda de los jumpers ID (0-31) junto a lo que dice
   actualmente el registro `free_tool_selection` de la F-RAM (`0x1A3` -
@@ -266,31 +280,42 @@ esta herramienta.
 
 ## 4. Cobertura de herramientas
 
-Cada uno de los 12 perfiles tiene su propio panel, construido
+Cada uno de los 25 perfiles tiene su propio panel, construido
 directamente a partir de `docs/CANBUS.TXT`:
 
 | Herramienta | Controles | Telemetría en vivo |
 |---|---|---|
 | Soldador | Temperatura de setpoint, encendido/apagado | Temperatura real, endstop |
-| Dispensador de Pasta/Líquido, Destornillador, ambos Grippers | Dirección + cuenta de pasos (movimiento de una vez) | ninguna (0x120 compartido, sin telemetría para ninguna de estas 5) |
+| Dispensador de Pasta/Líquido, Destornillador, ambos Grippers, SMT Pick & Place, Vacuum Gripper (LG) | Dirección + cuenta de pasos (movimiento de una vez) | ninguna (0x120 compartido, sin telemetría para ninguna de estas 7) |
 | Recogida por Vacío | ninguno | Lectura analógica, pieza detectada |
 | Taladro | Velocidad + dirección | RPM real, endstop |
 | Inspección AOI | Modo de anillo (apagado/estrobo/continuo) + período de estrobo | Endstop |
 | Grabador Láser | Potencia + armado/seguro del interlock | Endstop |
 | Impresora 3D | Setpoint de boquilla, dirección/pasos del extrusor, potencia del ventilador de capa, potencia del ventilador de hotend | Temperatura de hotend, RPM del ventilador de capa, RPM del ventilador de hotend |
 | Sonda de Escaneo | ninguno | Cuenta de eventos de impacto + marca de tiempo (`0x095` de máxima prioridad) |
+| Electroimán | Casilla energizar/liberar bobina | ninguna |
+| Soldador por Puntos | Duración de pulso + Disparar | ninguna (solo dispara si el sensor de contacto lee HIGH primero - ver `docs/CANBUS.TXT`'s propio `0x1C0`) |
+| Recubrimiento Conformal, Insertador a Presión | ninguno - panel solo informativo | ninguna - ambos IDs de herramienta no tienen manejador CAN alguno, su propio actuador y sensor viven en la placa base del propio robot, ver `docs/TOOLS.TXT` |
+| Sonda Voladora | La lectura básica es automática; la lectura avanzada necesita una palabra de config ADS1115 en bruto (hex) + Disparar Conversión + Leer Resultado | Lectura básica del ADC integrado (automática, `0x243`) |
+| Curado UV | Deslizador de potencia (0-255) + Enviar/Apagar | ninguna |
+| Aire Caliente para Retrabajo | Temperatura de setpoint, potencia del soplador, encendido/apagado | Temperatura en vivo (comparte la propia telemetría `0x135` y gráfica en vivo del soldador - mismo lazo térmico físico) |
+| Actuador de Crimpado | Dirección + cuenta de pasos (movimiento de una vez, misma forma que las herramientas de movimiento compartidas de arriba, pero llega al driver de una placa de expansión vía `0x1F0` en vez del `0x120` integrado) | ninguna |
+| Inspección Avanzada de PCB | Disparar Captura, Comprobar Estado, Leer Imagen Térmica | Lienzo de mapa de calor de 32x24 píxeles (gradiente azul a rojo), extraído chunk por chunk por CAN bajo demanda - no es un video en vivo, ver sección 6 abajo |
+| Jetting de Pasta de Soldar | Canal PWM + frecuencia (Configurar), luego ciclo + duración (Disparar Pulso) | ninguna |
+| Soldador Ultrasónico | Duración de pulso + Disparar | ninguna (misma forma que el Soldador por Puntos, pero sin puerta de sensor de contacto) |
 
 **Los watchdogs de comunicación se manejan por ti.** El soldador, el
-láser, y la boquilla de la impresora 3D tienen cada uno un watchdog de
-250ms en el firmware; el ventilador de capa tiene uno de 1000ms. Marcar
-la casilla "Activo" correspondiente no solo envía el comando una vez -
-lo reenvía automáticamente (150ms para las herramientas con watchdog de
-250ms, 400ms para el ventilador de capa) mientras la casilla siga
-marcada, de la misma forma en que un controlador maestro real tiene que
-hacerlo. Desmarcarla envía una única trama de cero/apagado y para. El
-ventilador de hotend no tiene watchdog (un detector de estancamiento en
-su lugar - ver `docs/CANBUS.TXT`), así que es un envío simple de una
-vez.
+Aire Caliente para Retrabajo (comparte el mismo lazo térmico y watchdog
+que el soldador), el láser, y la boquilla de la impresora 3D tienen
+cada uno un watchdog de 250ms en el firmware; el ventilador de capa
+tiene uno de 1000ms. Marcar la casilla "Activo" correspondiente no solo
+envía el comando una vez - lo reenvía automáticamente (150ms para las
+herramientas con watchdog de 250ms, 400ms para el ventilador de capa)
+mientras la casilla siga marcada, de la misma forma en que un
+controlador maestro real tiene que hacerlo. Desmarcarla envía una única
+trama de cero/apagado y para. El ventilador de hotend no tiene watchdog
+(un detector de estancamiento en su lugar - ver `docs/CANBUS.TXT`), así
+que es un envío simple de una vez.
 
 ## 5. Registros y paquetes de depuración
 
@@ -317,3 +342,13 @@ entregar a quien esté depurando un problema de cabezal de herramienta.
   lectura en vivo - no hay telemetría de qué están mostrando realmente
   en este momento los LEDs de estado/anillo, solo lo que se ordenó por
   última vez.
+- **La propia imagen térmica de Inspección Avanzada de PCB se basa en
+  extracción, no en un feed en vivo.** Leer una imagen completa
+  significa solicitar los 48 chunks secuencialmente por CAN (peor caso,
+  la propia resolución de MLX90640/MLX90642) - esto puede tardar varios
+  segundos, y no existe un modo de envío en streaming en el propio
+  protocolo CAN de esta herramienta para hacerlo más rápido. Una
+  captura ya debe haberse disparado y reportado lista (Comprobar
+  Estado) antes de que Leer Imagen Térmica devuelva datos reales - leer
+  demasiado pronto simplemente pinta lo que sea que el propio buffer
+  del sensor tuviera guardado la última vez.

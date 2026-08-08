@@ -11,10 +11,10 @@ siehe `LICENSE` im Wurzelverzeichnis des Repositorys.
 
 Ein Live-CAN-Bus-Testwerkzeug für die URTC-Platine. Es verbindet sich
 über denselben USB-CAN-Adapter, den auch der Flasher verwendet, fragt
-die Platine, für welches ihrer 12 Werkzeugprofile sie aktuell per Jumper
+die Platine, für welches ihrer 25 Werkzeugprofile sie aktuell per Jumper
 konfiguriert ist, und zeigt nur die eigenen Steuerelemente und die
 Telemetrie dieses Werkzeugs - nicht ein einziges Fenster, das versucht,
-alle 12 gleichzeitig darzustellen. Alles, was es tut, ist ein
+alle 25 gleichzeitig darzustellen. Alles, was es tut, ist ein
 Laufzeitbefehl oder ein Telemetrie-Lesevorgang gegen die laufende
 Anwendung; es berührt niemals die Flash, sodass es hier nichts gibt, das
 die Platine weniger funktionsfähig zurücklassen könnte, als sie
@@ -91,9 +91,11 @@ die Menüleiste) plus 3 Mixins, die es kombiniert:
 `tester_common_panels.py` (Panels für globale Steuerung/F-RAM/
 Erweiterung/Selbsttest/Bus-Monitor/benutzerdefinierten Frame),
 `tester_panel_helpers.py` (gemeinsame Hilfsprogramme, die jeder
-Werkzeug-Panel-Builder verwendet), und `tester_tool_panels.py` (die 8
-werkzeugspezifischen Panel-Builder). `urtc_tester.py` ist jetzt nur noch
-der Einstiegspunkt - CLI-freier Start und der Splash-Screen.
+Werkzeug-Panel-Builder verwendet), und `tester_tool_panels.py` (19
+werkzeugspezifische Panel-Builder, die alle 25 Profile abdecken -
+mehrere Werkzeuge teilen sich denselben Builder, z. B. deckt
+`_build_motion_panel` allein 7 davon ab). `urtc_tester.py` ist jetzt nur
+noch der Einstiegspunkt - CLI-freier Start und der Splash-Screen.
 
 **Sprache**: Englisch als Standard. Wird über das Menü **Sprache** (in
 der Menüleiste oben im Fenster) gewechselt statt über ein Dropdown im
@@ -132,7 +134,7 @@ Die immer sichtbaren Abschnitte auf 2 Spalten statt alle in einer zu
 stapeln, hält das Fenster davon ab, so hoch zu wachsen, dass es nicht
 mehr auf einen normalen Bildschirm passt, während im Laufe der Zeit
 mehr dieser Abschnitte hinzugefügt wurden. Das eigene Panel des
-3D-Druckers (das höchste der 12) geht noch einen Schritt weiter und
+3D-Druckers (das höchste der 25) geht noch einen Schritt weiter und
 teilt seine eigenen Steuerelemente intern in 2 Unterspalten, aus
 demselben Grund.
 
@@ -144,7 +146,7 @@ optional die Bitrate automatisch, dann Verbinden.
 auf **Erkennen**, um sie zu wiederholen): das Tool sendet `0x110`
 (aktives Werkzeug abfragen) und `0x7F8` (Version abfragen), und
 verwendet die Antwort, um:
-- Zu zeigen, welches der 12 Werkzeugprofile aktiv ist, und den
+- Zu zeigen, welches der 25 Werkzeugprofile aktiv ist, und den
   Gesamtstatus der Platine (jeder deklarierte Fehler, CAN-Busfehler,
   noch im Start-Splashscreen).
 - Die gemeldete HardwareID und Firmware-Version anzuzeigen und eine
@@ -165,8 +167,14 @@ ignoriert (gemäß `docs/CANBUS.TXT`) - die Farbe gilt in beiden Fällen
 trotzdem.
 
 **Erweiterungsplatine** (Abschnitt 3, immer sichtbar): der eigene
-SPI-Bus von `CONN_EXPANSION` und die DIAG0-Leitung - nichts anderes
-lebt heute auf diesem Steckverbinder -
+generische SPI-Bus und die DIAG0-Leitung von `CONN_EXPANSION` - der
+rohe Durchgang, den sich alle Erweiterungsplatinen-Varianten mit
+Treiber teilen. Der ADS1115 und die MLX9064x-Sensoren sowie der eigene
+Treiber des Crimp-Aktuators werden nicht von hier gesteuert - sie leben
+stattdessen im Panel des jeweiligen Werkzeugs (Flying Probe, PCB
+Advanced Inspection, Crimping Actuator - siehe Abschnitt 4 unten), da
+davon abhängt, welches davon tatsächlich zutrifft, welches
+Werkzeugprofil per Jumper konfiguriert ist.
 
 **Persistenz-F-RAM** (Abschnitt 4, ebenfalls immer sichtbar, aber
 absichtlich getrennt von Erweiterungsplatine oben): die FM24CL64B teilt
@@ -194,13 +202,19 @@ selbst hat kein F-RAM, kein EEPROM, nichts nichtflüchtiges darauf.
   diesem Zeitpunkt ein kritischer Fehler aktiv war. **F-RAM löschen...**
   löscht es (`0x192`, zuerst mit einem Bestätigungsdialog - dies kann
   nicht rückgängig gemacht werden).
-- **Erweiterungsplatinentyp**: **Abfragen** zeigt, welche der 5
+- **Erweiterungsplatinentyp**: **Abfragen** zeigt, welche der 7
   möglichen `CONN_EXPANSION`-Konfigurationen aktuell eingestellt ist
   (`0x1A1` - siehe `EXPANSION.TXT`). Hier schreibgeschützt - stellen
   Sie es stattdessen über den eigenen CAN-OTA-Abschnitt von `URTC
   Flasher` ein, da es sich um einen einmaligen
   Hardware-Konfigurationsschritt handelt, nichts, das beiläufig von
   einem Live-Diagnosetool geändert werden sollte.
+- **MLX9064x-Sensorvariante**: **Abfragen** zeigt, welcher der 3
+  Wärmesensoren der MLX9064x-Familie (oder keiner) aktuell konfiguriert
+  ist (`0x1A7` - siehe `CANBUS.TXT`) - nur relevant, wenn der obige
+  Erweiterungsplatinentyp eine Advanced-Variante oder Basic+MLX9064x
+  ist. Hier schreibgeschützt, gleiche Begründung wie beim
+  Erweiterungsplatinentyp oben.
 - **Freie Werkzeugkonfiguration**: **Abfragen** zeigt die rohe
   ID-Jumper-Ablesung (0-31) neben dem, was das
   `free_tool_selection`-Register des F-RAM aktuell sagt (`0x1A3` -
@@ -272,31 +286,42 @@ müssen.
 
 ## 4. Werkzeugabdeckung
 
-Jedes der 12 Profile hat sein eigenes Panel, direkt aus
+Jedes der 25 Profile hat sein eigenes Panel, direkt aus
 `docs/CANBUS.TXT` aufgebaut:
 
 | Werkzeug | Steuerelemente | Live-Telemetrie |
 |---|---|---|
 | Lötkolben | Solltemperatur, Ein/Aus | Ist-Temperatur, Endanschlag |
-| Pasten-/Flüssigkeitsspender, Schraubendreher, beide Greifer | Richtung + Schrittzahl (Einmalbewegung) | keine (gemeinsames 0x120, keine Telemetrie für keinen dieser 5) |
+| Pasten-/Flüssigkeitsspender, Schraubendreher, beide Greifer, SMT Pick & Place, Vacuum Gripper (LG) | Richtung + Schrittzahl (Einmalbewegung) | keine (gemeinsames 0x120, keine Telemetrie für keines dieser 7) |
 | Vakuum-Aufnahme | keine | Analogmessung, Teil erkannt |
 | Bohrer | Geschwindigkeit + Richtung | Ist-Drehzahl, Endanschlag |
 | AOI-Inspektion | Ringmodus (aus/Stroboskop/kontinuierlich) + Stroboskopperiode | Endanschlag |
 | Lasergravierer | Leistung + Interlock scharf/sicher | Endanschlag |
 | 3D-Drucker | Düsensollwert, Extruderrichtung/-schritte, Schichtlüfterleistung, Hotend-Lüfterleistung | Hotend-Temperatur, Schichtlüfter-Drehzahl, Hotend-Lüfter-Drehzahl |
 | Scan-Sonde | keine | Anzahl Aufprallereignisse + Zeitstempel (`0x095` mit höchster Priorität) |
+| Elektromagnet | Kontrollkästchen Spule erregen/lösen | keine |
+| Punktschweißgerät | Impulsdauer + Auslösen | keine (löst nur aus, wenn der Kontaktsensor zuvor HIGH liest - siehe das eigene `0x1C0` in `docs/CANBUS.TXT`) |
+| Konforme Beschichtung, Einpress-Zylinder | keine - rein informatives Panel | keine - beide Werkzeug-IDs haben keinen eigenen CAN-Handler, ihr eigener Aktuator und Sensor befinden sich auf der Hauptplatine des Roboters selbst, siehe `docs/TOOLS.TXT` |
+| Flying Probe | Die Basismessung erfolgt automatisch; die erweiterte Messung benötigt ein rohes ADS1115-Konfigurationswort (hex) + Konvertierung Auslösen + Ergebnis Lesen | Basismessung integrierter ADC (automatisch, `0x243`) |
+| UV-Härtung | Leistungsregler (0-255) + Senden/Aus | keine |
+| Heißluft für Nacharbeit | Solltemperatur, Gebläseleistung, Ein/Aus | Live-Temperatur (teilt sich die eigene `0x135`-Telemetrie und das Live-Diagramm des Lötkolbens - derselbe physische Thermoregelkreis) |
+| Crimp-Aktuator | Richtung + Schrittzahl (Einmalbewegung, gleiche Form wie die oben gemeinsam genutzten Bewegungswerkzeuge, erreicht aber den Treiber einer Erweiterungsplatine über `0x1F0` statt des integrierten `0x120`) | keine |
+| PCB Advanced Inspection | Erfassung Auslösen, Status Prüfen, Wärmebild Lesen | 32x24-Pixel-Wärmebild-Leinwand (Blau-Rot-Verlauf), Chunk für Chunk über CAN auf Anfrage abgerufen - kein Live-Videofeed, siehe Abschnitt 6 unten |
+| Lötpasten-Jetting | PWM-Kanal + Frequenz (Konfigurieren), dann Tastverhältnis + Dauer (Impuls Auslösen) | keine |
+| Ultraschallschweißgerät | Impulsdauer + Auslösen | keine (gleiche Form wie Punktschweißgerät, aber ohne Kontaktsensor-Sperre) |
 
 **Kommunikations-Watchdogs werden für Sie gehandhabt.** Der Lötkolben,
-der Laser, und die 3D-Drucker-Düse haben jeweils einen 250ms-Watchdog
-in der Firmware; der Schichtlüfter hat einen 1000ms-Watchdog. Das
-Markieren des entsprechenden "Aktiv"-Kästchens sendet den Befehl nicht
-nur einmal - es sendet ihn automatisch erneut (150ms für die Werkzeuge
-mit 250ms-Watchdog, 400ms für den Schichtlüfter), solange das Kästchen
-markiert bleibt, genauso wie es ein echter Master-Controller tun muss.
-Das Deaktivieren sendet einen einzelnen Null-/Aus-Frame und stoppt. Der
-Hotend-Lüfter hat keinen Watchdog (stattdessen einen
-Stillstandsdetektor - siehe `docs/CANBUS.TXT`), also ist es ein
-einfaches einmaliges Senden.
+die Heißluft für Nacharbeit (teilt sich denselben Thermoregelkreis und
+Watchdog wie der Lötkolben), der Laser, und die 3D-Drucker-Düse haben
+jeweils einen 250ms-Watchdog in der Firmware; der Schichtlüfter hat
+einen 1000ms-Watchdog. Das Markieren des entsprechenden
+"Aktiv"-Kästchens sendet den Befehl nicht nur einmal - es sendet ihn
+automatisch erneut (150ms für die Werkzeuge mit 250ms-Watchdog, 400ms
+für den Schichtlüfter), solange das Kästchen markiert bleibt, genauso
+wie es ein echter Master-Controller tun muss. Das Deaktivieren sendet
+einen einzelnen Null-/Aus-Frame und stoppt. Der Hotend-Lüfter hat
+keinen Watchdog (stattdessen einen Stillstandsdetektor - siehe
+`docs/CANBUS.TXT`), also ist es ein einfaches einmaliges Senden.
 
 ## 5. Protokolle und Debug-Pakete
 
@@ -324,3 +349,13 @@ Werkzeugkopfproblem debuggt.
   Live-Rücklesen - es gibt keine Telemetrie dafür, was die
   Status-/Ring-LEDs aktuell tatsächlich anzeigen, nur was zuletzt
   befohlen wurde.
+- **Das eigene Wärmebild von PCB Advanced Inspection basiert auf
+  Abruf, nicht auf einem Live-Feed.** Ein vollständiges Bild zu lesen
+  bedeutet, alle 48 Chunks nacheinander über CAN abzufragen
+  (schlimmster Fall, die eigene Auflösung von MLX90640/MLX90642) - dies
+  kann einige Sekunden dauern, und es gibt keinen Streaming-Sendemodus
+  im eigenen CAN-Protokoll dieses Werkzeugs, um es schneller zu machen.
+  Eine Erfassung muss bereits ausgelöst und als bereit gemeldet worden
+  sein (Status Prüfen), bevor Wärmebild Lesen echte Daten zurückgibt -
+  zu frühes Lesen zeichnet einfach das, was im eigenen Puffer des
+  Sensors zuletzt gespeichert war.

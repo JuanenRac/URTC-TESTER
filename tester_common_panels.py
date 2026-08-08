@@ -712,7 +712,7 @@ class CommonPanelsMixin:
             return
         response = self.bus.wait_for_one(CAN_ID_MLX_VARIANT_RESP, timeout=1.0,
                                           send_after_register=lambda: self.bus.send(CAN_ID_MLX_VARIANT_RESP, b""))
-        if response is None or len(response) < 1 or response[0] > 2:
+        if response is None or len(response) < 1 or response[0] > 3:
             self.mlx_sensor_variant_var.set("No response (older firmware, or not connected)")
             self.log(_("LOG_QUERIED_0X1A7_NO_RESPONSE"))
             return

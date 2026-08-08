@@ -260,11 +260,13 @@ EXPANSION_BOARD_TYPES = [
 ]
 
 # Same list as urtc_flasher.py's own MLX_SENSOR_VARIANTS - see that
-# file's own comment for what this controls.
+# file's own comment for what this controls. 0 deliberately means "no
+# sensor configured" rather than defaulting to any real sensor.
 MLX_SENSOR_VARIANTS = [
-    "0 - MLX90640 (32x24)",
-    "1 - MLX90641 (16x12)",
-    "2 - MLX90642 (32x24, onboard calc)",
+    "0 - None installed",
+    "1 - MLX90640 (32x24)",
+    "2 - MLX90641 (16x12)",
+    "3 - MLX90642 (32x24, onboard calc)",
 ]
 ERASE_FRAM_MAGIC = bytes([0xE3, 0xA5, 0xE0, 0xFF])
 CAN_ID_QUERY_VERSION     = 0x7F8  # Answered by app or bootloader, whichever's running

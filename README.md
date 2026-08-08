@@ -262,7 +262,6 @@ Every one of the 25 profiles has its own panel, built directly from
 | Flying Probe | Basic reading is automatic; advanced reading needs a raw ADS1115 config word (hex) + Trigger Conversion + Read Result | Basic onboard-ADC reading (automatic, `0x243`) |
 | UV Curing | Power slider (0-255) + Send/Off | none |
 | Hot Air Rework | Setpoint temperature, blower power, on/off | Live temperature (shares the soldering iron's own `0x135` telemetry and live graph - same physical thermal loop) |
-| Press-Fit Inserter | *(see Conformal Coating above)* | |
 | Crimping Actuator | Direction + step count (one-shot move, same shape as the shared motion tools above, but reaches an expansion board's own driver via `0x1F0` instead of the onboard `0x120`) | none |
 | PCB Advanced Inspection | Trigger Capture, Check Status, Read Thermal Image | 32x24 pixel heat-map canvas (blue-to-red gradient), pulled chunk-by-chunk over CAN on request - not a live video feed, see section 6 below |
 | Solder Paste Jetting | PWM channel + frequency (Configure), then duty + duration (Fire Pulse) | none |

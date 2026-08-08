@@ -11,10 +11,10 @@ flashage - voir `LICENSE` à la racine du dépôt.
 
 Un testeur de bus CAN en direct pour la carte URTC. Il se connecte via
 le même adaptateur USB-CAN que celui utilisé par le flasher, demande à
-la carte pour lequel de ses 12 profils d'outil elle est actuellement
+la carte pour lequel de ses 25 profils d'outil elle est actuellement
 configurée par cavaliers, et n'affiche que les contrôles et la
 télémétrie propres à cet outil - pas une seule fenêtre essayant de
-représenter les 12 à la fois. Tout ce qu'il fait est une commande
+représenter les 25 à la fois. Tout ce qu'il fait est une commande
 d'exécution ou une lecture de télémétrie contre l'application en cours
 d'exécution ; il ne touche jamais la flash, donc il n'y a rien ici qui
 puisse laisser la carte moins fonctionnelle qu'au départ.
@@ -89,9 +89,11 @@ cycle de vie de la fenêtre, et la barre de menu) plus 3 mixins qu'elle
 combine : `tester_common_panels.py` (panneaux contrôles globaux/F-RAM/
 extension/auto-test/moniteur de bus/trame personnalisée),
 `tester_panel_helpers.py` (utilitaires partagés utilisés par chaque
-constructeur de panneau d'outil), et `tester_tool_panels.py` (les 8
-constructeurs de panneaux spécifiques à un outil). `urtc_tester.py` est
-maintenant juste le point d'entrée - démarrage sans CLI et l'écran de
+constructeur de panneau d'outil), et `tester_tool_panels.py` (19
+constructeurs de panneaux spécifiques à un outil, couvrant les 25
+profils - plusieurs outils partagent le même constructeur, par ex.
+`_build_motion_panel` couvre à lui seul 7 d'entre eux). `urtc_tester.py`
+est maintenant juste le point d'entrée - démarrage sans CLI et l'écran de
 démarrage.
 
 **Langue** : anglais par défaut. Se change via le menu **Langue** (dans
@@ -131,7 +133,7 @@ sections toujours visibles sur 2 colonnes plutôt que de les empiler
 toutes en une seule empêche la fenêtre de devenir assez haute pour ne
 plus tenir sur un écran ordinaire, à mesure que davantage de ces
 sections ont été ajoutées au fil du temps. Le panneau propre de
-l'imprimante 3D (le plus haut des 12) va un pas plus loin et divise ses
+l'imprimante 3D (le plus haut des 25) va un pas plus loin et divise ses
 propres contrôles en 2 sous-colonnes en interne, pour la même raison.
 
 **Connecter** (section 1, identique au flasher) : choisissez
@@ -142,7 +144,7 @@ automatiquement le débit binaire, puis Connecter.
 sur **Détecter** pour la refaire) : l'outil envoie `0x110` (interroger
 l'outil actif) et `0x7F8` (interroger la version), et utilise la
 réponse pour :
-- Montrer lequel des 12 profils d'outil est actif, et l'état général de
+- Montrer lequel des 25 profils d'outil est actif, et l'état général de
   la carte (toute erreur déclarée, défaut de bus CAN, encore dans
   l'écran de démarrage).
 - Montrer le HardwareID et la version de firmware rapportés, signalant
@@ -163,8 +165,14 @@ faveur du propre contrôle de stroboscope de cet outil (selon
 `docs/CANBUS.TXT`) - la couleur s'applique quand même dans les deux cas.
 
 **Carte d'Extension** (section 3, toujours visible) : le propre bus SPI
-de `CONN_EXPANSION` et la ligne DIAG0 - rien d'autre ne vit sur ce
-connecteur aujourd'hui -
+générique et la ligne DIAG0 de `CONN_EXPANSION` - le passage brut
+partagé par toutes les variantes de carte d'extension avec driver.
+L'ADS1115 et les capteurs MLX9064x, ainsi que le driver propre de
+l'actionneur de sertissage, ne se contrôlent pas depuis ici - ils vivent
+dans le panneau de leur propre outil à la place (Sonde Volante,
+Inspection Avancée PCB, Actionneur de Sertissage - voir section 4
+ci-dessous), puisque celui qui s'applique réellement dépend du profil
+d'outil configuré par cavaliers.
 
 **F-RAM de Persistance** (section 4, également toujours visible, mais
 délibérément séparée de Carte d'Extension ci-dessus) : la FM24CL64B
@@ -192,13 +200,19 @@ pas d'EEPROM, rien de non volatile dessus.
   erreur critique était active à ce moment-là. **Effacer la F-RAM...**
   l'efface (`0x192`, avec une boîte de dialogue de confirmation
   d'abord - ceci ne peut pas être annulé).
-- **Type de carte d'extension** : **Interroger** montre laquelle des 5
+- **Type de carte d'extension** : **Interroger** montre laquelle des 7
   configurations possibles de `CONN_EXPANSION` est actuellement définie
   (`0x1A1` - voir `EXPANSION.TXT`). Lecture seule ici - définissez-la
   depuis la propre section CAN OTA de `URTC Flasher` à la place,
   puisque c'est une étape de configuration matérielle ponctuelle, pas
   quelque chose à changer avec désinvolture depuis un outil de
   diagnostic en direct.
+- **Variante de capteur MLX9064x** : **Interroger** montre lequel des 3
+  capteurs thermiques de la famille MLX9064x (ou aucun) est
+  actuellement configuré (`0x1A7` - voir `CANBUS.TXT`) - pertinent
+  uniquement lorsque le type de carte d'extension ci-dessus est une
+  variante Advanced ou Basic+MLX9064x. Lecture seule ici, même
+  raisonnement que le type de carte d'extension ci-dessus.
 - **Configuration libre de l'outil** : **Interroger** montre la lecture
   brute des cavaliers ID (0-31) à côté de ce que dit actuellement le
   registre `free_tool_selection` de la F-RAM (`0x1A3` - voir
@@ -268,31 +282,42 @@ outil.
 
 ## 4. Couverture des outils
 
-Chacun des 12 profils a son propre panneau, construit directement à
+Chacun des 25 profils a son propre panneau, construit directement à
 partir de `docs/CANBUS.TXT` :
 
 | Outil | Contrôles | Télémétrie en direct |
 |---|---|---|
 | Fer à souder | Température de consigne, marche/arrêt | Température réelle, fin de course |
-| Distributeur Pâte/Liquide, Tournevis, les deux Pinces | Direction + nombre de pas (mouvement unique) | aucune (0x120 partagé, aucune télémétrie pour aucun de ces 5) |
+| Distributeur Pâte/Liquide, Tournevis, les deux Pinces, SMT Pick & Place, Vacuum Gripper (LG) | Direction + nombre de pas (mouvement unique) | aucune (0x120 partagé, aucune télémétrie pour aucun de ces 7) |
 | Prélèvement par Aspiration | aucun | Lecture analogique, pièce détectée |
 | Perceuse | Vitesse + direction | RPM réel, fin de course |
 | Inspection AOI | Mode anneau (éteint/stroboscope/continu) + période de stroboscope | Fin de course |
 | Graveur Laser | Puissance + armement/sécurité de l'interlock | Fin de course |
 | Imprimante 3D | Consigne de buse, direction/pas de l'extrudeur, puissance ventilateur de couche, puissance ventilateur hotend | Température hotend, RPM ventilateur de couche, RPM ventilateur hotend |
 | Sonde de Balayage | aucun | Nombre d'événements d'impact + horodatage (`0x095` priorité maximale) |
+| Électroaimant | Case à cocher activer/relâcher bobine | aucune |
+| Soudeuse par Points | Durée d'impulsion + Déclencher | aucune (ne se déclenche que si le capteur de contact lit HIGH d'abord - voir le propre `0x1C0` de `docs/CANBUS.TXT`) |
+| Revêtement Conforme, Insertion par Pression | aucun - panneau purement informatif | aucune - les deux ID d'outil n'ont aucun gestionnaire CAN, leur propre actionneur et capteur vivent sur la carte mère du robot lui-même, voir `docs/TOOLS.TXT` |
+| Sonde Volante | La lecture basique est automatique ; la lecture avancée nécessite un mot de config ADS1115 brut (hex) + Déclencher Conversion + Lire Résultat | Lecture basique ADC intégré (automatique, `0x243`) |
+| Durcissement UV | Curseur de puissance (0-255) + Envoyer/Éteindre | aucune |
+| Air Chaud pour Retouche | Température de consigne, puissance ventilateur, marche/arrêt | Température en direct (partage la propre télémétrie `0x135` et le graphique en direct du fer à souder - même boucle thermique physique) |
+| Actionneur de Sertissage | Direction + nombre de pas (mouvement unique, même forme que les outils de mouvement partagés ci-dessus, mais atteint le driver d'une carte d'extension via `0x1F0` au lieu du `0x120` intégré) | aucune |
+| Inspection Avancée PCB | Déclencher Capture, Vérifier Statut, Lire Image Thermique | Toile de carte thermique 32x24 pixels (dégradé bleu-rouge), extraite morceau par morceau via CAN à la demande - pas un flux vidéo en direct, voir section 6 ci-dessous |
+| Jetting de Pâte à Souder | Canal PWM + fréquence (Configurer), puis cycle + durée (Déclencher Impulsion) | aucune |
+| Soudeuse Ultrasonique | Durée d'impulsion + Déclencher | aucune (même forme que la Soudeuse par Points, mais sans verrou du capteur de contact) |
 
 **Les watchdogs de communication sont gérés pour vous.** Le fer à
-souder, le laser, et la buse de l'imprimante 3D ont chacun un watchdog
-de 250ms dans le firmware ; le ventilateur de couche en a un de 1000ms.
-Cocher la case "Actif" correspondante n'envoie pas seulement la
-commande une fois - elle la renvoie automatiquement (150ms pour les
-outils avec watchdog 250ms, 400ms pour le ventilateur de couche) tant
-que la case reste cochée, de la même manière qu'un vrai contrôleur
-maître doit le faire. La décocher envoie une seule trame zéro/arrêt et
-s'arrête. Le ventilateur hotend n'a pas de watchdog (un détecteur de
-blocage à la place - voir `docs/CANBUS.TXT`), donc c'est un simple
-envoi unique.
+souder, l'Air Chaud pour Retouche (partage la même boucle thermique et
+le même watchdog que le fer à souder), le laser, et la buse de
+l'imprimante 3D ont chacun un watchdog de 250ms dans le firmware ; le
+ventilateur de couche en a un de 1000ms. Cocher la case "Actif"
+correspondante n'envoie pas seulement la commande une fois - elle la
+renvoie automatiquement (150ms pour les outils avec watchdog 250ms,
+400ms pour le ventilateur de couche) tant que la case reste cochée, de
+la même manière qu'un vrai contrôleur maître doit le faire. La décocher
+envoie une seule trame zéro/arrêt et s'arrête. Le ventilateur hotend
+n'a pas de watchdog (un détecteur de blocage à la place - voir
+`docs/CANBUS.TXT`), donc c'est un simple envoi unique.
 
 ## 5. Journaux et paquets de débogage
 
@@ -319,3 +344,13 @@ remettre à quiconque déboguant un problème de tête d'outil.
   relecture en direct - il n'y a pas de télémétrie de ce que les LED
   de statut/anneau montrent réellement actuellement, seulement ce qui a
   été commandé en dernier.
+- **La propre image thermique de l'Inspection Avancée PCB est basée sur
+  extraction, pas un flux en direct.** Lire une image complète signifie
+  demander les 48 morceaux séquentiellement via CAN (pire cas, la
+  propre résolution de MLX90640/MLX90642) - cela peut prendre plusieurs
+  secondes, et il n'existe aucun mode d'envoi en streaming dans le
+  propre protocole CAN de cet outil pour accélérer cela. Une capture
+  doit déjà avoir été déclenchée et signalée prête (Vérifier Statut)
+  avant que Lire Image Thermique ne renvoie de vraies données - lire
+  trop tôt peint simplement ce que le propre tampon du capteur
+  contenait la dernière fois.
