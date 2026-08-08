@@ -154,9 +154,9 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         # MSB-to-LSB order) plus the resulting tool number - decoded
         # straight from the same active_tool byte the 0x111 response
         # already carries (it IS the raw 5-bit jumper reading - confirmed
-        # against STM32F303CC.C's own Read_ToolID, which builds it bit by
-        # bit from ID0..ID4 the same way), so no separate query or
-        # firmware change is needed for this display.
+        # against Identify_PhysicalTool() in firmware_identify.c, which
+        # builds it bit by bit from ID0..ID4 the same way), so no separate
+        # query or firmware change is needed for this display.
         ttk.Label(conn_frame, text=_("LBL_ID_PINS")).grid(row=row, column=0, sticky="w", **pad)
         id_pins_frame = ttk.Frame(conn_frame)
         id_pins_frame.grid(row=row, column=1, columnspan=3, sticky="w", **pad)
@@ -476,7 +476,8 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
 
     def _update_id_pin_display(self, tool_id):
         # bit0=ID0 .. bit4=ID4, matching ECOVIA.TXT's table and
-        # STM32F303CC.C's Read_ToolID exactly - the squares are drawn
+        # Identify_PhysicalTool()'s own bit-building order in
+        # firmware_identify.c exactly - the squares are drawn
         # ID4..ID0 (left to right, matching the documented MSB-to-LSB
         # convention), so index 0 in self._id_pin_squares is ID4, needing
         # bit 4, down to index 4 being ID0, needing bit 0.

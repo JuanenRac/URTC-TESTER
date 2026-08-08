@@ -6,8 +6,9 @@
 
 **Version:** 1.1 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
-License: **GPL-3.0**, same as the URTC firmware and the flasher tool - see
-`LICENSE` in the repository root.
+License: **GPL-3.0** for the source code, **CC BY-SA 4.0** for this
+documentation - see `LICENSE` in this repository, or the "License and
+Copyright Notices" section at the end of this document.
 
 A live CAN bus exerciser for the URTC board. It connects over the same
 USB-CAN adapter the flasher uses, asks the board which of its 25 tool
@@ -307,3 +308,50 @@ tool) for handing to whoever's debugging a tool head issue.
   capture has to already be triggered and reported ready (Check Status)
   before Read Thermal Image returns real data - reading too early just
   paints whatever the sensor's own buffer happened to hold last.
+
+## 📸 Photos
+
+<p align="center">
+  <img src="images/URTC_TESTER_V1_1.png" alt="URTC Tester window" width="700">
+</p>
+
+## 📜 License and Copyright Notices
+
+URTC Tester is (c) 2026 JuanenRac (Electro Hobby 3D). This notice must
+be included in any distributions of this project or derivative works.
+
+This project consists of source code and its own documentation, made
+available under different licenses - each suited to what it actually
+covers:
+
+1. The source code (`urtc_tester.py` and every `tester_*.py` module)
+   and any binary built from it via `build_exe.bat`/`build_exe.sh` are
+   available under the **GNU General Public License v3.0 (GPL-3.0)**.
+   Full text at https://www.gnu.org/licenses/gpl-3.0.html.
+
+2. The documentation (this README and its own translations -
+   `README_spa.md`, `README_ita.md`, `README_fra.md`, `README_deu.md`)
+   is available under **Creative Commons Attribution-ShareAlike 4.0
+   International (CC BY-SA 4.0)**. Full text at
+   https://creativecommons.org/licenses/by-sa/4.0/.
+
+This tool is the live CAN-bus diagnostic companion to the
+[URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC)
+project - see that project's own repository for the board firmware,
+hardware designs, and full protocol documentation this tool exercises
+against. URTC's own firmware is GPL-3.0 and its hardware designs are
+CERN-OHL-S v2; this tool's own license here doesn't extend to that
+separate project, and vice versa. A web-based alternative covering
+similar ground also exists at
+[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
+
+If you build on this project, keep the licensing split in mind: code
+changes should stay GPL-3.0, documentation derivatives should stay CC
+BY-SA - each with attribution back to this project and its author.
+
+## 👤 Author
+
+**JuanenRac** (Electro Hobby 3D)
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+

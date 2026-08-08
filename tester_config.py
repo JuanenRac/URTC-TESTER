@@ -19,7 +19,7 @@ except ImportError:
 TESTER_VERSION = "1.1"
 TESTER_AUTHOR = "JuanenRac"
 
-# THIS_HARDWARE_ID matches BOOTLOADER.C/STM32F303CC.C's own constant - used
+# THIS_HARDWARE_ID matches bootloader_common.h/firmware_common.h's own constant - used
 # here only to flag a mismatch after connecting (a different board/rig
 # answering than the one this was set up for), never to gate anything.
 THIS_HARDWARE_ID = 0x0303CC01

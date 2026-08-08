@@ -6,8 +6,9 @@
 
 **Version:** 1.1 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
-Lizenz: **GPL-3.0**, dieselbe wie die URTC-Firmware und das Flash-Tool -
-siehe `LICENSE` im Wurzelverzeichnis des Repositorys.
+Lizenz: **GPL-3.0** für den Quellcode, **CC BY-SA 4.0** für diese
+Dokumentation - siehe `LICENSE` in diesem Repository, oder den
+Abschnitt „Lizenz und Urheberrechtshinweise" am Ende dieses Dokuments.
 
 Ein Live-CAN-Bus-Testwerkzeug für die URTC-Platine. Es verbindet sich
 über denselben USB-CAN-Adapter, den auch der Flasher verwendet, fragt
@@ -359,3 +360,54 @@ Werkzeugkopfproblem debuggt.
   sein (Status Prüfen), bevor Wärmebild Lesen echte Daten zurückgibt -
   zu frühes Lesen zeichnet einfach das, was im eigenen Puffer des
   Sensors zuletzt gespeichert war.
+
+## 📸 Fotos
+
+<p align="center">
+  <img src="images/URTC_TESTER_V1_1.png" alt="URTC Tester Fenster" width="700">
+</p>
+
+## 📜 Lizenz und Urheberrechtshinweise
+
+URTC Tester ist (c) 2026 JuanenRac (Electro Hobby 3D). Dieser Hinweis
+muss in jeder Verteilung dieses Projekts oder abgeleiteter Werke
+enthalten sein.
+
+Dieses Projekt besteht aus Quellcode und seiner eigenen Dokumentation,
+die unter verschiedenen Lizenzen verfügbar gemacht werden - jede
+passend zu dem, was sie tatsächlich abdeckt:
+
+1. Der Quellcode (`urtc_tester.py` und jedes `tester_*.py`-Modul) und
+   jedes daraus über `build_exe.bat`/`build_exe.sh` erstellte Binary
+   sind unter der **GNU General Public License v3.0 (GPL-3.0)**
+   verfügbar. Vollständiger Text unter
+   https://www.gnu.org/licenses/gpl-3.0.html.
+
+2. Die Dokumentation (dieses README und seine eigenen Übersetzungen -
+   `README_spa.md`, `README_ita.md`, `README_fra.md`, `README_deu.md`)
+   ist unter **Creative Commons Attribution-ShareAlike 4.0
+   International (CC BY-SA 4.0)** verfügbar. Vollständiger Text unter
+   https://creativecommons.org/licenses/by-sa/4.0/.
+
+Dieses Tool ist der Live-CAN-Bus-Diagnose-Begleiter des
+[URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC)
+-Projekts - siehe das eigene Repository dieses Projekts für die
+Platinen-Firmware, Hardware-Designs und die vollständige
+Protokolldokumentation, die dieses Tool ausübt. Die eigene Firmware von
+URTC ist GPL-3.0 und ihre Hardware-Designs sind CERN-OHL-S v2; die
+eigene Lizenz dieses Tools erstreckt sich hier nicht auf dieses
+separate Projekt, und umgekehrt. Eine webbasierte Alternative, die
+ähnliches Terrain abdeckt, existiert ebenfalls unter
+[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
+
+Wenn Sie auf diesem Projekt aufbauen, denken Sie an die Lizenztrennung:
+Codeänderungen sollten GPL-3.0 bleiben, Dokumentationsableitungen
+sollten CC BY-SA bleiben - jeweils mit Zuschreibung zurück an dieses
+Projekt und seinen Autor.
+
+## 👤 Autor
+
+**JuanenRac** (Electro Hobby 3D)
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
