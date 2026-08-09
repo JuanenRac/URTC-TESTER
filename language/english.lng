@@ -199,6 +199,14 @@ LOG_FRAM_ERASED_CONFIRMED=F-RAM erased and confirmed.
 LOG_KEEPALIVE_STOPPED=Keepalive '{name}' stopped: {e}
 LOG_SOLDER_SETPOINT_ACTIVE=Soldering iron: setpoint {temp}°C, sending every 150ms (firmware watchdog is 250ms).
 LOG_SOLDER_TURNED_OFF=Soldering iron: turned off (setpoint 0 sent once).
+TOOL_SOLDERING_IRON_FEEDER_LABEL=Soldering Iron - Wire Feeder
+LBL_FEEDER_POSITION=Feeder position (steps)
+VAL_FEEDER_STEPS={n} steps
+TITLE_RESET_FEEDER_POSITION_Q=Reset feeder position?
+CONFIRM_RESET_FEEDER_POSITION=This resets the tracked wire feeder position to 0 - normally done right after loading a fresh spool. Continue?
+LOG_FEEDER_POSITION_RESET=Wire feeder: position reset to 0.
+BTN_RESET_FEEDER_POSITION=Reset Position to 0
+HELP_FEEDER_POSITION_OPEN_LOOP=Open-loop estimate - this motor has no encoder, so this is this board's own best guess based on commanded steps, not a physical measurement. Reset it after loading a fresh spool so it starts meaning something again.
 LOG_TOOL_MOVE={tool}: move {direction}, {n} steps.
 LOG_AOI_MODE_PERIOD=AOI: mode={mode}, period={period}
 LBL_ARMED=armed

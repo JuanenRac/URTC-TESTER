@@ -292,7 +292,7 @@ Jedes der 25 Profile hat sein eigenes Panel, direkt aus
 
 | Werkzeug | Steuerelemente | Live-Telemetrie |
 |---|---|---|
-| Lötkolben | Solltemperatur, Ein/Aus | Ist-Temperatur, Endanschlag |
+| Lötkolben | Solltemperatur, Ein/Aus; Lötzinnvorschub Richtung + Schrittzahl (Einmalbewegung); Abfrage und Zurücksetzen der Vorschubposition auf 0 | Ist-Temperatur; Vorschubposition (Schätzung im offenen Regelkreis) |
 | Pasten-/Flüssigkeitsspender, Schraubendreher, beide Greifer, SMT Pick & Place, Vacuum Gripper (LG) | Richtung + Schrittzahl (Einmalbewegung) | keine (gemeinsames 0x120, keine Telemetrie für keines dieser 7) |
 | Vakuum-Aufnahme | keine | Analogmessung, Teil erkannt |
 | Bohrer | Geschwindigkeit + Richtung | Ist-Drehzahl, Endanschlag |

@@ -249,7 +249,7 @@ Every one of the 25 profiles has its own panel, built directly from
 
 | Tool | Controls | Live telemetry |
 |---|---|---|
-| Soldering Iron | Setpoint temperature, on/off | Actual temperature, endstop |
+| Soldering Iron | Setpoint temperature, on/off; wire feeder direction + step count (one-shot); feeder position query + reset to 0 | Actual temperature; feeder position (open-loop estimate) |
 | Paste/Liquid Dispenser, Screwdriver, both Grippers, SMT Pick & Place, Vacuum Gripper (LG) | Direction + step count (one-shot move) | none (shared 0x120, no telemetry for any of these 7) |
 | Vacuum Pickup | none | Analog reading, part-detected |
 | Drill | Speed + direction | Actual RPM, endstop |

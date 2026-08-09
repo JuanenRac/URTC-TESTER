@@ -592,7 +592,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         name = TOOL_NAMES.get(tool_id, "No tool assigned")
         self._notebook.tab(self.tool_tab, text=f"Tool Controls - {name}")
         builder = {
-            0: self._build_soldering_iron_panel,
+            0: lambda p: self._build_soldering_iron_panel(p, tool_id, name),
             1: self._build_motion_panel, 2: self._build_motion_panel,
             3: self._build_motion_panel, 6: self._build_motion_panel,
             7: self._build_motion_panel,

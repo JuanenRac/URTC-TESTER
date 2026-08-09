@@ -200,6 +200,14 @@ LOG_FRAM_ERASED_CONFIRMED=F-RAM effacée et confirmée.
 LOG_KEEPALIVE_STOPPED=Maintien '{name}' arrêté : {e}
 LOG_SOLDER_SETPOINT_ACTIVE=Fer à souder : consigne {temp}°C, envoi toutes les 150ms (surveillance firmware de 250ms).
 LOG_SOLDER_TURNED_OFF=Fer à souder : éteint (consigne 0 envoyée une fois).
+TOOL_SOLDERING_IRON_FEEDER_LABEL=Fer à Souder - Alimentateur de Fil
+LBL_FEEDER_POSITION=Position de l'alimentateur (pas)
+VAL_FEEDER_STEPS={n} pas
+TITLE_RESET_FEEDER_POSITION_Q=Réinitialiser la position de l'alimentateur ?
+CONFIRM_RESET_FEEDER_POSITION=Ceci réinitialise à 0 la position suivie de l'alimentateur de fil - normalement fait juste après avoir chargé une bobine neuve. Continuer ?
+LOG_FEEDER_POSITION_RESET=Alimentateur de fil : position réinitialisée à 0.
+BTN_RESET_FEEDER_POSITION=Réinitialiser la Position à 0
+HELP_FEEDER_POSITION_OPEN_LOOP=Estimation en boucle ouverte - ce moteur n'a pas d'encodeur, donc c'est la meilleure estimation de cette carte basée sur les pas commandés, pas une mesure physique. Réinitialisez-la après avoir chargé une bobine neuve pour qu'elle redevienne significative.
 LOG_TOOL_MOVE={tool} : déplacement {direction}, {n} pas.
 LOG_AOI_MODE_PERIOD=AOI : mode={mode}, période={period}
 LBL_ARMED=armé

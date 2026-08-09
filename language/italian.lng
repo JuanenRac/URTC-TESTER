@@ -200,6 +200,14 @@ LOG_FRAM_ERASED_CONFIRMED=F-RAM cancellata e confermata.
 LOG_KEEPALIVE_STOPPED=Keepalive '{name}' fermato: {e}
 LOG_SOLDER_SETPOINT_ACTIVE=Saldatore: setpoint {temp}°C, invio ogni 150ms (watchdog firmware e 250ms).
 LOG_SOLDER_TURNED_OFF=Saldatore: spento (setpoint 0 inviato una volta).
+TOOL_SOLDERING_IRON_FEEDER_LABEL=Saldatore - Alimentatore Stagno
+LBL_FEEDER_POSITION=Posizione alimentatore (passi)
+VAL_FEEDER_STEPS={n} passi
+TITLE_RESET_FEEDER_POSITION_Q=Azzerare la posizione dell'alimentatore?
+CONFIRM_RESET_FEEDER_POSITION=Questo azzera la posizione tracciata dell'alimentatore di stagno - normalmente si fa subito dopo aver caricato una nuova bobina. Continuare?
+LOG_FEEDER_POSITION_RESET=Alimentatore stagno: posizione azzerata a 0.
+BTN_RESET_FEEDER_POSITION=Azzera Posizione a 0
+HELP_FEEDER_POSITION_OPEN_LOOP=Stima ad anello aperto - questo motore non ha encoder, quindi questa è la migliore stima della scheda basata sui passi comandati, non una misurazione fisica. Azzerala dopo aver caricato una bobina nuova cosicché torni ad avere significato.
 LOG_TOOL_MOVE={tool}: movimento {direction}, {n} passi.
 LOG_AOI_MODE_PERIOD=AOI: modalita={mode}, periodo={period}
 LBL_ARMED=armato

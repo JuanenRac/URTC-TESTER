@@ -21,6 +21,7 @@ from tester_config import (
     CAN_ID_AOI_CMD, CAN_ID_AOI_TELEMETRY, CAN_ID_DRILL_CMD, CAN_ID_DRILL_TELEMETRY,
     CAN_ID_IMPACT_EVENT, CAN_ID_LASER_CMD, CAN_ID_LASER_TELEMETRY, CAN_ID_MOTION_CMD,
     CAN_ID_SOLDER_SETPOINT, CAN_ID_SOLDER_TELEMETRY, CAN_ID_VACUUM_TELEMETRY,
+    CAN_ID_SOLDER_FEEDER_RESET, CAN_ID_SOLDER_FEEDER_POS,
     CAN_ID_ELECTROMAGNET_CMD, CAN_ID_SPOT_WELD_CMD, CAN_ID_UV_CURING_CMD,
     CAN_ID_HOTAIR_CMD, CAN_ID_CRIMPING_CMD, CAN_ID_ULTRASONIC_WELD_CMD,
     CAN_ID_FLYING_PROBE_BASIC, CAN_ID_ADS1115_CONFIG, CAN_ID_ADS1115_TRIGGER,
@@ -32,11 +33,10 @@ from tester_config import (
 
 class ToolPanelsMixin:
 
-    def _build_soldering_iron_panel(self, parent):
+    def _build_soldering_iron_panel(self, parent, tool_id=None, tool_name=None):
         setpoint = tk.IntVar(value=0)
         active = tk.BooleanVar(value=False)
         temp_var = tk.StringVar(value="-- °C")
-        endstop_var = tk.StringVar(value="--")
 
         ttk.Label(parent, text=_("LBL_SETPOINT_TEMPERATURE")).grid(row=0, column=0, sticky="w", padx=4, pady=4)
         ttk.Spinbox(parent, from_=0, to=450, textvariable=setpoint, width=6).grid(row=0, column=1, sticky="w", padx=4)
@@ -60,22 +60,62 @@ class ToolPanelsMixin:
         ttk.Separator(parent, orient="horizontal").grid(row=1, column=0, columnspan=3, sticky="ew", pady=6)
         ttk.Label(parent, text=_("LBL_LIVE_TEMPERATURE")).grid(row=2, column=0, sticky="w", padx=4, pady=2)
         ttk.Label(parent, textvariable=temp_var, font=("", 11, "bold")).grid(row=2, column=1, sticky="w")
-        ttk.Label(parent, text=_("LBL_ENDSTOP_LIMIT_SWITCH")).grid(row=3, column=0, sticky="w", padx=4, pady=2)
-        ttk.Label(parent, textvariable=endstop_var).grid(row=3, column=1, sticky="w")
         graph_frame = ttk.Frame(parent)
-        graph_frame.grid(row=4, column=0, columnspan=3, sticky="w", padx=4)
+        graph_frame.grid(row=3, column=0, columnspan=3, sticky="w", padx=4)
         add_temp_point = self._create_live_graph(graph_frame, y_max=450)
 
         def _on_telemetry(data):
-            if len(data) < 3:
+            if len(data) < 2:
                 return
             temp = struct.unpack(">H", data[0:2])[0]
-            endstop = data[2]
             self.root.after(0, lambda: temp_var.set(f"{temp} °C"))
-            self.root.after(0, lambda: endstop_var.set("TRIGGERED" if endstop else "open"))
             self.root.after(0, lambda: add_temp_point(temp))
 
         self.bus.register(CAN_ID_SOLDER_TELEMETRY, _on_telemetry)
+
+        # doc #16's own solder-wire-feeder motor - same CONN_MOT connector
+        # and 0x120 protocol as the 7 tools _build_motion_panel already
+        # covers, reused here rather than duplicated. This tool's own
+        # heater section above uses rows 0-3, so the shared panel starts
+        # at row 4.
+        ttk.Separator(parent, orient="horizontal").grid(row=4, column=0, columnspan=3, sticky="ew", pady=6)
+        self._build_motion_panel(parent, tool_id, tool_name or _("TOOL_SOLDERING_IRON_FEEDER_LABEL"), start_row=5)
+
+        # Position tracking - open-loop (no encoder on this motor), so this
+        # is this board's own best estimate of how much wire has been fed
+        # since the last reset, not a physical measurement. Query/response
+        # and reset both live on 0x131/0x132 - see CANBUS.TXT.
+        pos_row = 9  # _build_motion_panel above occupies rows 5-8 (title, direction, steps+move, help text)
+        ttk.Separator(parent, orient="horizontal").grid(row=pos_row, column=0, columnspan=3, sticky="ew", pady=6)
+        position_var = tk.StringVar(value="--")
+        ttk.Label(parent, text=_("LBL_FEEDER_POSITION")).grid(row=pos_row+1, column=0, sticky="w", padx=4, pady=4)
+        ttk.Label(parent, textvariable=position_var, font=("", 11, "bold")).grid(row=pos_row+1, column=1, sticky="w")
+
+        def _on_position(data):
+            if len(data) < 4:
+                return
+            pos = struct.unpack(">i", data[0:4])[0]
+            self.root.after(0, lambda: position_var.set(_("VAL_FEEDER_STEPS", n=pos)))
+
+        self.bus.register(CAN_ID_SOLDER_FEEDER_POS, _on_position)
+
+        def _query_position():
+            self.bus.send(CAN_ID_SOLDER_FEEDER_POS, b"")
+
+        def _reset_position():
+            if messagebox.askyesno(_("TITLE_RESET_FEEDER_POSITION_Q"), _("CONFIRM_RESET_FEEDER_POSITION")):
+                self.bus.send(CAN_ID_SOLDER_FEEDER_RESET, bytes([0x52, 0x53, 0x50, 0x30]))
+                self.log(_("LOG_FEEDER_POSITION_RESET"))
+
+        ttk.Button(parent, text=_("BTN_QUERY"), command=_query_position).grid(row=pos_row+1, column=2, padx=8)
+        ttk.Button(parent, text=_("BTN_RESET_FEEDER_POSITION"), command=_reset_position).grid(row=pos_row+2, column=0, columnspan=2, sticky="w", padx=4, pady=(4, 0))
+        ttk.Label(
+            parent,
+            text=_("HELP_FEEDER_POSITION_OPEN_LOOP"),
+            foreground="gray", wraplength=380, justify="left",
+        ).grid(row=pos_row+3, column=0, columnspan=3, sticky="w", padx=4, pady=(8, 0))
+
+        _query_position()
 
     def _build_motion_panel(self, parent, tool_id, tool_name, cmd_id=None, start_row=0):
         # 7 tools (paste/liquid dispenser, screwdriver, both grippers,

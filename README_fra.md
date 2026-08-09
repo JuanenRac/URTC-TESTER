@@ -288,7 +288,7 @@ partir de `docs/CANBUS.TXT` :
 
 | Outil | Contrôles | Télémétrie en direct |
 |---|---|---|
-| Fer à souder | Température de consigne, marche/arrêt | Température réelle, fin de course |
+| Fer à souder | Température de consigne, marche/arrêt ; alimentateur de fil direction + nombre de pas (mouvement unique) ; interrogation et réinitialisation à 0 de la position de l'alimentateur | Température réelle ; position de l'alimentateur (estimation en boucle ouverte) |
 | Distributeur Pâte/Liquide, Tournevis, les deux Pinces, SMT Pick & Place, Vacuum Gripper (LG) | Direction + nombre de pas (mouvement unique) | aucune (0x120 partagé, aucune télémétrie pour aucun de ces 7) |
 | Prélèvement par Aspiration | aucun | Lecture analogique, pièce détectée |
 | Perceuse | Vitesse + direction | RPM réel, fin de course |

@@ -281,7 +281,7 @@ Ognuno dei 25 profili ha il proprio pannello, costruito direttamente da
 
 | Strumento | Controlli | Telemetria live |
 |---|---|---|
-| Saldatore | Temperatura di setpoint, accensione/spegnimento | Temperatura reale, endstop |
+| Saldatore | Temperatura di setpoint, accensione/spegnimento; alimentatore stagno direzione + conteggio passi (movimento singolo); interrogazione e azzeramento a 0 della posizione dell'alimentatore | Temperatura reale; posizione alimentatore (stima ad anello aperto) |
 | Dispenser Pasta/Liquido, Cacciavite, entrambi i Gripper, SMT Pick & Place, Vacuum Gripper (LG) | Direzione + conteggio passi (movimento singolo) | nessuna (0x120 condiviso, nessuna telemetria per nessuno di questi 7) |
 | Prelievo a Vuoto | nessuno | Lettura analogica, pezzo rilevato |
 | Trapano | Velocità + direzione | RPM reale, endstop |

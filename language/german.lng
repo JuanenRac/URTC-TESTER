@@ -200,6 +200,14 @@ LOG_FRAM_ERASED_CONFIRMED=F-RAM gelöscht und bestätigt.
 LOG_KEEPALIVE_STOPPED=Keepalive '{name}' gestoppt: {e}
 LOG_SOLDER_SETPOINT_ACTIVE=Lötkolben: Sollwert {temp}°C, Senden alle 150ms (Firmware-Watchdog ist 250ms).
 LOG_SOLDER_TURNED_OFF=Lötkolben: ausgeschaltet (Sollwert 0 einmal gesendet).
+TOOL_SOLDERING_IRON_FEEDER_LABEL=Lötkolben - Lötzinnvorschub
+LBL_FEEDER_POSITION=Vorschubposition (Schritte)
+VAL_FEEDER_STEPS={n} Schritte
+TITLE_RESET_FEEDER_POSITION_Q=Vorschubposition zurücksetzen?
+CONFIRM_RESET_FEEDER_POSITION=Dies setzt die verfolgte Position des Lötzinnvorschubs auf 0 zurück - normalerweise direkt nach dem Einlegen einer neuen Spule. Fortfahren?
+LOG_FEEDER_POSITION_RESET=Lötzinnvorschub: Position auf 0 zurückgesetzt.
+BTN_RESET_FEEDER_POSITION=Position auf 0 zurücksetzen
+HELP_FEEDER_POSITION_OPEN_LOOP=Schätzung im offenen Regelkreis - dieser Motor hat keinen Encoder, daher ist dies die beste Schätzung dieser Platine basierend auf befohlenen Schritten, keine physische Messung. Nach dem Einlegen einer neuen Spule zurücksetzen, damit sie wieder aussagekräftig ist.
 LOG_TOOL_MOVE={tool}: Bewegung {direction}, {n} Schritte.
 LOG_AOI_MODE_PERIOD=AOI: Modus={mode}, Periode={period}
 LBL_ARMED=scharf

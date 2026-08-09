@@ -200,6 +200,14 @@ LOG_FRAM_ERASED_CONFIRMED=F-RAM borrada y confirmada.
 LOG_KEEPALIVE_STOPPED=Vigilancia periodica '{name}' detenida: {e}
 LOG_SOLDER_SETPOINT_ACTIVE=Soldador: consigna {temp}°C, enviando cada 150ms (la vigilancia del firmware es de 250ms).
 LOG_SOLDER_TURNED_OFF=Soldador: apagado (consigna 0 enviada una vez).
+TOOL_SOLDERING_IRON_FEEDER_LABEL=Soldador - Alimentador de Estaño
+LBL_FEEDER_POSITION=Posición del alimentador (pasos)
+VAL_FEEDER_STEPS={n} pasos
+TITLE_RESET_FEEDER_POSITION_Q=¿Restablecer posición del alimentador?
+CONFIRM_RESET_FEEDER_POSITION=Esto restablece a 0 la posición rastreada del alimentador de estaño - normalmente se hace justo después de cargar un carrete nuevo. ¿Continuar?
+LOG_FEEDER_POSITION_RESET=Alimentador de estaño: posición restablecida a 0.
+BTN_RESET_FEEDER_POSITION=Restablecer Posición a 0
+HELP_FEEDER_POSITION_OPEN_LOOP=Estimación en lazo abierto - este motor no tiene encoder, así que esta es la mejor estimación de la propia placa basada en pasos comandados, no una medición física. Restablécela tras cargar un carrete nuevo para que vuelva a tener sentido.
 LOG_TOOL_MOVE={tool}: mover {direction}, {n} pasos.
 LOG_AOI_MODE_PERIOD=AOI: modo={mode}, periodo={period}
 LBL_ARMED=armado

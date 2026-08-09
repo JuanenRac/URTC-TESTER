@@ -286,7 +286,7 @@ directamente a partir de `docs/CANBUS.TXT`:
 
 | Herramienta | Controles | Telemetría en vivo |
 |---|---|---|
-| Soldador | Temperatura de setpoint, encendido/apagado | Temperatura real, endstop |
+| Soldador | Temperatura de setpoint, encendido/apagado; alimentador de estaño dirección + cuenta de pasos (movimiento de una vez); consulta y reseteo a 0 de la posición del alimentador | Temperatura real; posición del alimentador (estimación en lazo abierto) |
 | Dispensador de Pasta/Líquido, Destornillador, ambos Grippers, SMT Pick & Place, Vacuum Gripper (LG) | Dirección + cuenta de pasos (movimiento de una vez) | ninguna (0x120 compartido, sin telemetría para ninguna de estas 7) |
 | Recogida por Vacío | ninguno | Lectura analógica, pieza detectada |
 | Taladro | Velocidad + dirección | RPM real, endstop |
