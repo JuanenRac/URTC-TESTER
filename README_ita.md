@@ -22,7 +22,7 @@ iniziato.
 
 ## 1. Relazione con il flasher
 
-Questo strumento e `tools/flasher/` condividono lo stesso layer di
+Questo strumento e [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) condividono lo stesso layer di
 trasporto (le classi SLCAN e SocketCAN sono identiche) poiché entrambi
 in definitiva devono solo far entrare e uscire trame CAN dallo stesso
 tipo di adattatore, ma svolgono compiti fondamentalmente diversi:
@@ -42,7 +42,6 @@ riscaldatore scalda, il motore gira, il LED si accende), vuoi questo.
 Stesso schema del flasher:
 
 ```
-cd tools/tester
 pip install -r requirements.txt
 python urtc_tester.py          # Windows
 python3 urtc_tester.py         # Linux
@@ -118,8 +117,9 @@ disallineamento.
 
 **Configurazione SLCAN/SocketCAN su Linux** (reflash dell'adattatore,
 permessi seriali, attivazione con `ip link`) è esattamente uguale alla
-sezione 1 del flasher - vedi `tools/flasher/README.md` sezioni 1 e
-2 invece di duplicarlo qui.
+sezione 1 del flasher - vedi il
+[README di URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)
+sezioni 1 e 2 invece di duplicarlo qui.
 
 ## 3. Come funziona
 
@@ -316,7 +316,7 @@ semplice invio singolo.
 ## 5. Registri e pacchetti di debug
 
 Come il flasher: un registro di sessione con marca temporale viene
-scritto automaticamente in `tools/tester/logs/` (sicuro da
+scritto automaticamente in `logs/` (sicuro da
 eliminare), ed **Esporta Pacchetto Debug** salva uno `.zip` con il
 registro attuale a schermo più diagnostica di base del sistema (SO,
 versione Python, trasporto/porta/bitrate attuale, strumento rilevato)

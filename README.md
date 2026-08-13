@@ -20,7 +20,7 @@ nothing here that can leave the board any less working than it started.
 
 ## 1. Relationship to the flasher
 
-This tool and `tools/flasher/` share the same transport layer (SLCAN and
+This tool and [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) share the same transport layer (SLCAN and
 SocketCAN classes are identical) since both ultimately just need to get
 CAN frames on and off the same kind of adapter, but they do fundamentally
 different jobs:
@@ -40,7 +40,6 @@ motor turns, LED lights up), you want this one.
 Same pattern as the flasher:
 
 ```
-cd tools/tester
 pip install -r requirements.txt
 python urtc_tester.py          # Windows
 python3 urtc_tester.py         # Linux
@@ -109,8 +108,8 @@ sorted out.
 
 **Linux SLCAN/SocketCAN setup** (adapter reflash, serial permissions,
 `ip link` bring-up) is exactly the same as the flasher's section 1 - see
-`tools/flasher/README.md` sections 1 and 2 rather than duplicating it
-here.
+[URTC Flasher's own README](https://github.com/JuanenRac/URTC-FLASHER)
+sections 1 and 2 rather than duplicating it here.
 
 ## 3. How it works
 
@@ -282,7 +281,7 @@ stops. The hotend fan has no watchdog (a stall detector instead - see
 ## 5. Logs and debug bundles
 
 Same as the flasher: a timestamped session log is written automatically
-to `tools/tester/logs/` (safe to delete), and **Export Debug Bundle**
+to `logs/` (safe to delete), and **Export Debug Bundle**
 saves a `.zip` with the current on-screen log plus basic system
 diagnostics (OS, Python version, current transport/port/bitrate, detected
 tool) for handing to whoever's debugging a tool head issue.

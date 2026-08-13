@@ -22,7 +22,7 @@ de lo que estaba al empezar.
 
 ## 1. Relación con el flasher
 
-Esta herramienta y `tools/flasher/` comparten la misma capa de
+Esta herramienta y [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) comparten la misma capa de
 transporte (las clases SLCAN y SocketCAN son idénticas) ya que ambas en
 última instancia solo necesitan meter y sacar tramas CAN del mismo tipo
 de adaptador, pero hacen trabajos fundamentalmente distintos:
@@ -42,7 +42,6 @@ calentador calienta, el motor gira, el LED se enciende), quieres esta.
 Mismo patrón que el flasher:
 
 ```
-cd tools/tester
 pip install -r requirements.txt
 python urtc_tester.py          # Windows
 python3 urtc_tester.py         # Linux
@@ -120,9 +119,9 @@ mientras se resuelve el desajuste.
 
 **Configuración de SLCAN/SocketCAN en Linux** (reflasheo del adaptador,
 permisos de serie, levantar la interfaz con `ip link`) es exactamente
-igual que la sección 1 del flasher - ver
-`tools/flasher/README.md` secciones 1 y 2 en vez de duplicarlo
-aquí.
+igual que la sección 1 del flasher - ver el propio
+[README de URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)
+secciones 1 y 2 en vez de duplicarlo aquí.
 
 ## 3. Cómo funciona
 
@@ -321,7 +320,7 @@ que es un envío simple de una vez.
 ## 5. Registros y paquetes de depuración
 
 Igual que el flasher: un registro de sesión con marca de tiempo se
-escribe automáticamente en `tools/tester/logs/` (seguro de borrar),
+escribe automáticamente en `logs/` (seguro de borrar),
 y **Exportar Paquete de Depuración** guarda un `.zip` con el registro
 actual en pantalla más diagnósticos básicos del sistema (SO, versión de
 Python, transporte/puerto/bitrate actual, herramienta detectada) para

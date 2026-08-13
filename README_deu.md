@@ -23,7 +23,7 @@ begonnen hat.
 
 ## 1. Beziehung zum Flasher
 
-Dieses Tool und `tools/flasher/` teilen sich denselben
+Dieses Tool und [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) teilen sich denselben
 Transport-Layer (die SLCAN- und SocketCAN-Klassen sind identisch), da
 beide letztlich nur CAN-Frames auf denselben Adaptertyp bringen und von
 ihm holen müssen, aber sie erledigen grundlegend unterschiedliche
@@ -45,7 +45,6 @@ LED leuchtet), wollen Sie dieses.
 Dasselbe Schema wie der Flasher:
 
 ```
-cd tools/tester
 pip install -r requirements.txt
 python urtc_tester.py          # Windows
 python3 urtc_tester.py         # Linux
@@ -122,7 +121,8 @@ nutzbar, während die Unstimmigkeit behoben wird.
 
 **SLCAN/SocketCAN-Einrichtung unter Linux** (Adapter-Reflash, serielle
 Berechtigungen, Aktivierung mit `ip link`) ist genau dieselbe wie
-Abschnitt 1 des Flashers - siehe `tools/flasher/README.md`
+Abschnitt 1 des Flashers - siehe die eigene
+[README von URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)
 Abschnitte 1 und 2, statt es hier zu duplizieren.
 
 ## 3. Wie es funktioniert
@@ -327,7 +327,7 @@ keinen Watchdog (stattdessen einen Stillstandsdetektor - siehe
 ## 5. Protokolle und Debug-Pakete
 
 Wie beim Flasher: ein zeitgestempeltes Sitzungsprotokoll wird
-automatisch nach `tools/tester/logs/` geschrieben (sicher zu
+automatisch nach `logs/` geschrieben (sicher zu
 löschen), und **Debug-Paket exportieren** speichert eine `.zip`-Datei
 mit dem aktuellen Bildschirmprotokoll plus grundlegender Systemdiagnose
 (Betriebssystem, Python-Version, aktueller Transport/Port/Bitrate,

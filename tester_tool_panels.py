@@ -485,14 +485,17 @@ class ToolPanelsMixin:
     def _build_weld_pulse_panel(self, parent, cmd_id, has_contact_gate):
         # Shared by Spot Welder (0x1C0, gated on the contact sensor) and
         # Ultrasonic Welder (0x200, no gate) - same 3-byte fire/duration
-        # protocol either way, see CANBUS.TXT.
+        # protocol either way, see CANBUS.TXT. The Spinbox's own ceiling
+        # (and _fire's own clamp) match the firmware's real 2000ms cap
+        # (firmware_can_weldpulse.c) - entering more than that used to be
+        # silently truncated by the board with no indication here.
         duration = tk.IntVar(value=100)
 
         ttk.Label(parent, text=_("LBL_PULSE_DURATION_MS")).grid(row=0, column=0, sticky="w", padx=4, pady=4)
-        ttk.Spinbox(parent, from_=1, to=65535, textvariable=duration, width=8).grid(row=0, column=1, sticky="w", padx=4)
+        ttk.Spinbox(parent, from_=1, to=2000, textvariable=duration, width=8).grid(row=0, column=1, sticky="w", padx=4)
 
         def _fire():
-            ms = max(1, min(65535, self._safe_int(duration, 100)))
+            ms = max(1, min(2000, self._safe_int(duration, 100)))
             self.bus.send(cmd_id, bytes([0x01]) + struct.pack(">H", ms))
             self.log(_("LOG_WELD_PULSE_FIRED", ms=ms))
 
@@ -507,6 +510,10 @@ class ToolPanelsMixin:
             parent, text=_("HELP_WELD_RESOLUTION"),
             foreground="gray", wraplength=380, justify="left",
         ).grid(row=2, column=0, columnspan=3, sticky="w", padx=4, pady=(0, 4))
+        ttk.Label(
+            parent, text=_("HELP_WELD_MAX_DURATION"),
+            foreground="gray", wraplength=380, justify="left",
+        ).grid(row=3, column=0, columnspan=3, sticky="w", padx=4, pady=(0, 4))
 
     def _build_spot_welder_panel(self, parent):
         self._build_weld_pulse_panel(parent, CAN_ID_SPOT_WELD_CMD, has_contact_gate=True)
@@ -523,7 +530,14 @@ class ToolPanelsMixin:
         ).grid(row=0, column=0, sticky="w", padx=4, pady=8)
 
     def _build_uv_curing_panel(self, parent):
+        # UV Curing (0x1D0) now has the same 250ms comms-loss watchdog as
+        # the laser (both share TIM1_CH1) - see _build_laser_panel above
+        # for the identical Active-checkbox/keepalive pattern this mirrors.
+        # A plain one-shot Send used to be correct here (no watchdog
+        # existed yet); left as a one-shot today, it would auto-extinguish
+        # ~250ms after every click with no indication why.
         power = tk.IntVar(value=0)
+        active = tk.BooleanVar(value=False)
 
         ttk.Label(parent, text=_("LBL_POWER_0_255")).grid(row=0, column=0, sticky="w", padx=4, pady=4)
         power_scale = ttk.Scale(parent, from_=0, to=255, variable=power, orient="horizontal", length=160)
@@ -534,10 +548,19 @@ class ToolPanelsMixin:
 
         def _send():
             self.bus.send(CAN_ID_UV_CURING_CMD, bytes([max(0, min(255, power.get()))]))
-            self.log(_("LOG_UV_CURING_POWER", power=power.get()))
 
-        ttk.Button(parent, text=_("BTN_SEND"), command=_send).grid(row=0, column=3, sticky="w", padx=8)
-        ttk.Button(parent, text=_("BTN_OFF"), command=lambda: (power.set(0), _send())).grid(row=1, column=0, sticky="w", padx=4, pady=4)
+        def _toggle(*_):
+            if active.get():
+                self.log(_("LOG_UV_CURING_POWER", power=power.get()))
+                self._start_keepalive("uvcuring", 150, _send, on_failure=lambda: active.set(False))
+            else:
+                self._stop_keepalive("uvcuring")
+                power.set(0)
+                _send()
+                self.log(_("LOG_UV_CURING_STOPPED"))
+
+        ttk.Checkbutton(parent, text=_("LBL_ACTIVE_250MS_WATCHDOG"),
+                         variable=active, command=_toggle).grid(row=1, column=0, columnspan=3, sticky="w", padx=4, pady=4)
 
     def _build_hotair_rework_panel(self, parent):
         setpoint = tk.IntVar(value=0)
