@@ -21,7 +21,7 @@ from tester_config import (
     CAN_ID_QUERY_VERSION, CAN_ID_SOLDER_SETPOINT, CAN_ID_SOLDER_TELEMETRY,
     CAN_ID_VACUUM_TELEMETRY, CAN_ID_VERSION_RESPONSE, CUSTOM_ID_NAMES, ERASE_FRAM_MAGIC,
     CAN_ID_MLX_VARIANT_RESP, MLX_SENSOR_VARIANTS,
-    EXPANSION_BOARD_TYPES, TOOL_NAMES,
+    EXPANSION_BOARD_TYPES, TOOL_NAMES, MOTION_TOOL_IDS,
 )
 
 
@@ -237,7 +237,6 @@ class CommonPanelsMixin:
         11: [("Scan probe is event-driven (only sends on physical impact) - "
               "cannot verify without triggering it by hand", None, None, None)],
     }
-    _MOTION_TOOL_IDS = (1, 2, 3, 6, 7)
 
     def _run_self_test(self):
         if self.bus is None:
@@ -247,7 +246,7 @@ class CommonPanelsMixin:
             messagebox.showerror(_("TITLE_NOT_DETECTED"), _("MSG_RUN_DETECT_FIRST"))
             return
         steps = self._SELF_TEST_STEPS.get(self.active_tool_id)
-        is_motion = self.active_tool_id in self._MOTION_TOOL_IDS
+        is_motion = self.active_tool_id in MOTION_TOOL_IDS
         if not messagebox.askyesno(
             _("TITLE_RUN_SELF_TEST_Q"),
             _("MSG_SELF_TEST_CONFIRM"),

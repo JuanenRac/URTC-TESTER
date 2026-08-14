@@ -247,7 +247,10 @@ confirmar eso necesita a un humano observando de todas formas. Pide
 confirmación antes de enviar nada. Las herramientas sin telemetría
 (movimiento simple) o que son puramente dirigidas por eventos (sonda de
 escaneo) reciben una nota solo informativa en vez de un aprobado/fallido
-real.
+real. **La cobertura es parcial**: solo 7 de las 25 herramientas tienen
+un paso de autoprueba definido (soldador, taladro, láser, impresora 3D,
+AOI, vacío, sonda de escaneo) - las otras 18 herramientas no ejecutan
+ninguna comprobación al pulsar este botón.
 
 **Gráficos de temperatura en vivo**: tanto los paneles del soldador
 como de la boquilla de la impresora 3D muestran un pequeño gráfico de

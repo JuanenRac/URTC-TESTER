@@ -21,6 +21,7 @@ from tester_config import (
     _, AVAILABLE_LANGUAGES, BANNER_IMAGE_PATH, BITRATE_500K_SLCAN_CODE, CAN_ID_3DP_HOTEND_FAN_CMD,
     CAN_ID_3DP_LAYER_FAN_CMD, CAN_ID_3DP_THERMAL_MOTION, CAN_ID_ACTIVE_TOOL_RESP,
     CAN_ID_DRILL_CMD, CAN_ID_LASER_CMD, CAN_ID_QUERY_ACTIVE_TOOL, CAN_ID_QUERY_VERSION,
+    CAN_ID_UV_CURING_CMD, CAN_ID_HOTAIR_CMD,
     CAN_ID_SOLDER_SETPOINT, CAN_ID_VERSION_RESPONSE, CONFIG_PATH, ICON_IMAGE_PATH,
     LOGS_FOLDER, MOTION_TOOL_IDS, SLCAN_BITRATES, TESTER_AUTHOR, TESTER_VERSION, THIS_HARDWARE_ID,
     TOOL_NAMES, list_serial_ports, load_language, save_config, _center_geometry,
@@ -566,6 +567,8 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             5: lambda: self.bus.send(CAN_ID_DRILL_CMD, bytes([0, 0])),
             9: lambda: self.bus.send(CAN_ID_LASER_CMD, bytes([0, 0])),
             10: _send_3dp_off,
+            18: lambda: self.bus.send(CAN_ID_UV_CURING_CMD, bytes([0])),
+            19: lambda: self.bus.send(CAN_ID_HOTAIR_CMD, struct.pack(">H", 0) + bytes([0])),
         }.get(self._current_tool_id)
         if off_commands is not None:
             try:

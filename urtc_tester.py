@@ -8,9 +8,9 @@ Licensed under the GNU General Public License v3.0 (GPL-3.0), matching the
 URTC firmware and the flasher tool. See LICENSE in the repository root.
 
 Connects over the same USB-CAN adapter/interface the flasher uses, asks
-the board which of its 12 tool profiles it's currently jumpered for, and
+the board which of its 25 tool profiles it's currently jumpered for, and
 shows only that tool's own controls and live telemetry - per CANBUS.TXT -
-rather than one window trying to represent all 12 at once.
+rather than one window trying to represent all 25 at once.
 
 Shares its transport layer (SLCAN/SocketCAN) with urtc_flasher.py, since
 both tools ultimately just need to get CAN frames on and off the same
@@ -72,9 +72,9 @@ def main():
     root = tk.Tk()
     root.withdraw()
     # Sized from actual measured content across all 5 supported languages
-    # and all 12 tool panels (root.winfo_reqwidth/reqheight after
+    # and all 25 tool panels (root.winfo_reqwidth/reqheight after
     # building the real GUI, not a guess) - re-measured after
-    # redesigning the 3D printer panel (the tallest of the 12) into 2
+    # redesigning the 3D printer panel (the tallest of the 25) into 2
     # columns instead of one long stack. Worst case: Spanish for width
     # (1342px measured), German for height (1054px measured). A small
     # margin above those worst-case measurements.

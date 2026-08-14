@@ -254,7 +254,11 @@ Bestätigung dessen sowieso einen zusehenden Menschen erfordert. Fragt
 vor dem Senden von irgendetwas nach Bestätigung. Werkzeuge ohne
 Telemetrie (einfache Bewegung) oder die rein ereignisgesteuert sind
 (Scan-Sonde) erhalten stattdessen einen reinen Informationshinweis statt
-eines echten Bestanden/Fehlgeschlagen.
+eines echten Bestanden/Fehlgeschlagen. **Die Abdeckung ist
+unvollständig**: nur 7 der 25 Werkzeuge haben einen definierten
+Selbsttest-Schritt (Lötkolben, Bohrer, Laser, 3D-Drucker, AOI, Vakuum,
+Scan-Sonde) - die anderen 18 Werkzeuge führen bei Betätigung dieser
+Schaltfläche keine Prüfung aus.
 
 **Live-Temperaturgraphen**: sowohl die Panels des Lötkolbens als auch
 der 3D-Drucker-Düse zeigen jeweils ein kleines rollendes Liniendiagramm
@@ -307,7 +311,7 @@ Jedes der 25 Profile hat sein eigenes Panel, direkt aus
 | UV-Härtung | Leistungsregler (0-255) + Senden/Aus | keine |
 | Heißluft für Nacharbeit | Solltemperatur, Gebläseleistung, Ein/Aus | Live-Temperatur (teilt sich die eigene `0x135`-Telemetrie und das Live-Diagramm des Lötkolbens - derselbe physische Thermoregelkreis) |
 | Crimp-Aktuator | Richtung + Schrittzahl (Einmalbewegung, gleiche Form wie die oben gemeinsam genutzten Bewegungswerkzeuge, erreicht aber den Treiber einer Erweiterungsplatine über `0x1F0` statt des integrierten `0x120`) | keine |
-| PCB Advanced Inspection | Erfassung Auslösen, Status Prüfen, Wärmebild Lesen | 32x24-Pixel-Wärmebild-Leinwand (Blau-Rot-Verlauf), Chunk für Chunk über CAN auf Anfrage abgerufen - kein Live-Videofeed, siehe Abschnitt 6 unten |
+| Thermal Inspection | Erfassung Auslösen, Status Prüfen, Wärmebild Lesen | 32x24-Pixel-Wärmebild-Leinwand (Blau-Rot-Verlauf), Chunk für Chunk über CAN auf Anfrage abgerufen - kein Live-Videofeed, siehe Abschnitt 6 unten |
 | Lötpasten-Jetting | PWM-Kanal + Frequenz (Konfigurieren), dann Tastverhältnis + Dauer (Impuls Auslösen) | keine |
 | Ultraschallschweißgerät | Impulsdauer + Auslösen | keine (gleiche Form wie Punktschweißgerät, aber ohne Kontaktsensor-Sperre) |
 
@@ -350,7 +354,7 @@ Werkzeugkopfproblem debuggt.
   Live-Rücklesen - es gibt keine Telemetrie dafür, was die
   Status-/Ring-LEDs aktuell tatsächlich anzeigen, nur was zuletzt
   befohlen wurde.
-- **Das eigene Wärmebild von PCB Advanced Inspection basiert auf
+- **Das eigene Wärmebild von Thermal Inspection basiert auf
   Abruf, nicht auf einem Live-Feed.** Ein vollständiges Bild zu lesen
   bedeutet, alle 48 Chunks nacheinander über CAN abzufragen
   (schlimmster Fall, die eigene Auflösung von MLX90640/MLX90642) - dies

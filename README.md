@@ -150,7 +150,7 @@ generic SPI bus and DIAG0 line - the raw passthrough every driver-
 carrying expansion board variant shares. The ADS1115 and MLX9064x
 sensors, and the crimping actuator's own driver, aren't controlled from
 here - they live inside their own tool's own panel instead (Flying
-Probe, PCB Advanced Inspection, Crimping Actuator - see section 4
+Probe, Thermal Inspection, Crimping Actuator - see section 4
 below), since which of those actually applies depends on which tool
 profile is jumpered.
 
@@ -215,7 +215,10 @@ communication round-trip works, not that an actuator physically responds,
 since confirming that needs a human watching anyway. Asks for
 confirmation before sending anything. Tools with no telemetry (plain
 motion) or that are purely event-driven (scan probe) get an info-only
-note instead of a real pass/fail.
+note instead of a real pass/fail. **Coverage is partial**: only 7 of
+the 25 tools have a defined self-test step (soldering iron, drill,
+laser, 3D printer, AOI, vacuum, scan probe) - the other 18 tools don't
+run any check when this button is pressed.
 
 **Live temperature graphs**: the soldering iron and 3D-printer nozzle
 panels both show a small rolling line graph alongside their live
@@ -263,7 +266,7 @@ Every one of the 25 profiles has its own panel, built directly from
 | UV Curing | Power slider (0-255) + Send/Off | none |
 | Hot Air Rework | Setpoint temperature, blower power, on/off | Live temperature (shares the soldering iron's own `0x135` telemetry and live graph - same physical thermal loop) |
 | Crimping Actuator | Direction + step count (one-shot move, same shape as the shared motion tools above, but reaches an expansion board's own driver via `0x1F0` instead of the onboard `0x120`) | none |
-| PCB Advanced Inspection | Trigger Capture, Check Status, Read Thermal Image | 32x24 pixel heat-map canvas (blue-to-red gradient), pulled chunk-by-chunk over CAN on request - not a live video feed, see section 6 below |
+| Thermal Inspection | Trigger Capture, Check Status, Read Thermal Image | 32x24 pixel heat-map canvas (blue-to-red gradient), pulled chunk-by-chunk over CAN on request - not a live video feed, see section 6 below |
 | Solder Paste Jetting | PWM channel + frequency (Configure), then duty + duration (Fire Pulse) | none |
 | Ultrasonic Welder | Pulse duration + Fire | none (same shape as Spot Welder, but no contact-sensor gate) |
 
@@ -299,7 +302,7 @@ tool) for handing to whoever's debugging a tool head issue.
 - **Global LED colors are a straight override**, not a live readback -
   there's no telemetry for what the status/ring LEDs are actually
   currently showing, only what was last commanded.
-- **PCB Advanced Inspection's own thermal image is pull-based, not a
+- **Thermal Inspection's own thermal image is pull-based, not a
   live feed.** Reading a full frame means requesting all 48 chunks
   sequentially over CAN (worst case, MLX90640/MLX90642's own
   resolution) - this can take a few seconds, and there's no streaming

@@ -107,8 +107,8 @@ for f in README_*.md; do
         echo "      Copied $f into dist/"
     fi
 done
-if [ -f ../../../LICENSE ]; then
-    cp ../../../LICENSE dist/LICENSE
+if [ -f LICENSE ]; then
+    cp LICENSE dist/LICENSE
     echo "      Copied LICENSE into dist/"
 fi
 echo "      Done."

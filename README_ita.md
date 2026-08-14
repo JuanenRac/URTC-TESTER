@@ -243,7 +243,11 @@ attuatore risponda fisicamente, poiché confermare ciò richiede comunque
 un umano che osserva. Chiede conferma prima di inviare qualsiasi cosa.
 Gli strumenti senza telemetria (movimento semplice) o che sono
 puramente guidati da eventi (sonda di scansione) ricevono una nota solo
-informativa invece di un vero superato/fallito.
+informativa invece di un vero superato/fallito. **La copertura è
+parziale**: solo 7 dei 25 strumenti hanno un passo di autotest definito
+(saldatore, trapano, laser, stampante 3D, AOI, vuoto, sonda di
+scansione) - gli altri 18 strumenti non eseguono alcun controllo quando
+si preme questo pulsante.
 
 **Grafici di temperatura live**: sia i pannelli del saldatore che
 dell'ugello della stampante 3D mostrano un piccolo grafico a linee

@@ -250,7 +250,11 @@ puisque confirmer cela nécessite de toute façon un humain qui observe.
 Demande confirmation avant d'envoyer quoi que ce soit. Les outils sans
 télémétrie (mouvement simple) ou qui sont purement pilotés par
 événements (sonde de balayage) reçoivent une note informative
-seulement au lieu d'un vrai succès/échec.
+seulement au lieu d'un vrai succès/échec. **La couverture est
+partielle** : seuls 7 des 25 outils ont une étape d'auto-test définie
+(fer à souder, perceuse, laser, imprimante 3D, AOI, vide, sonde de
+balayage) - les 18 autres outils n'exécutent aucune vérification quand
+ce bouton est actionné.
 
 **Graphiques de température en direct** : les panneaux du fer à souder
 et de la buse de l'imprimante 3D montrent tous deux un petit graphique
