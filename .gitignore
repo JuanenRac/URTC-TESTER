@@ -24,3 +24,5 @@ dist/README_ita.md
 dist/README_spa.md
 dist/URTC_Tester.exe
 URTC_Tester.spec
+__pycache__/tester_config.cpython-314.pyc
+__pycache__/tester_transports.cpython-314.pyc

@@ -13,8 +13,9 @@ import time
 
 try:
     import serial
+    HAVE_SERIAL = True
 except ImportError:
-    pass  # SLCAN's constructor is what actually needs this - SocketCAN works fine without it
+    HAVE_SERIAL = False  # SLCAN's constructor is what actually needs this - SocketCAN works fine without it
 
 from tester_config import _, BITRATE_500K_SLCAN_CODE
 
