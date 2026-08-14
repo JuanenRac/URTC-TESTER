@@ -18,7 +18,7 @@ once. Everything it does is a runtime command or a telemetry read against
 the currently-running application; it never touches flash, so there's
 nothing here that can leave the board any less working than it started.
 
-## 1. Relationship to the flasher
+## 1. 🆚 Relationship to the flasher
 
 This tool and [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) share the same transport layer (SLCAN and
 SocketCAN classes are identical) since both ultimately just need to get
@@ -35,7 +35,7 @@ If you're not sure which one you need: if the board is already running
 firmware and you want to check a tool actually works (heater heats,
 motor turns, LED lights up), you want this one.
 
-## 2. Install and run
+## 2. 📦 Install and run
 
 Same pattern as the flasher:
 
@@ -73,18 +73,9 @@ not the banner shrunk down.
 
 This tool is organized into modules by responsibility, purely for
 readability - there's no functional difference between having them as
-separate files versus one large one. `tester_config.py` holds config/language/
-protocol constants, `tester_transports.py` holds SLCAN/SocketCAN,
-`tester_bus_monitor.py` holds the background CAN read thread, and
-`TesterGUI` itself is split across `tester_gui_core.py` (connection,
-detection, window lifecycle, and the menu bar) plus 3 mixins it
-combines: `tester_common_panels.py` (global/F-RAM/expansion/self-test/
-bus-monitor/custom-frame panels), `tester_panel_helpers.py` (shared
-utilities every tool panel builder uses), and `tester_tool_panels.py`
-(19 tool-specific panel builders covering all 25 tool profiles - several
-tools share one builder, e.g. `_build_motion_panel` alone covers 7 of
-them). `urtc_tester.py` is now just the entry point - CLI-free startup
-and the splash screen.
+separate files versus one large one. See the
+"📂 Repository Structure" section near the end of this document for
+the full file-by-file breakdown.
 
 **Language**: English by default. Switched via the **Language** menu
 (in the menu bar at the top of the window) rather than a dropdown in
@@ -111,7 +102,7 @@ sorted out.
 [URTC Flasher's own README](https://github.com/JuanenRac/URTC-FLASHER)
 sections 1 and 2 rather than duplicating it here.
 
-## 3. How it works
+## 3. ⚙️ How it works
 
 The window is laid out in three columns: left and center hold the
 always-visible sections below (1-4, then 6), right holds section 5's
@@ -244,7 +235,7 @@ the ID column shows that friendly name alongside the raw hex ID -
 useful for anyone testing a custom expansion board's own traffic without
 needing to modify this tool's source.
 
-## 4. Tool coverage
+## 4. 🧰 Tool coverage
 
 Every one of the 25 profiles has its own panel, built directly from
 `docs/CANBUS.TXT`:
@@ -281,7 +272,7 @@ controller has to. Unchecking it sends a single zero/off frame and
 stops. The hotend fan has no watchdog (a stall detector instead - see
 `docs/CANBUS.TXT`), so it's a plain one-shot send.
 
-## 5. Logs and debug bundles
+## 5. 📋 Logs and debug bundles
 
 Same as the flasher: a timestamped session log is written automatically
 to `logs/` (safe to delete), and **Export Debug Bundle**
@@ -289,7 +280,7 @@ saves a `.zip` with the current on-screen log plus basic system
 diagnostics (OS, Python version, current transport/port/bitrate, detected
 tool) for handing to whoever's debugging a tool head issue.
 
-## 6. Known limitations
+## 6. ⚠️ Known limitations
 
 - **Not tested against real hardware.** Every piece here - the transport
   layer, the CAN ID/byte-layout handling, the watchdog keepalive timing -
@@ -310,12 +301,85 @@ tool) for handing to whoever's debugging a tool head issue.
   capture has to already be triggered and reported ready (Check Status)
   before Read Thermal Image returns real data - reading too early just
   paints whatever the sensor's own buffer happened to hold last.
+- **Run Self-Test only covers 7 of the 25 tools** (soldering iron,
+  drill, laser, 3D printer, AOI, vacuum, scan probe) - see "How it
+  works" above for the full explanation. The other 18 tools get no
+  automated check from that button; verifying them still means
+  watching the actual hardware respond to their own panel's controls.
+
+## 📂 Repository Structure
+
+```
+/
+├── urtc_tester.py             Entry point - CLI-free startup and the splash screen
+├── tester_config.py            Config/language/protocol constants (CAN IDs, tool
+│                                names, MOTION_TOOL_IDS, AVAILABLE_LANGUAGES,
+│                                EXPANSION_BOARD_TYPES)
+├── tester_transports.py        SLCAN and SocketCAN transport classes
+├── tester_bus_monitor.py       Background CAN read thread (CANBusMonitor)
+├── tester_gui_core.py          TesterGUI core - connection, detection, window
+│                                lifecycle, and the menu bar; the class the 3
+│                                mixins below combine into
+├── tester_common_panels.py     CommonPanelsMixin - global/F-RAM/expansion/
+│                                self-test/bus-monitor/custom-frame panels
+│                                (the always-visible sections)
+├── tester_panel_helpers.py     PanelHelpersMixin - shared utilities every tool
+│                                panel builder uses
+├── tester_tool_panels.py       ToolPanelsMixin - 19 tool-specific panel builders
+│                                covering all 25 tool profiles (several tools
+│                                share one builder, e.g. `_build_motion_panel`
+│                                alone covers 7 of them)
+├── requirements.txt            Single dependency: pyserial>=3.5
+├── build_exe.bat               Standalone Windows binary build script (PyInstaller)
+├── build_exe.sh                Same, for Linux
+├── URTC_Tester.spec            PyInstaller spec used by both build scripts
+├── assets/
+│   ├── URTC_APP_ICON.svg       Window/taskbar icon source (small standalone design)
+│   ├── URTC_LOGO_TESTER.svg    Startup banner source
+│   ├── urtc_icon.ico           Windows icon, built from URTC_APP_ICON.svg
+│   ├── urtc_icon.png           Same, PNG form (Linux)
+│   └── urtc_tester_banner.png  Startup banner PNG, rendered from the SVG above
+├── images/
+│   ├── URTC_LOGO_TESTER.svg    Logo banner shown at the top of this README
+│   └── URTC_TESTER_V1_1.png    Screenshot of the tool's main window (see Photos below)
+├── language/
+│   ├── english.lng             Default language, plain-text KEY=Value strings
+│   ├── spanish.lng
+│   ├── italian.lng
+│   ├── french.lng
+│   └── german.lng
+├── logs/                       Session logs written here at runtime (safe to delete)
+├── LICENSE                     Full license text - see License and Copyright
+│                                Notices below
+├── README.md                   This file
+├── README_spa.md               Spanish translation
+├── README_ita.md               Italian translation
+├── README_fra.md               French translation
+└── README_deu.md               German translation
+```
 
 ## 📸 Photos
 
 <p align="center">
   <img src="images/URTC_TESTER_V1_1.png" alt="URTC Tester window" width="700">
 </p>
+
+## 🔗 Related Projects
+
+This project is part of a larger robotics ecosystem by the same author (JuanenRac / Electro Hobby 3D). Worth knowing about, since a request might actually be about one of these rather than this repository:
+
+**HYDRA-UMC platform** — the multi-robot micro-factory cell
+- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — the motherboard itself: Raspberry Pi CM5 host + dual-core STM32H745 real-time co-processor, orchestrating up to 8 distributed robot arms over CAN-OTA/SPI-OTA. Own hardware + firmware, GPL-3.0/CERN-OHL-S v2/CC BY-SA 4.0.
+- **[HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)** — web-based control dashboard for HYDRA-UMC: multi-robot 3D visualization, kinematics/trajectory recording, CAN-OTA flashing and testing for the whole platform. React + Vite + Three.js.
+- **[HYDRA-UMC-ANDROID-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-ANDROID-CONTROL)** — planned Android control app for HYDRA-UMC. Not yet started; scope to be defined.
+- **[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL)** — planned iOS control app for HYDRA-UMC. Not yet started; scope to be defined.
+- **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — planned; scope to be defined.
+
+**URTC platform** — the tool head controller every HYDRA-UMC robot arm carries
+- **[URTC](https://github.com/JuanenRac/URTC)** — Universal Robot Tool Controller: STM32F303-based CAN bus tool head controller, 25 fully-implemented tool profiles, CAN-OTA firmware update.
+- **[URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)** — desktop CAN-OTA + full-chip SWD/JTAG flashing tool for URTC boards (Windows/Linux).
+- **URTC Tester** — desktop live CAN-bus diagnostic tool for URTC boards, one panel per tool profile (Windows/Linux). *(this repository)*
+- **[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — browser-based alternative to the 2 desktop tools above (Web Serial API + SLCAN), no local install needed.
 
 ## 📜 License and Copyright Notices
 
