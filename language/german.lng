@@ -314,7 +314,7 @@ TITLE_INVALID_VALUE=Ungültiger Wert
 HELP_NO_HANDLER_CONFORMAL_COATING=Der eigene Aktor dieses Werkzeugs (Sprühventil-Magnetspule) und sein eigener Sensor befinden sich auf der Hauptplatine des Roboters selbst, außerhalb des Geltungsbereichs dieser Platine - es gibt hier keinen CAN-Handler dafür, nichts auf dieser Platine zu testen.
 HELP_NO_HANDLER_PRESSFIT_INSERTER=Der eigene Aktor dieses Werkzeugs (linearer Einpresszylinder) und sein eigener Sensor befinden sich auf der Hauptplatine des Roboters selbst, außerhalb des Geltungsbereichs dieser Platine - es gibt hier keinen CAN-Handler dafür, nichts auf dieser Platine zu testen.
 
-# --- Korrekturen aus dem URTC-Ökosystem-Audit (2026-08-19) - siehe SONNET/auditoria_historial.txt ---
+# --- Bestätigungen für physische Aktionen, Nur-Zuhören-Modus, Bus-Zustandsüberwachung und automatischer Detect-Wiederholungsversuch ---
 TITLE_CONFIRM_DRILL_ACTIVATION_Q=Bohrer aktivieren?
 MSG_CONFIRM_DRILL_ACTIVATION=Dies sendet eine von Null verschiedene Drehzahl an einen echten, physisch rotierenden Bohrer. Stellen Sie sicher, dass der Bereich frei und ein Start sicher ist. Fortfahren?
 TITLE_CONFIRM_LASER_ACTIVATION_Q=Laser aktivieren?

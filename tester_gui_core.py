@@ -1,8 +1,8 @@
 # =============================================================================
-# URTC Tester - TesterGUI: the main window. Split from one large class
-# across 4 files by responsibility - this one holds __init__, connection/
-# detection, and window lifecycle; the panel-building methods live in the
-# 3 mixins below, combined here via multiple inheritance.
+# URTC Tester - TesterGUI: the main window, organized across 4 files by
+# responsibility - this one holds __init__, connection/detection, and
+# window lifecycle; the panel-building methods live in the 3 mixins
+# below, combined here via multiple inheritance.
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE
 # =============================================================================
@@ -339,10 +339,10 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         # through Windows WMI/registry queries (COMx friendly-name lookups)
         # under the hood, which have been observed to take a couple hundred
         # ms on a system with several USB-serial devices having been
-        # enumerated before. Doing that synchronously on the Tkinter main
-        # thread used to freeze the entire window (no repaint, no other
-        # button responds) for however long that query happened to take -
-        # moved to a background worker here, same pattern already used by
+        # enumerated before. Run synchronously on the Tkinter main thread,
+        # that would freeze the entire window (no repaint, no other button
+        # responds) for however long the query takes - run in a background
+        # worker instead, same pattern already used by
         # _auto_detect_worker/_detect_active_tool_worker below, so a port
         # refresh (including the one this class's own __init__ triggers on
         # startup, and the one on_transport_change triggers on every
@@ -694,9 +694,11 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
     # 150-1000ms comms watchdogs. This isn't standing in for those (a tool
     # panel's own keepalive already handles "did MY command get through
     # recently"); it exists purely to notice "did the BUS ITSELF go bad"
-    # sometime after Detect, which previously only got checked once, right
-    # at connect/Detect time - see this method's own docstring below for
-    # the known limitation on exactly what "bad" can mean here.
+    # sometime after Detect - _show_detect_result's own check only runs
+    # once, at connect/Detect time, so without this loop a bus that goes
+    # bad partway through a session would go unnoticed until the next
+    # manual Detect or self-test - see this method's own docstring below
+    # for the known limitation on exactly what "bad" can mean here.
     _BUS_HEALTH_INTERVAL_S = 3.0
 
     def _start_bus_health_monitor(self):
@@ -710,13 +712,14 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
     def _bus_health_worker(self, bus):
         """Background loop, started alongside every connection (see
         toggle_connect) and stopped on disconnect, that periodically re-
-        checks bus health for as long as a session stays connected -
-        previously this project only ever looked at the CAN_ID_ACTIVE_TOOL_
-        RESP (0x111) error bits once, at connect/Detect time
-        (_show_detect_result), so a bus that went bad sometime AFTER that
+        checks bus health for as long as a session stays connected.
+        _show_detect_result's own look at the CAN_ID_ACTIVE_TOOL_RESP
+        (0x111) error bits only ever runs once, at connect/Detect time -
+        this loop is what catches a bus that goes bad sometime AFTER that
         (a marginal termination resistor working loose, another device on
-        the bus starting to misbehave mid-session, ...) would go completely
-        unnoticed until the next manual Detect or self-test.
+        the bus starting to misbehave mid-session, ...), which would
+        otherwise go completely unnoticed until the next manual Detect or
+        self-test.
 
         KNOWN LIMITATION: this firmware's own 0x111 reply only ever
         exposes one generic "a CAN bus error was seen" boolean (byte 2,
@@ -965,13 +968,9 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
 
     def _menu_show_github(self):
         import webbrowser
-        # This tool's own future dedicated repository, per the user's own
-        # explicit URL - not this project's monorepo (github.com/
-        # JuanenRac/URTC), which is where this tool's own source still
-        # physically lives as of this comment (the split described in
-        # this project's own audit trail hasn't happened yet). Pointing
-        # here now means this link is already correct the moment that
-        # split lands, rather than needing a separate follow-up change.
+        # This tool's own dedicated repository - not the URTC monorepo
+        # (github.com/JuanenRac/URTC), which holds the firmware and
+        # documentation this tool talks to but not this tool's own source.
         webbrowser.open("https://github.com/JuanenRac/URTC-TESTER")
 
     def _show_text_window(self, title, text, width=90, height=30):

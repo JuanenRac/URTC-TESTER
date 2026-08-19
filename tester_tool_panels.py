@@ -1,8 +1,9 @@
 # =============================================================================
-# URTC Tester - ToolPanelsMixin: the 8 tool-specific panel builders
-# (soldering iron, shared motion tools, vacuum, drill, AOI, laser, scan
-# probe, 3D printer). No standalone class - mixed into TesterGUI in
-# tester_gui_core.py alongside the other panel mixins. Relies on
+# URTC Tester - ToolPanelsMixin: the 19 tool-specific panel builders
+# covering all 25 tool profiles (several profiles share one builder -
+# _build_motion_panel alone covers 7 of them). No standalone class -
+# mixed into TesterGUI in tester_gui_core.py alongside the other panel
+# mixins. Relies on
 # PanelHelpersMixin's methods (_translated_combobox, _safe_int,
 # _start_keepalive, _create_live_graph) being present on the same
 # instance via multiple inheritance, not imported directly here.
@@ -525,8 +526,10 @@ class ToolPanelsMixin:
         # Ultrasonic Welder (0x200, no gate) - same 3-byte fire/duration
         # protocol either way, see CANBUS.TXT. The Spinbox's own ceiling
         # (and _fire's own clamp) match the firmware's real 2000ms cap
-        # (firmware_can_weldpulse.c) - entering more than that used to be
-        # silently truncated by the board with no indication here.
+        # (firmware_can_weldpulse.c) - without it, entering something
+        # higher would still get sent, but the firmware would silently
+        # truncate it to 2000ms with nothing in this UI to show that
+        # happened.
         duration = tk.IntVar(value=100)
 
         ttk.Label(parent, text=_("LBL_PULSE_DURATION_MS")).grid(row=0, column=0, sticky="w", padx=4, pady=4)
@@ -568,12 +571,12 @@ class ToolPanelsMixin:
         ).grid(row=0, column=0, sticky="w", padx=4, pady=8)
 
     def _build_uv_curing_panel(self, parent):
-        # UV Curing (0x1D0) now has the same 250ms comms-loss watchdog as
-        # the laser (both share TIM1_CH1) - see _build_laser_panel above
-        # for the identical Active-checkbox/keepalive pattern this mirrors.
-        # A plain one-shot Send used to be correct here (no watchdog
-        # existed yet); left as a one-shot today, it would auto-extinguish
-        # ~250ms after every click with no indication why.
+        # UV Curing (0x1D0) has the same 250ms comms-loss watchdog as the
+        # laser (both share TIM1_CH1) - see _build_laser_panel above for
+        # the identical Active-checkbox/keepalive pattern this mirrors. A
+        # plain one-shot Send would auto-extinguish ~250ms after every
+        # click with no indication why, since the firmware cuts power the
+        # moment this stops resending.
         power = tk.IntVar(value=0)
         active = tk.BooleanVar(value=False)
 

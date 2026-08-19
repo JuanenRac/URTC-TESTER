@@ -313,7 +313,7 @@ TITLE_INVALID_VALUE=Invalid Value
 HELP_NO_HANDLER_CONFORMAL_COATING=This tool's own actuator (spray valve solenoid) and its own sensor live on the robot's own mainboard, outside this board's own scope - there is no CAN handler for it here, nothing to test on this board.
 HELP_NO_HANDLER_PRESSFIT_INSERTER=This tool's own actuator (linear press-fit cylinder) and its own sensor live on the robot's own mainboard, outside this board's own scope - there is no CAN handler for it here, nothing to test on this board.
 
-# --- URTC ecosystem audit fixes (2026-08-19) - see SONNET/auditoria_historial.txt ---
+# --- Physical-action confirmations, Listen Only mode, bus health monitoring, and Detect auto-retry ---
 TITLE_CONFIRM_DRILL_ACTIVATION_Q=Activate the drill?
 MSG_CONFIRM_DRILL_ACTIVATION=This sends a nonzero speed to a real, physically spinning drill bit. Make sure the area is clear and it's safe to start. Continue?
 TITLE_CONFIRM_LASER_ACTIVATION_Q=Activate the laser?

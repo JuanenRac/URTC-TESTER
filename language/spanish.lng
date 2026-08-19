@@ -314,7 +314,7 @@ TITLE_INVALID_VALUE=Valor Invalido
 HELP_NO_HANDLER_CONFORMAL_COATING=El actuador propio de esta herramienta (electrovalvula de spray) y su propio sensor viven en la placa base del propio robot, fuera del alcance de esta placa - no hay ningun manejador CAN para ella aqui, nada que probar en esta placa.
 HELP_NO_HANDLER_PRESSFIT_INSERTER=El actuador propio de esta herramienta (cilindro lineal de insercion a presion) y su propio sensor viven en la placa base del propio robot, fuera del alcance de esta placa - no hay ningun manejador CAN para ella aqui, nada que probar en esta placa.
 
-# --- Correcciones de la auditoria del ecosistema URTC (2026-08-19) - ver SONNET/auditoria_historial.txt ---
+# --- Confirmaciones de acciones fisicas, modo Solo Escucha, monitorizacion de salud del bus y auto-retry de Detect ---
 TITLE_CONFIRM_DRILL_ACTIVATION_Q=¿Activar el taladro?
 MSG_CONFIRM_DRILL_ACTIVATION=Esto envia una velocidad distinta de cero a una broca real que girara fisicamente. Asegurate de que la zona esta despejada y de que es seguro arrancarla. ¿Continuar?
 TITLE_CONFIRM_LASER_ACTIVATION_Q=¿Activar el laser?

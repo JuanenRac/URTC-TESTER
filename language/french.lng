@@ -314,7 +314,7 @@ TITLE_INVALID_VALUE=Valeur Invalide
 HELP_NO_HANDLER_CONFORMAL_COATING=L'actionneur propre de cet outil (electrovanne de pulverisation) et son propre capteur se trouvent sur la carte mere du robot lui-meme, hors de la portee de cette carte - il n'y a aucun gestionnaire CAN pour lui ici, rien a tester sur cette carte.
 HELP_NO_HANDLER_PRESSFIT_INSERTER=L'actionneur propre de cet outil (verin lineaire d'insertion par pression) et son propre capteur se trouvent sur la carte mere du robot lui-meme, hors de la portee de cette carte - il n'y a aucun gestionnaire CAN pour lui ici, rien a tester sur cette carte.
 
-# --- Corrections de l'audit de l'écosystème URTC (2026-08-19) - voir SONNET/auditoria_historial.txt ---
+# --- Confirmations pour actions physiques, mode Écoute seule, surveillance de la santé du bus et nouvel essai automatique de Detect ---
 TITLE_CONFIRM_DRILL_ACTIVATION_Q=Activer la perceuse ?
 MSG_CONFIRM_DRILL_ACTIVATION=Ceci envoie une vitesse non nulle à un foret réel qui va physiquement tourner. Assurez-vous que la zone est dégagée et qu'il est sûr de le démarrer. Continuer ?
 TITLE_CONFIRM_LASER_ACTIVATION_Q=Activer le laser ?

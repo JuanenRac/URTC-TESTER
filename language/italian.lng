@@ -314,7 +314,7 @@ TITLE_INVALID_VALUE=Valore Non Valido
 HELP_NO_HANDLER_CONFORMAL_COATING=L'attuatore di questo strumento (elettrovalvola spray) e il proprio sensore risiedono sulla scheda madre del robot stesso, fuori dall'ambito di questa scheda - non esiste alcun gestore CAN per esso qui, nulla da testare su questa scheda.
 HELP_NO_HANDLER_PRESSFIT_INSERTER=L'attuatore di questo strumento (cilindro lineare a pressione) e il proprio sensore risiedono sulla scheda madre del robot stesso, fuori dall'ambito di questa scheda - non esiste alcun gestore CAN per esso qui, nulla da testare su questa scheda.
 
-# --- Correzioni dall'audit dell'ecosistema URTC (2026-08-19) - vedi SONNET/auditoria_historial.txt ---
+# --- Conferme per azioni fisiche, modalita Solo Ascolto, controllo salute del bus e nuovo tentativo automatico di Detect ---
 TITLE_CONFIRM_DRILL_ACTIVATION_Q=Attivare il trapano?
 MSG_CONFIRM_DRILL_ACTIVATION=Questo invia una velocita diversa da zero a una punta del trapano reale che girera fisicamente. Assicurati che l'area sia libera e che sia sicuro avviarlo. Continuare?
 TITLE_CONFIRM_LASER_ACTIVATION_Q=Attivare il laser?
