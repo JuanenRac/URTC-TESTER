@@ -78,6 +78,8 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         self.active_tool_id = None
         self._keepalive_jobs = {}  # name -> root.after() id, for watchdog-guarded commands currently repeating
         self._current_tool_id = None  # which tool's panel is currently showing, if any - see _send_tool_off_command
+        self._bus_health_running = False  # guards _bus_health_worker's own loop - see _start_bus_health_monitor
+        self._bus_health_was_bad = False  # tracks the last reported state, so a warning is only logged/popped up once per transition into trouble, not once per poll while it stays that way
 
         pad = {"padx": 8, "pady": 4}
         root.grid_columnconfigure(0, weight=1)
@@ -117,7 +119,8 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         self.port_var = tk.StringVar()
         self.port_combo = ttk.Combobox(conn_frame, textvariable=self.port_var, width=20, state="readonly")
         self.port_combo.grid(row=row, column=1, **pad)
-        ttk.Button(conn_frame, text=_("BTN_REFRESH"), command=self.refresh_ports).grid(row=row, column=2, **pad)
+        self.refresh_btn = ttk.Button(conn_frame, text=_("BTN_REFRESH"), command=self.refresh_ports)
+        self.refresh_btn.grid(row=row, column=2, **pad)
         self.connect_btn = ttk.Button(conn_frame, text=_("BTN_CONNECT"), command=self.toggle_connect)
         self.connect_btn.grid(row=row, column=3, **pad)
         self.conn_status = ttk.Label(conn_frame, text=_("STATUS_NOT_CONNECTED"), foreground="red")
@@ -139,6 +142,27 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         if self.transport_var.get() != "serial":
             self.bitrate_combo.config(state="disabled")
             self.autobaud_btn.config(state="disabled")
+        row += 1
+
+        # --- Listen Only mode - purely passive monitoring, this tool never
+        # puts a single bit on the wire while connected this way (not even
+        # an ACK). Genuinely enforced at the transport level for SLCAN (the
+        # adapter itself is told to open in Lawicel's own listen-only mode,
+        # "L" instead of "O" - see tester_transports.py's own comment) and
+        # at the application level for SocketCAN (real hardware listen-only
+        # there needs the interface configured before it's brought up,
+        # outside this app's control - see SocketCAN.open_channel's own
+        # comment for the full reasoning). Locked once connected, same as
+        # the bitrate controls above - changing transmit behavior mid-
+        # session isn't a thing either transport supports without a full
+        # reconnect anyway. ---
+        self.listen_only_var = tk.BooleanVar(value=False)
+        self.listen_only_check = ttk.Checkbutton(conn_frame, text=_("CHK_LISTEN_ONLY"), variable=self.listen_only_var)
+        self.listen_only_check.grid(row=row, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 4))
+        ttk.Label(
+            conn_frame, text=_("HELP_LISTEN_ONLY"),
+            foreground="gray", wraplength=460, justify="left",
+        ).grid(row=row, column=2, columnspan=3, sticky="w", padx=4, pady=(0, 4))
         row += 1
 
         # --- Detected tool status (replaces the flasher's firmware-version row) ---
@@ -270,6 +294,26 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         def _append():
             self.log_text.config(state="normal")
             self.log_text.insert("end", msg + "\n")
+            # Bounded the same way the Raw Bus Monitor's own row count
+            # already is (tester_common_panels.py's _open_bus_monitor) - an
+            # hours-long session otherwise grows this Text widget's line
+            # count, and Tk's own internal representation of it, without
+            # limit. The full session is still on disk regardless (every
+            # message reaching this point was already written to
+            # self._file_logger above before this widget ever sees it), so
+            # trimming what's kept on-screen loses nothing permanently.
+            # Counted via the widget's own line index rather than a
+            # separately tracked counter - "end-1c linestart" is one past
+            # the last real line (plain "end" always has one further,
+            # empty trailing line Tk keeps), so this always reflects the
+            # widget's own true line count without a hand-maintained total
+            # that could drift out of sync with it. One delete() call
+            # covering however many lines are over the cap, not one call
+            # per line - same reasoning as the Bus Monitor's own single
+            # delete(*to_remove) over a batch of rows.
+            line_count = int(self.log_text.index("end-1c").split(".")[0])
+            if line_count > 500:
+                self.log_text.delete("1.0", f"{line_count - 500 + 1}.0")
             self.log_text.see("end")
             self.log_text.config(state="disabled")
         self.root.after(0, _append)
@@ -290,10 +334,33 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             messagebox.showerror(_("TITLE_COULDNT_SAVE"), _("MSG_LANGUAGE_NOT_SAVED", path=CONFIG_PATH))
 
     def refresh_ports(self):
-        if self.transport_var.get() == "serial":
-            ports = list_serial_ports()
-        else:
-            ports = list_socketcan_interfaces()
+        # list_serial_ports()/list_socketcan_interfaces() below can block
+        # for a noticeable moment - pyserial's own port enumeration goes
+        # through Windows WMI/registry queries (COMx friendly-name lookups)
+        # under the hood, which have been observed to take a couple hundred
+        # ms on a system with several USB-serial devices having been
+        # enumerated before. Doing that synchronously on the Tkinter main
+        # thread used to freeze the entire window (no repaint, no other
+        # button responds) for however long that query happened to take -
+        # moved to a background worker here, same pattern already used by
+        # _auto_detect_worker/_detect_active_tool_worker below, so a port
+        # refresh (including the one this class's own __init__ triggers on
+        # startup, and the one on_transport_change triggers on every
+        # transport switch) never blocks the UI.
+        self.refresh_btn.config(state="disabled")
+        self.port_combo.config(state="disabled")
+        transport_mode = self.transport_var.get()
+        threading.Thread(target=self._refresh_ports_worker, args=(transport_mode,), daemon=True).start()
+
+    def _refresh_ports_worker(self, transport_mode):
+        ports = list_serial_ports() if transport_mode == "serial" else list_socketcan_interfaces()
+        self.root.after(0, lambda: self._refresh_ports_done(ports))
+
+    def _refresh_ports_done(self, ports):
+        if not self.root.winfo_exists():
+            return  # window closed while this background worker was still running
+        self.refresh_btn.config(state="normal")
+        self.port_combo.config(state="readonly")
         self.port_combo["values"] = ports
         if ports and not self.port_var.get():
             self.port_var.set(ports[0])
@@ -305,23 +372,43 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
                 messagebox.showerror(_("TITLE_NOTHING_SELECTED"), _("MSG_SELECT_PORT_FIRST"))
                 return
             is_serial = self.transport_var.get() == "serial"
+            listen_only = self.listen_only_var.get()
             try:
                 if is_serial:
                     bitrate_label = self.bitrate_var.get()
                     bitrate_code = next((code for label, code in SLCAN_BITRATES if label == bitrate_label),
                                          BITRATE_500K_SLCAN_CODE)
                     self.transport = SLCAN(port, log=self.log)
-                    self.transport.open_channel(bitrate_code)
+                    self.transport.open_channel(bitrate_code, listen_only=listen_only)
                 else:
                     self.transport = SocketCAN(port, log=self.log)
-                    self.transport.open_channel()
-                self.bus = CANBusMonitor(self.transport, self.log)
+                    self.transport.open_channel(listen_only=listen_only)
+                self.bus = CANBusMonitor(self.transport, self.log, listen_only=listen_only)
                 self.bus.start()
-                self.conn_status.config(text=f"Connected ({port})", foreground="green")
+                status_text = _("STATUS_CONNECTED_PORT", port=port)
+                if listen_only:
+                    status_text += _("LBL_LISTEN_ONLY_SUFFIX")
+                self.conn_status.config(text=status_text, foreground="green")
                 self.connect_btn.config(text=_("BTN_DISCONNECT"))
+                self.refresh_btn.config(state="disabled")
+                self.listen_only_check.config(state="disabled")
                 self.log(_("LOG_CONNECTED_TO_PORT", port=port)
                           + (_("LOG_AT_BITRATE_SUFFIX", bitrate=self.bitrate_var.get()) if is_serial else "."))
-                self.detect_active_tool()
+                if listen_only:
+                    # Detect needs to send 0x110/0x7F8 to get anything back
+                    # at all - CANBusMonitor.send() would just quietly
+                    # no-op every one of those (see its own guard), so
+                    # running it automatically here would only produce a
+                    # guaranteed, misleading "no response" a few seconds
+                    # into every listen-only connection. Skipped outright
+                    # instead, with a status message that explains why
+                    # rather than leaving the label sitting on "connect to
+                    # detect" with no indication anything's different.
+                    self.log(_("LOG_LISTEN_ONLY_ACTIVE"))
+                    self.active_tool_label.config(text=_("STATUS_LISTEN_ONLY_NO_DETECT"), foreground="gray")
+                else:
+                    self.detect_active_tool()
+                self._start_bus_health_monitor()
             except Exception as e:
                 self.transport = None
                 msg = str(e)
@@ -333,6 +420,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
                 else:
                     messagebox.showerror(_("TITLE_CONNECTION_FAILED"), msg)
         else:
+            self._stop_bus_health_monitor()
             self._clear_tool_panel()
             if self.bus is not None:
                 self.bus.stop()
@@ -347,6 +435,8 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             self.connect_btn.config(text=_("BTN_CONNECT"))
             self.active_tool_label.config(text=_("STATUS_CONNECT_TO_DETECT"), foreground="gray")
             self.board_state_label.config(text=_("STATUS_CONNECT_TO_CHECK"), foreground="gray")
+            self.refresh_btn.config(state="normal")
+            self.listen_only_check.config(state="normal")
             self.log(_("LOG_DISCONNECTED"))
 
     def auto_detect_bitrate(self):
@@ -378,6 +468,31 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
                 try:
                     trial = SLCAN(port, log=lambda m: None)
                     trial.open_channel(code)
+                    # Passive listen window before this transmits anything
+                    # of its own - a probe frame sent in blind is aimed at
+                    # a bus this tool has no actual knowledge is idle. If
+                    # some other device is already talking at THIS
+                    # candidate bitrate, that traffic is real and this
+                    # tool's own probe would be landing in the middle of
+                    # it purely by luck of the timing; if some other
+                    # device is talking at a DIFFERENT bitrate than the one
+                    # currently being tried, every byte of it decodes as
+                    # noise on this one, and this tool has no way to tell
+                    # those two cases apart without listening first. A
+                    # short silent window here (~120ms, small next to the
+                    # 0.8s already budgeted per candidate below - 9
+                    # candidates x 120ms adds a little over 1s total to
+                    # the whole scan) means every transmission this tool
+                    # ever makes during auto-detect is at least preceded by
+                    # a real look at what's already on the wire, rather
+                    # than firing blind the instant the channel opens.
+                    passive_deadline = time.time() + 0.12
+                    passive_frames_seen = 0
+                    while time.time() < passive_deadline:
+                        if trial.read_frame(timeout=0.05) is not None:
+                            passive_frames_seen += 1
+                    if passive_frames_seen:
+                        self.log(_("LOG_AUTODETECT_TRAFFIC_SEEN", label=label, n=passive_frames_seen))
                     trial.send_frame(CAN_ID_QUERY_ACTIVE_TOOL, b"")
                     deadline = time.time() + 0.8
                     while time.time() < deadline:
@@ -413,11 +528,16 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         self.autobaud_btn.config(state="normal")
         if found_label:
             self.bitrate_var.set(found_label)
-            self.bitrate_status.config(text=f"Found: {found_label}", foreground="green")
+            self.bitrate_status.config(text=_("STATUS_AUTODETECT_FOUND", label=found_label), foreground="green")
             self.log(_("LOG_AUTODETECT_RESPONDED", label=found_label))
         else:
             self.bitrate_status.config(text=_("STATUS_NO_RESPONSE_ANY_BITRATE"), foreground="red")
             self.log(_("LOG_AUTODETECT_NO_RESPONSE"))
+
+    # First attempt plus this many automatic retries before Detect actually
+    # gives up and shows "no response" to the user - see
+    # _detect_active_tool_worker's own comment for the reasoning.
+    _DETECT_MAX_ATTEMPTS = 3
 
     def detect_active_tool(self):
         if self.transport is None or self.bus is None:
@@ -427,9 +547,9 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         self.active_tool_label.config(text=_("STATUS_DETECTING"), foreground="gray")
         self.board_state_label.config(text=_("STATUS_DETECTING"), foreground="gray")
         self.progress["value"] = 0
-        threading.Thread(target=self._detect_active_tool_worker, daemon=True).start()
+        threading.Thread(target=self._detect_active_tool_worker, args=(1,), daemon=True).start()
 
-    def _detect_active_tool_worker(self):
+    def _detect_active_tool_worker(self, attempt):
         bus = self.bus  # local reference - self.bus can be reassigned to
         # None by toggle_connect() running on the main thread while this
         # worker is still blocked inside wait_for_one below; using this
@@ -448,7 +568,8 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         # bottom ever ran, leaving it stuck disabled. Same pattern already
         # used successfully in _auto_detect_worker.
         try:
-            self.log(_("LOG_QUERYING_ACTIVE_TOOL"))
+            self.log(_("LOG_QUERYING_ACTIVE_TOOL") if attempt == 1 else
+                      _("LOG_QUERYING_ACTIVE_TOOL_RETRY", attempt=attempt, max=self._DETECT_MAX_ATTEMPTS))
             self.root.after(0, lambda: self.progress.configure(value=35))
             tool_data = bus.wait_for_one(CAN_ID_ACTIVE_TOOL_RESP, timeout=1.5,
                                           send_after_register=lambda: bus.send(CAN_ID_QUERY_ACTIVE_TOOL, b""))
@@ -472,6 +593,31 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             # even the one currently connected.
             self.root.after(0, lambda: self.detect_btn.config(state="normal"))
             return
+
+        # Auto-retry on a total no-response, same "try again a couple more
+        # times before bothering the user" reasoning as _auto_detect_worker's
+        # own per-bitrate loop above - a single missed 0x111/0x7F9 reply is
+        # common enough (a board that's mid-boot right when Detect was
+        # pressed, one dropped frame on a noisy bus) to be worth another
+        # automatic look before showing "check your wiring". Recurses on
+        # this same background thread rather than spawning a new one each
+        # time - it's already off the Tkinter main thread, so there's
+        # nothing to gain from a fresh thread per attempt, only more
+        # bookkeeping. Only retries on a COMPLETE non-response (both
+        # queries got nothing back) - a real, if incomplete, answer (e.g.
+        # the tool query worked but the version query didn't) is shown to
+        # the user as-is rather than silently re-queried, since retrying
+        # would risk masking a genuinely flaky version-query path behind an
+        # eventual lucky success.
+        if tool_data is None and version_data is None and attempt < self._DETECT_MAX_ATTEMPTS:
+            self.log(_("LOG_DETECT_NO_RESPONSE_RETRYING", attempt=attempt, max=self._DETECT_MAX_ATTEMPTS))
+            time.sleep(0.3)
+            if self.bus is not bus:
+                self.root.after(0, lambda: self.detect_btn.config(state="normal"))
+                return
+            self._detect_active_tool_worker(attempt + 1)
+            return
+
         self.root.after(0, lambda: self.detect_btn.config(state="normal"))
         self.root.after(0, lambda: self._show_detect_result(tool_data, version_data))
 
@@ -491,6 +637,23 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
                 square.config(text="0", bg="#EEEEEE", fg="#666666")  # no jumper
         self.tool_number_label.config(text=str(tool_id))
 
+    def _format_board_state(self, err, can_err, booting):
+        """Turns the 3 status bits carried in every CAN_ID_ACTIVE_TOOL_RESP
+        (0x111) reply into the same translated summary text/severity used
+        both right after a Detect (_show_detect_result below) and by the
+        periodic in-session bus health check (_bus_health_worker) - one
+        shared place for this rather than 2 copies that could drift apart
+        on wording or on what counts as "bad"."""
+        state_bits = []
+        if err:
+            state_bits.append(_("STATE_CRITICAL_ERROR"))
+        if can_err:
+            state_bits.append(_("STATE_CAN_BUS_ERROR"))
+        if booting:
+            state_bits.append(_("STATE_BOOT_SPLASH"))
+        state_text = ", ".join(state_bits) if state_bits else _("STATE_NORMAL")
+        return state_text, bool(err or can_err)
+
     def _show_detect_result(self, tool_data, version_data):
         if tool_data is None and version_data is None:
             self.active_tool_label.config(text=_("STATUS_NO_RESPONSE_CHECK_WIRING"), foreground="red")
@@ -507,17 +670,8 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             self.active_tool_label.config(text=f"{name} (ID {tool_id})",
                                            foreground="green" if tool_id in TOOL_NAMES else "orange")
             self._update_id_pin_display(tool_id)
-            state_bits = []
-            if err:
-                state_bits.append("CRITICAL ERROR declared")
-            if can_err:
-                state_bits.append("CAN bus error seen")
-            if booting:
-                state_bits.append("still in boot splash")
-            state_text = ", ".join(state_bits) if state_bits else "normal"
-            self.board_state_label.config(
-                text=state_text, foreground="red" if (err or can_err) else "green"
-            )
+            state_text, is_bad = self._format_board_state(err, can_err, booting)
+            self.board_state_label.config(text=state_text, foreground="red" if is_bad else "green")
             self.log(_("LOG_ACTIVE_TOOL_STATE", name=name, tool_id=tool_id, state=state_text))
             self.active_tool_id = tool_id
             self.rebuild_tool_panel(tool_id)
@@ -534,6 +688,100 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             ver_minor = version_data[7]
             hw_note = "" if hw_id == THIS_HARDWARE_ID else f" (expected 0x{THIS_HARDWARE_ID:08X} - different board/rig?)"
             self.log(_("LOG_VERSION_INFO", role=role, hw_id=hw_id, hw_note=hw_note, major=ver_major, minor=ver_minor))
+
+    # Polling interval for the in-session bus health check below - a
+    # deliberately gentle 3s, not tied to any of the firmware's own
+    # 150-1000ms comms watchdogs. This isn't standing in for those (a tool
+    # panel's own keepalive already handles "did MY command get through
+    # recently"); it exists purely to notice "did the BUS ITSELF go bad"
+    # sometime after Detect, which previously only got checked once, right
+    # at connect/Detect time - see this method's own docstring below for
+    # the known limitation on exactly what "bad" can mean here.
+    _BUS_HEALTH_INTERVAL_S = 3.0
+
+    def _start_bus_health_monitor(self):
+        self._bus_health_running = True
+        self._bus_health_was_bad = False
+        threading.Thread(target=self._bus_health_worker, args=(self.bus,), daemon=True).start()
+
+    def _stop_bus_health_monitor(self):
+        self._bus_health_running = False
+
+    def _bus_health_worker(self, bus):
+        """Background loop, started alongside every connection (see
+        toggle_connect) and stopped on disconnect, that periodically re-
+        checks bus health for as long as a session stays connected -
+        previously this project only ever looked at the CAN_ID_ACTIVE_TOOL_
+        RESP (0x111) error bits once, at connect/Detect time
+        (_show_detect_result), so a bus that went bad sometime AFTER that
+        (a marginal termination resistor working loose, another device on
+        the bus starting to misbehave mid-session, ...) would go completely
+        unnoticed until the next manual Detect or self-test.
+
+        KNOWN LIMITATION: this firmware's own 0x111 reply only ever
+        exposes one generic "a CAN bus error was seen" boolean (byte 2,
+        the same can_err bit _format_board_state already turns into
+        STATE_CAN_BUS_ERROR) - there's no separate bit for Error-Passive
+        vs. Bus-Off vs. anything else on that wire protocol, so this can't
+        actually distinguish those from each other, only report "the board
+        itself is currently flagging a bus problem". SocketCAN.check_carrier
+        (tester_transports.py) adds one more, independent signal
+        specifically for Bus-Off on that transport only (the kernel drops
+        carrier on bus-off - see that method's own comment) - not
+        available for SLCAN at all, since a Lawicel adapter's own serial
+        link to the USB host stays up regardless of what's happening on the
+        CAN side of it. Getting genuine REC/TEC error-counter-level detail
+        would need either a firmware protocol change (a new response
+        field) or, for SocketCAN specifically, a netlink query this project
+        deliberately doesn't take a dependency for (see
+        SocketCAN.read_interface_stats's own comment on that same
+        tradeoff) - both are real, if incomplete, signals worth surfacing
+        with what's already available today, rather than leaving this
+        entirely unmonitored between manual Detects until one of those
+        larger changes happens.
+        """
+        while self._bus_health_running and self.bus is bus:
+            time.sleep(self._BUS_HEALTH_INTERVAL_S)
+            if not self._bus_health_running or self.bus is not bus:
+                break
+            if bus.listen_only:
+                continue  # would never get a response by design - see the Listen Only note in toggle_connect
+            tool_data = bus.wait_for_one(CAN_ID_ACTIVE_TOOL_RESP, timeout=1.0,
+                                          send_after_register=lambda: bus.send(CAN_ID_QUERY_ACTIVE_TOOL, b""))
+            if self.bus is not bus:
+                break  # disconnected (or reconnected to something new) while this was waiting
+
+            is_bad = tool_data is not None and len(tool_data) >= 3 and bool(tool_data[2])
+            reason = _("STATE_CAN_BUS_ERROR") if is_bad else None
+
+            transport = self.transport  # local snapshot - same "main thread
+            # can reassign this out from under a background worker" concern
+            # as the bus local reference above, just for self.transport
+            # instead of self.bus.
+            if isinstance(transport, SocketCAN):
+                carrier = SocketCAN.check_carrier(transport.interface)
+                if carrier is False:
+                    is_bad = True
+                    reason = _("MSG_NO_CARRIER_SESSION", interface=transport.interface)
+
+            if is_bad and not self._bus_health_was_bad:
+                self._bus_health_was_bad = True
+                self.root.after(0, lambda r=reason: self._on_bus_health_bad(r))
+            elif not is_bad and self._bus_health_was_bad:
+                self._bus_health_was_bad = False
+                self.root.after(0, self._on_bus_health_recovered)
+
+    def _on_bus_health_bad(self, reason):
+        if self.bus is None:
+            return  # disconnected between the worker's root.after() and this actually running
+        self.board_state_label.config(text=reason, foreground="red")
+        self.log(_("LOG_BUS_HEALTH_WARNING", reason=reason))
+        messagebox.showwarning(_("TITLE_BUS_HEALTH_WARNING"), _("MSG_BUS_HEALTH_WARNING", reason=reason))
+
+    def _on_bus_health_recovered(self):
+        if self.bus is None:
+            return
+        self.log(_("LOG_BUS_HEALTH_RECOVERED"))
 
     def _send_tool_off_command(self):
         """Sends an explicit, immediate safe/off command for whichever
@@ -808,6 +1056,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         win.geometry(_center_geometry(win, win.winfo_reqwidth(), win.winfo_reqheight()))
 
     def on_close(self):
+        self._stop_bus_health_monitor()
         for job_id in list(self._keepalive_jobs.values()):
             try:
                 self.root.after_cancel(job_id)

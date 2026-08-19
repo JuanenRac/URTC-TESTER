@@ -175,7 +175,7 @@ class ToolPanelsMixin:
             adc = struct.unpack(">H", data[0:2])[0]
             detected = data[2]
             self.root.after(0, lambda: adc_var.set(str(adc)))
-            self.root.after(0, lambda: detect_var.set("YES - part picked up" if detected else "no"))
+            self.root.after(0, lambda: detect_var.set(_("VAL_PART_PICKED_UP") if detected else _("VAL_PART_NOT_DETECTED")))
 
         self.bus.register(CAN_ID_VACUUM_TELEMETRY, _on_telemetry)
 
@@ -195,9 +195,31 @@ class ToolPanelsMixin:
         direction, direction_combo = self._translated_combobox(parent, ["Clockwise", "Counter-clockwise"], "OPT", width=14)
         direction_combo.grid(row=1, column=1, sticky="w", padx=4)
 
+        # Physical-safety confirmation, same askyesno/icon="warning" pattern
+        # already used elsewhere for irreversible/hazardous actions (see
+        # CommonPanelsMixin._erase_fram) - a spinning drill bit is real,
+        # physical, at-hand equipment, not something a stray click should
+        # ever be able to start unconfirmed. Only asked on the actual
+        # off->on transition (tracked in _last_sent_speed below), not on
+        # every Send click while it's already running - re-confirming a
+        # speed change on an already-spinning drill would just train the
+        # user to reflexively click through the dialog, defeating the
+        # point of asking at all; the transition into motion is the one
+        # moment this can actually still prevent something.
+        _last_sent_speed = [0]
+
         def _send_drill():
             dir_byte = 0x01 if direction.get() == "Counter-clockwise" else 0x00
-            self.bus.send(CAN_ID_DRILL_CMD, bytes([max(0, min(255, self._safe_int(speed, 0))), dir_byte]))
+            spd = max(0, min(255, self._safe_int(speed, 0)))
+            if spd > 0 and _last_sent_speed[0] == 0:
+                if not messagebox.askyesno(
+                    _("TITLE_CONFIRM_DRILL_ACTIVATION_Q"),
+                    _("MSG_CONFIRM_DRILL_ACTIVATION"),
+                    icon="warning",
+                ):
+                    return
+            _last_sent_speed[0] = spd
+            self.bus.send(CAN_ID_DRILL_CMD, bytes([spd, dir_byte]))
 
         ttk.Button(parent, text=_("BTN_SEND"), command=_send_drill).grid(row=1, column=2, padx=8)
         ttk.Label(
@@ -217,7 +239,7 @@ class ToolPanelsMixin:
             rpm = struct.unpack(">H", data[0:2])[0]
             endstop = data[2]
             self.root.after(0, lambda: rpm_var.set(f"{rpm} RPM"))
-            self.root.after(0, lambda: endstop_var.set("TRIGGERED" if endstop else "open"))
+            self.root.after(0, lambda: endstop_var.set(_("VAL_TRIGGERED") if endstop else _("VAL_ENDSTOP_OPEN")))
 
         self.bus.register(CAN_ID_DRILL_TELEMETRY, _on_telemetry)
 
@@ -253,7 +275,7 @@ class ToolPanelsMixin:
             if len(data) < 1:
                 return
             endstop = data[0]
-            self.root.after(0, lambda: endstop_var.set("TRIGGERED" if endstop else "open"))
+            self.root.after(0, lambda: endstop_var.set(_("VAL_TRIGGERED") if endstop else _("VAL_ENDSTOP_OPEN")))
 
         self.bus.register(CAN_ID_AOI_TELEMETRY, _on_telemetry)
 
@@ -286,6 +308,22 @@ class ToolPanelsMixin:
 
         def _toggle(*_):
             if active.get():
+                # Same physical-safety confirmation as the drill's own Send
+                # button above (see that panel's own comment) - this is a
+                # real laser, not a simulated one, and the software
+                # interlock checkbox just above is a separate signal sent
+                # to the firmware, not a substitute for a human explicitly
+                # confirming "yes, energize this now". Declining reverts
+                # the checkbox rather than leaving it checked-but-inactive,
+                # so the UI never shows "Active" for something that never
+                # actually started.
+                if not messagebox.askyesno(
+                    _("TITLE_CONFIRM_LASER_ACTIVATION_Q"),
+                    _("MSG_CONFIRM_LASER_ACTIVATION"),
+                    icon="warning",
+                ):
+                    active.set(False)
+                    return
                 interlock_state = _("LBL_ARMED") if interlock.get() else _("LBL_SAFE")
                 self.log(_("LOG_LASER_POWER_INTERLOCK", power=power.get(), interlock=interlock_state))
                 self._start_keepalive("laser", 150, _send_laser, on_failure=lambda: active.set(False))
@@ -305,7 +343,7 @@ class ToolPanelsMixin:
             if len(data) < 1:
                 return
             endstop = data[0]
-            self.root.after(0, lambda: endstop_var.set("TRIGGERED" if endstop else "open"))
+            self.root.after(0, lambda: endstop_var.set(_("VAL_TRIGGERED") if endstop else _("VAL_ENDSTOP_OPEN")))
 
         self.bus.register(CAN_ID_LASER_TELEMETRY, _on_telemetry)
 

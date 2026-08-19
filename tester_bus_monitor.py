@@ -20,7 +20,7 @@ class CANBusMonitor:
     on this background thread - they must only touch Tkinter state via
     root.after(), never touch widgets directly.
     """
-    def __init__(self, transport, log):
+    def __init__(self, transport, log, listen_only=False):
         self.transport = transport
         self.log = log
         self._handlers = {}  # can_id -> list of callback(data) functions
@@ -28,6 +28,16 @@ class CANBusMonitor:
         self._running = False
         self._thread = None
         self._lock = threading.Lock()
+        self.listen_only = listen_only  # mirrors the transport's own flag
+        # (set at open_channel time) - checked here too, first, so every
+        # caller across the whole GUI that goes through self.bus.send()
+        # (which is all of them) gets a quiet no-op instead of an
+        # SLCANError/SocketCANError bubbling up out of a button click.
+        # wait_for_one's own send_after_register callbacks funnel through
+        # this same send() too, so a query that can never get an answer
+        # (nothing was actually transmitted to prompt one) just times out
+        # normally rather than raising - the correct, expected outcome
+        # while genuinely listen-only, not a bug to report.
 
     def register(self, can_id, callback):
         with self._lock:
@@ -93,6 +103,9 @@ class CANBusMonitor:
                     self.log(_("LOG_SNIFFER_ERROR", e=e))
 
     def send(self, can_id, data):
+        if self.listen_only:
+            self.log(_("LOG_SEND_BLOCKED_LISTEN_ONLY", can_id=f"0x{can_id:03X}"))
+            return
         self.transport.send_frame(can_id, data)
 
     def wait_for_one(self, can_id, timeout=1.5, send_after_register=None):

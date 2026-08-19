@@ -53,6 +53,11 @@ class SLCAN:
         # this, two concurrent writes could interleave their bytes on the
         # wire, corrupting whatever frame either one was sending.
         self._write_lock = threading.Lock()
+        self.listen_only = False  # set for real by open_channel below - kept
+        # here too so send_frame's own guard has something sane to check
+        # against even if it's ever called before open_channel (shouldn't
+        # normally happen, but this is what stands between "shouldn't" and
+        # an AttributeError).
         time.sleep(0.2)
         self.ser.reset_input_buffer()
 
@@ -63,7 +68,7 @@ class SLCAN:
             except serial.SerialException as e:
                 raise SLCANError(f"serial write failed (adapter disconnected?): {e}")
 
-    def open_channel(self, bitrate_code=BITRATE_500K_SLCAN_CODE):
+    def open_channel(self, bitrate_code=BITRATE_500K_SLCAN_CODE, listen_only=False):
         # Close first in case it was already open from a previous session
         # that didn't shut down cleanly - SLCAN adapters reject "O" (open)
         # if already open, which would otherwise abort every connection
@@ -77,10 +82,27 @@ class SLCAN:
         # connection sitting here, mixing with the new connection's data.
         self._send_raw("S" + bitrate_code)
         time.sleep(0.05)
-        self._send_raw("O")
+        # "L" is the Lawicel SLCAN protocol's listen-only open, as opposed
+        # to "O"'s normal fully-participating open - the adapter's own CAN
+        # controller stays off the bus at the hardware level in that mode
+        # (no ACK bit driven on receipt, no error frames raised, no
+        # arbitration participation at all), not merely "this application
+        # happens not to call send_frame right now". send_frame below still
+        # refuses to transmit while this flag is set as a second,
+        # independent guard - belt and suspenders, since the actual
+        # guarantee against ever putting a bit on the wire comes from the
+        # adapter having been told to open this way in the first place, not
+        # from this application remembering not to ask it to. Not every
+        # SLCAN firmware implements "L" (it's optional in the spec); an
+        # adapter that doesn't recognize it typically just ignores the
+        # unrecognized command, which surfaces the same way any other
+        # failed-to-open condition already does elsewhere in this class
+        # (no special-case handling needed here for that).
+        self._send_raw("L" if listen_only else "O")
         time.sleep(0.1)
         self.ser.reset_input_buffer()
         self._rx_buf = b""
+        self.listen_only = listen_only
 
     def close_channel(self):
         try:
@@ -100,6 +122,16 @@ class SLCAN:
     def send_frame(self, can_id, data):
         # SLCAN standard-frame transmit: "t" + 3 hex ID digits + 1 hex DLC
         # digit + DLC*2 hex data digits, e.g. t7F108 + 8 bytes = t7F1081122334455667788
+        if self.listen_only:
+            # Should never actually be reached in normal use - CANBusMonitor
+            # already refuses to call this at all while listen-only (see its
+            # own send() guard), and it's the only thing this project's own
+            # GUI code sends frames through. Kept here anyway as the last
+            # line of defense against a future direct transport.send_frame()
+            # call bypassing that: raising loudly here beats silently
+            # putting a bit on a bus this was explicitly told to only
+            # listen to.
+            raise SLCANError("Cannot transmit - channel is open in listen-only mode.")
         if can_id < 0 or can_id > 0x7FF:
             raise SLCANError(f"ID 0x{can_id:X} exceeds standard 11-bit range" if can_id >= 0 else f"ID {can_id} is negative - not a valid CAN ID")
         if len(data) > 8:
@@ -290,6 +322,7 @@ class SocketCAN:
         # worker thread at the same time, and without this a concurrent
         # write could interleave with another's socket.send() call.
         self._write_lock = threading.Lock()
+        self.listen_only = False  # real value set by open_channel below
         carrier = self.check_carrier(interface)
         if carrier is False:
             # Deliberately doesn't attempt an automatic recovery cycle
@@ -314,12 +347,26 @@ class SocketCAN:
         self._last_timeout = 0.05  # tracks the last value passed to settimeout,
         # so read_frame below only re-calls it when the timeout actually changes
 
-    def open_channel(self, bitrate_code=None):
-        # Deliberately a no-op - see the SOCKETCAN NOTE above. The bitrate
-        # is already fixed by whoever ran `ip link set ... bitrate ...`
-        # before this constructor was ever called; there's no per-connection
-        # equivalent of SLCAN's "Sx" command in SocketCAN's raw-socket API.
-        pass
+    def open_channel(self, bitrate_code=None, listen_only=False):
+        # Deliberately a no-op for the bitrate itself - see the SOCKETCAN
+        # NOTE above. listen_only is different: unlike SLCAN's "L" open
+        # command, there is no per-connection SocketCAN raw-socket
+        # equivalent - real listen-only for SocketCAN is CAN_CTRLMODE_
+        # LISTENONLY, a property of the kernel network interface set via a
+        # privileged netlink call (`ip link set <iface> type can ...
+        # listen-only on`), the same "already fixed before this
+        # constructor ever ran, needs sudo, this app doesn't touch it"
+        # category as the bitrate itself. What this DOES enforce - the
+        # same as SLCAN's own second guard - is the application-level
+        # promise: send_frame below refuses to transmit while this flag is
+        # set, and CANBusMonitor.send() refuses even earlier. That's a real
+        # guarantee against this application putting anything on the wire,
+        # just not the hardware-level "won't even ACK" guarantee true
+        # listen-only gives on an adapter that's actually configured for
+        # it - logged once here so that distinction isn't silently lost.
+        self.listen_only = listen_only
+        if listen_only:
+            self.log(_("WARN_SOCKETCAN_LISTEN_ONLY_SOFT", interface=self.interface))
 
     def close_channel(self):
         pass
@@ -331,6 +378,15 @@ class SocketCAN:
             pass
 
     def send_frame(self, can_id, data):
+        if self.listen_only:
+            # See open_channel's own comment above - this is the
+            # application-level half of listen-only for SocketCAN (the
+            # hardware-level half needs the interface itself configured
+            # with listen-only before it's brought up, outside this app's
+            # control). Shouldn't normally be reached at all, since
+            # CANBusMonitor.send() already refuses first - kept as the
+            # same last-line-of-defense pattern as SLCAN's own send_frame.
+            raise SocketCANError("Cannot transmit - this connection was opened in (application-level) listen-only mode.")
         if can_id < 0 or can_id > 0x7FF:
             raise SocketCANError(f"ID 0x{can_id:X} exceeds standard 11-bit range" if can_id >= 0 else f"ID {can_id} is negative - not a valid CAN ID")
         if len(data) > 8:

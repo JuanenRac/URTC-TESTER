@@ -1,0 +1,94 @@
+URTC Tester - historial de auditoria del ecosistema HYDRA-UMC/URTC
+====================================================================
+
+2026-08-19 - Correccion de los 8 bugs confirmados por la auditoria del
+ecosistema para este proyecto (URTC-TESTER). Orden de prioridad seguido:
+seguridad fisica primero.
+
+1. [SEGURIDAD FISICA] Interlock/confirmacion real en controles de laser
+   y taladro - tester_tool_panels.py
+   - Taladro (_build_drill_panel): el boton Send ahora pide confirmacion
+     (messagebox.askyesno, icon="warning", mismo patron que
+     CommonPanelsMixin._erase_fram) antes de enviar la primera velocidad
+     distinta de cero (transicion apagado->encendido). No vuelve a pedir
+     confirmacion en cada click mientras ya esta girando, para no
+     entrenar al usuario a hacer click ciego en el dialogo.
+   - Laser (_build_laser_panel): el checkbox "Active" (watchdog 250ms)
+     ahora pide la misma confirmacion antes de arrancar el keepalive. Si
+     se cancela, el checkbox se revierte a False.
+
+2. Autobaud sin comprobar trafico de bus antes de transmitir -
+   tester_gui_core.py (_auto_detect_worker)
+   - Anadida una ventana de escucha pasiva (~120ms) tras abrir el canal
+     SLCAN a cada bitrate candidato y antes de enviar la trama de sondeo
+     0x110 - evita transmitir a ciegas sobre un bus que ya pueda tener
+     trafico real de otro dispositivo. Si se ve trafico durante esa
+     ventana se registra en el log (LOG_AUTODETECT_TRAFFIC_SEEN).
+
+3. Falta modo "Listen Only" - tester_transports.py, tester_bus_monitor.py,
+   tester_gui_core.py
+   - SLCAN.open_channel(listen_only=True) usa el comando "L" del
+     protocolo Lawicel (en vez de "O") - listen-only real a nivel de
+     adaptador/hardware, sin ACKs.
+   - SocketCAN.open_channel(listen_only=True) es "blando": SocketCAN real
+     necesita `ip link set <iface> type can listen-only on` antes de
+     levantar la interfaz (fuera del alcance de esta app, igual que ya
+     ocurria con el bitrate) - se registra un aviso explicando la
+     limitacion (WARN_SOCKETCAN_LISTEN_ONLY_SOFT).
+   - CANBusMonitor.send() y ambos transports.send_frame() bloquean
+     cualquier transmision mientras listen_only este activo (doble capa
+     de seguridad).
+   - Nuevo checkbox "Listen Only" en la fila de conexion, bloqueado
+     mientras hay conexion activa. Al conectar en Listen Only se omite el
+     Detect automatico (nunca podria responder) y se explica por que en
+     el log y en el estado.
+
+4. Refresco de puertos COM sincrono en el hilo de UI - tester_gui_core.py
+   - refresh_ports() ahora lanza un hilo en segundo plano
+     (_refresh_ports_worker/_refresh_ports_done), mismo patron que
+     _auto_detect_worker/_detect_active_tool_worker. Refresh/Port combo
+     se deshabilitan durante la operacion.
+
+5. Bus Off / Error Passive no se comprueban durante una sesion activa -
+   tester_gui_core.py
+   - Nuevo _bus_health_worker en segundo plano, arrancado al conectar y
+     detenido al desconectar, que reconsulta CAN_ID_ACTIVE_TOOL_RESP
+     (0x111) cada 3s y, en SocketCAN, tambien SocketCAN.check_carrier().
+     Avisa una vez por transicion (messagebox.showwarning + log), no en
+     cada poll. LIMITACION CONOCIDA (documentada en el propio codigo):
+     el firmware solo expone un bit generico "hubo error de bus CAN", sin
+     distinguir Bus-Off de Error-Passive - distinguirlos de verdad
+     necesitaria un cambio de protocolo firmware o (solo en SocketCAN) una
+     consulta netlink que este proyecto deliberadamente no anade como
+     dependencia.
+
+6. Strings hardcodeadas en ingles sin pasar por _() - tester_tool_panels.py,
+   tester_gui_core.py
+   - Corregidas: "TRIGGERED"/"open" (endstop, 3 sitios), "YES - part
+     picked up"/"no" (vacio), "Connected ({port})", "Found: {label}",
+     "CRITICAL ERROR declared", "CAN bus error seen" y, de paso (mismo
+     bloque de codigo ya tocado por el punto 5), "still in boot splash" y
+     el "normal" por defecto - unificadas en el nuevo helper
+     _format_board_state() para no duplicar la logica entre el Detect y
+     el chequeo de salud del bus.
+
+7. Log de sesion sin limite de crecimiento - tester_gui_core.py (log())
+   - Mismo limite de 500 filas que ya tenia el Bus Monitor
+     (tester_common_panels.py). El log completo se sigue guardando integro
+     en disco via self._file_logger; solo se recorta lo mostrado en
+     pantalla.
+
+8. Boton "Detect" sin auto-retry - tester_gui_core.py
+   - detect_active_tool()/_detect_active_tool_worker() reintentan hasta
+     _DETECT_MAX_ATTEMPTS=3 veces (intento inicial + 2 reintentos, 0.3s
+     entre intentos) cuando NO llega ninguna respuesta (ni 0x111 ni
+     0x7F9). Si llega una respuesta parcial no se reintenta, para no
+     enmascarar un fallo real en una de las dos consultas.
+
+Archivos tocados: tester_tool_panels.py, tester_gui_core.py,
+tester_bus_monitor.py, tester_transports.py, language/*.lng (5 idiomas).
+Verificacion: python -m py_compile sobre los 8 .py del proyecto + import
+real de todos los modulos con el venv del proyecto, ambos sin errores.
+Prueba funcional aislada del guard listen_only de CANBusMonitor.send().
+No se ha tocado tester_common_panels.py ni tester_config.py ni
+tester_panel_helpers.py ni urtc_tester.py.
