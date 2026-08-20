@@ -338,6 +338,7 @@ LOG_BUS_HEALTH_WARNING=Bus health check: {reason}
 TITLE_BUS_HEALTH_WARNING=Bus problem detected
 MSG_BUS_HEALTH_WARNING=The CAN bus reported a problem during this session: {reason}. Commands may not be getting through reliably - check wiring, termination, and other devices on the bus.
 LOG_BUS_HEALTH_RECOVERED=Bus health check: back to normal.
+LOG_BUS_HEALTH_POLL_FAILED=Bus health check: poll failed ({e}) - adapter may have been disconnected. Will retry.
 MSG_NO_CARRIER_SESSION={interface} lost carrier during this session - likely a bus-off condition
 VAL_TRIGGERED=TRIGGERED
 VAL_ENDSTOP_OPEN=open

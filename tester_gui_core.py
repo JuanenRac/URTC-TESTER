@@ -749,8 +749,24 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
                 break
             if bus.listen_only:
                 continue  # would never get a response by design - see the Listen Only note in toggle_connect
-            tool_data = bus.wait_for_one(CAN_ID_ACTIVE_TOOL_RESP, timeout=1.0,
-                                          send_after_register=lambda: bus.send(CAN_ID_QUERY_ACTIVE_TOOL, b""))
+            try:
+                tool_data = bus.wait_for_one(CAN_ID_ACTIVE_TOOL_RESP, timeout=1.0,
+                                              send_after_register=lambda: bus.send(CAN_ID_QUERY_ACTIVE_TOOL, b""))
+            except Exception as e:
+                # bus.send() inside send_after_register raises on a real
+                # transport failure (e.g. the adapter physically unplugged
+                # mid-session) - letting that propagate out of this loop
+                # would silently kill this whole background thread for the
+                # rest of the session (an uncaught exception in a Python
+                # thread just ends it, with nothing surfaced to the user),
+                # which is exactly the kind of swallowed communication
+                # failure this monitor exists to catch, not become an
+                # instance of. CANBusMonitor's own read loop already logs
+                # the same underlying failure repeatedly on its own
+                # (LOG_BUS_READ_ERROR); this logs it once more here, then
+                # retries on the next poll instead of giving up for good.
+                self.log(_("LOG_BUS_HEALTH_POLL_FAILED", e=e))
+                continue
             if self.bus is not bus:
                 break  # disconnected (or reconnected to something new) while this was waiting
 
@@ -827,18 +843,36 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             except Exception as e:
                 self.log(_("LOG_OFF_COMMAND_FAILED", tool_id=self._current_tool_id, e=e))
 
+    # Keepalive job names NOT tied to whichever tool panel is currently
+    # showing - every keepalive (tool-panel ones and this one alike)
+    # shares the same self._keepalive_jobs dict via PanelHelpersMixin's
+    # _start_keepalive/_stop_keepalive, so blindly cancelling every entry
+    # below would also kill these. "custom_frame" is the periodic sender
+    # in the always-present Custom Frame tab (see
+    # CommonPanelsMixin._build_custom_frame_panel) - completely
+    # independent of which tool is currently detected. Without this
+    # exclusion, clicking Detect (or anything else that rebuilds the tool
+    # panel) while a custom periodic frame is running would silently
+    # cancel it out from under its own "Repeat Every" checkbox, which
+    # stays checked with nothing left actually being sent - misleading
+    # during a session where that custom frame could be pointed at
+    # anything, including a hazardous CAN ID.
+    _GLOBAL_KEEPALIVE_NAMES = {"custom_frame"}
+
     def _clear_tool_panel(self):
         self._send_tool_off_command()
         if self.bus is not None:
             self.bus.clear_all()  # drops every per-tool telemetry handler, not the connection itself
         for child in self.tool_panel_inner.winfo_children():
             child.destroy()
-        for job_id in self._keepalive_jobs.values():
+        for name, job_id in list(self._keepalive_jobs.items()):
+            if name in self._GLOBAL_KEEPALIVE_NAMES:
+                continue
             try:
                 self.root.after_cancel(job_id)
             except Exception:
                 pass
-        self._keepalive_jobs = {}
+            del self._keepalive_jobs[name]
 
     def rebuild_tool_panel(self, tool_id):
         self._clear_tool_panel()

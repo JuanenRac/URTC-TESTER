@@ -339,6 +339,7 @@ LOG_BUS_HEALTH_WARNING=Bus-Zustandsprüfung: {reason}
 TITLE_BUS_HEALTH_WARNING=Busproblem erkannt
 MSG_BUS_HEALTH_WARNING=Der CAN-Bus hat während dieser Sitzung ein Problem gemeldet: {reason}. Befehle kommen möglicherweise nicht zuverlässig an - überprüfen Sie Verkabelung, Terminierung und andere Geräte am Bus.
 LOG_BUS_HEALTH_RECOVERED=Bus-Zustandsprüfung: wieder normal.
+LOG_BUS_HEALTH_POLL_FAILED=Bus-Zustandsprüfung: Abfrage fehlgeschlagen ({e}) - der Adapter wurde möglicherweise getrennt. Wird erneut versucht.
 MSG_NO_CARRIER_SESSION={interface} hat während dieser Sitzung den Träger verloren - wahrscheinlich ein Bus-Off-Zustand
 VAL_TRIGGERED=AUSGELÖST
 VAL_ENDSTOP_OPEN=offen

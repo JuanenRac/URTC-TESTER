@@ -339,6 +339,7 @@ LOG_BUS_HEALTH_WARNING=Vérification de la santé du bus : {reason}
 TITLE_BUS_HEALTH_WARNING=Problème de bus détecté
 MSG_BUS_HEALTH_WARNING=Le bus CAN a signalé un problème pendant cette session : {reason}. Les commandes pourraient ne pas passer de manière fiable - vérifiez le câblage, la terminaison et les autres appareils sur le bus.
 LOG_BUS_HEALTH_RECOVERED=Vérification de la santé du bus : retour à la normale.
+LOG_BUS_HEALTH_POLL_FAILED=Vérification de la santé du bus : échec de l'interrogation ({e}) - l'adaptateur a peut-être été déconnecté. Nouvel essai à suivre.
 MSG_NO_CARRIER_SESSION={interface} a perdu la porteuse pendant cette session - probablement une condition de bus-off
 VAL_TRIGGERED=DÉCLENCHÉ
 VAL_ENDSTOP_OPEN=ouvert
