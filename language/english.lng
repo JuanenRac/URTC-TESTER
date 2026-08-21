@@ -177,6 +177,7 @@ LOG_SENT_GLOBAL_STATUS=Sent 0x100: status RGB=({r1},{g1},{b1}), night={night}, r
 LOG_EXPORTED_FRAMES=Exported {n} frames to {path}
 LOG_QUERIED_0X182_NO_RESPONSE=Queried 0x182 - no 0x183 response.
 LOG_EXP_TMC_DIAG0_LEVEL=TMC_DIAG0 level: {level}
+LBL_NO_RESPONSE_SHORT=no response
 LBL_DIAG0_HIGH=HIGH (asserted - stall/error on onboard or expansion driver)
 LBL_DIAG0_LOW=LOW (clear)
 LBL_EMPTY_PARENS=(empty)

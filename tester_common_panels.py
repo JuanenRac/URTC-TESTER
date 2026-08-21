@@ -539,7 +539,7 @@ class CommonPanelsMixin:
         response = self.bus.wait_for_one(CAN_ID_DIAG0_RESP, timeout=1.0,
                                           send_after_register=lambda: self.bus.send(CAN_ID_QUERY_DIAG0, b""))
         if response is None or len(response) < 1:
-            self.diag0_var.set("no response")
+            self.diag0_var.set(_("LBL_NO_RESPONSE_SHORT"))
             self.log(_("LOG_QUERIED_0X182_NO_RESPONSE"))
             return
         level = _("LBL_DIAG0_HIGH") if response[0] else _("LBL_DIAG0_LOW")

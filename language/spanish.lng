@@ -178,6 +178,9 @@ LOG_SENT_GLOBAL_STATUS=Enviado 0x100: RGB de estado=({r1},{g1},{b1}), noche={nig
 LOG_EXPORTED_FRAMES=Exportadas {n} tramas a {path}
 LOG_QUERIED_0X182_NO_RESPONSE=Consultado 0x182 - sin respuesta 0x183.
 LOG_EXP_TMC_DIAG0_LEVEL=Nivel TMC_DIAG0: {level}
+LBL_NO_RESPONSE_SHORT=sin respuesta
+LBL_DIAG0_HIGH=ALTO (activo - fallo/parada en el driver integrado o de expansion)
+LBL_DIAG0_LOW=BAJO (despejado)
 LBL_EMPTY_PARENS=(vacio)
 LOG_SENT_CUSTOM_FRAME=Trama personalizada enviada: ID=0x{can_id:03X}, datos={data}
 LOG_REPEATING_CUSTOM_FRAME=Repitiendo trama personalizada cada {interval}ms: ID=0x{can_id:03X}, datos={data}
@@ -190,10 +193,14 @@ LOG_SENT_0X180_NO_RESPONSE=Enviado 0x180 ({tx}) - sin respuesta 0x181.
 LBL_SPI_MALFORMED=(mal formado: declaro {n} bytes, pero solo llegaron {actual})
 LOG_SENT_0X180_MALFORMED=Enviado 0x180 ({tx}) - la respuesta 0x181 declaro {n} bytes pero solo llegaron {actual}: {rx}
 LOG_SENT_0X180_RECEIVED=Enviado 0x180 ({tx}), recibido de vuelta: {rx}
+LBL_NO_RESPONSE_OLDER_FW=Sin respuesta (firmware antiguo, o no conectado)
 LOG_QUERIED_0X1A1_NO_RESPONSE=Consultado 0x1A1 - sin respuesta valida.
 LOG_EXPANSION_BOARD_TYPE=Tipo de placa de expansion: {label}
+LBL_FRAM_NO_RESPONSE=Sin respuesta - la placa no ejecuta esta version de firmware, o no esta conectada.
 LOG_QUERIED_0X190_NO_RESPONSE=Consultado 0x190 - sin respuesta 0x191.
+LBL_FRAM_NO_VALID_STATE=No hay estado guardado valido (F-RAM sin inicializar, o nada guardado todavia).
 LOG_FRAM_STATE_NOTHING_SAVED=Estado de F-RAM: nada valido guardado.
+LBL_FRAM_STATE_TEXT=Ultimo guardado bajo: {tool}\nConsigna de temperatura: {temp}°C  |  Velocidad/potencia: {speed}  |  Direccion/enclavamiento: {dir_or_interlock}  |  Ventilador: {fan}\nError critico activo en el ultimo guardado: {had_error}
 LOG_FRAM_STATE_FULL=Estado de F-RAM: herramienta={tool}, temp={temp}, velocidad/potencia={speed}, direccion/enclavamiento={dir_or_interlock}, ventilador={fan}, hubo_error={had_error}
 LOG_FRAM_ERASE_NO_CONFIRM=Borrado de F-RAM enviado (0x192) - no llego respuesta de confirmacion.
 LOG_FRAM_ERASED_CONFIRMED=F-RAM borrada y confirmada.
@@ -345,3 +352,7 @@ VAL_TRIGGERED=DISPARADO
 VAL_ENDSTOP_OPEN=abierto
 VAL_PART_PICKED_UP=SI - pieza recogida
 VAL_PART_NOT_DETECTED=no
+VAL_ON=activado
+VAL_OFF=desactivado
+VAL_YES=SI
+VAL_NO=no

@@ -178,6 +178,9 @@ LOG_SENT_GLOBAL_STATUS=Inviato 0x100: stato RGB=({r1},{g1},{b1}), notte={night},
 LOG_EXPORTED_FRAMES=Esportati {n} frame in {path}
 LOG_QUERIED_0X182_NO_RESPONSE=Interrogato 0x182 - nessuna risposta 0x183.
 LOG_EXP_TMC_DIAG0_LEVEL=Livello TMC_DIAG0: {level}
+LBL_NO_RESPONSE_SHORT=nessuna risposta
+LBL_DIAG0_HIGH=ALTO (attivo - stallo/errore sul driver integrato o di espansione)
+LBL_DIAG0_LOW=BASSO (libero)
 LBL_EMPTY_PARENS=(vuoto)
 LOG_SENT_CUSTOM_FRAME=Frame personalizzato inviato: ID=0x{can_id:03X}, dati={data}
 LOG_REPEATING_CUSTOM_FRAME=Ripetizione frame personalizzato ogni {interval}ms: ID=0x{can_id:03X}, dati={data}
@@ -190,10 +193,14 @@ LOG_SENT_0X180_NO_RESPONSE=Inviato 0x180 ({tx}) - nessuna risposta 0x181.
 LBL_SPI_MALFORMED=(malformato: dichiarati {n} byte, arrivati solo {actual})
 LOG_SENT_0X180_MALFORMED=Inviato 0x180 ({tx}) - la risposta 0x181 ha dichiarato {n} byte ma ne sono arrivati solo {actual}: {rx}
 LOG_SENT_0X180_RECEIVED=Inviato 0x180 ({tx}), ricevuto in risposta: {rx}
+LBL_NO_RESPONSE_OLDER_FW=Nessuna risposta (firmware precedente, o non connesso)
 LOG_QUERIED_0X1A1_NO_RESPONSE=Interrogato 0x1A1 - nessuna risposta valida.
 LOG_EXPANSION_BOARD_TYPE=Tipo di scheda di espansione: {label}
+LBL_FRAM_NO_RESPONSE=Nessuna risposta - la scheda non esegue questa versione di firmware, o non e connessa.
 LOG_QUERIED_0X190_NO_RESPONSE=Interrogato 0x190 - nessuna risposta 0x191.
+LBL_FRAM_NO_VALID_STATE=Nessuno stato salvato valido (F-RAM non inizializzata, o niente salvato finora).
 LOG_FRAM_STATE_NOTHING_SAVED=Stato F-RAM: nessun dato valido salvato.
+LBL_FRAM_STATE_TEXT=Ultimo salvataggio sotto: {tool}\nSetpoint di temperatura: {temp}°C  |  Velocita/potenza: {speed}  |  Direzione/interlock: {dir_or_interlock}  |  Ventola: {fan}\nErrore critico attivo all'ultimo salvataggio: {had_error}
 LOG_FRAM_STATE_FULL=Stato F-RAM: utensile={tool}, temp={temp}, velocita/potenza={speed}, direzione/interlock={dir_or_interlock}, ventola={fan}, errore_presente={had_error}
 LOG_FRAM_ERASE_NO_CONFIRM=Cancellazione F-RAM inviata (0x192) - nessuna risposta di conferma ricevuta.
 LOG_FRAM_ERASED_CONFIRMED=F-RAM cancellata e confermata.
@@ -345,3 +352,7 @@ VAL_TRIGGERED=ATTIVATO
 VAL_ENDSTOP_OPEN=aperto
 VAL_PART_PICKED_UP=SI - pezzo prelevato
 VAL_PART_NOT_DETECTED=no
+VAL_ON=attivo
+VAL_OFF=spento
+VAL_YES=SI
+VAL_NO=no

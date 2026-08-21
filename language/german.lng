@@ -178,6 +178,9 @@ LOG_SENT_GLOBAL_STATUS=Gesendet 0x100: Status-RGB=({r1},{g1},{b1}), Nacht={night
 LOG_EXPORTED_FRAMES={n} Frames nach {path} exportiert
 LOG_QUERIED_0X182_NO_RESPONSE=0x182 abgefragt - keine 0x183-Antwort.
 LOG_EXP_TMC_DIAG0_LEVEL=TMC_DIAG0-Pegel: {level}
+LBL_NO_RESPONSE_SHORT=keine Antwort
+LBL_DIAG0_HIGH=HOCH (aktiv - Stillstand/Fehler am integrierten oder Erweiterungstreiber)
+LBL_DIAG0_LOW=NIEDRIG (frei)
 LBL_EMPTY_PARENS=(leer)
 LOG_SENT_CUSTOM_FRAME=Benutzerdefinierter Frame gesendet: ID=0x{can_id:03X}, Daten={data}
 LOG_REPEATING_CUSTOM_FRAME=Wiederholung des benutzerdefinierten Frames alle {interval}ms: ID=0x{can_id:03X}, Daten={data}
@@ -190,10 +193,14 @@ LOG_SENT_0X180_NO_RESPONSE=Gesendet 0x180 ({tx}) - keine 0x181-Antwort.
 LBL_SPI_MALFORMED=(fehlerhaft: {n} Bytes angegeben, nur {actual} angekommen)
 LOG_SENT_0X180_MALFORMED=Gesendet 0x180 ({tx}) - die 0x181-Antwort gab {n} Bytes an, aber es kamen nur {actual} tatsächlich an: {rx}
 LOG_SENT_0X180_RECEIVED=Gesendet 0x180 ({tx}), zurück empfangen: {rx}
+LBL_NO_RESPONSE_OLDER_FW=Keine Antwort (ältere Firmware, oder nicht verbunden)
 LOG_QUERIED_0X1A1_NO_RESPONSE=0x1A1 abgefragt - keine gültige Antwort.
 LOG_EXPANSION_BOARD_TYPE=Typ der Erweiterungsplatine: {label}
+LBL_FRAM_NO_RESPONSE=Keine Antwort - Board läuft nicht mit dieser Firmware-Version, oder ist nicht verbunden.
 LOG_QUERIED_0X190_NO_RESPONSE=0x190 abgefragt - keine 0x191-Antwort.
+LBL_FRAM_NO_VALID_STATE=Kein gültiger gespeicherter Zustand (F-RAM nicht initialisiert, oder noch nichts gespeichert).
 LOG_FRAM_STATE_NOTHING_SAVED=F-RAM-Status: nichts Gültiges gespeichert.
+LBL_FRAM_STATE_TEXT=Zuletzt gespeichert unter: {tool}\nTemperatur-Sollwert: {temp}°C  |  Geschwindigkeit/Leistung: {speed}  |  Richtung/Verriegelung: {dir_or_interlock}  |  Lüfter: {fan}\nKritischer Fehler beim letzten Speichern aktiv: {had_error}
 LOG_FRAM_STATE_FULL=F-RAM-Status: Werkzeug={tool}, Temp={temp}, Geschwindigkeit/Leistung={speed}, Richtung/Verriegelung={dir_or_interlock}, Lüfter={fan}, Fehler_aufgetreten={had_error}
 LOG_FRAM_ERASE_NO_CONFIRM=F-RAM-Löschung gesendet (0x192) - keine Bestätigungsantwort erhalten.
 LOG_FRAM_ERASED_CONFIRMED=F-RAM gelöscht und bestätigt.
@@ -345,3 +352,7 @@ VAL_TRIGGERED=AUSGELÖST
 VAL_ENDSTOP_OPEN=offen
 VAL_PART_PICKED_UP=JA - Teil aufgenommen
 VAL_PART_NOT_DETECTED=nein
+VAL_ON=ein
+VAL_OFF=aus
+VAL_YES=JA
+VAL_NO=nein
