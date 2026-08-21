@@ -1,3 +1,0 @@
-2026-08-21 12:41:43,944 === URTC Tester v1.1 session started ===
-2026-08-21 12:41:44,040 URTC Tester ready. Expected HardwareID: 0x0303CC01
-2026-08-21 12:41:44,040 Expecting the adapter in SLCAN mode - see the README if your CANable shows up as anything other than a serial port.
