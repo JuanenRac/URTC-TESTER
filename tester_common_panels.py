@@ -542,7 +542,7 @@ class CommonPanelsMixin:
             self.diag0_var.set("no response")
             self.log(_("LOG_QUERIED_0X182_NO_RESPONSE"))
             return
-        level = "HIGH (asserted - stall/error on onboard or expansion driver)" if response[0] else "LOW (clear)"
+        level = _("LBL_DIAG0_HIGH") if response[0] else _("LBL_DIAG0_LOW")
         self.diag0_var.set(level)
         self.log(_("LOG_EXP_TMC_DIAG0_LEVEL", level=level))
 
@@ -710,7 +710,7 @@ class CommonPanelsMixin:
         response = self.bus.wait_for_one(CAN_ID_EXPANSION_TYPE_RESP, timeout=1.0,
                                           send_after_register=lambda: self.bus.send(CAN_ID_EXPANSION_TYPE_RESP, b""))
         if response is None or len(response) < 1 or response[0] > 6:
-            self.expansion_board_type_var.set("No response (older firmware, or not connected)")
+            self.expansion_board_type_var.set(_("LBL_NO_RESPONSE_OLDER_FW"))
             self.log(_("LOG_QUERIED_0X1A1_NO_RESPONSE"))
             return
         label = EXPANSION_BOARD_TYPES[response[0]]
@@ -727,7 +727,7 @@ class CommonPanelsMixin:
         response = self.bus.wait_for_one(CAN_ID_MLX_VARIANT_RESP, timeout=1.0,
                                           send_after_register=lambda: self.bus.send(CAN_ID_MLX_VARIANT_RESP, b""))
         if response is None or len(response) < 1 or response[0] > 3:
-            self.mlx_sensor_variant_var.set("No response (older firmware, or not connected)")
+            self.mlx_sensor_variant_var.set(_("LBL_NO_RESPONSE_OLDER_FW"))
             self.log(_("LOG_QUERIED_0X1A7_NO_RESPONSE"))
             return
         label = MLX_SENSOR_VARIANTS[response[0]]
@@ -746,7 +746,7 @@ class CommonPanelsMixin:
         response = self.bus.wait_for_one(CAN_ID_FREE_TOOL_CONFIG_RESP, timeout=1.0,
                                           send_after_register=lambda: self.bus.send(CAN_ID_FREE_TOOL_CONFIG_RESP, b""))
         if response is None or len(response) < 2:
-            self.free_tool_config_var.set("No response (older firmware, or not connected)")
+            self.free_tool_config_var.set(_("LBL_NO_RESPONSE_OLDER_FW"))
             self.log(_("LOG_QUERIED_0X1A3_NO_RESPONSE"))
             return
         raw_id_pin, selection = response[0], response[1]
@@ -773,7 +773,7 @@ class CommonPanelsMixin:
         response = self.bus.wait_for_one(CAN_ID_PERIPHERAL_INFO_RESP, timeout=1.0,
                                           send_after_register=lambda: self.bus.send(CAN_ID_PERIPHERAL_INFO_RESP, b""))
         if response is None or len(response) < 2:
-            self.peripheral_info_var.set("No response (older firmware, or not connected)")
+            self.peripheral_info_var.set(_("LBL_NO_RESPONSE_OLDER_FW"))
             self.log(_("LOG_QUERIED_0X1A5_NO_RESPONSE"))
             return
         peripheral_type, serial = response[0], response[1]
@@ -785,20 +785,21 @@ class CommonPanelsMixin:
 
     def _show_fram_state(self, response):
         if response is None or len(response) < 8:
-            self.fram_state_var.set("No response - board not running this firmware version, or not connected.")
+            self.fram_state_var.set(_("LBL_FRAM_NO_RESPONSE"))
             self.log(_("LOG_QUERIED_0X190_NO_RESPONSE"))
             return
         valid, tool_id, had_error, temp_hi, temp_lo, speed, dir_or_interlock, fan = response[:8]
         if not valid:
-            self.fram_state_var.set("No valid saved state (uninitialized F-RAM, or nothing saved yet).")
+            self.fram_state_var.set(_("LBL_FRAM_NO_VALID_STATE"))
             self.log(_("LOG_FRAM_STATE_NOTHING_SAVED"))
             return
         temp = (temp_hi << 8) | temp_lo
         tool_name = TOOL_NAMES.get(tool_id, f"unknown ({tool_id})")
-        text = (f"Last saved under: {tool_name}\n"
-                f"Temperature setpoint: {temp}°C  |  Speed/power: {speed}  |  "
-                f"Direction/interlock: {'on' if dir_or_interlock else 'off'}  |  Fan: {fan}\n"
-                f"Critical error active at last save: {'YES' if had_error else 'no'}")
+        text = _(
+            "LBL_FRAM_STATE_TEXT", tool=tool_name, temp=temp, speed=speed,
+            dir_or_interlock=_("VAL_ON") if dir_or_interlock else _("VAL_OFF"),
+            fan=fan, had_error=_("VAL_YES") if had_error else _("VAL_NO"),
+        )
         self.fram_state_var.set(text)
         self.log(_("LOG_FRAM_STATE_FULL", tool=tool_name, temp=temp, speed=speed, dir_or_interlock=dir_or_interlock, fan=fan, had_error=had_error))
 

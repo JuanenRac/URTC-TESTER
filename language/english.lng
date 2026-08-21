@@ -177,6 +177,8 @@ LOG_SENT_GLOBAL_STATUS=Sent 0x100: status RGB=({r1},{g1},{b1}), night={night}, r
 LOG_EXPORTED_FRAMES=Exported {n} frames to {path}
 LOG_QUERIED_0X182_NO_RESPONSE=Queried 0x182 - no 0x183 response.
 LOG_EXP_TMC_DIAG0_LEVEL=TMC_DIAG0 level: {level}
+LBL_DIAG0_HIGH=HIGH (asserted - stall/error on onboard or expansion driver)
+LBL_DIAG0_LOW=LOW (clear)
 LBL_EMPTY_PARENS=(empty)
 LOG_SENT_CUSTOM_FRAME=Sent custom frame: ID=0x{can_id:03X}, data={data}
 LOG_REPEATING_CUSTOM_FRAME=Repeating custom frame every {interval}ms: ID=0x{can_id:03X}, data={data}
@@ -189,10 +191,14 @@ LOG_SENT_0X180_NO_RESPONSE=Sent 0x180 ({tx}) - no 0x181 response.
 LBL_SPI_MALFORMED=(malformed: declared {n} bytes, only {actual} arrived)
 LOG_SENT_0X180_MALFORMED=Sent 0x180 ({tx}) - 0x181 response declared {n} bytes but only {actual} actually arrived: {rx}
 LOG_SENT_0X180_RECEIVED=Sent 0x180 ({tx}), received back: {rx}
+LBL_NO_RESPONSE_OLDER_FW=No response (older firmware, or not connected)
 LOG_QUERIED_0X1A1_NO_RESPONSE=Queried 0x1A1 - no valid response.
 LOG_EXPANSION_BOARD_TYPE=Expansion board type: {label}
+LBL_FRAM_NO_RESPONSE=No response - board not running this firmware version, or not connected.
 LOG_QUERIED_0X190_NO_RESPONSE=Queried 0x190 - no 0x191 response.
+LBL_FRAM_NO_VALID_STATE=No valid saved state (uninitialized F-RAM, or nothing saved yet).
 LOG_FRAM_STATE_NOTHING_SAVED=F-RAM state: nothing valid saved.
+LBL_FRAM_STATE_TEXT=Last saved under: {tool}\nTemperature setpoint: {temp}°C  |  Speed/power: {speed}  |  Direction/interlock: {dir_or_interlock}  |  Fan: {fan}\nCritical error active at last save: {had_error}
 LOG_FRAM_STATE_FULL=F-RAM state: tool={tool}, temp={temp}, speed/power={speed}, dir/interlock={dir_or_interlock}, fan={fan}, had_error={had_error}
 LOG_FRAM_ERASE_NO_CONFIRM=Sent F-RAM erase (0x192) - no confirmation response received.
 LOG_FRAM_ERASED_CONFIRMED=F-RAM erased and confirmed.
@@ -344,3 +350,7 @@ VAL_TRIGGERED=TRIGGERED
 VAL_ENDSTOP_OPEN=open
 VAL_PART_PICKED_UP=YES - part picked up
 VAL_PART_NOT_DETECTED=no
+VAL_ON=on
+VAL_OFF=off
+VAL_YES=YES
+VAL_NO=no
