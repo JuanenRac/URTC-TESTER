@@ -4,7 +4,7 @@
 
 # URTC Tester (Windows / Linux)
 
-**Version:** 1.1 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 1.1.0 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Lizenz: **GPL-3.0** für den Quellcode, **CC BY-SA 4.0** für diese
 Dokumentation - siehe `LICENSE` in diesem Repository, oder den
@@ -56,6 +56,18 @@ Windows, `./build_exe.sh` unter Linux. Beide bereinigen zuerst
 das Executable - siehe das eigene README des Flashers für die
 vollständige Begründung hinter diesen Skripten, da sie hier identisch
 gilt.
+
+**Versionierung:** `TESTER_VERSION` (in `tester_config.py`, angezeigt in
+der Titelleiste, im Über-Dialog, in Sitzungsprotokollen und in
+Debug-Paketen) folgt dem Schema `MAJOR.MINOR.PATCH`. Beide Build-Skripte
+erhöhen sie automatisch unmittelbar vor jedem echten Build über
+`bump_version.py`, nach einer "Kilometerzähler"-Regel im Zehnersystem:
+PATCH +1, und sobald PATCH 9 überschreitet, wird es auf 0 zurückgesetzt
+und MINOR steigt um 1 (z. B. `1.1.9` → `1.2.0`). Das Ausführen aus dem
+Quellcode (`python urtc_tester.py`) verändert sie nie - nur ein echter
+Lauf von `build_exe.bat`/`build_exe.sh` tut dies. MAJOR wird nie
+automatisch erhöht, nur von Hand. Siehe `CHANGELOG.md` für die
+Versionshistorie.
 
 **Beim Start** wird das Banner 5 Sekunden lang zentriert auf dem
 Bildschirm angezeigt, bevor das Hauptfenster erscheint, statt im

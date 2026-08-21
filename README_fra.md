@@ -4,7 +4,7 @@
 
 # URTC Tester (Windows / Linux)
 
-**Version :** 1.1 · **Auteur :** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version :** 1.1.0 · **Auteur :** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licence : **GPL-3.0** pour le code source, **CC BY-SA 4.0** pour cette
 documentation - voir `LICENSE` dans ce dépôt, ou la section « Licence
@@ -54,6 +54,19 @@ Ou construisez un binaire autonome : `build_exe.bat` sous Windows,
 et empaquettent `assets/` (la bannière et l'icône) dans l'exécutable -
 voir le propre README du flasher pour le raisonnement complet derrière
 ces scripts, puisqu'il s'applique identiquement ici.
+
+**Versionnage :** `TESTER_VERSION` (dans `tester_config.py`, affiché
+dans la barre de titre, la boîte de dialogue À propos, les logs de
+session et les paquets de débogage) suit le schéma
+`MAJEUR.MINEUR.CORRECTIF`. Les deux scripts de build l'incrémentent
+automatiquement juste avant chaque build réel via `bump_version.py`,
+avec une règle « compteur kilométrique » en base 10 : CORRECTIF +1, et
+au-delà de 9 il repasse à 0 et MINEUR monte de 1 (ex. `1.1.9` →
+`1.2.0`). Exécuter depuis le code source (`python urtc_tester.py`) ne le
+touche jamais - seule une exécution réelle de
+`build_exe.bat`/`build_exe.sh` le fait. MAJEUR ne monte jamais
+automatiquement, seulement à la main. Voir `CHANGELOG.md` pour
+l'historique des versions.
 
 **Au démarrage**, la bannière s'affiche centrée à l'écran pendant 5
 secondes avant que la fenêtre principale n'apparaisse, plutôt que de

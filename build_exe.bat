@@ -10,12 +10,13 @@ REM Output: dist\URTC_Tester.exe (no Python installation needed to run it)
 
 echo.
 echo  ===============================================================
-echo   U R T C   T E S T E R  -  Windows build
+echo   U R T C - T E S T E R  -  Windows build script
 echo  ===============================================================
-echo   Universal Robot Tool Controller
-echo   Author:  JuanenRac (Electro Hobby 3D)
-echo   E-mail:  electrohobby3d@gmail.com
-echo   License: GPL-3.0
+echo   Builds a standalone Windows .exe for the URTC Tester (PyInstaller),
+echo   bumps TESTER_VERSION, then bundles it with language/, README(s)
+echo   and LICENSE into dist\.
+echo   Copyright (C) 2026 JuanenRac (Electro Hobby 3D) ^<electrohobby3d@gmail.com^>
+echo   GPL-3.0 - see LICENSE
 echo  ===============================================================
 echo.
 
@@ -23,14 +24,14 @@ REM NOTE: every step below runs through "python -m" rather than calling
 REM pip/pyinstaller directly - see the flasher's build_exe.bat for the
 REM full reasoning (Scripts\ not always being on PATH).
 
-echo [1/5] Installing Python dependencies...
+echo [1/6] Installing Python dependencies...
 python -m pip install --upgrade pip >nul
 python -m pip install -r requirements.txt
 python -m pip install pyinstaller
 echo       Done.
 echo.
 
-echo [2/5] Cleaning previous build...
+echo [2/6] Cleaning previous build...
 REM Clean slate before compiling - see build_exe.sh for the reasoning.
 if exist build rmdir /s /q build
 if exist dist (
@@ -38,13 +39,27 @@ if exist dist (
     if exist dist (
         echo       ERROR: couldn't remove dist\ - is URTC_Tester.exe currently running?
         echo       Close it first, then run this script again.
+        pause
         exit /b 1
     )
 )
 echo       Done.
 echo.
 
-echo [3/5] Compiling URTC_Tester.exe with PyInstaller...
+echo [3/6] Bumping TESTER_VERSION for this build...
+REM Ecosystem-wide versioning policy: TESTER_VERSION auto-increments on
+REM every REAL build (every run of this script), never just from running
+REM "python urtc_tester.py" from source. base-10 "odometer" rule - see
+REM bump_version.py for the exact carry logic (e.g. 1.1.9 -> 1.2.0).
+python bump_version.py
+if errorlevel 1 (
+    echo       ERROR: version bump failed - see the output above.
+    pause
+    exit /b 1
+)
+echo.
+
+echo [4/6] Compiling URTC_Tester.exe with PyInstaller...
 REM --icon sets what Explorer/the taskbar shows for the .exe file itself -
 REM separate from root.iconphoto() in the code, which sets the title-bar/
 REM Alt-Tab icon of the running window. Both need setting for a consistent
@@ -64,12 +79,13 @@ python -m PyInstaller --onefile --windowed --noconfirm --name "URTC_Tester" ^
     urtc_tester.py
 if not exist dist\URTC_Tester.exe (
     echo       ERROR: PyInstaller did not produce dist\URTC_Tester.exe - see the output above.
+    pause
     exit /b 1
 )
 echo       Done.
 echo.
 
-echo [4/5] Copying files that must sit next to the .exe, not inside it...
+echo [5/6] Copying files that must sit next to the .exe, not inside it...
 REM language/ is deliberately NOT bundled into the .exe itself (unlike
 REM assets above) - it's meant to stay editable without a rebuild, same
 REM reasoning as the flasher's own firmware\ folder. Without this, the
@@ -105,7 +121,7 @@ if exist LICENSE (
 echo       Done.
 echo.
 
-echo [5/5] Build complete.
+echo [6/6] Build complete.
 echo  ===============================================================
 echo   dist\URTC_Tester.exe is ready to run - no Python needed.
 echo  ===============================================================
