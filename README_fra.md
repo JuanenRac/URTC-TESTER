@@ -359,12 +359,97 @@ remettre à quiconque déboguant un problème de tête d'outil.
   avant que Lire Image Thermique ne renvoie de vraies données - lire
   trop tôt peint simplement ce que le propre tampon du capteur
   contenait la dernière fois.
+- **Exécuter Self-Test ne couvre que 7 des 25 outils** (fer à souder,
+  perceuse, laser, imprimante 3D, AOI, aspiration, sonde de balayage)
+  - voir « Comment ça fonctionne » ci-dessus pour l'explication
+  complète. Les 18 autres outils ne reçoivent aucune vérification
+  automatisée de ce bouton ; les vérifier signifie toujours observer
+  le matériel réel répondre aux commandes de son propre panneau.
+
+## 📂 Structure du Dépôt
+
+```
+/
+├── urtc_tester.py             Point d'entrée - démarrage sans CLI et écran de
+│                                démarrage
+├── tester_config.py            Constantes de config/langue/protocole (ID CAN,
+│                                noms d'outils, MOTION_TOOL_IDS,
+│                                AVAILABLE_LANGUAGES, EXPANSION_BOARD_TYPES)
+├── tester_transports.py        Classes de transport SLCAN et SocketCAN
+├── tester_bus_monitor.py       Thread de lecture CAN en arrière-plan
+│                                (CANBusMonitor)
+├── tester_gui_core.py          Cœur de TesterGUI - connexion, détection, cycle de
+│                                vie de la fenêtre et barre de menu ; la classe
+│                                dans laquelle se combinent les 3 mixins ci-dessous
+├── tester_common_panels.py     CommonPanelsMixin - panneaux global/F-RAM/
+│                                extension/self-test/bus-monitor/trame
+│                                personnalisée (les sections toujours visibles)
+├── tester_panel_helpers.py     PanelHelpersMixin - utilitaires partagés utilisés
+│                                par chaque constructeur de panneau d'outil
+├── tester_tool_panels.py       ToolPanelsMixin - 19 constructeurs de panneau
+│                                spécifiques à un outil couvrant les 25 profils
+│                                d'outils (plusieurs outils partagent un même
+│                                constructeur, ex. `_build_motion_panel` couvre à
+│                                lui seul 7 d'entre eux)
+├── requirements.txt            Dépendance unique : pyserial>=3.5
+├── build_exe.bat               Script de build du binaire Windows autonome
+│                                (PyInstaller)
+├── build_exe.sh                Le même, pour Linux
+├── URTC_Tester.spec            Spec PyInstaller utilisée par les deux scripts de
+│                                build
+├── assets/
+│   ├── URTC_APP_ICON.svg       Source de l'icône fenêtre/barre des tâches (petit
+│                                design autonome)
+│   ├── URTC_LOGO_TESTER.svg    Source de la bannière de démarrage
+│   ├── urtc_icon.ico           Icône Windows, générée depuis URTC_APP_ICON.svg
+│   ├── urtc_icon.png           La même, en PNG (Linux)
+│   └── urtc_tester_banner.png  PNG de la bannière de démarrage, rendu depuis le
+│                                SVG ci-dessus
+├── images/
+│   ├── URTC_LOGO_TESTER.svg    Bannière du logo affichée en haut de ce README
+│   └── URTC_TESTER_V1_1.png    Capture d'écran de la fenêtre principale de l'outil
+│                                (voir Photos ci-dessous)
+├── language/
+│   ├── english.lng             Langue par défaut, chaînes KEY=Value en texte brut
+│   ├── spanish.lng
+│   ├── italian.lng
+│   ├── french.lng
+│   └── german.lng
+├── logs/                       Journaux de session écrits ici à l'exécution (sans
+│                                risque à supprimer)
+├── LICENSE                     Texte complet de la licence - voir Licence et Avis
+│                                de Copyright ci-dessous
+├── README.md                   Version anglaise
+├── README_spa.md               Traduction espagnole
+├── README_ita.md               Traduction italienne
+├── README_fra.md               Ce fichier
+└── README_deu.md               Traduction allemande
+```
 
 ## 📸 Photos
 
 <p align="center">
   <img src="images/URTC_TESTER_V1_1.png" alt="Fenêtre URTC Tester" width="700">
 </p>
+
+## 🔗 Projets Connexes
+
+Ce projet fait partie d'un écosystème robotique plus large du même auteur (JuanenRac / Electro Hobby 3D). Bon à savoir, car une demande pourrait en réalité concerner l'un de ceux-ci plutôt que ce dépôt :
+
+**Plateforme HYDRA-UMC** — la cellule de micro-usine multi-robots
+- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — la carte mère elle-même : hôte Raspberry Pi CM5 + coprocesseur temps réel STM32H745 double cœur, orchestrant jusqu'à 8 bras robotiques distribués via CAN-OTA/SPI-OTA. Matériel + firmware propres, GPL-3.0/CERN-OHL-S v2/CC BY-SA 4.0.
+- **[HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)** — tableau de bord de contrôle web pour HYDRA-UMC : visualisation 3D multi-robots, enregistrement cinématique/trajectoire, flashage et tests CAN-OTA pour toute la plateforme. React + Vite + Three.js.
+- **[HYDRA-UMC-ANDROID-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-ANDROID-CONTROL)** — application de contrôle Android pour HYDRA-UMC via Wi-Fi/Bluetooth. Application réelle et fonctionnelle - ensemble complet de fonctions de contrôle à distance, authentification JWT, stockage chiffré des identifiants.
+- **[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL)** — application de contrôle iOS/iPadOS pour HYDRA-UMC via Wi-Fi, développée en Flutter (multiplateforme, vérifiable sous Windows sans Mac ; le packaging final du `.ipa` nécessite tout de même Xcode). Application réelle et fonctionnelle - mêmes fonctionnalités que l'application Android.
+- **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — centre de commande de bureau (Python/PySide6) pour l'essaim : découverte réseau multi-contrôleurs, synchronisation bidirectionnelle en direct, véritable viewport 3D robot, espace de travail ancrable façon Photoshop. Réel et fonctionnel, pas un placeholder.
+- **[HYDRA-UMC-EDITOR-URDF](https://github.com/JuanenRac/HYDRA-UMC-EDITOR-URDF)** — créateur/éditeur URDF graphique de bureau (Python/PySide6) pour le propre catalogue de modèles de ce projet : récupère les fichiers source depuis GitHub ou un dossier local, valide la faisabilité des degrés de liberté, modifie couleur/échelle/cinématique avec aperçu 3D en direct, et envoie le résultat final à un serveur STUDIO en cours d'exécution. Réel et fonctionnel, pas un placeholder.
+- **[HYDRA-UMC-DSI](https://github.com/JuanenRac/HYDRA-UMC-DSI)** — prévu : une interface tactile native pour l'écran tactile DSI 5"/7" propre à HYDRA-UMC (1280×720, même résolution dans les deux tailles) sur le Compute Module 5, contrôlant ce même serveur directement depuis la carte. Pas encore commencé.
+
+**Plateforme URTC** — le contrôleur de tête d'outil que porte chaque bras robotique HYDRA-UMC
+- **[URTC](https://github.com/JuanenRac/URTC)** — Universal Robot Tool Controller : contrôleur de tête d'outil sur bus CAN basé sur STM32F303, 25 profils d'outils entièrement implémentés, mise à jour firmware CAN-OTA.
+- **[URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)** — outil de bureau de flashage CAN-OTA + SWD/JTAG puce complète pour cartes URTC (Windows/Linux).
+- URTC Tester *(ce dépôt)* — outil de bureau de diagnostic bus CAN en direct pour cartes URTC, un panneau par profil d'outil (Windows/Linux).
+- **[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — alternative basée sur navigateur aux 2 outils de bureau ci-dessus (Web Serial API + SLCAN), sans installation locale nécessaire.
 
 ## 📜 Licence et Avis de Copyright
 

@@ -292,6 +292,21 @@ class CommonPanelsMixin:
                     resp = self.bus.wait_for_one(
                         expect_id, timeout=1.5,
                         send_after_register=(lambda c=cmd_id, d=cmd_data: self.bus.send(c, d)) if cmd_id is not None else None)
+                    if cmd_id == CAN_ID_DRILL_CMD:
+                        # send_after_register above just put a real,
+                        # physical zero-speed command on the wire, bypassing
+                        # the drill panel's own _send_drill() and its
+                        # off->on confirmation tracking entirely - this
+                        # talks to the bus directly. Without resetting the
+                        # same tracked value that check reads
+                        # (self._drill_last_sent_speed, set on the GUI
+                        # instance by _build_drill_panel), it would still
+                        # think the drill was already spinning from before
+                        # Self-Test ran, and the next real Send click with
+                        # an unchanged nonzero speed would skip the
+                        # confirmation dialog even though it's a genuine
+                        # off->on transition for the actual hardware.
+                        self._drill_last_sent_speed = 0
                     _append(f"[{'PASS' if resp is not None else 'FAIL'}] {description}")
             else:
                 _append("[INFO] No self-test steps defined for this tool yet.")

@@ -201,25 +201,38 @@ class ToolPanelsMixin:
         # CommonPanelsMixin._erase_fram) - a spinning drill bit is real,
         # physical, at-hand equipment, not something a stray click should
         # ever be able to start unconfirmed. Only asked on the actual
-        # off->on transition (tracked in _last_sent_speed below), not on
-        # every Send click while it's already running - re-confirming a
-        # speed change on an already-spinning drill would just train the
-        # user to reflexively click through the dialog, defeating the
-        # point of asking at all; the transition into motion is the one
-        # moment this can actually still prevent something.
-        _last_sent_speed = [0]
+        # off->on transition (tracked in self._drill_last_sent_speed
+        # below), not on every Send click while it's already running -
+        # re-confirming a speed change on an already-spinning drill would
+        # just train the user to reflexively click through the dialog,
+        # defeating the point of asking at all; the transition into motion
+        # is the one moment this can actually still prevent something.
+        #
+        # Kept as an instance attribute rather than a plain closure-local -
+        # CommonPanelsMixin._run_self_test's own drill step sends a real,
+        # physical zero-speed command straight to CAN_ID_DRILL_CMD to
+        # verify telemetry, bypassing this panel's own _send_drill()
+        # entirely. A closure-local here would never learn that the
+        # physical drill was actually stopped that way, so running
+        # Self-Test while the drill was spinning would leave this thinking
+        # it was still on - the very next Send click with an unchanged
+        # nonzero speed would then skip the confirmation dialog even
+        # though it's a genuine off->on transition for the real hardware.
+        # _run_self_test resets this same attribute after its own drill
+        # step for exactly that reason.
+        self._drill_last_sent_speed = 0
 
         def _send_drill():
             dir_byte = 0x01 if direction.get() == "Counter-clockwise" else 0x00
             spd = max(0, min(255, self._safe_int(speed, 0)))
-            if spd > 0 and _last_sent_speed[0] == 0:
+            if spd > 0 and self._drill_last_sent_speed == 0:
                 if not messagebox.askyesno(
                     _("TITLE_CONFIRM_DRILL_ACTIVATION_Q"),
                     _("MSG_CONFIRM_DRILL_ACTIVATION"),
                     icon="warning",
                 ):
                     return
-            _last_sent_speed[0] = spd
+            self._drill_last_sent_speed = spd
             self.bus.send(CAN_ID_DRILL_CMD, bytes([spd, dir_byte]))
 
         ttk.Button(parent, text=_("BTN_SEND"), command=_send_drill).grid(row=1, column=2, padx=8)
