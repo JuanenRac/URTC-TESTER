@@ -93,6 +93,25 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         conn_frame = ttk.LabelFrame(root, text=_("TAB_CONNECT_TITLE"))
         conn_frame.grid(row=0, column=0, sticky="nsew", padx=4, pady=4)
 
+        # Column weights - without these the frame just sits left-aligned
+        # with blank space on the right as the window widens, since grid()
+        # gives extra space only to columns with weight>0. Column 0 is
+        # always a fixed-width label (LBL_TRANSPORT/LBL_COM_PORT/
+        # LBL_BITRATE/LBL_ACTIVE_TOOL/LBL_ID_PINS/LBL_BOARD_STATE), so it
+        # gets none. Columns 1-4 are where the actual variable-length
+        # content lives - combo boxes plus the columnspan=3 status labels
+        # (active_tool_label, id_pins_frame, board_state_label, the listen-
+        # only help text, bitrate_status) - column 1 gets extra weight
+        # since it's the anchor column those spans all start from, and
+        # column 4 also carries conn_status, the single most important
+        # value in this panel. Column 5 is only ever a small fixed button
+        # or short value (selftest_btn/tool_number_label), so it stays at
+        # the default weight of 0 like column 0.
+        conn_frame.grid_columnconfigure(1, weight=2)
+        conn_frame.grid_columnconfigure(2, weight=1)
+        conn_frame.grid_columnconfigure(3, weight=1)
+        conn_frame.grid_columnconfigure(4, weight=1)
+
         row = 0
         if HAVE_SOCKETCAN:
             ttk.Label(conn_frame, text=_("LBL_TRANSPORT")).grid(row=row, column=0, sticky="w", **pad)
