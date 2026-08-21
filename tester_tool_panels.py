@@ -46,7 +46,27 @@ class ToolPanelsMixin:
             value = max(0, min(450, self._safe_int(setpoint, 0)))
             self.bus.send(CAN_ID_SOLDER_SETPOINT, struct.pack(">H", value))
 
-        def _toggle(*_):
+        def _toggle():
+            # No *_ catch-all here (there used to be one) - this is only
+            # ever wired up as a ttk widget's own command= callback, which
+            # Tk always invokes with zero arguments, never as a .bind()
+            # handler (which would pass an event). A bare *_ parameter
+            # would otherwise shadow tester_config._ (the translation
+            # function every _("...") call below actually needs) with
+            # this callback's own empty args tuple for the entire body of
+            # this function - every _(...) call inside would then raise
+            # TypeError: 'tuple' object is not callable the moment this
+            # runs, silently swallowed by Tkinter's own callback exception
+            # handler (a traceback printed to stderr, nothing more) rather
+            # than crashing outright - which meant clicking this "Active"
+            # checkbox appeared to do nothing at all: the exception fires
+            # on this function's very first _(...) call, before
+            # _start_keepalive ever runs, so no keepalive is ever armed
+            # and no CAN frame for this control ever gets sent. Confirmed
+            # empirically with a real ttk.Checkbutton.invoke() before this
+            # fix (raised exactly that TypeError), and confirmed fixed
+            # after (keepalive registers, a real frame is sent) - see
+            # auditoria_historial.txt.
             if active.get():
                 self.log(_("LOG_SOLDER_SETPOINT_ACTIVE", temp=self._safe_int(setpoint, 0)))
                 self._start_keepalive("solder", 150, _send_setpoint, on_failure=lambda: active.set(False))
@@ -320,7 +340,27 @@ class ToolPanelsMixin:
                 0x01 if interlock.get() else 0x00,
             ]))
 
-        def _toggle(*_):
+        def _toggle():
+            # No *_ catch-all here (there used to be one) - this is only
+            # ever wired up as a ttk widget's own command= callback, which
+            # Tk always invokes with zero arguments, never as a .bind()
+            # handler (which would pass an event). A bare *_ parameter
+            # would otherwise shadow tester_config._ (the translation
+            # function every _("...") call below actually needs) with
+            # this callback's own empty args tuple for the entire body of
+            # this function - every _(...) call inside would then raise
+            # TypeError: 'tuple' object is not callable the moment this
+            # runs, silently swallowed by Tkinter's own callback exception
+            # handler (a traceback printed to stderr, nothing more) rather
+            # than crashing outright - which meant clicking this "Active"
+            # checkbox appeared to do nothing at all: the exception fires
+            # on this function's very first _(...) call, before
+            # _start_keepalive ever runs, so no keepalive is ever armed
+            # and no CAN frame for this control ever gets sent. Confirmed
+            # empirically with a real ttk.Checkbutton.invoke() before this
+            # fix (raised exactly that TypeError), and confirmed fixed
+            # after (keepalive registers, a real frame is sent) - see
+            # auditoria_historial.txt.
             if active.get():
                 # Same physical-safety confirmation as the drill's own Send
                 # button above (see that panel's own comment) - this is a
@@ -415,23 +455,52 @@ class ToolPanelsMixin:
         ttk.Label(left, text=_("LBL_NOZZLE_SETPOINT")).grid(row=0, column=0, sticky="w", padx=4, pady=4)
         ttk.Spinbox(left, from_=0, to=300, textvariable=nozzle_setpoint, width=6).grid(row=0, column=1, sticky="w", padx=4)
 
-        def _send_thermal_motion():
+        def _send_thermal_motion(steps_override=None):
             temp = max(0, min(300, self._safe_int(nozzle_setpoint, 0)))
             dir_byte = 0x01 if extruder_dir.get() == "Forward" else 0x00
-            steps = max(0, self._safe_int(extruder_steps, 0)) & 0xFFFFFF
+            # steps_override lets a caller force this frame's step count
+            # regardless of whatever the Spinbox currently holds - see
+            # _send_temp_keepalive_tick below for why the periodic
+            # temperature-hold keepalive needs that.
+            steps = (max(0, self._safe_int(extruder_steps, 0)) & 0xFFFFFF) if steps_override is None else steps_override
             data = struct.pack(">H", temp) + bytes([dir_byte]) + steps.to_bytes(3, "big")
             self.bus.send(CAN_ID_3DP_THERMAL_MOTION, data)
 
-        def _toggle_nozzle(*_):
+        def _send_temp_keepalive_tick():
+            # CAN_ID_3DP_THERMAL_MOTION carries setpoint temperature AND
+            # extruder direction/steps in one combined frame (see
+            # CANBUS.TXT's 0x170) - this heater keepalive's only job is
+            # holding that setpoint alive against the firmware's 250ms
+            # comms watchdog, not moving the extruder. Sending
+            # extruder_steps' current Spinbox value here (as a plain
+            # _send_thermal_motion() call used to) would repeat WHATEVER
+            # move was last configured on every single 150ms tick for as
+            # long as the heater stayed active: press "Move Extruder Once"
+            # (steps defaults to 200, and stays whatever it was last set
+            # to), then simply turn the heater on, and every following
+            # keepalive tick would command another identical extruder
+            # move as a pure side effect of holding a temperature -
+            # continuous, unintended motor motion nobody asked for.
+            # steps_override=0 is what keeps this a pure "hold this
+            # temperature" frame; the explicit "Move Extruder Once" button
+            # below still calls _send_thermal_motion() with no override,
+            # using the real Spinbox value exactly as before.
+            _send_thermal_motion(steps_override=0)
+
+        def _toggle_nozzle():
+            # See the generic _toggle() callbacks elsewhere in this file
+            # for the full explanation - a bare *_ parameter here used to
+            # shadow tester_config._ for this whole function body, so
+            # every _(...) call below raised TypeError the moment this
+            # ran, silently swallowed by Tkinter, meaning the nozzle
+            # heater's "Active" checkbox never actually armed its
+            # keepalive.
             if nozzle_active.get():
                 self.log(_("LOG_3DP_NOZZLE_SETPOINT_ACTIVE", temp=self._safe_int(nozzle_setpoint, 0)))
-                self._start_keepalive("nozzle", 150, _send_thermal_motion, on_failure=lambda: nozzle_active.set(False))
+                self._start_keepalive("nozzle", 150, _send_temp_keepalive_tick, on_failure=lambda: nozzle_active.set(False))
             else:
                 self._stop_keepalive("nozzle")
-                extruder_steps_saved = self._safe_int(extruder_steps, 0)
-                extruder_steps.set(0)
-                _send_thermal_motion()
-                extruder_steps.set(extruder_steps_saved)
+                _send_thermal_motion(steps_override=0)
                 self.log(_("LOG_3DP_NOZZLE_TURNED_OFF"))
 
         ttk.Checkbutton(left, text=_("LBL_HEATER_ACTIVE_250MS"), variable=nozzle_active,
@@ -458,7 +527,10 @@ class ToolPanelsMixin:
         def _send_layer_fan():
             self.bus.send(CAN_ID_3DP_LAYER_FAN_CMD, bytes([max(0, min(255, layer_fan_power.get()))]))
 
-        def _toggle_layer_fan(*_):
+        def _toggle_layer_fan():
+            # Same *_ shadowing bug as the generic _toggle() callbacks
+            # elsewhere in this file - see one of those for the full
+            # explanation.
             if layer_fan_active.get():
                 self.log(_("LOG_LAYER_FAN_ACTIVE", power=layer_fan_power.get()))
                 self._start_keepalive("layer_fan", 400, _send_layer_fan, on_failure=lambda: layer_fan_active.set(False))
@@ -523,7 +595,27 @@ class ToolPanelsMixin:
     def _build_electromagnet_panel(self, parent):
         state = tk.BooleanVar(value=False)
 
-        def _toggle(*_):
+        def _toggle():
+            # No *_ catch-all here (there used to be one) - this is only
+            # ever wired up as a ttk widget's own command= callback, which
+            # Tk always invokes with zero arguments, never as a .bind()
+            # handler (which would pass an event). A bare *_ parameter
+            # would otherwise shadow tester_config._ (the translation
+            # function every _("...") call below actually needs) with
+            # this callback's own empty args tuple for the entire body of
+            # this function - every _(...) call inside would then raise
+            # TypeError: 'tuple' object is not callable the moment this
+            # runs, silently swallowed by Tkinter's own callback exception
+            # handler (a traceback printed to stderr, nothing more) rather
+            # than crashing outright - which meant clicking this "Active"
+            # checkbox appeared to do nothing at all: the exception fires
+            # on this function's very first _(...) call, before
+            # _start_keepalive ever runs, so no keepalive is ever armed
+            # and no CAN frame for this control ever gets sent. Confirmed
+            # empirically with a real ttk.Checkbutton.invoke() before this
+            # fix (raised exactly that TypeError), and confirmed fixed
+            # after (keepalive registers, a real frame is sent) - see
+            # auditoria_historial.txt.
             self.bus.send(CAN_ID_ELECTROMAGNET_CMD, bytes([0x01 if state.get() else 0x00]))
             self.log(_("LOG_ELECTROMAGNET_STATE", state=_("LBL_ENERGIZED") if state.get() else _("LBL_RELEASED")))
 
@@ -549,7 +641,17 @@ class ToolPanelsMixin:
         ttk.Spinbox(parent, from_=1, to=2000, textvariable=duration, width=8).grid(row=0, column=1, sticky="w", padx=4)
 
         def _fire():
-            ms = max(1, min(2000, self._safe_int(duration, 100)))
+            # _require_int, not _safe_int - this button fires a real,
+            # physical weld pulse immediately. Silently substituting a
+            # default duration (as _safe_int would) if the Spinbox
+            # happens to be empty mid-edit right when this is clicked
+            # would weld for however long that default says, not for
+            # whatever the user actually meant to enter - see
+            # _require_int's own docstring.
+            raw = self._require_int(duration)
+            if raw is None:
+                return
+            ms = max(1, min(2000, raw))
             self.bus.send(cmd_id, bytes([0x01]) + struct.pack(">H", ms))
             self.log(_("LOG_WELD_PULSE_FIRED", ms=ms))
 
@@ -603,7 +705,27 @@ class ToolPanelsMixin:
         def _send():
             self.bus.send(CAN_ID_UV_CURING_CMD, bytes([max(0, min(255, power.get()))]))
 
-        def _toggle(*_):
+        def _toggle():
+            # No *_ catch-all here (there used to be one) - this is only
+            # ever wired up as a ttk widget's own command= callback, which
+            # Tk always invokes with zero arguments, never as a .bind()
+            # handler (which would pass an event). A bare *_ parameter
+            # would otherwise shadow tester_config._ (the translation
+            # function every _("...") call below actually needs) with
+            # this callback's own empty args tuple for the entire body of
+            # this function - every _(...) call inside would then raise
+            # TypeError: 'tuple' object is not callable the moment this
+            # runs, silently swallowed by Tkinter's own callback exception
+            # handler (a traceback printed to stderr, nothing more) rather
+            # than crashing outright - which meant clicking this "Active"
+            # checkbox appeared to do nothing at all: the exception fires
+            # on this function's very first _(...) call, before
+            # _start_keepalive ever runs, so no keepalive is ever armed
+            # and no CAN frame for this control ever gets sent. Confirmed
+            # empirically with a real ttk.Checkbutton.invoke() before this
+            # fix (raised exactly that TypeError), and confirmed fixed
+            # after (keepalive registers, a real frame is sent) - see
+            # auditoria_historial.txt.
             if active.get():
                 self.log(_("LOG_UV_CURING_POWER", power=power.get()))
                 self._start_keepalive("uvcuring", 150, _send, on_failure=lambda: active.set(False))
@@ -637,7 +759,27 @@ class ToolPanelsMixin:
             blow = max(0, min(255, blower.get()))
             self.bus.send(CAN_ID_HOTAIR_CMD, struct.pack(">H", temp) + bytes([blow]))
 
-        def _toggle(*_):
+        def _toggle():
+            # No *_ catch-all here (there used to be one) - this is only
+            # ever wired up as a ttk widget's own command= callback, which
+            # Tk always invokes with zero arguments, never as a .bind()
+            # handler (which would pass an event). A bare *_ parameter
+            # would otherwise shadow tester_config._ (the translation
+            # function every _("...") call below actually needs) with
+            # this callback's own empty args tuple for the entire body of
+            # this function - every _(...) call inside would then raise
+            # TypeError: 'tuple' object is not callable the moment this
+            # runs, silently swallowed by Tkinter's own callback exception
+            # handler (a traceback printed to stderr, nothing more) rather
+            # than crashing outright - which meant clicking this "Active"
+            # checkbox appeared to do nothing at all: the exception fires
+            # on this function's very first _(...) call, before
+            # _start_keepalive ever runs, so no keepalive is ever armed
+            # and no CAN frame for this control ever gets sent. Confirmed
+            # empirically with a real ttk.Checkbutton.invoke() before this
+            # fix (raised exactly that TypeError), and confirmed fixed
+            # after (keepalive registers, a real frame is sent) - see
+            # auditoria_historial.txt.
             if active.get():
                 self.log(_("LOG_HOTAIR_ACTIVE", temp=self._safe_int(setpoint, 0), blower=blower.get()))
                 self._start_keepalive("hotair", 150, _send_setpoint, on_failure=lambda: active.set(False))
@@ -776,15 +918,33 @@ class ToolPanelsMixin:
         ttk.Spinbox(parent, from_=0, to=255, textvariable=pulse_ms, width=6).grid(row=4, column=1, sticky="w", padx=4)
 
         def _fire():
-            ch = max(0, min(3, self._safe_int(channel, 0)))
-            d = max(0, min(100, self._safe_int(duty, 50)))
-            ms = max(0, min(255, self._safe_int(pulse_ms, 10)))
+            # _require_int, not _safe_int, for the same reason as the weld
+            # pulse panel's own _fire above - this dispenses a real paste
+            # pulse immediately, so an empty field mid-edit must abort the
+            # send rather than quietly firing with a phantom default duty/
+            # duration the user never entered.
+            ch_raw = self._require_int(channel)
+            duty_raw = self._require_int(duty)
+            ms_raw = self._require_int(pulse_ms)
+            if ch_raw is None or duty_raw is None or ms_raw is None:
+                return
+            ch = max(0, min(3, ch_raw))
+            d = max(0, min(100, duty_raw))
+            ms = max(0, min(255, ms_raw))
             self.bus.send(CAN_ID_PASTE_JETTING_PULSE, bytes([ch, d, ms]))
             self.log(_("LOG_PASTE_JETTING_FIRED", channel=ch, duty=d, ms=ms))
 
         ttk.Button(parent, text=_("BTN_FIRE_PULSE"), command=_fire).grid(row=4, column=2, sticky="w", padx=8)
 
     def _build_thermal_inspection_panel(self, parent):
+        # Captured now, at panel-build time - see _tool_panel_generation's
+        # own comment in tester_gui_core.py. _read_frame below (a
+        # multi-second, 48-chunk background read) compares against this
+        # fixed snapshot rather than the live self._tool_panel_generation
+        # on every check, so it notices being torn down (Detect run again,
+        # a different tool selected, disconnect) even if several rebuilds
+        # happen in a row.
+        panel_gen = self._tool_panel_generation
         status_var = tk.StringVar(value=_("LBL_NOT_TRIGGERED_YET"))
         # 32x24 max resolution (MLX90640/90642) - MLX90641 (16x12) simply
         # leaves the unused chunk indices reading back zeroed (per this
@@ -832,6 +992,20 @@ class ToolPanelsMixin:
         ttk.Button(parent, text=_("BTN_CHECK_STATUS"), command=_check_status).grid(row=0, column=1, sticky="w", padx=4)
         ttk.Label(parent, textvariable=status_var).grid(row=1, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 4))
 
+        def _paint_cell(row, col, color, gen):
+            # Runs on the Tkinter main thread via root.after below - the
+            # panel (and this very canvas) may have been torn down by a
+            # rebuild that started after this specific update was already
+            # queued, so both the generation check and winfo_exists() are
+            # needed: the generation check catches "torn down, but a new
+            # thermal panel with a live canvas of its own now exists"
+            # (canvas would still exist, just be the WRONG one), and
+            # winfo_exists() catches "torn down, no thermal panel at all
+            # right now" (this exact canvas object is gone).
+            if gen != panel_gen or not canvas.winfo_exists():
+                return
+            canvas.itemconfig(cells[row][col], fill=color)
+
         def _read_frame():
             # Pulls all 48 chunks sequentially (worst case, MLX90640/42's
             # own resolution - MLX90641's own unused chunks just read
@@ -840,7 +1014,22 @@ class ToolPanelsMixin:
             # is triggered and read on request, which is what this
             # tool's own CAN protocol actually supports (no streaming
             # push mode exists).
+            #
+            # This read can take several seconds (48 chunks x up to 4
+            # attempts x up to 0.3s each, worst case) on a background
+            # thread - if the user switches away mid-read (runs Detect
+            # again, picks a different tool, disconnects), the thread
+            # used to just keep going regardless: still querying the bus
+            # underneath whatever tool panel replaced this one, and
+            # eventually trying to paint cells on a canvas widget that
+            # had already been destroyed (a TclError from inside a
+            # root.after callback). The panel_gen check at the top of
+            # every chunk stops the querying itself as soon as possible
+            # after a rebuild; _paint_cell's own check above stops the
+            # widget access specifically.
             for chunk_idx in range(48):
+                if self._tool_panel_generation != panel_gen:
+                    return
                 frames = []
                 for _attempt in range(4):
                     frame = self.bus.wait_for_one(CAN_ID_THERMAL_CALIB_CHUNK, timeout=0.3,
@@ -860,8 +1049,9 @@ class ToolPanelsMixin:
                         break
                     row, col = divmod(pixel_idx, GRID_W)
                     color = _temp_to_color(px)
-                    self.root.after(0, lambda r=row, c=col, col_=color: canvas.itemconfig(cells[r][c], fill=col_))
-            self.log(_("LOG_THERMAL_FRAME_READ"))
+                    self.root.after(0, lambda r=row, c=col, col_=color: _paint_cell(r, c, col_, panel_gen))
+            if self._tool_panel_generation == panel_gen:
+                self.log(_("LOG_THERMAL_FRAME_READ"))
 
         ttk.Button(parent, text=_("BTN_READ_THERMAL_IMAGE"), command=lambda: threading.Thread(target=_read_frame, daemon=True).start()
                    ).grid(row=0, column=2, sticky="w", padx=8)

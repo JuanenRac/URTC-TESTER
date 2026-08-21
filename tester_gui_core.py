@@ -80,6 +80,16 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         self._current_tool_id = None  # which tool's panel is currently showing, if any - see _send_tool_off_command
         self._bus_health_running = False  # guards _bus_health_worker's own loop - see _start_bus_health_monitor
         self._bus_health_was_bad = False  # tracks the last reported state, so a warning is only logged/popped up once per transition into trouble, not once per poll while it stays that way
+        self._self_test_running = False  # guards _run_self_test against a second overlapping run - see that method's own comment
+        # Bumped by _clear_tool_panel on every tool-panel rebuild (each
+        # Detect) AND on disconnect. Long-running background workers a
+        # tool panel starts (currently just the thermal inspection
+        # panel's multi-second 48-chunk image read) capture this value at
+        # launch and compare it on every iteration - once it no longer
+        # matches, the panel that started them has been torn down (its
+        # widgets destroyed), so they stop querying the bus and touching
+        # now-dead widgets instead of running to completion regardless.
+        self._tool_panel_generation = 0
 
         pad = {"padx": 8, "pady": 4}
         root.grid_columnconfigure(0, weight=1)
@@ -425,6 +435,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
                     # detect" with no indication anything's different.
                     self.log(_("LOG_LISTEN_ONLY_ACTIVE"))
                     self.active_tool_label.config(text=_("STATUS_LISTEN_ONLY_NO_DETECT"), foreground="gray")
+                    self._reset_id_pin_display()
                 else:
                     self.detect_active_tool()
                 self._start_bus_health_monitor()
@@ -454,6 +465,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             self.connect_btn.config(text=_("BTN_CONNECT"))
             self.active_tool_label.config(text=_("STATUS_CONNECT_TO_DETECT"), foreground="gray")
             self.board_state_label.config(text=_("STATUS_CONNECT_TO_CHECK"), foreground="gray")
+            self._reset_id_pin_display()
             self.refresh_btn.config(state="normal")
             self.listen_only_check.config(state="normal")
             self.log(_("LOG_DISCONNECTED"))
@@ -655,6 +667,20 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             else:
                 square.config(text="0", bg="#EEEEEE", fg="#666666")  # no jumper
         self.tool_number_label.config(text=str(tool_id))
+
+    def _reset_id_pin_display(self):
+        """Reverts the ID4..ID0 squares and tool-number label to their
+        pre-detect "?" placeholder state - called on disconnect and when
+        connecting in Listen Only (which deliberately skips Detect - see
+        toggle_connect). Without this, the squares and tool number kept
+        showing whichever board was detected LAST until a fresh detection
+        overwrote them, which after a disconnect (or a Listen Only
+        connection to a completely different physical board) is stale
+        information from a board that is no longer even connected, with
+        nothing in the UI indicating it's now stale rather than current."""
+        for square in self._id_pin_squares:
+            square.config(text="?", bg="#DDDDDD", fg="#666666")
+        self.tool_number_label.config(text="--")
 
     def _format_board_state(self, err, can_err, booting):
         """Turns the 3 status bits carried in every CAN_ID_ACTIVE_TOOL_RESP
@@ -882,6 +908,11 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         self._send_tool_off_command()
         if self.bus is not None:
             self.bus.clear_all()  # drops every per-tool telemetry handler, not the connection itself
+        self._tool_panel_generation += 1  # see __init__'s own comment - signals any
+        # still-running background worker from the panel about to be torn
+        # down (e.g. a thermal-image read mid-flight) to stop on its next
+        # check, before the widgets it might still try to touch below are
+        # actually destroyed.
         for child in self.tool_panel_inner.winfo_children():
             child.destroy()
         for name, job_id in list(self._keepalive_jobs.items()):
@@ -939,10 +970,10 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
 
     def export_debug_bundle(self):
         save_path = filedialog.asksaveasfilename(
-            title="Save Debug Bundle",
+            title=_("TITLE_SAVE_DEBUG_BUNDLE"),
             defaultextension=".zip",
             initialfile=f"urtc_tester_debug_{time.strftime('%Y%m%d_%H%M%S')}.zip",
-            filetypes=[("ZIP archive", "*.zip")],
+            filetypes=[(_("LBL_ZIP_FILES"), "*.zip")],
         )
         if not save_path:
             return

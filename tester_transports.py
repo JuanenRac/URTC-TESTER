@@ -198,15 +198,28 @@ class SLCAN:
                 continue  # non-ASCII noise - not a real SLCAN line, keep listening
             if not line or line[0] not in ("t", "T"):
                 continue  # status/ack character (z, Z, BELL, ...) - keep listening
+            if line[0] == "T":
+                # 'T' = extended (29-bit) ID frame - this protocol's own
+                # CAN_ID_* constants are always standard 11-bit IDs (every
+                # one of them is <= 0x7FF), so a real 'T' line here can
+                # only be noise or another device sharing the same
+                # physical bus. Discarded outright rather than parsed and
+                # returned the way this used to: exposing its raw 29-bit
+                # value as a plain Python int can_id risks colliding with
+                # (and being misdispatched to a handler/waiter registered
+                # for) a genuine standard-ID protocol response whenever
+                # the extended ID's numeric value happens to land inside
+                # 0-0x7FF - e.g. an extended frame with ID 0x00000111
+                # would otherwise be indistinguishable from a real
+                # CAN_ID_ACTIVE_TOOL_RESP. SocketCAN.read_frame below
+                # already discards extended/RTR/error frames before
+                # masking for exactly this reason (see its own comment) -
+                # this matches that same treatment for SLCAN.
+                continue
             try:
-                if line[0] == "t":
-                    can_id = int(line[1:4], 16)
-                    dlc = int(line[4:5], 16)
-                    data_start = 5
-                else:  # 'T' = extended 29-bit ID, not used by this protocol but handled for completeness
-                    can_id = int(line[1:9], 16)
-                    dlc = int(line[9:10], 16)
-                    data_start = 10
+                can_id = int(line[1:4], 16)
+                dlc = int(line[4:5], 16)
+                data_start = 5
                 expected_len = data_start + dlc * 2
                 if len(line) != expected_len:
                     continue  # length doesn't match what this line's own DLC implies - malformed, keep listening

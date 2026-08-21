@@ -7,7 +7,7 @@
 # GPL-3.0 - see LICENSE
 # =============================================================================
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
 from tester_config import _
 
@@ -107,6 +107,23 @@ class PanelHelpersMixin:
             return var.get()
         except tk.TclError:
             return default
+
+    def _require_int(self, var, error_title_key="TITLE_INVALID_VALUE"):
+        """Like _safe_int above, but for one-shot buttons that trigger a
+        real PHYSICAL actuation right now (a weld pulse firing, a paste
+        dispense pulse, ...) rather than a repeating keepalive - silently
+        substituting a "safe-looking" default and firing anyway the
+        moment the field is empty (e.g. the user selected the text to
+        type a new value and clicked the button before finishing) would
+        mean the actuator fires with a value the user never actually
+        entered, with nothing telling them that's what happened. Shows an
+        error dialog and returns None instead, so the caller can abort
+        the send entirely rather than picking a default of its own."""
+        try:
+            return var.get()
+        except tk.TclError:
+            messagebox.showerror(_(error_title_key), _("MSG_ENTER_VALID_NUMBER"))
+            return None
 
     def _create_live_graph(self, parent, y_max, width=340, height=100, max_points=60):
         """Builds a simple live-scrolling line graph on a plain Canvas -

@@ -245,6 +245,20 @@ class CommonPanelsMixin:
         if self.active_tool_id is None:
             messagebox.showerror(_("TITLE_NOT_DETECTED"), _("MSG_RUN_DETECT_FIRST"))
             return
+        if self._self_test_running:
+            # selftest_btn is disabled for the whole run below, so this is
+            # only reachable through some non-UI path re-invoking this
+            # method directly - still guarded here rather than trusting
+            # the button's disabled state alone. Without this, two
+            # concurrent _worker threads (tester_bus_monitor.py's
+            # wait_for_one lets any number of callers register a waiter
+            # for the same CAN ID at once, so nothing at the bus layer
+            # itself would stop this) would both send real, physical
+            # test commands - the drill step among them - interleaved on
+            # the bus, and both would try to reset
+            # self._drill_last_sent_speed independently, an unnecessary
+            # race for zero benefit over just running one test at a time.
+            return
         steps = self._SELF_TEST_STEPS.get(self.active_tool_id)
         is_motion = self.active_tool_id in MOTION_TOOL_IDS
         if not messagebox.askyesno(
@@ -252,6 +266,9 @@ class CommonPanelsMixin:
             _("MSG_SELF_TEST_CONFIRM"),
         ):
             return
+
+        self._self_test_running = True
+        self.selftest_btn.config(state="disabled")
 
         win = tk.Toplevel(self.root)
         win.title(f"Self-Test - {TOOL_NAMES.get(self.active_tool_id, '?')}")
@@ -269,48 +286,62 @@ class CommonPanelsMixin:
                 text.see("end")
             self.root.after(0, _do)
 
+        def _self_test_done():
+            self._self_test_running = False
+            if self.selftest_btn.winfo_exists():
+                self.selftest_btn.config(state="normal")
+
         def _worker():
-            _append(f"Testing: {TOOL_NAMES.get(self.active_tool_id, '?')}\n")
-            # Generic checks first - meaningful for every tool.
-            resp = self.bus.wait_for_one(CAN_ID_ACTIVE_TOOL_RESP, timeout=1.5,
-                                          send_after_register=lambda: self.bus.send(CAN_ID_QUERY_ACTIVE_TOOL, b""))
-            ok = resp is not None and len(resp) >= 1 and resp[0] == self.active_tool_id
-            _append(f"[{'PASS' if ok else 'FAIL'}] Active-tool query (0x110) confirms detected tool")
+            # try/finally around the whole run - same pattern already used
+            # by _detect_active_tool_worker/_auto_detect_worker (see
+            # tester_gui_core.py) - so selftest_btn always gets re-enabled
+            # even if a bus call raises partway through (e.g. the adapter
+            # gets disconnected mid-test), instead of leaving it stuck
+            # disabled for the rest of the session.
+            try:
+                _append(f"Testing: {TOOL_NAMES.get(self.active_tool_id, '?')}\n")
+                # Generic checks first - meaningful for every tool.
+                resp = self.bus.wait_for_one(CAN_ID_ACTIVE_TOOL_RESP, timeout=1.5,
+                                              send_after_register=lambda: self.bus.send(CAN_ID_QUERY_ACTIVE_TOOL, b""))
+                ok = resp is not None and len(resp) >= 1 and resp[0] == self.active_tool_id
+                _append(f"[{'PASS' if ok else 'FAIL'}] Active-tool query (0x110) confirms detected tool")
 
-            resp = self.bus.wait_for_one(CAN_ID_VERSION_RESPONSE, timeout=1.5,
-                                          send_after_register=lambda: self.bus.send(CAN_ID_QUERY_VERSION, b"\x00"))
-            _append(f"[{'PASS' if resp is not None else 'FAIL'}] Version query (0x7F8) gets a response")
+                resp = self.bus.wait_for_one(CAN_ID_VERSION_RESPONSE, timeout=1.5,
+                                              send_after_register=lambda: self.bus.send(CAN_ID_QUERY_VERSION, b"\x00"))
+                _append(f"[{'PASS' if resp is not None else 'FAIL'}] Version query (0x7F8) gets a response")
 
-            if is_motion:
-                _append("[INFO] This tool has no telemetry to verify - STEP/DIR/EN "
-                        "commands are one-shot with no response by design.")
-            elif steps:
-                for description, cmd_id, cmd_data, expect_id in steps:
-                    if expect_id is None:
-                        _append(f"[INFO] {description}")
-                        continue
-                    resp = self.bus.wait_for_one(
-                        expect_id, timeout=1.5,
-                        send_after_register=(lambda c=cmd_id, d=cmd_data: self.bus.send(c, d)) if cmd_id is not None else None)
-                    if cmd_id == CAN_ID_DRILL_CMD:
-                        # send_after_register above just put a real,
-                        # physical zero-speed command on the wire, bypassing
-                        # the drill panel's own _send_drill() and its
-                        # off->on confirmation tracking entirely - this
-                        # talks to the bus directly. Without resetting the
-                        # same tracked value that check reads
-                        # (self._drill_last_sent_speed, set on the GUI
-                        # instance by _build_drill_panel), it would still
-                        # think the drill was already spinning from before
-                        # Self-Test ran, and the next real Send click with
-                        # an unchanged nonzero speed would skip the
-                        # confirmation dialog even though it's a genuine
-                        # off->on transition for the actual hardware.
-                        self._drill_last_sent_speed = 0
-                    _append(f"[{'PASS' if resp is not None else 'FAIL'}] {description}")
-            else:
-                _append("[INFO] No self-test steps defined for this tool yet.")
-            _append("\nDone.")
+                if is_motion:
+                    _append("[INFO] This tool has no telemetry to verify - STEP/DIR/EN "
+                            "commands are one-shot with no response by design.")
+                elif steps:
+                    for description, cmd_id, cmd_data, expect_id in steps:
+                        if expect_id is None:
+                            _append(f"[INFO] {description}")
+                            continue
+                        resp = self.bus.wait_for_one(
+                            expect_id, timeout=1.5,
+                            send_after_register=(lambda c=cmd_id, d=cmd_data: self.bus.send(c, d)) if cmd_id is not None else None)
+                        if cmd_id == CAN_ID_DRILL_CMD:
+                            # send_after_register above just put a real,
+                            # physical zero-speed command on the wire, bypassing
+                            # the drill panel's own _send_drill() and its
+                            # off->on confirmation tracking entirely - this
+                            # talks to the bus directly. Without resetting the
+                            # same tracked value that check reads
+                            # (self._drill_last_sent_speed, set on the GUI
+                            # instance by _build_drill_panel), it would still
+                            # think the drill was already spinning from before
+                            # Self-Test ran, and the next real Send click with
+                            # an unchanged nonzero speed would skip the
+                            # confirmation dialog even though it's a genuine
+                            # off->on transition for the actual hardware.
+                            self._drill_last_sent_speed = 0
+                        _append(f"[{'PASS' if resp is not None else 'FAIL'}] {description}")
+                else:
+                    _append("[INFO] No self-test steps defined for this tool yet.")
+                _append("\nDone.")
+            finally:
+                self.root.after(0, _self_test_done)
 
         threading.Thread(target=_worker, daemon=True).start()
 
