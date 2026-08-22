@@ -4,6 +4,14 @@
 
 # URTC Tester (Windows / Linux)
 
+<p align="left">
+  <img src="https://img.shields.io/badge/Licenza-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/Linguaggio-Python-3776AB.svg" alt="Python">
+  <img src="https://img.shields.io/badge/UI-Tkinter-lightgrey.svg" alt="Tkinter">
+  <img src="https://img.shields.io/badge/Protocollo-CAN-yellow.svg" alt="CAN">
+</p>
+
+
 **Versione:** 1.1.0 · **Autore:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licenza: **GPL-3.0** per il codice sorgente, **CC BY-SA 4.0** per questa
