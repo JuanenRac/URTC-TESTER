@@ -35,13 +35,18 @@ from tester_gui_core import TesterGUI
 
 
 def _show_splash_then(root, on_done):
-    """Shows the banner centered on screen for 5s, then calls on_done() and
-    closes the splash. Built as a borderless Toplevel rather than the
-    banner being part of the main window itself, so the main window can
-    stay smaller - the banner only needs screen space for those first 5
-    seconds, not for the entire session. Skipped straight to on_done() if
-    the banner image can't be loaded for any reason (missing file, etc.) -
-    a missing splash was never worth blocking startup over.
+    """Shows the banner centered on screen for up to 5s, then calls
+    on_done() and closes the splash. Built as a borderless Toplevel rather
+    than the banner being part of the main window itself, so the main
+    window can stay smaller - the banner only needs screen space for those
+    first 5 seconds, not for the entire session. Skipped straight to
+    on_done() if the banner image can't be loaded for any reason (missing
+    file, etc.) - a missing splash was never worth blocking startup over.
+
+    Click or any keypress dismisses it immediately instead of waiting out
+    the full 5s - a technician restarting the tool repeatedly between
+    quick diagnostic runs (its actual, frequent use case) shouldn't have
+    to sit through the same fixed delay every single time.
     """
     try:
         banner_img = tk.PhotoImage(file=BANNER_IMAGE_PATH)
@@ -61,11 +66,30 @@ def _show_splash_then(root, on_done):
     splash.attributes("-topmost", True)
     splash.deiconify()  # only shown now that it's already correctly positioned
 
-    def _finish():
+    _done = {"fired": False}
+
+    def _finish(event=None):
+        # Guards against both the timer and a click/keypress firing this
+        # in the same tick (e.g. a click landing right as the 5s timer
+        # expires) - destroy()/on_done() must only ever run once.
+        if _done["fired"]:
+            return
+        _done["fired"] = True
         splash.destroy()
         on_done()
 
-    splash.after(5000, _finish)
+    timer_id = splash.after(5000, _finish)
+
+    def _skip(event=None):
+        splash.after_cancel(timer_id)
+        _finish()
+
+    # overrideredirect windows don't get keyboard focus automatically -
+    # without this, <Key> below would never fire.
+    splash.focus_set()
+    splash.bind("<Button-1>", _skip)
+    splash.bind("<Key>", _skip)
+    label.bind("<Button-1>", _skip)
 
 
 def main():
