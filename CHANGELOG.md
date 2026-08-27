@@ -25,6 +25,11 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
   `TESTER_VERSION` on its own - this project's own versioning convention
   only advances it on a real `build_exe.bat`/`build_exe.sh` packaged build.
 
+### Fixed
+- SLCAN reception now discards impossible CAN 2.0 DLC values (`9`-`F`) rather
+  than passing oversized frames to GUI handlers. Valid standard frames are
+  unaffected.
+
 ## [0.1.1] - Export live graphs to CSV
 
 - `_create_live_graph()` (`tester_panel_helpers.py`) now keeps its own

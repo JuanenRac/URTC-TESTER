@@ -220,6 +220,11 @@ class SLCAN:
                 can_id = int(line[1:4], 16)
                 dlc = int(line[4:5], 16)
                 data_start = 5
+                # CAN 2.0 carries at most eight bytes.  Do not let a noisy
+                # SLCAN line with DLC 9..F reach GUI handlers as an
+                # impossible frame merely because its text length matches.
+                if dlc > 8:
+                    continue
                 expected_len = data_start + dlc * 2
                 if len(line) != expected_len:
                     continue  # length doesn't match what this line's own DLC implies - malformed, keep listening
@@ -462,5 +467,4 @@ class SocketCAN:
         # dlc shouldn't be trusted at face value even though Python's own
         # slicing already caps silently at the buffer's real 8-byte length.
         return (can_id, data[:min(dlc, 8)])
-
 
