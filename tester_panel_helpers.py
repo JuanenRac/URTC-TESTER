@@ -139,8 +139,7 @@ class PanelHelpersMixin:
 
         `label` names both the CSV export button's tooltip and the value
         column header (audit idea: "Los gráficos de PID no permiten
-        exportar los datos a CSV" -
-        SONNET/AUDITORIA_COMPLETA_44_PROYECTOS.txt). Export is backed by
+        exportar los datos a CSV"). Export is backed by
         its OWN unbounded `history` list, separate from the rolling
         `values` the canvas draws from - the live view is deliberately a
         short rolling window (see above), but a CSV export dropping
@@ -208,4 +207,3 @@ class PanelHelpersMixin:
         export_btn.pack(anchor="w", padx=4, pady=(0, 6))
 
         return add_point
-
