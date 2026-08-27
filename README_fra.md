@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/images/URTC_LOGO_TESTER.svg" alt="URTC Tester Logo" width="100%">
+  <img src="/images/URTC_TESTER_BANNER.svg" alt="URTC Tester Logo" width="100%">
 </p>
 
 # URTC Tester (Windows / Linux)
