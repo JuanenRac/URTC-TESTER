@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "ecosystem": "HYDRA-UMC",
+  "name": "URTC-TESTER",
+  "version": "0.1.1",
+  "role": "tool",
+  "stack": "python-bare",
+  "technologies": [
+    "Python",
+    "Tkinter",
+    "live CAN bus diagnostics"
+  ],
+  "deployment_target": "user-pc",
+  "maturity": "established",
+  "family": "URTC Tool Platform",
+  "parent": "URTC",
+  "build": "Standalone script. pip install -r requirements.txt.",
+  "notes": "Real live CAN-bus diagnostic tool, including CSV export of live graphs per its own CHANGELOG history.",
+  "native_version": {
+    "file": "tester_config.py",
+    "pattern": "TESTER_VERSION\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""
+  }
+}

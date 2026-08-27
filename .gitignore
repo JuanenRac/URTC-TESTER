@@ -1,0 +1,9 @@
+build/
+dist/
+__pycache__/
+*.pyc
+URTC_Tester.spec
+# HYDRA-UMC shared secret protection
+.env
+.env.*
+!.env.example
