@@ -3,6 +3,9 @@ dist/
 __pycache__/
 *.pyc
 URTC_Tester.spec
+
+# Real per-session test-run logs (logs/.gitkeep keeps the directory itself)
+logs/*.log
 # HYDRA-UMC shared secret protection
 .env
 .env.*
