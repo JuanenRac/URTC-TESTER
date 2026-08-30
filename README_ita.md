@@ -191,7 +191,7 @@ OLED (`0x100`) - questi si applicano a ogni strumento, quindi non si
 spostano nel pannello dinamico. In modalità Ispezione AOI nello
 specifico, l'accensione/spegnimento dell'anello qui viene ignorato a
 favore del controllo strobo proprio di quello strumento (secondo
-`docs/CANBUS.TXT`) - il colore si applica comunque in entrambi i casi.
+`docs/CANBUS.md`) - il colore si applica comunque in entrambi i casi.
 
 **Scheda di Espansione** (sezione 3, sempre visibile): il bus SPI
 generico e la linea DIAG0 proprio di `CONN_EXPANSION` - il passthrough
@@ -235,7 +235,7 @@ EEPROM, niente di non volatile su di esso.
   leggerezza da uno strumento diagnostico live.
 - **Variante sensore MLX9064x**: **Interroga** mostra quale dei 3
   sensori termici della famiglia MLX9064x (o nessuno) è attualmente
-  configurato (`0x1A7` - vedi `CANBUS.TXT`) - rilevante solo quando il
+  configurato (`0x1A7` - vedi `CANBUS.md`) - rilevante solo quando il
   tipo di scheda di espansione sopra è una variante Advanced o
   Basic+MLX9064x. Sola lettura qui, stesso ragionamento del tipo di
   scheda di espansione sopra.
@@ -257,7 +257,7 @@ EEPROM, niente di non volatile su di esso.
 **Trama CAN Personalizzata** (sezione 6, anch'essa sempre visibile):
 un'immissione di ID grezzo + byte hex con invio singolo e periodico -
 per un comando che non ha ancora un proprio controllo qui, o per
-testare qualcosa non (o non ancora) documentato in `docs/CANBUS.TXT`.
+testare qualcosa non (o non ancora) documentato in `docs/CANBUS.md`.
 Nessuna validazione oltre all'intervallo ID e DLC≤8; qualsiasi cosa
 questo invii è esattamente ciò che va sul bus. La stessa sezione apre
 anche il **Monitor Bus Grezzo** (vedi sotto).
@@ -312,7 +312,7 @@ bisogno di modificare il codice sorgente di questo strumento.
 ## 4. Copertura strumenti
 
 Ognuno dei 25 profili ha il proprio pannello, costruito direttamente da
-`docs/CANBUS.TXT`:
+`docs/CANBUS.md`:
 
 | Strumento | Controlli | Telemetria live |
 |---|---|---|
@@ -325,7 +325,7 @@ Ognuno dei 25 profili ha il proprio pannello, costruito direttamente da
 | Stampante 3D | Setpoint ugello, direzione/passi estrusore, potenza ventola strato, potenza ventola hotend | Temperatura hotend, RPM ventola strato, RPM ventola hotend |
 | Sonda di Scansione | nessuno | Conteggio eventi impatto + timestamp (`0x095` a massima priorità) |
 | Elettromagnete | Casella energizza/rilascia bobina | nessuna |
-| Saldatrice a Punti | Durata impulso + Spara | nessuna (spara solo se il sensore di contatto legge HIGH prima - vedi il proprio `0x1C0` in `docs/CANBUS.TXT`) |
+| Saldatrice a Punti | Durata impulso + Spara | nessuna (spara solo se il sensore di contatto legge HIGH prima - vedi il proprio `0x1C0` in `docs/CANBUS.md`) |
 | Rivestimento Conformale, Inseritore a Pressione | nessuno - pannello solo informativo | nessuna - entrambi gli ID strumento non hanno alcun gestore CAN, il proprio attuatore e sensore vivono sulla scheda madre del robot stesso, vedi `docs/TOOLS.TXT` |
 | Sonda Volante | La lettura base è automatica; la lettura avanzata richiede una parola di config ADS1115 grezza (hex) + Avvia Conversione + Leggi Risultato | Lettura base ADC integrato (automatica, `0x243`) |
 | Cura UV | Cursore potenza (0-255) + Invia/Spegni | nessuna |
@@ -345,7 +345,7 @@ per gli strumenti con watchdog 250ms, 400ms per la ventola dello
 strato) finché la casella rimane spuntata, allo stesso modo in cui un
 vero controller master deve fare. Deselezionarla invia una singola
 trama zero/spento e si ferma. La ventola hotend non ha watchdog (un
-rilevatore di stallo invece - vedi `docs/CANBUS.TXT`), quindi è un
+rilevatore di stallo invece - vedi `docs/CANBUS.md`), quindi è un
 semplice invio singolo.
 
 ## 5. Registri e pacchetti di debug
@@ -450,6 +450,11 @@ strumento.
 ├── README_fra.md               Traduzione francese
 ├── README_deu.md               Traduzione tedesca
 ├── README_zho.md               Traduzione cinese
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── BUILD_AND_RUN.md
+│   ├── INTEGRATION_CONTRACT.md
+│   └── CANBUS.md
 └── README_jpn.md               Traduzione giapponese
 ```
 

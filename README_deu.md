@@ -195,7 +195,7 @@ die Ring-LED-Farbe und Ein/Aus, und der OLED-Anzeigemodus (`0x100`) -
 diese gelten für jedes Werkzeug, sodass sie nicht in das dynamische
 Panel wandern. Im AOI-Inspektionsmodus speziell wird das Ein/Aus des
 Rings hier zugunsten der eigenen Stroboskopsteuerung dieses Werkzeugs
-ignoriert (gemäß `docs/CANBUS.TXT`) - die Farbe gilt in beiden Fällen
+ignoriert (gemäß `docs/CANBUS.md`) - die Farbe gilt in beiden Fällen
 trotzdem.
 
 **Erweiterungsplatine** (Abschnitt 3, immer sichtbar): der eigene
@@ -243,7 +243,7 @@ selbst hat kein F-RAM, kein EEPROM, nichts nichtflüchtiges darauf.
   einem Live-Diagnosetool geändert werden sollte.
 - **MLX9064x-Sensorvariante**: **Abfragen** zeigt, welcher der 3
   Wärmesensoren der MLX9064x-Familie (oder keiner) aktuell konfiguriert
-  ist (`0x1A7` - siehe `CANBUS.TXT`) - nur relevant, wenn der obige
+  ist (`0x1A7` - siehe `CANBUS.md`) - nur relevant, wenn der obige
   Erweiterungsplatinentyp eine Advanced-Variante oder Basic+MLX9064x
   ist. Hier schreibgeschützt, gleiche Begründung wie beim
   Erweiterungsplatinentyp oben.
@@ -267,7 +267,7 @@ selbst hat kein F-RAM, kein EEPROM, nichts nichtflüchtiges darauf.
 sichtbar): eine rohe ID-Eingabe + Hex-Bytes mit Einmal- und periodischem
 Senden - für einen Befehl, der hier noch keine eigene Steuerung hat,
 oder um etwas zu testen, das nicht (oder noch nicht) in
-`docs/CANBUS.TXT` dokumentiert ist. Keine Validierung über den
+`docs/CANBUS.md` dokumentiert ist. Keine Validierung über den
 ID-Bereich und DLC≤8 hinaus; was auch immer dies sendet, ist genau das,
 was auf den Bus geht. Derselbe Abschnitt öffnet auch den **Rohen
 Bus-Monitor** (siehe unten).
@@ -323,7 +323,7 @@ müssen.
 ## 4. Werkzeugabdeckung
 
 Jedes der 25 Profile hat sein eigenes Panel, direkt aus
-`docs/CANBUS.TXT` aufgebaut:
+`docs/CANBUS.md` aufgebaut:
 
 | Werkzeug | Steuerelemente | Live-Telemetrie |
 |---|---|---|
@@ -336,7 +336,7 @@ Jedes der 25 Profile hat sein eigenes Panel, direkt aus
 | 3D-Drucker | Düsensollwert, Extruderrichtung/-schritte, Schichtlüfterleistung, Hotend-Lüfterleistung | Hotend-Temperatur, Schichtlüfter-Drehzahl, Hotend-Lüfter-Drehzahl |
 | Scan-Sonde | keine | Anzahl Aufprallereignisse + Zeitstempel (`0x095` mit höchster Priorität) |
 | Elektromagnet | Kontrollkästchen Spule erregen/lösen | keine |
-| Punktschweißgerät | Impulsdauer + Auslösen | keine (löst nur aus, wenn der Kontaktsensor zuvor HIGH liest - siehe das eigene `0x1C0` in `docs/CANBUS.TXT`) |
+| Punktschweißgerät | Impulsdauer + Auslösen | keine (löst nur aus, wenn der Kontaktsensor zuvor HIGH liest - siehe das eigene `0x1C0` in `docs/CANBUS.md`) |
 | Konforme Beschichtung, Einpress-Zylinder | keine - rein informatives Panel | keine - beide Werkzeug-IDs haben keinen eigenen CAN-Handler, ihr eigener Aktuator und Sensor befinden sich auf der Hauptplatine des Roboters selbst, siehe `docs/TOOLS.TXT` |
 | Flying Probe | Die Basismessung erfolgt automatisch; die erweiterte Messung benötigt ein rohes ADS1115-Konfigurationswort (hex) + Konvertierung Auslösen + Ergebnis Lesen | Basismessung integrierter ADC (automatisch, `0x243`) |
 | UV-Härtung | Leistungsregler (0-255) + Senden/Aus | keine |
@@ -357,7 +357,7 @@ für den Schichtlüfter), solange das Kästchen markiert bleibt, genauso
 wie es ein echter Master-Controller tun muss. Das Deaktivieren sendet
 einen einzelnen Null-/Aus-Frame und stoppt. Der Hotend-Lüfter hat
 keinen Watchdog (stattdessen einen Stillstandsdetektor - siehe
-`docs/CANBUS.TXT`), also ist es ein einfaches einmaliges Senden.
+`docs/CANBUS.md`), also ist es ein einfaches einmaliges Senden.
 
 ## 5. Protokolle und Debug-Pakete
 
@@ -464,6 +464,11 @@ Werkzeugkopfproblem debuggt.
 ├── README_fra.md               Französische Übersetzung
 ├── README_deu.md               Diese Datei
 ├── README_zho.md               Chinesische Übersetzung
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── BUILD_AND_RUN.md
+│   ├── INTEGRATION_CONTRACT.md
+│   └── CANBUS.md
 └── README_jpn.md               Japanische Übersetzung
 ```
 

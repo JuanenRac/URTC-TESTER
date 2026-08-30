@@ -191,7 +191,7 @@ color y encendido/apagado del anillo LED, y el modo de pantalla OLED
 (`0x100`) - estos aplican a toda herramienta, así que no se mueven al
 panel dinámico. En el modo Inspección AOI específicamente, el
 encendido/apagado del anillo aquí se ignora en favor del propio control
-de estrobo de esa herramienta (según `docs/CANBUS.TXT`) - el color sigue
+de estrobo de esa herramienta (según `docs/CANBUS.md`) - el color sigue
 aplicando de cualquier forma.
 
 **Placa de Expansión** (sección 3, siempre visible): el propio bus SPI
@@ -237,7 +237,7 @@ en él.
   en vivo.
 - **Variante de sensor MLX9064x**: **Consultar** muestra cuál de los 3
   sensores térmicos de la familia MLX9064x (o ninguno) está configurado
-  actualmente (`0x1A7` - ver `CANBUS.TXT`) - solo relevante cuando el
+  actualmente (`0x1A7` - ver `CANBUS.md`) - solo relevante cuando el
   tipo de placa de expansión de arriba es una variante Advanced o
   Basic+MLX9064x. Solo lectura aquí, mismo razonamiento que el tipo de
   placa de expansión de arriba.
@@ -259,7 +259,7 @@ en él.
 **Trama CAN Personalizada** (sección 6, también siempre visible): una
 entrada de ID en bruto + bytes hex con envío de una vez y periódico -
 para un comando que aún no tiene su propio control aquí, o para probar
-algo no (o aún no) documentado en `docs/CANBUS.TXT`. Sin validación más
+algo no (o aún no) documentado en `docs/CANBUS.md`. Sin validación más
 allá del rango de ID y DLC≤8; lo que sea que esto envíe es exactamente
 lo que va al bus. La misma sección también abre el **Monitor de Bus en
 Bruto** (ver abajo).
@@ -314,7 +314,7 @@ esta herramienta.
 ## 4. Cobertura de herramientas
 
 Cada uno de los 25 perfiles tiene su propio panel, construido
-directamente a partir de `docs/CANBUS.TXT`:
+directamente a partir de `docs/CANBUS.md`:
 
 | Herramienta | Controles | Telemetría en vivo |
 |---|---|---|
@@ -327,7 +327,7 @@ directamente a partir de `docs/CANBUS.TXT`:
 | Impresora 3D | Setpoint de boquilla, dirección/pasos del extrusor, potencia del ventilador de capa, potencia del ventilador de hotend | Temperatura de hotend, RPM del ventilador de capa, RPM del ventilador de hotend |
 | Sonda de Escaneo | ninguno | Cuenta de eventos de impacto + marca de tiempo (`0x095` de máxima prioridad) |
 | Electroimán | Casilla energizar/liberar bobina | ninguna |
-| Soldador por Puntos | Duración de pulso + Disparar | ninguna (solo dispara si el sensor de contacto lee HIGH primero - ver `docs/CANBUS.TXT`'s propio `0x1C0`) |
+| Soldador por Puntos | Duración de pulso + Disparar | ninguna (solo dispara si el sensor de contacto lee HIGH primero - ver `docs/CANBUS.md`'s propio `0x1C0`) |
 | Recubrimiento Conformal, Insertador a Presión | ninguno - panel solo informativo | ninguna - ambos IDs de herramienta no tienen manejador CAN alguno, su propio actuador y sensor viven en la placa base del propio robot, ver `docs/TOOLS.TXT` |
 | Sonda Voladora | La lectura básica es automática; la lectura avanzada necesita una palabra de config ADS1115 en bruto (hex) + Disparar Conversión + Leer Resultado | Lectura básica del ADC integrado (automática, `0x243`) |
 | Curado UV | Deslizador de potencia (0-255) + Enviar/Apagar | ninguna |
@@ -347,7 +347,7 @@ herramientas con watchdog de 250ms, 400ms para el ventilador de capa)
 mientras la casilla siga marcada, de la misma forma en que un
 controlador maestro real tiene que hacerlo. Desmarcarla envía una única
 trama de cero/apagado y para. El ventilador de hotend no tiene watchdog
-(un detector de estancamiento en su lugar - ver `docs/CANBUS.TXT`), así
+(un detector de estancamiento en su lugar - ver `docs/CANBUS.md`), así
 que es un envío simple de una vez.
 
 ## 5. Registros y paquetes de depuración
@@ -451,6 +451,11 @@ entregar a quien esté depurando un problema de cabezal de herramienta.
 ├── README_fra.md               Traducción al francés
 ├── README_deu.md               Traducción al alemán
 ├── README_zho.md               Traducción al chino
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── BUILD_AND_RUN.md
+│   ├── INTEGRATION_CONTRACT.md
+│   └── CANBUS.md
 └── README_jpn.md               Traducción al japonés
 ```
 

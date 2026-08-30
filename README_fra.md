@@ -195,7 +195,7 @@ l'allumage/extinction de l'anneau LED, et le mode d'affichage OLED
 déplacent pas vers le panneau dynamique. En mode Inspection AOI
 spécifiquement, l'allumage/extinction de l'anneau ici est ignoré en
 faveur du propre contrôle de stroboscope de cet outil (selon
-`docs/CANBUS.TXT`) - la couleur s'applique quand même dans les deux cas.
+`docs/CANBUS.md`) - la couleur s'applique quand même dans les deux cas.
 
 **Carte d'Extension** (section 3, toujours visible) : le propre bus SPI
 générique et la ligne DIAG0 de `CONN_EXPANSION` - le passage brut
@@ -242,7 +242,7 @@ pas d'EEPROM, rien de non volatile dessus.
   diagnostic en direct.
 - **Variante de capteur MLX9064x** : **Interroger** montre lequel des 3
   capteurs thermiques de la famille MLX9064x (ou aucun) est
-  actuellement configuré (`0x1A7` - voir `CANBUS.TXT`) - pertinent
+  actuellement configuré (`0x1A7` - voir `CANBUS.md`) - pertinent
   uniquement lorsque le type de carte d'extension ci-dessus est une
   variante Advanced ou Basic+MLX9064x. Lecture seule ici, même
   raisonnement que le type de carte d'extension ci-dessus.
@@ -265,7 +265,7 @@ pas d'EEPROM, rien de non volatile dessus.
 une entrée d'ID brut + octets hexadécimaux avec envoi unique et
 périodique - pour une commande qui n'a pas encore son propre contrôle
 ici, ou pour tester quelque chose non (ou pas encore) documenté dans
-`docs/CANBUS.TXT`. Aucune validation au-delà de la plage d'ID et
+`docs/CANBUS.md`. Aucune validation au-delà de la plage d'ID et
 DLC≤8 ; quoi que ceci envoie est exactement ce qui va sur le bus. La
 même section ouvre aussi le **Moniteur de Bus Brut** (voir ci-dessous).
 
@@ -320,7 +320,7 @@ outil.
 ## 4. Couverture des outils
 
 Chacun des 25 profils a son propre panneau, construit directement à
-partir de `docs/CANBUS.TXT` :
+partir de `docs/CANBUS.md` :
 
 | Outil | Contrôles | Télémétrie en direct |
 |---|---|---|
@@ -333,7 +333,7 @@ partir de `docs/CANBUS.TXT` :
 | Imprimante 3D | Consigne de buse, direction/pas de l'extrudeur, puissance ventilateur de couche, puissance ventilateur hotend | Température hotend, RPM ventilateur de couche, RPM ventilateur hotend |
 | Sonde de Balayage | aucun | Nombre d'événements d'impact + horodatage (`0x095` priorité maximale) |
 | Électroaimant | Case à cocher activer/relâcher bobine | aucune |
-| Soudeuse par Points | Durée d'impulsion + Déclencher | aucune (ne se déclenche que si le capteur de contact lit HIGH d'abord - voir le propre `0x1C0` de `docs/CANBUS.TXT`) |
+| Soudeuse par Points | Durée d'impulsion + Déclencher | aucune (ne se déclenche que si le capteur de contact lit HIGH d'abord - voir le propre `0x1C0` de `docs/CANBUS.md`) |
 | Revêtement Conforme, Insertion par Pression | aucun - panneau purement informatif | aucune - les deux ID d'outil n'ont aucun gestionnaire CAN, leur propre actionneur et capteur vivent sur la carte mère du robot lui-même, voir `docs/TOOLS.TXT` |
 | Sonde Volante | La lecture basique est automatique ; la lecture avancée nécessite un mot de config ADS1115 brut (hex) + Déclencher Conversion + Lire Résultat | Lecture basique ADC intégré (automatique, `0x243`) |
 | Durcissement UV | Curseur de puissance (0-255) + Envoyer/Éteindre | aucune |
@@ -354,7 +354,7 @@ renvoie automatiquement (150ms pour les outils avec watchdog 250ms,
 la même manière qu'un vrai contrôleur maître doit le faire. La décocher
 envoie une seule trame zéro/arrêt et s'arrête. Le ventilateur hotend
 n'a pas de watchdog (un détecteur de blocage à la place - voir
-`docs/CANBUS.TXT`), donc c'est un simple envoi unique.
+`docs/CANBUS.md`), donc c'est un simple envoi unique.
 
 ## 5. Journaux et paquets de débogage
 
@@ -457,6 +457,11 @@ remettre à quiconque déboguant un problème de tête d'outil.
 ├── README_fra.md               Ce fichier
 ├── README_deu.md               Traduction allemande
 ├── README_zho.md               Traduction chinoise
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── BUILD_AND_RUN.md
+│   ├── INTEGRATION_CONTRACT.md
+│   └── CANBUS.md
 └── README_jpn.md               Traduction japonaise
 ```
 

@@ -162,7 +162,7 @@ is active): the status LED color override, the ring LED color and
 on/off, and OLED display mode (`0x100`) - these apply to every tool, so
 they don't move to the dynamic panel. In AOI Inspection mode specifically,
 the ring's on/off here is ignored in favor of that tool's own strobe
-control (per `docs/CANBUS.TXT`) - color still applies either way.
+control (per `docs/CANBUS.md`) - color still applies either way.
 
 **Expansion Board** (section 3, always visible): `CONN_EXPANSION`'s own
 generic SPI bus and DIAG0 line - the raw passthrough every driver-
@@ -201,7 +201,7 @@ nothing non-volatile on it.
   not something to change casually from a live diagnostic tool.
 - **MLX9064x sensor variant**: **Query** shows which of the 3 MLX9064x
   family members (or none at all) is currently configured (`0x1A7` -
-  see `CANBUS.TXT`) - only meaningful when the expansion board type
+  see `CANBUS.md`) - only meaningful when the expansion board type
   above is an Advanced variant or Basic+MLX9064x. Read-only here, same
   reasoning as expansion board type above.
 - **Free tool configuration**: **Query** shows the raw ID-jumper reading
@@ -220,7 +220,7 @@ nothing non-volatile on it.
 **Custom CAN Frame** (section 6, also always visible): a raw ID + hex
 bytes entry with one-shot and periodic send - for a command that doesn't
 have its own control here yet, or for testing something not (or not yet)
-documented in `docs/CANBUS.TXT`. No validation beyond ID range and DLC≤8;
+documented in `docs/CANBUS.md`. No validation beyond ID range and DLC≤8;
 whatever this sends is exactly what goes on the bus. Same section also
 opens the **Raw Bus Monitor** (see below).
 
@@ -266,7 +266,7 @@ needing to modify this tool's source.
 ## 4. 🧰 Tool coverage
 
 Every one of the 25 profiles has its own panel, built directly from
-`docs/CANBUS.TXT`:
+`docs/CANBUS.md`:
 
 | Tool | Controls | Live telemetry |
 |---|---|---|
@@ -279,7 +279,7 @@ Every one of the 25 profiles has its own panel, built directly from
 | 3D Printer | Nozzle setpoint, extruder direction/steps, layer fan power, hotend fan power | Hotend temperature, layer fan RPM, hotend fan RPM |
 | Scan Probe | none | Impact event count + timestamp (max-priority `0x095`) |
 | Electromagnet | Energize/release checkbox | none |
-| Spot Welder | Pulse duration + Fire | none (fires only if the contact sensor reads HIGH first - see `docs/CANBUS.TXT`'s own `0x1C0`) |
+| Spot Welder | Pulse duration + Fire | none (fires only if the contact sensor reads HIGH first - see `docs/CANBUS.md`'s own `0x1C0`) |
 | Conformal Coating, Press-Fit Inserter | none - informational panel only | none - both tool IDs have no CAN handler at all, their own actuator and sensor live on the robot's own mainboard, see `docs/TOOLS.TXT` |
 | Flying Probe | Basic reading is automatic; advanced reading needs a raw ADS1115 config word (hex) + Trigger Conversion + Read Result | Basic onboard-ADC reading (automatic, `0x243`) |
 | UV Curing | Power slider (0-255) + Send/Off | none |
@@ -298,7 +298,7 @@ automatically (150ms for the 250ms-watchdog tools, 400ms for the layer
 fan) for as long as the box stays checked, the same way a real master
 controller has to. Unchecking it sends a single zero/off frame and
 stops. The hotend fan has no watchdog (a stall detector instead - see
-`docs/CANBUS.TXT`), so it's a plain one-shot send.
+`docs/CANBUS.md`), so it's a plain one-shot send.
 
 ## 5. 📋 Logs and debug bundles
 
@@ -385,6 +385,11 @@ tool) for handing to whoever's debugging a tool head issue.
 ├── README_fra.md               French translation
 ├── README_deu.md               German translation
 ├── README_zho.md               Chinese translation
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── BUILD_AND_RUN.md
+│   ├── INTEGRATION_CONTRACT.md
+│   └── CANBUS.md
 └── README_jpn.md               Japanese translation
 ```
 
