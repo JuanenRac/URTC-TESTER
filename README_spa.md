@@ -96,6 +96,14 @@ incluidos conservan la animación en Tkinter y en el ejecutable autónomo sin
 añadir una dependencia gráfica en tiempo de ejecución. El icono nativo URTC
 de ventana/barra de tareas se mantiene estático por diseño.
 
+### Panel visual de control
+
+El flujo consolidado de diagnóstico CAN en vivo usa ahora una superficie de
+control azul marino/cian: cabecera de producto, tarjeta de conexión de alto
+contraste, pestañas de herramientas claras, registro de sesión oscuro y canal
+de progreso visible. Esta mejora visual y de accesibilidad no modifica la
+monitorización pasiva, el enrutamiento de comandos ni ningún límite de seguridad.
+
 ### Barra de menú
 
 - **Archivo** - Guardar registros (el registro en pantalla como texto

@@ -100,6 +100,14 @@ incluses préservent l’animation dans Tkinter et dans l’exécutable autonome
 sans dépendance graphique à l’exécution. L’icône native URTC de fenêtre/barre
 des tâches reste volontairement statique.
 
+### Console visuelle de contrôle
+
+Le flux de diagnostic CAN en direct utilise désormais une surface de contrôle
+bleu nuit/cyan : en-tête produit, carte de connexion contrastée, onglets
+d’outils lisibles, journal de session sombre et progression visible. Cette
+amélioration visuelle et d’accessibilité ne modifie ni la surveillance
+passive, ni le routage des commandes, ni aucune limite de sécurité.
+
 ### Barre de menu
 
 - **Fichier** - Enregistrer les journaux (le journal à l'écran en texte

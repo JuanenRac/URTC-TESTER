@@ -97,6 +97,14 @@ fotogrammi PNG inclusi preservano l’animazione in Tkinter e nell’eseguibile
 autonomo senza dipendenze grafiche a runtime. L’icona nativa URTC della
 finestra/barra delle applicazioni rimane volutamente statica.
 
+### Console visiva di controllo
+
+Il flusso di diagnostica CAN dal vivo usa ora una superficie di controllo blu
+notte/ciano: intestazione di prodotto, scheda di connessione ad alto
+contrasto, schede degli strumenti leggibili, registro di sessione scuro e
+progresso visibile. Questo miglioramento visivo e di accessibilità non altera
+il monitoraggio passivo, il routing dei comandi o alcun limite di sicurezza.
+
 ### Barra dei menu
 
 - **File** - Salva Registri (il registro a schermo come testo semplice;

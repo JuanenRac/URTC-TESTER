@@ -32,6 +32,7 @@ from tester_common_panels import CommonPanelsMixin
 from tester_panel_helpers import PanelHelpersMixin
 from tester_tool_panels import ToolPanelsMixin
 from hydra_umc_animation import AnimatedHydraUMCMark
+from hydra_umc_deck_widgets import RoundedDeckCard
 
 try:
     import serial
@@ -45,10 +46,117 @@ HAVE_SOCKETCAN = hasattr(socket, "AF_CAN")
 
 
 class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
+    # Shared command-deck palette. It sits over the proven live-CAN workflow
+    # and deliberately leaves the existing transport, safety and per-tool
+    # behaviours intact instead of substituting a decorative mock interface.
+    BG = "#07131B"
+    PANEL = "#0C1A24"
+    PANEL_ALT = "#102431"
+    BORDER = "#1B4051"
+    ACCENT = "#23C9E8"
+    TEXT = "#E8F4F8"
+    MUTED = "#91A9B5"
+    SUCCESS = "#65DE91"
+    WARNING = "#F7B955"
+    DANGER = "#FF6B78"
+
+    def _configure_command_deck_theme(self):
+        """Apply the dark command-deck theme before the live controls exist."""
+        self.root.configure(bg=self.BG)
+        style = ttk.Style(self.root)
+        try:
+            style.theme_use("clam")
+        except tk.TclError:
+            pass
+        style.configure(".", background=self.PANEL, foreground=self.TEXT, font=("Segoe UI", 10))
+        style.configure("TFrame", background=self.PANEL)
+        style.configure("TLabel", background=self.PANEL, foreground=self.TEXT)
+        style.configure(
+            "TLabelframe", background=self.PANEL, foreground=self.ACCENT,
+            bordercolor=self.BORDER, lightcolor=self.BORDER, darkcolor=self.BORDER,
+            borderwidth=1, relief="solid",
+        )
+        style.configure(
+            "TLabelframe.Label", background=self.PANEL, foreground=self.ACCENT,
+            font=("Segoe UI Semibold", 11),
+        )
+        style.configure(
+            "TButton", background=self.PANEL_ALT, foreground=self.TEXT,
+            bordercolor=self.BORDER, lightcolor=self.BORDER, darkcolor=self.BORDER,
+            padding=(12, 7), font=("Segoe UI Semibold", 10),
+        )
+        style.map(
+            "TButton", background=[("active", "#173544"), ("pressed", "#0A6579")],
+            foreground=[("disabled", "#5D7480")], bordercolor=[("active", self.ACCENT)],
+        )
+        style.configure(
+            "Accent.TButton", background="#0B7187", foreground="#F3FDFF",
+            bordercolor=self.ACCENT, padding=(13, 7), font=("Segoe UI Semibold", 10),
+        )
+        style.map("Accent.TButton", background=[("active", "#109DB9"), ("pressed", "#07566A")])
+        style.configure(
+            "TEntry", fieldbackground="#09151D", foreground=self.TEXT,
+            insertcolor=self.ACCENT, bordercolor=self.BORDER, padding=6,
+        )
+        style.configure(
+            "TCombobox", fieldbackground="#09151D", background=self.PANEL_ALT,
+            foreground=self.TEXT, arrowcolor=self.ACCENT, bordercolor=self.BORDER,
+            padding=5,
+        )
+        style.map("TCombobox", fieldbackground=[("readonly", "#09151D")], foreground=[("readonly", self.TEXT)])
+        style.configure("TCheckbutton", background=self.PANEL, foreground=self.TEXT)
+        style.configure("TRadiobutton", background=self.PANEL, foreground=self.TEXT)
+        style.configure("TNotebook", background=self.BG, borderwidth=0, tabmargins=(0, 0, 0, 0))
+        style.configure(
+            "TNotebook.Tab", background="#0A1821", foreground=self.MUTED,
+            bordercolor=self.BORDER, padding=(16, 9), font=("Segoe UI Semibold", 10),
+        )
+        style.map("TNotebook.Tab", background=[("selected", self.PANEL_ALT), ("active", "#132D3A")], foreground=[("selected", self.ACCENT), ("active", self.TEXT)])
+        style.configure(
+            "Treeview", background="#09151D", fieldbackground="#09151D",
+            foreground=self.TEXT, bordercolor=self.BORDER, rowheight=28,
+        )
+        style.map("Treeview", background=[("selected", "#155269")], foreground=[("selected", "#FFFFFF")])
+        style.configure(
+            "Treeview.Heading", background="#122A36", foreground=self.ACCENT,
+            bordercolor=self.BORDER, relief="flat", font=("Segoe UI Semibold", 9), padding=(8, 7),
+        )
+        style.map("Treeview.Heading", background=[("active", "#173A49")])
+        style.configure(
+            "Horizontal.TProgressbar", troughcolor="#071018", background=self.ACCENT,
+            bordercolor=self.BORDER, lightcolor=self.ACCENT, darkcolor=self.ACCENT,
+        )
+        style.configure("TScrollbar", background=self.PANEL_ALT, troughcolor="#071018", bordercolor=self.BORDER, arrowcolor=self.ACCENT)
+
+    def _build_command_deck_header(self):
+        """Place a product/status header above the existing real CAN controls."""
+        header = tk.Frame(self.root, bg=self.BG, height=76, highlightthickness=0)
+        header.grid(row=0, column=0, sticky="ew", padx=8, pady=(7, 4))
+        header.grid_propagate(False)
+        header.grid_columnconfigure(1, weight=1)
+        tk.Frame(header, bg=self.ACCENT, width=4).grid(row=0, column=0, sticky="ns", padx=(0, 13))
+        title_block = tk.Frame(header, bg=self.BG)
+        title_block.grid(row=0, column=1, sticky="w")
+        tk.Label(title_block, text="URTC", bg=self.BG, fg=self.ACCENT, font=("Segoe UI Semibold", 12)).pack(anchor="w")
+        tk.Label(title_block, text="Tester", bg=self.BG, fg=self.TEXT, font=("Segoe UI", 20, "bold")).pack(anchor="w")
+        tk.Label(title_block, text="LIVE CAN DIAGNOSTICS  •  TOOL TELEMETRY  •  SAFE TEST CONTROL", bg=self.BG, fg=self.MUTED, font=("Segoe UI Semibold", 8)).pack(anchor="w", pady=(1, 0))
+        state = tk.Frame(header, bg="#0B202A", highlightbackground=self.BORDER, highlightthickness=1)
+        state.grid(row=0, column=2, sticky="e", padx=(12, 0))
+        tk.Label(state, text="●  DIAGNOSTIC READY", bg="#0B202A", fg=self.SUCCESS, font=("Segoe UI Semibold", 9)).pack(padx=12, pady=(8, 1))
+        tk.Label(state, text=f"APP v{TESTER_VERSION}", bg="#0B202A", fg=self.MUTED, font=("Segoe UI", 8)).pack(padx=12, pady=(0, 8))
+
+    def _new_deck_card(self, parent, title):
+        """Build a real rounded surface while leaving live CAN logic intact."""
+        return RoundedDeckCard(
+            parent, title, canvas_color=self.BG, panel_color=self.PANEL,
+            border_color=self.BORDER, accent_color=self.ACCENT,
+            text_color=self.TEXT,
+        )
 
     def __init__(self, root):
         self.root = root
         root.title(f"URTC Tester v{TESTER_VERSION}")
+        self._configure_command_deck_theme()
         self._build_menu_bar()
         # Geometry (size + centered position) is set once in main(), before
         # this class is constructed - not here, so it isn't overwritten by
@@ -94,15 +202,17 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
 
         pad = {"padx": 8, "pady": 4}
         root.grid_columnconfigure(0, weight=1)
-        root.grid_rowconfigure(1, weight=1)  # notebook row
-        root.grid_rowconfigure(3, weight=1)  # log row
+        root.grid_rowconfigure(2, weight=1)  # notebook row
+        root.grid_rowconfigure(4, weight=1)  # log row
+        self._build_command_deck_header()
 
         # --- Connect (fixed at the top, outside the tabs below - connection
         # state and the detected-tool status are relevant no matter which
         # tab is currently open, so these don't get hidden behind a tab
         # switch the way the rest of the controls do) ---
-        conn_frame = ttk.LabelFrame(root, text=_("TAB_CONNECT_TITLE"))
-        conn_frame.grid(row=0, column=0, sticky="nsew", padx=4, pady=4)
+        conn_card = self._new_deck_card(root, _("TAB_CONNECT_TITLE"))
+        conn_card.grid(row=1, column=0, sticky="nsew", padx=8, pady=4)
+        conn_frame = conn_card.content
 
         # Tkinter cannot play the animated SVG directly.  This small mark
         # plays pre-rendered frames made from the official HYDRA-UMC SVG,
@@ -168,7 +278,10 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         self.port_combo.grid(row=row, column=1, **pad)
         self.refresh_btn = ttk.Button(conn_frame, text=_("BTN_REFRESH"), command=self.refresh_ports)
         self.refresh_btn.grid(row=row, column=2, **pad)
-        self.connect_btn = ttk.Button(conn_frame, text=_("BTN_CONNECT"), command=self.toggle_connect)
+        self.connect_btn = ttk.Button(
+            conn_frame, text=_("BTN_CONNECT"), command=self.toggle_connect,
+            style="Accent.TButton",
+        )
         self.connect_btn.grid(row=row, column=3, **pad)
         self.conn_status = ttk.Label(conn_frame, text=_("STATUS_NOT_CONNECTED"), foreground="red")
         self.conn_status.grid(row=row, column=4, **pad)
@@ -216,9 +329,15 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         ttk.Label(conn_frame, text=_("LBL_ACTIVE_TOOL")).grid(row=row, column=0, sticky="w", **pad)
         self.active_tool_label = ttk.Label(conn_frame, text=_("STATUS_CONNECT_TO_DETECT"), foreground="gray")
         self.active_tool_label.grid(row=row, column=1, columnspan=3, sticky="w", **pad)
-        self.detect_btn = ttk.Button(conn_frame, text=_("BTN_DETECT"), command=self.detect_active_tool)
+        self.detect_btn = ttk.Button(
+            conn_frame, text=_("BTN_DETECT"), command=self.detect_active_tool,
+            style="Accent.TButton",
+        )
         self.detect_btn.grid(row=row, column=4, **pad)
-        self.selftest_btn = ttk.Button(conn_frame, text=_("BTN_RUN_SELF_TEST"), command=self._run_self_test)
+        self.selftest_btn = ttk.Button(
+            conn_frame, text=_("BTN_RUN_SELF_TEST"), command=self._run_self_test,
+            style="Accent.TButton",
+        )
         self.selftest_btn.grid(row=row, column=5, **pad)
         row += 1
 
@@ -238,7 +357,8 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             cell.pack(side="left", padx=(0, 10))
             ttk.Label(cell, text=bit_label, font=("", 8)).pack()
             sq = tk.Label(cell, text="?", width=2, height=1, relief="solid", borderwidth=1,
-                          font=("", 11, "bold"), bg="#DDDDDD", fg="#666666")
+                          font=("Segoe UI", 11, "bold"), bg="#142A36", fg=self.MUTED,
+                          highlightbackground=self.BORDER, highlightthickness=1)
             sq.pack()
             self._id_pin_squares.append(sq)
         ttk.Label(conn_frame, text=_("LBL_TOOL_NUMBER")).grid(row=row, column=4, sticky="w", padx=(0, 2))
@@ -255,7 +375,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         # window only needs to be wide enough to show whichever single
         # tab is open, not 3 columns of sections at once. ---
         notebook = ttk.Notebook(root)
-        notebook.grid(row=1, column=0, sticky="nsew", padx=4, pady=(0, 4))
+        notebook.grid(row=2, column=0, sticky="nsew", padx=8, pady=(0, 4))
         self._notebook = notebook
 
         global_tab = ttk.Frame(notebook, padding=8)
@@ -309,16 +429,21 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         ).pack(padx=8, pady=8, anchor="w")
 
         self.progress = ttk.Progressbar(root, orient="horizontal", mode="determinate", maximum=100)
-        self.progress.grid(row=2, column=0, sticky="ew", padx=8, pady=(4, 8))
+        self.progress.grid(row=3, column=0, sticky="ew", padx=12, pady=(4, 8))
 
-        log_frame = ttk.LabelFrame(root, text=_("TITLE_LOG"))
-        log_frame.grid(row=3, column=0, sticky="nsew", **pad)
+        log_card = self._new_deck_card(root, _("TITLE_LOG"))
+        log_card.grid(row=4, column=0, sticky="nsew", padx=8, pady=(0, 8))
+        log_frame = log_card.content
         log_toolbar = ttk.Frame(log_frame)
         log_toolbar.pack(fill="x", side="top")
         ttk.Button(log_toolbar, text=_("BTN_EXPORT_DEBUG_BUNDLE"), command=self.export_debug_bundle).pack(
             side="left", padx=4, pady=2
         )
-        self.log_text = tk.Text(log_frame, height=5, state="disabled", wrap="word")
+        self.log_text = tk.Text(
+            log_frame, height=5, state="disabled", wrap="word", bg="#071018",
+            fg=self.TEXT, insertbackground=self.ACCENT, relief="flat", borderwidth=0,
+            selectbackground="#155269", selectforeground="#FFFFFF", font=("Cascadia Mono", 9),
+        )
         self.log_text.pack(fill="both", expand=True, side="left")
         scrollbar = ttk.Scrollbar(log_frame, command=self.log_text.yview)
         scrollbar.pack(side="right", fill="y")
@@ -1017,10 +1142,15 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             messagebox.showerror(_("TITLE_EXPORT_FAILED"), str(e))
 
     def _build_menu_bar(self):
-        menubar = tk.Menu(self.root)
+        menu_style = {
+            "background": self.PANEL_ALT, "foreground": self.TEXT,
+            "activebackground": self.ACCENT, "activeforeground": "#03161D",
+            "borderwidth": 0,
+        }
+        menubar = tk.Menu(self.root, **menu_style)
         self.root.config(menu=menubar)
 
-        file_menu = tk.Menu(menubar, tearoff=False)
+        file_menu = tk.Menu(menubar, tearoff=False, **menu_style)
         file_menu.add_command(label=_("MENU_SAVE_LOGS"), command=self._menu_save_logs)
         file_menu.add_separator()
         file_menu.add_command(label=_("MENU_EXIT"), command=self.on_close)
@@ -1031,7 +1161,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         # with its own fixed code regardless of this variable's value),
         # but confirms at a glance which one is actually active without
         # opening a submenu of plain, unmarked entries.
-        language_menu = tk.Menu(menubar, tearoff=False)
+        language_menu = tk.Menu(menubar, tearoff=False, **menu_style)
         import tester_config
         self._menu_lang_var = tk.StringVar(value=tester_config._current_language)
         for code, display in AVAILABLE_LANGUAGES:
@@ -1041,7 +1171,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             )
         menubar.add_cascade(label=_("MENU_LANGUAGE"), menu=language_menu)
 
-        help_menu = tk.Menu(menubar, tearoff=False)
+        help_menu = tk.Menu(menubar, tearoff=False, **menu_style)
         help_menu.add_command(label=_("MENU_README"), command=self._menu_show_readme)
         help_menu.add_command(label=_("MENU_GITHUB"), command=self._menu_show_github)
         help_menu.add_separator()
@@ -1178,4 +1308,3 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
                 except Exception:
                     pass
         self.root.destroy()
-

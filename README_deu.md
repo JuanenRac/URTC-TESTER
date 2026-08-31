@@ -102,6 +102,14 @@ die Animation in Tkinter und im eigenständigen Programm ohne zusätzliche
 grafische Laufzeitabhängigkeit. Das native URTC-Fenster-/Taskleisten-Symbol
 bleibt bewusst statisch.
 
+### Visuelles Steuerpult
+
+Der bewährte Live-CAN-Diagnoseablauf verwendet jetzt eine dunkelblau-cyanfarbene
+Steueroberfläche: Produktkopf, kontrastreiche Verbindungskarte, klare
+Werkzeug-Tabs, dunkles Sitzungsprotokoll und sichtbarer Fortschritt. Diese
+Verbesserung von Darstellung und Zugänglichkeit verändert weder passives
+Monitoring noch Befehlsrouting oder eine Sicherheitsgrenze.
+
 ### Menüleiste
 
 - **Datei** - Protokolle speichern (das Protokoll auf dem Bildschirm als

@@ -11,6 +11,12 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 
 ## [Unreleased] - Chinese and Japanese added to the Language menu
 
+- A full dark navy/cyan command-deck presentation now wraps the established
+  live-CAN UI: product/status header, real 16px rounded canvas cards on the
+  connection and session-log surfaces, plus coherent tab surfaces,
+  high-contrast controls, readable tool navigation and a dark monospace
+  session log. It is visual-only; monitoring, routing and safety flows are
+  unchanged.
 - The fixed connection panel now displays the official animated HYDRA-UMC
   mark. Tkinter plays twelve bundled PNG frames rendered from
   `assets/HYDRA_UMC_ICON.svg`, so both source and PyInstaller runs retain the

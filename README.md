@@ -90,6 +90,14 @@ frames preserve the animation in Tkinter and in the standalone executable
 without adding a runtime GUI dependency. The native URTC window/taskbar icon
 remains static by design.
 
+### Visual command deck
+
+The established live-CAN diagnostic workflow now uses a dark navy/cyan
+command-deck surface: product header, high-contrast connection card, clear
+tool tabs, dark session log and visible progress channel. This visual and
+accessibility improvement does not change passive monitoring, command routing
+or any hardware safety boundary.
+
 ### Menu bar
 
 - **File** - Save Logs (the on-screen log as plain text; for a fuller
