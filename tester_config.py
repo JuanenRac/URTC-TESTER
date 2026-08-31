@@ -182,9 +182,15 @@ CUSTOM_ID_NAMES = _load_custom_id_names()
 if getattr(sys, "frozen", False):
     BANNER_IMAGE_PATH = os.path.normpath(os.path.join(sys._MEIPASS, "assets", "urtc_tester_banner.png"))
     ICON_IMAGE_PATH = os.path.normpath(os.path.join(sys._MEIPASS, "assets", "urtc_icon.png"))
+    HYDRA_UMC_ICON_FRAMES_DIR = os.path.normpath(
+        os.path.join(sys._MEIPASS, "assets", "hydra_umc_icon_frames")
+    )
 else:
     BANNER_IMAGE_PATH = os.path.normpath(os.path.join(base_dir, "assets", "urtc_tester_banner.png"))
     ICON_IMAGE_PATH = os.path.normpath(os.path.join(base_dir, "assets", "urtc_icon.png"))
+    HYDRA_UMC_ICON_FRAMES_DIR = os.path.normpath(
+        os.path.join(base_dir, "assets", "hydra_umc_icon_frames")
+    )
 
 
 def list_serial_ports():

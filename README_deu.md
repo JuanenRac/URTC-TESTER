@@ -95,6 +95,13 @@ Fenster selbst zu leben - wie beim Flasher, und aus demselben Grund
 ebenfalls ein kleines eigenständiges Design, nicht das verkleinerte
 Banner.
 
+Im Verbindungsbereich erscheint auch die animierte offizielle
+HYDRA-UMC-Marke. Ihre gepflegte SVG-Quelle ist
+`assets/HYDRA_UMC_ICON.svg`; zwölf mitgelieferte PNG-Einzelbilder erhalten
+die Animation in Tkinter und im eigenständigen Programm ohne zusätzliche
+grafische Laufzeitabhängigkeit. Das native URTC-Fenster-/Taskleisten-Symbol
+bleibt bewusst statisch.
+
 ### Menüleiste
 
 - **Datei** - Protokolle speichern (das Protokoll auf dem Bildschirm als

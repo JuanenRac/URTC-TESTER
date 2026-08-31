@@ -90,6 +90,12 @@ dentro de la ventana misma - igual que el flasher, y por el mismo motivo
 tareas es igualmente un diseño pequeño independiente, no el banner
 reducido.
 
+El panel de conexión también muestra la marca animada oficial de HYDRA-UMC.
+Su fuente SVG mantenida es `assets/HYDRA_UMC_ICON.svg`; doce fotogramas PNG
+incluidos conservan la animación en Tkinter y en el ejecutable autónomo sin
+añadir una dependencia gráfica en tiempo de ejecución. El icono nativo URTC
+de ventana/barra de tareas se mantiene estático por diseño.
+
 ### Barra de menú
 
 - **Archivo** - Guardar registros (el registro en pantalla como texto

@@ -91,6 +91,12 @@ finestra stessa compatta). L'icona di finestra/barra delle applicazioni
 è allo stesso modo un piccolo design standalone, non il banner
 rimpicciolito.
 
+Il pannello di connessione mostra anche il marchio ufficiale HYDRA-UMC
+animato. La sorgente SVG mantenuta è `assets/HYDRA_UMC_ICON.svg`; dodici
+fotogrammi PNG inclusi preservano l’animazione in Tkinter e nell’eseguibile
+autonomo senza dipendenze grafiche a runtime. L’icona nativa URTC della
+finestra/barra delle applicazioni rimane volutamente statica.
+
 ### Barra dei menu
 
 - **File** - Salva Registri (il registro a schermo come testo semplice;

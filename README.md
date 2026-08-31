@@ -84,6 +84,12 @@ same as the flasher, and for the same reason (keeps the window itself
 compact). The window/taskbar icon is likewise a small standalone design,
 not the banner shrunk down.
 
+The connection panel also shows the official animated HYDRA-UMC mark. Its
+maintained SVG source is `assets/HYDRA_UMC_ICON.svg`; twelve bundled PNG
+frames preserve the animation in Tkinter and in the standalone executable
+without adding a runtime GUI dependency. The native URTC window/taskbar icon
+remains static by design.
+
 ### Menu bar
 
 - **File** - Save Logs (the on-screen log as plain text; for a fuller
@@ -336,6 +342,11 @@ tool) for handing to whoever's debugging a tool head issue.
   watching the actual hardware respond to their own panel's controls.
 
 ## 📂 Repository Structure
+
+The `assets/` directory also contains `HYDRA_UMC_ICON.svg`, the maintained
+animated vector source, and `hydra_umc_icon_frames/`, its twelve bundled
+Tkinter PNG frames. `tools/render_hydra_umc_icon_frames.py` regenerates them
+from the SVG during development; it is not required to run the application.
 
 ```
 /

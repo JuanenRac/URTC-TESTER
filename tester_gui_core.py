@@ -22,7 +22,7 @@ from tester_config import (
     CAN_ID_3DP_LAYER_FAN_CMD, CAN_ID_3DP_THERMAL_MOTION, CAN_ID_ACTIVE_TOOL_RESP,
     CAN_ID_DRILL_CMD, CAN_ID_LASER_CMD, CAN_ID_QUERY_ACTIVE_TOOL, CAN_ID_QUERY_VERSION,
     CAN_ID_UV_CURING_CMD, CAN_ID_HOTAIR_CMD,
-    CAN_ID_SOLDER_SETPOINT, CAN_ID_VERSION_RESPONSE, CONFIG_PATH, ICON_IMAGE_PATH,
+    CAN_ID_SOLDER_SETPOINT, CAN_ID_VERSION_RESPONSE, CONFIG_PATH, HYDRA_UMC_ICON_FRAMES_DIR, ICON_IMAGE_PATH,
     LOGS_FOLDER, MOTION_TOOL_IDS, SLCAN_BITRATES, TESTER_AUTHOR, TESTER_VERSION, THIS_HARDWARE_ID,
     TOOL_NAMES, list_serial_ports, load_language, save_config, _center_geometry,
 )
@@ -31,6 +31,7 @@ from tester_bus_monitor import CANBusMonitor
 from tester_common_panels import CommonPanelsMixin
 from tester_panel_helpers import PanelHelpersMixin
 from tester_tool_panels import ToolPanelsMixin
+from hydra_umc_animation import AnimatedHydraUMCMark
 
 try:
     import serial
@@ -102,6 +103,23 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         # switch the way the rest of the controls do) ---
         conn_frame = ttk.LabelFrame(root, text=_("TAB_CONNECT_TITLE"))
         conn_frame.grid(row=0, column=0, sticky="nsew", padx=4, pady=4)
+
+        # Tkinter cannot play the animated SVG directly.  This small mark
+        # plays pre-rendered frames made from the official HYDRA-UMC SVG,
+        # while the URTC-specific static icon remains the native taskbar
+        # identity where animated window icons are not supported.
+        self._hydra_umc_mark = None
+        try:
+            self._hydra_umc_mark = AnimatedHydraUMCMark(
+                conn_frame, HYDRA_UMC_ICON_FRAMES_DIR
+            )
+            self._hydra_umc_mark.widget.grid(
+                row=0, column=6, rowspan=3, sticky="ne", padx=(8, 10), pady=(2, 2)
+            )
+        except (OSError, tk.TclError):
+            # Branding is cosmetic: the diagnostic application remains
+            # usable if a source checkout lacks the generated frame assets.
+            self._hydra_umc_mark = None
 
         # Column weights - without these the frame just sits left-aligned
         # with blank space on the right as the window widens, since grid()
@@ -1160,5 +1178,4 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
                 except Exception:
                     pass
         self.root.destroy()
-
 

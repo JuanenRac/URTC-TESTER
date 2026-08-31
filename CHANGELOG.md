@@ -11,6 +11,14 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 
 ## [Unreleased] - Chinese and Japanese added to the Language menu
 
+- The fixed connection panel now displays the official animated HYDRA-UMC
+  mark. Tkinter plays twelve bundled PNG frames rendered from
+  `assets/HYDRA_UMC_ICON.svg`, so both source and PyInstaller runs retain the
+  animation without adding a heavyweight GUI runtime dependency. The
+  URTC-specific native window/taskbar icon remains static and unchanged.
+- `tools/render_hydra_umc_icon_frames.py` regenerates those frames with
+  PySide6 when the source SVG changes; PySide6 remains development-only.
+
 - New `language/chinese.lng` (简体中文) and `language/japanese.lng` (日本語),
   full translation of all 349 keys, matching the coverage of the existing
   english/spanish/italian/french/german files. Added to `tester_config.py`'s
