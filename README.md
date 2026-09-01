@@ -18,12 +18,12 @@
 <p align="left">
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
-  <img src="https://img.shields.io/badge/UI-Tkinter-lightgrey.svg" alt="Tkinter">
+  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
 
-**Version:** 0.1.0 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 0.1.1 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 License: **GPL-3.0** for the source code, **CC BY-SA 4.0** for this
 documentation - see `LICENSE` in this repository, or the "License and
@@ -91,6 +91,17 @@ without adding a runtime GUI dependency. The native URTC window/taskbar icon
 remains static by design.
 
 ### Visual command deck
+
+The shared **Qt Quick** command deck is available for real connection,
+listen-only monitoring and an explicitly armed identity probe:
+~~~
+python urtc_tester.py --qtquick
+~~~
+It uses the production SLCAN/SocketCAN transports. It starts in listen-only
+mode, so it cannot transmit until you deliberately arm active checks; that
+probe sends only the documented active-tool and version queries. The default
+Tkinter interface remains the complete tool while its 25 per-tool control
+panels are migrated safely.
 
 The established live-CAN diagnostic workflow now uses a dark navy/cyan
 command-deck surface: product header, high-contrast connection card, clear
@@ -424,6 +435,7 @@ This project is part of a larger robotics ecosystem by the same author (JuanenRa
 
 ### Directly related to this project
 
+- **[URTC](https://github.com/JuanenRac/URTC)** — the exact firmware this tester connects to and diagnoses, one panel per its 25 tool profiles.
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — runs fleet-wide audits (the `audit` command) across every tool head at once, going beyond the single-board scope this tester covers.
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — complements this project's live CAN-bus diagnostics with its own visual quality-assurance (QA) checks on the tool head.
 
