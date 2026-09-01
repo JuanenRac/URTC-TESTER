@@ -13,7 +13,8 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 
 - A full dark navy/cyan command-deck presentation now wraps the established
   live-CAN UI: product/status header, real 16px rounded canvas cards on the
-  connection and session-log surfaces, plus coherent tab surfaces,
+  connection and session-log surfaces, 10px curved primary actions, plus
+  coherent tab surfaces,
   high-contrast controls, readable tool navigation and a dark monospace
   session log. It is visual-only; monitoring, routing and safety flows are
   unchanged.

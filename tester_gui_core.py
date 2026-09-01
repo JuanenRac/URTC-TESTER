@@ -32,7 +32,7 @@ from tester_common_panels import CommonPanelsMixin
 from tester_panel_helpers import PanelHelpersMixin
 from tester_tool_panels import ToolPanelsMixin
 from hydra_umc_animation import AnimatedHydraUMCMark
-from hydra_umc_deck_widgets import RoundedDeckCard
+from hydra_umc_deck_widgets import RoundedDeckButton, RoundedDeckCard
 
 try:
     import serial
@@ -151,6 +151,14 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             parent, title, canvas_color=self.BG, panel_color=self.PANEL,
             border_color=self.BORDER, accent_color=self.ACCENT,
             text_color=self.TEXT,
+        )
+
+    def _new_deck_button(self, parent, text, command, *, accent=False, state="normal"):
+        """Create a curved command action without changing its CAN callback."""
+        return RoundedDeckButton(
+            parent, text=text, command=command, panel_color=self.PANEL_ALT,
+            border_color=self.BORDER, text_color=self.TEXT, muted_color=self.MUTED,
+            accent_color=self.ACCENT, accent=accent, state=state,
         )
 
     def __init__(self, root):
@@ -278,9 +286,8 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         self.port_combo.grid(row=row, column=1, **pad)
         self.refresh_btn = ttk.Button(conn_frame, text=_("BTN_REFRESH"), command=self.refresh_ports)
         self.refresh_btn.grid(row=row, column=2, **pad)
-        self.connect_btn = ttk.Button(
-            conn_frame, text=_("BTN_CONNECT"), command=self.toggle_connect,
-            style="Accent.TButton",
+        self.connect_btn = self._new_deck_button(
+            conn_frame, _("BTN_CONNECT"), self.toggle_connect, accent=True
         )
         self.connect_btn.grid(row=row, column=3, **pad)
         self.conn_status = ttk.Label(conn_frame, text=_("STATUS_NOT_CONNECTED"), foreground="red")
@@ -329,14 +336,12 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         ttk.Label(conn_frame, text=_("LBL_ACTIVE_TOOL")).grid(row=row, column=0, sticky="w", **pad)
         self.active_tool_label = ttk.Label(conn_frame, text=_("STATUS_CONNECT_TO_DETECT"), foreground="gray")
         self.active_tool_label.grid(row=row, column=1, columnspan=3, sticky="w", **pad)
-        self.detect_btn = ttk.Button(
-            conn_frame, text=_("BTN_DETECT"), command=self.detect_active_tool,
-            style="Accent.TButton",
+        self.detect_btn = self._new_deck_button(
+            conn_frame, _("BTN_DETECT"), self.detect_active_tool, accent=True
         )
         self.detect_btn.grid(row=row, column=4, **pad)
-        self.selftest_btn = ttk.Button(
-            conn_frame, text=_("BTN_RUN_SELF_TEST"), command=self._run_self_test,
-            style="Accent.TButton",
+        self.selftest_btn = self._new_deck_button(
+            conn_frame, _("BTN_RUN_SELF_TEST"), self._run_self_test, accent=True
         )
         self.selftest_btn.grid(row=row, column=5, **pad)
         row += 1
