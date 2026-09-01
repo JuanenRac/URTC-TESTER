@@ -11,6 +11,16 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 
 ## [Unreleased] - Chinese and Japanese added to the Language menu
 
+- The Qt Quick transport selector cannot refresh or switch ports while a
+  connection is active. The same guard is enforced by the backend, not only
+  by the visual control.
+- The Qt Quick transport selector now uses the actual discovered SocketCAN
+  interface set instead of guessing from names such as `can0`, so valid
+  interfaces including `vcan0` are routed to SocketCAN correctly.
+- Qt Quick worker logs are now marshalled to the GUI thread before the QML
+  log model changes, avoiding a possible cross-thread UI race during
+  connection and identity probes. Selecting `--qtquick` without PySide6
+  now returns a clear dependency message rather than an import traceback.
 - Fixed `urtc_tester.py` crashing on every launch (`NameError: name 'sys'
   is not defined`) - the `--qtquick` mode check at the top of the file
   used `sys.argv` without `sys` ever being imported. Both the default

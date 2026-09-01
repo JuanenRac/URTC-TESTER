@@ -18,12 +18,12 @@
 <p align="left">
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
-  <img src="https://img.shields.io/badge/UI-Tkinter-lightgrey.svg" alt="Tkinter">
+  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
 
-**版本：** 0.1.0 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**版本：** 0.1.1 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 许可证：源代码为 **GPL-3.0**，本文档为 **CC BY-SA 4.0**——见本仓库中的
 `LICENSE`，或本文档末尾的“许可证与版权声明”一节。
@@ -82,6 +82,14 @@ python3 urtc_tester.py         # Linux
 按设计保持静态。
 
 ### 可视化控制台
+
+共享的 **Qt Quick** 命令控制台可用于真实连接、只监听监控以及明确启用的身份探测：
+~~~
+python urtc_tester.py --qtquick
+~~~
+它使用生产级 SLCAN/SocketCAN 传输。它以只监听模式启动，因此在你明确启用主动检查前
+不会发送任何内容；该探测仅发送已文档化的活动工具与版本查询。在其 25 个专用面板安全迁移
+期间，Tkinter 仍是默认的完整工具。
 
 成熟的实时 CAN 诊断流程现在使用深海军蓝/青色控制界面：产品标题、高对比度连接卡、
 清晰的工具标签页、深色会话日志以及可见的进度通道。这项视觉与可访问性改进不会改变

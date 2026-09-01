@@ -18,12 +18,12 @@
 <p align="left">
   <img src="https://img.shields.io/badge/Licence-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Langage-Python-3776AB.svg" alt="Python">
-  <img src="https://img.shields.io/badge/UI-Tkinter-lightgrey.svg" alt="Tkinter">
+  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protocole-CAN-yellow.svg" alt="CAN">
 </p>
 
 
-**Version :** 0.1.0 · **Auteur :** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version :** 0.1.1 · **Auteur :** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licence : **GPL-3.0** pour le code source, **CC BY-SA 4.0** pour cette
 documentation - voir `LICENSE` dans ce dépôt, ou la section « Licence
@@ -101,6 +101,17 @@ sans dépendance graphique à l’exécution. L’icône native URTC de fenêtre
 des tâches reste volontairement statique.
 
 ### Console visuelle de contrôle
+
+La console de commandes partagée **Qt Quick** est disponible pour la connexion
+réelle, l'écoute passive et une sonde d'identité explicitement armée :
+~~~
+python urtc_tester.py --qtquick
+~~~
+Elle utilise les transports de production SLCAN/SocketCAN. Elle démarre en
+écoute seule et ne peut donc pas émettre avant l'armement volontaire des
+contrôles actifs ; cette sonde envoie uniquement les requêtes documentées
+d'outil actif et de version. Tkinter reste l'outil complet par défaut pendant
+la migration sûre de ses 25 panneaux dédiés.
 
 Le flux de diagnostic CAN en direct utilise désormais une surface de contrôle
 bleu nuit/cyan : en-tête produit, carte de connexion contrastée, onglets

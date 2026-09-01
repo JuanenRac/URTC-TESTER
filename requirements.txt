@@ -1,1 +1,5 @@
 pyserial>=3.5
+# Shared HYDRA-UMC command-deck renderer. The default Tkinter UI remains
+# available during the staged migration; --qtquick starts the bounded,
+# safety-first diagnostics deck.
+PySide6>=6.8,<7

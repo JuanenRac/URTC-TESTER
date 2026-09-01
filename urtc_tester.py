@@ -102,8 +102,17 @@ def main():
         # monitoring and explicitly armed identity probes. The established
         # Tkinter UI remains the default until every per-tool panel has
         # equivalent, hardware-safe Qt Quick coverage.
-        from qt_tester import run_qtquick
-        raise SystemExit(run_qtquick())
+        try:
+            from qt_tester import run_qtquick
+        except ImportError as exc:
+            print(
+                "ERROR: Qt Quick mode requires PySide6. "
+                "Install this repository's requirements.txt first. "
+                f"Details: {exc}",
+                file=sys.stderr,
+            )
+            return 2
+        return run_qtquick()
     root = tk.Tk()
     root.withdraw()
     # Sized from actual measured content across all 5 supported languages
@@ -124,4 +133,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

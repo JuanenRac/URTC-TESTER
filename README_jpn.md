@@ -18,12 +18,12 @@
 <p align="left">
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
-  <img src="https://img.shields.io/badge/UI-Tkinter-lightgrey.svg" alt="Tkinter">
+  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
 
-**バージョン：** 0.1.0 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**バージョン：** 0.1.1 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 ライセンス：ソースコードは **GPL-3.0**、本ドキュメントは **CC BY-SA 4.0**——
 本リポジトリの `LICENSE`、または本ドキュメント末尾の「ライセンスと著作権
@@ -95,6 +95,16 @@ PNG フレームにより、追加の GUI 実行時依存関係なしで Tkinter
 アイコンは設計上、静的なままです。
 
 ### ビジュアル・コマンドデッキ
+
+共有 **Qt Quick** コマンドデッキは、実機接続、リッスンオンリー監視、および明示的に
+有効化した識別プローブに利用できます。
+~~~
+python urtc_tester.py --qtquick
+~~~
+本番用の SLCAN/SocketCAN トランスポートを使用します。リッスンオンリーで起動するため、
+アクティブチェックを意図的に有効化するまで送信できません。このプローブが送信するのは、
+アクティブツールとバージョンに対する文書化済みの問い合わせだけです。25 個の専用パネルを
+安全に移行する間、Tkinter が完全な既定ツールのままです。
 
 確立済みのライブ CAN 診断ワークフローは、ダークネイビー/シアンの操作面を使用します。
 製品ヘッダー、高コントラストの接続カード、明確なツールタブ、暗色のセッションログ、

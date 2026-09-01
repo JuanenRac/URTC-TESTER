@@ -108,6 +108,12 @@ python3 -m PyInstaller --onefile --noconfirm --name "URTC_Tester" \
     --hidden-import tester_common_panels \
     --hidden-import tester_panel_helpers \
     --hidden-import tester_tool_panels \
+    --hidden-import qt_tester \
+    --hidden-import PySide6.QtQml \
+    --hidden-import PySide6.QtQuick \
+    --hidden-import PySide6.QtQuickControls2 \
+    --collect-all PySide6.QtQuick \
+    --collect-all PySide6.QtQuickControls2 \
     urtc_tester.py
 if [ ! -f dist/URTC_Tester ]; then
     echo "      ERROR: PyInstaller did not produce dist/URTC_Tester - see the output above."
