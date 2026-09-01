@@ -39,7 +39,7 @@ lectura de telemetría contra la aplicación en ejecución; nunca toca la
 flash, así que no hay nada aquí que pueda dejar la placa menos operativa
 de lo que estaba al empezar.
 
-## 1. Relación con el flasher
+## 1. 🆚 Relación con el flasher
 
 Esta herramienta y [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) comparten la misma capa de
 transporte (las clases SLCAN y SocketCAN son idénticas) ya que ambas en
@@ -56,7 +56,7 @@ Si no estás seguro de cuál necesitas: si la placa ya está ejecutando
 firmware y quieres comprobar que una herramienta realmente funciona (el
 calentador calienta, el motor gira, el LED se enciende), quieres esta.
 
-## 2. Instalar y ejecutar
+## 2. 📦 Instalar y ejecutar
 
 Mismo patrón que el flasher:
 
@@ -167,7 +167,7 @@ igual que la sección 1 del flasher - ver el propio
 [README de URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)
 secciones 1 y 2 en vez de duplicarlo aquí.
 
-## 3. Cómo funciona
+## 3. ⚙️ Cómo funciona
 
 La ventana está distribuida en 3 columnas: izquierda y centro contienen
 las secciones siempre visibles de abajo (1-4, luego 6), la derecha
@@ -325,7 +325,7 @@ la columna ID muestra ese nombre amigable junto al ID hex en bruto -
 expansión personalizada sin necesitar modificar el código fuente de
 esta herramienta.
 
-## 4. Cobertura de herramientas
+## 4. 🧰 Cobertura de herramientas
 
 Cada uno de los 25 perfiles tiene su propio panel, construido
 directamente a partir de `docs/CANBUS.md`:
@@ -364,7 +364,7 @@ trama de cero/apagado y para. El ventilador de hotend no tiene watchdog
 (un detector de estancamiento en su lugar - ver `docs/CANBUS.md`), así
 que es un envío simple de una vez.
 
-## 5. Registros y paquetes de depuración
+## 5. 📋 Registros y paquetes de depuración
 
 Igual que el flasher: un registro de sesión con marca de tiempo se
 escribe automáticamente en `logs/` (seguro de borrar),
@@ -373,7 +373,7 @@ actual en pantalla más diagnósticos básicos del sistema (SO, versión de
 Python, transporte/puerto/bitrate actual, herramienta detectada) para
 entregar a quien esté depurando un problema de cabezal de herramienta.
 
-## 6. Limitaciones conocidas
+## 6. ⚠️ Limitaciones conocidas
 
 - **No probado contra hardware real.** Cada pieza aquí - la capa de
   transporte, el manejo de ID CAN/disposición de bytes, la temporización

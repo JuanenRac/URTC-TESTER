@@ -40,7 +40,7 @@ Anwendung; es berührt niemals die Flash, sodass es hier nichts gibt, das
 die Platine weniger funktionsfähig zurücklassen könnte, als sie
 begonnen hat.
 
-## 1. Beziehung zum Flasher
+## 1. 🆚 Beziehung zum Flasher
 
 Dieses Tool und [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) teilen sich denselben
 Transport-Layer (die SLCAN- und SocketCAN-Klassen sind identisch), da
@@ -59,7 +59,7 @@ bereits Firmware ausführt und Sie prüfen wollen, ob ein Werkzeug
 tatsächlich funktioniert (die Heizung heizt, der Motor dreht sich, die
 LED leuchtet), wollen Sie dieses.
 
-## 2. Installation und Ausführung
+## 2. 📦 Installation und Ausführung
 
 Dasselbe Schema wie der Flasher:
 
@@ -171,7 +171,7 @@ Abschnitt 1 des Flashers - siehe die eigene
 [README von URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)
 Abschnitte 1 und 2, statt es hier zu duplizieren.
 
-## 3. Wie es funktioniert
+## 3. ⚙️ Wie es funktioniert
 
 Das Fenster ist in 3 Spalten angeordnet: links und mittig enthalten die
 immer sichtbaren Abschnitte unten (1-4, dann 6), rechts enthält das
@@ -335,7 +335,7 @@ für jeden, der den eigenen Verkehr einer benutzerdefinierten
 Erweiterungsplatine testet, ohne den Quellcode dieses Tools ändern zu
 müssen.
 
-## 4. Werkzeugabdeckung
+## 4. 🧰 Werkzeugabdeckung
 
 Jedes der 25 Profile hat sein eigenes Panel, direkt aus
 `docs/CANBUS.md` aufgebaut:
@@ -374,7 +374,7 @@ einen einzelnen Null-/Aus-Frame und stoppt. Der Hotend-Lüfter hat
 keinen Watchdog (stattdessen einen Stillstandsdetektor - siehe
 `docs/CANBUS.md`), also ist es ein einfaches einmaliges Senden.
 
-## 5. Protokolle und Debug-Pakete
+## 5. 📋 Protokolle und Debug-Pakete
 
 Wie beim Flasher: ein zeitgestempeltes Sitzungsprotokoll wird
 automatisch nach `logs/` geschrieben (sicher zu
@@ -384,7 +384,7 @@ mit dem aktuellen Bildschirmprotokoll plus grundlegender Systemdiagnose
 erkanntes Werkzeug) zur Weitergabe an denjenigen, der ein
 Werkzeugkopfproblem debuggt.
 
-## 6. Bekannte Einschränkungen
+## 6. ⚠️ Bekannte Einschränkungen
 
 - **Nicht gegen echte Hardware getestet.** Jedes Teil hier - der
   Transport-Layer, die CAN-ID-/Byte-Layout-Handhabung, das

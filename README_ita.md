@@ -39,7 +39,7 @@ l'applicazione in esecuzione; non tocca mai la flash, quindi non c'è
 nulla qui che possa lasciare la scheda meno funzionante di come ha
 iniziato.
 
-## 1. Relazione con il flasher
+## 1. 🆚 Relazione con il flasher
 
 Questo strumento e [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) condividono lo stesso layer di
 trasporto (le classi SLCAN e SocketCAN sono identiche) poiché entrambi
@@ -56,7 +56,7 @@ Se non sei sicuro di quale ti serva: se la scheda sta già eseguendo
 firmware e vuoi controllare che uno strumento funzioni davvero (il
 riscaldatore scalda, il motore gira, il LED si accende), vuoi questo.
 
-## 2. Installazione ed esecuzione
+## 2. 📦 Installazione ed esecuzione
 
 Stesso schema del flasher:
 
@@ -166,7 +166,7 @@ sezione 1 del flasher - vedi il
 [README di URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)
 sezioni 1 e 2 invece di duplicarlo qui.
 
-## 3. Come funziona
+## 3. ⚙️ Come funziona
 
 La finestra è disposta in 3 colonne: sinistra e centro contengono le
 sezioni sempre visibili qui sotto (1-4, poi 6), destra contiene il
@@ -323,7 +323,7 @@ accanto all'ID hex grezzo - utile per chiunque stia testando il
 traffico proprio di una scheda di espansione personalizzata senza
 bisogno di modificare il codice sorgente di questo strumento.
 
-## 4. Copertura strumenti
+## 4. 🧰 Copertura strumenti
 
 Ognuno dei 25 profili ha il proprio pannello, costruito direttamente da
 `docs/CANBUS.md`:
@@ -362,7 +362,7 @@ trama zero/spento e si ferma. La ventola hotend non ha watchdog (un
 rilevatore di stallo invece - vedi `docs/CANBUS.md`), quindi è un
 semplice invio singolo.
 
-## 5. Registri e pacchetti di debug
+## 5. 📋 Registri e pacchetti di debug
 
 Come il flasher: un registro di sessione con marca temporale viene
 scritto automaticamente in `logs/` (sicuro da
@@ -372,7 +372,7 @@ versione Python, trasporto/porta/bitrate attuale, strumento rilevato)
 per consegnare a chi sta facendo debug di un problema di testa
 strumento.
 
-## 6. Limitazioni note
+## 6. ⚠️ Limitazioni note
 
 - **Non testato contro hardware reale.** Ogni pezzo qui - il layer di
   trasporto, la gestione ID CAN/layout byte, la temporizzazione

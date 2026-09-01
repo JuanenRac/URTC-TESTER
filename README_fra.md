@@ -39,7 +39,7 @@ d'exécution ou une lecture de télémétrie contre l'application en cours
 d'exécution ; il ne touche jamais la flash, donc il n'y a rien ici qui
 puisse laisser la carte moins fonctionnelle qu'au départ.
 
-## 1. Relation avec le flasher
+## 1. 🆚 Relation avec le flasher
 
 Cet outil et [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) partagent la même couche de transport
 (les classes SLCAN et SocketCAN sont identiques) puisque les deux ont
@@ -58,7 +58,7 @@ exécute déjà le firmware et que vous voulez vérifier qu'un outil
 fonctionne réellement (le chauffage chauffe, le moteur tourne, la LED
 s'allume), vous voulez celui-ci.
 
-## 2. Installation et exécution
+## 2. 📦 Installation et exécution
 
 Même schéma que le flasher :
 
@@ -170,7 +170,7 @@ que la section 1 du flasher - voir le
 [README d'URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)
 sections 1 et 2 plutôt que de la dupliquer ici.
 
-## 3. Comment ça fonctionne
+## 3. ⚙️ Comment ça fonctionne
 
 La fenêtre est disposée en 3 colonnes : gauche et centre contiennent les
 sections toujours visibles ci-dessous (1-4, puis 6), droite contient le
@@ -331,7 +331,7 @@ utile pour quiconque teste le propre trafic d'une carte d'extension
 personnalisée sans avoir besoin de modifier le code source de cet
 outil.
 
-## 4. Couverture des outils
+## 4. 🧰 Couverture des outils
 
 Chacun des 25 profils a son propre panneau, construit directement à
 partir de `docs/CANBUS.md` :
@@ -370,7 +370,7 @@ envoie une seule trame zéro/arrêt et s'arrête. Le ventilateur hotend
 n'a pas de watchdog (un détecteur de blocage à la place - voir
 `docs/CANBUS.md`), donc c'est un simple envoi unique.
 
-## 5. Journaux et paquets de débogage
+## 5. 📋 Journaux et paquets de débogage
 
 Comme le flasher : un journal de session horodaté est écrit
 automatiquement dans `logs/` (sûr à supprimer), et
@@ -379,7 +379,7 @@ actuel à l'écran plus des diagnostics système de base (OS, version
 Python, transport/port/débit binaire actuel, outil détecté) pour
 remettre à quiconque déboguant un problème de tête d'outil.
 
-## 6. Limitations connues
+## 6. ⚠️ Limitations connues
 
 - **Non testé contre du matériel réel.** Chaque pièce ici - la couche
   de transport, la gestion ID CAN/disposition d'octets, la
