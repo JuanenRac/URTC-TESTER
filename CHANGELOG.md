@@ -11,6 +11,20 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 
 ## [Unreleased] - Chinese and Japanese added to the Language menu
 
+- Fixed `urtc_tester.py` crashing on every launch (`NameError: name 'sys'
+  is not defined`) - the `--qtquick` mode check at the top of the file
+  used `sys.argv` without `sys` ever being imported. Both the default
+  Tkinter mode and `--qtquick` were affected; `run.bat`/`run.sh` never
+  actually got the app running.
+- A staged Qt Quick desktop deck can now be launched with
+  python urtc_tester.py --qtquick. It uses the real SLCAN/SocketCAN
+  transports for connection and begins in real listen-only mode. Its
+  explicitly armed identity check emits only the documented 0x110 and 0x7F8
+  queries, then reports the active-tool and version responses. It does not
+  expose actuator controls; the established Tkinter application remains the
+  default while its 25 tool panels are migrated safely.
+- PyInstaller scripts now collect the Qt Quick/QML runtime and the staged
+  command-deck entry point.
 - A full dark navy/cyan command-deck presentation now wraps the established
   live-CAN UI: product/status header, real 16px rounded canvas cards on the
   connection and session-log surfaces, 10px curved primary actions, plus
@@ -24,7 +38,8 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
   animation without adding a heavyweight GUI runtime dependency. The
   URTC-specific native window/taskbar icon remains static and unchanged.
 - `tools/render_hydra_umc_icon_frames.py` regenerates those frames with
-  PySide6 when the source SVG changes; PySide6 remains development-only.
+  PySide6 when the source SVG changes. PySide6 is also the runtime
+  dependency of the explicit Qt Quick deck.
 
 - New `language/chinese.lng` (简体中文) and `language/japanese.lng` (日本語),
   full translation of all 349 keys, matching the coverage of the existing

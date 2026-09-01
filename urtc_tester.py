@@ -28,10 +28,14 @@ detection/window lifecycle) and 3 mixins it combines - tester_common_
 panels.py, tester_panel_helpers.py, and tester_tool_panels.py.
 """
 
-import tkinter as tk
+import sys
 
-from tester_config import BANNER_IMAGE_PATH, _center_geometry
-from tester_gui_core import TesterGUI
+# The Qt Quick mode deliberately avoids importing Tkinter and the full legacy
+# 25-panel GUI. This lets the staged desktop deck start on a Qt-only machine.
+if "--qtquick" not in sys.argv:
+    import tkinter as tk
+    from tester_config import BANNER_IMAGE_PATH, _center_geometry
+    from tester_gui_core import TesterGUI
 
 
 def _show_splash_then(root, on_done):
@@ -93,6 +97,13 @@ def _show_splash_then(root, on_done):
 
 
 def main():
+    if "--qtquick" in sys.argv:
+        # The Qt Quick deck intentionally exposes only connection, passive
+        # monitoring and explicitly armed identity probes. The established
+        # Tkinter UI remains the default until every per-tool panel has
+        # equivalent, hardware-safe Qt Quick coverage.
+        from qt_tester import run_qtquick
+        raise SystemExit(run_qtquick())
     root = tk.Tk()
     root.withdraw()
     # Sized from actual measured content across all 5 supported languages
