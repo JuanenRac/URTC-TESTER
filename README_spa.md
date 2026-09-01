@@ -526,7 +526,7 @@ Este proyecto forma parte de un ecosistema de robótica más amplio del mismo au
 **🛠️ Herramientas Complementarias**
 [URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK) · [HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH) · [HYDRA-UMC-DASHBOARD-AI](https://github.com/JuanenRac/HYDRA-UMC-DASHBOARD-AI)
 
-## 📜 Licencia y Avisos de Copyright
+## 📜 LICENCIA
 
 URTC Tester es (c) 2026 JuanenRac (Electro Hobby 3D). Este aviso debe
 incluirse en cualquier distribución de este proyecto o trabajos
@@ -565,7 +565,7 @@ licencias: los cambios de código deberían mantenerse GPL-3.0, los
 derivados de documentación deberían mantenerse CC BY-SA - cada uno con
 atribución de vuelta a este proyecto y su autor.
 
-## 👤 Autor
+## 👤 AUTOR
 
 **JuanenRac** (Electro Hobby 3D)
 📧 electrohobby3d@gmail.com

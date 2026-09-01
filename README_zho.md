@@ -393,7 +393,7 @@ ID 列会在原始十六进制 ID 旁边显示该友好名称——对于任何�
 **🛠️ 配套工具**
 [URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK) · [HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH) · [HYDRA-UMC-DASHBOARD-AI](https://github.com/JuanenRac/HYDRA-UMC-DASHBOARD-AI)
 
-## 📜 许可证与版权声明
+## 📜 许可证
 
 URTC Tester 版权所有 (c) 2026 JuanenRac（Electro Hobby 3D）。分发本项目
 或其衍生作品时必须包含此声明。
