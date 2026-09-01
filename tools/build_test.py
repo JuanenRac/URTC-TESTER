@@ -92,6 +92,10 @@ def main() -> int:
     # runtime; this non-mutating test must remain safe on headless CI hosts.
     if stack in {"python", "python-bare", "python-qtquick"}:
         compile_python_sources()
+        tests = ROOT / "tests"
+        if tests.is_dir():
+            run(sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v")
+            print("UNIT_TESTS=PASS suite=tests")
         if stack == "python-qtquick":
             validate_qtquick_deck()
     elif stack == "node":

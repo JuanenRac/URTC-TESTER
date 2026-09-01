@@ -39,6 +39,26 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
   confirmation immediately before it sends the existing 0x120 command.
   Advanced actuator and configuration flows remain in the established Tkinter
   panels pending physical validation.
+- The Qt Quick deck now also migrates the real one-shot drill, AOI,
+  electromagnet, weld-pulse and paste-jetting frame layouts, plus the
+  established watchdog-backed solder, laser, printer heater/layer fan, UV
+  and hot-air outputs. Energising actions receive a second confirmation; a
+  stop/disconnect sends the matching safe-off frame. Telemetry-only,
+  external-machine and multi-packet profiles remain explicitly unavailable
+  rather than receiving a simulated control.
+- The printer profile additionally exposes the established one-shot hotend
+  fan and extruder frame paths. The watchdog heater frame always carries zero
+  extruder steps, preventing temperature maintenance from repeating motion.
+- Added a hardware-free control-protocol unit suite. It exercises bounded
+  command payloads, crimp routing, safe-off watchdog frames and isolated
+  telemetry fixtures without importing a GUI runtime or opening a CAN
+  transport. The baseline CI workflow runs the suite.
+- The Flying Probe profile now exposes its established ADS1115 configuration,
+  conversion trigger and bounded result-read sequence in the Qt Quick deck.
+- The Thermal Inspection profile now triggers and reads the established,
+  bounded 48-chunk calibrated frame sequence in a worker, then renders the
+  received cells in a Qt Quick grid. Missing chunks remain visibly absent;
+  the operation never substitutes fixture data for a device response.
 - The Qt Quick deck now includes a bounded **Passive bus window**. It is
   available only after a listen-only connection and captures two seconds of
   real received traffic, displaying frame/CAN-ID counts and a capped sample.
