@@ -11,6 +11,39 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 
 ## [Unreleased] - Chinese and Japanese added to the Language menu
 
+### Added
+- **Real About window**, matching HYDRA-UMC-STUDIO's own `About.tsx` and
+  URTC-FLASHER's own Tkinter AboutDialog: a tagline, a one-paragraph
+  description, and a real Version/Author/Email/License info block, not
+  just a banner and one line of text. New `TITLE_ABOUT`/`ABOUT_TAGLINE`/
+  `ABOUT_DESCRIPTION`/`ABOUT_VERSION`/`ABOUT_AUTHOR`/`ABOUT_EMAIL`/
+  `ABOUT_LICENSE`/`BTN_CLOSE` keys across all 7 languages, replacing the
+  old `LBL_ABOUT_AUTHOR` - full key parity verified.
+
+### Fixed
+- **`QT_PASSIVE_HELP` was defined twice in every one of the 7 `.lng`
+  files** (and in `qt_tester.py`'s own fallback dict) with two different
+  meanings - the transport-mode explanation next to the Listen-Only
+  toggle, and the Passive Bus Window capture explanation. The second
+  definition silently won in every language, so the transport-mode
+  toggle showed the wrong help text ("Capture live CAN traffic for two
+  seconds...") instead of its own ("Passive transport mode. Probe
+  commands are blocked."). Renamed the capture-window one to
+  `QT_PASSIVE_WINDOW_HELP` everywhere (language files, Python fallback,
+  `TesterDeck.qml`) - each now shows its own real text.
+
+- The Qt Quick deck now exposes the complete real legacy profile catalogue
+  and a deliberately bounded one-shot motion action for the existing motion
+  profiles. The backend requires a connected active transport, a matching
+  probed identity and an allowed profile; QML then requires a second operator
+  confirmation immediately before it sends the existing 0x120 command.
+  Advanced actuator and configuration flows remain in the established Tkinter
+  panels pending physical validation.
+- The Qt Quick deck now includes a bounded **Passive bus window**. It is
+  available only after a listen-only connection and captures two seconds of
+  real received traffic, displaying frame/CAN-ID counts and a capped sample.
+  It has no transmit path and is intentionally unavailable in active-check
+  mode; the separately armed identity probe remains unchanged.
 - The Qt Quick transport selector cannot refresh or switch ports while a
   connection is active. The same guard is enforced by the backend, not only
   by the visual control.

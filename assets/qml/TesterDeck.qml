@@ -62,6 +62,58 @@ ApplicationWindow {
         }
     }
 
+    Dialog {
+        id: motionConfirm
+        modal: true
+        anchors.centerIn: parent
+        width: Math.min(parent.width - 48, 510)
+        title: testerBackend.uiText("QT_CONFIRM_MOTION")
+        standardButtons: Dialog.NoButton
+        background: Rectangle {
+            color: window.panel
+            radius: 16
+            border.width: 1
+            border.color: window.cyan
+        }
+        contentItem: ColumnLayout {
+            spacing: 12
+            Text {
+                Layout.fillWidth: true
+                text: testerBackend.uiText("QT_CONFIRM_MOTION_HELP")
+                color: window.textPrimary
+                wrapMode: Text.WordWrap
+            }
+            Text {
+                Layout.fillWidth: true
+                text: "PROFILE #" + testerBackend.selectedToolId
+                    + "  •  " + motionDirection.currentText.toUpperCase()
+                    + "  •  " + motionSteps.text + " STEPS"
+                color: window.cyan
+                font.family: "Cascadia Mono"
+                font.bold: true
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Item { Layout.fillWidth: true }
+                GameButton {
+                    text: testerBackend.uiText("QT_CANCEL")
+                    accent: "#24465e"
+                    Layout.preferredWidth: 126
+                    onClicked: motionConfirm.close()
+                }
+                GameButton {
+                    text: testerBackend.uiText("QT_CONFIRM")
+                    accent: "#b86a35"
+                    Layout.preferredWidth: 126
+                    onClicked: {
+                        motionConfirm.close()
+                        testerBackend.sendMotion(motionDirection.currentText, motionSteps.text)
+                    }
+                }
+            }
+        }
+    }
+
     header: ToolBar {
         background: Rectangle { color: "#07111e" }
         Card {
@@ -105,8 +157,8 @@ ApplicationWindow {
                 anchors.fill: parent
                 anchors.margins: 16
                 spacing: 11
-                Text { text: "TRANSPORT GATE"; color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
-                Text { text: "Select a serial SLCAN port or a Linux SocketCAN interface."; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                Text { text: testerBackend.uiText("QT_TRANSPORT_GATE"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                Text { text: testerBackend.uiText("QT_TRANSPORT_HELP"); color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 ComboBox {
                     id: ports
                     Layout.fillWidth: true
@@ -116,14 +168,14 @@ ApplicationWindow {
                 }
                 RowLayout {
                     Layout.fillWidth: true
-                    GameButton { text: "REFRESH"; accent: "#24465e"; Layout.fillWidth: true; enabled: !testerBackend.connected && !testerBackend.busy; onClicked: testerBackend.scanPorts() }
-                    GameButton { text: testerBackend.connected ? "DISCONNECT" : "CONNECT"; Layout.fillWidth: true; enabled: !testerBackend.busy; onClicked: testerBackend.toggleConnection() }
+                    GameButton { text: testerBackend.uiText("BTN_REFRESH"); accent: "#24465e"; Layout.fillWidth: true; enabled: !testerBackend.connected && !testerBackend.busy; onClicked: testerBackend.scanPorts() }
+                    GameButton { text: testerBackend.connected ? testerBackend.uiText("BTN_DISCONNECT") : testerBackend.uiText("BTN_CONNECT"); Layout.fillWidth: true; enabled: !testerBackend.busy; onClicked: testerBackend.toggleConnection() }
                 }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
-                Text { text: "SAFETY MODE"; color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                Text { text: testerBackend.uiText("QT_SAFETY_MODE"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
                 Switch {
                     id: listenOnly
-                    text: checked ? "LISTEN-ONLY (NO CAN TX)" : "ACTIVE CHECKS ARMED"
+                    text: checked ? testerBackend.uiText("QT_LISTEN_ONLY") : testerBackend.uiText("QT_ACTIVE_CHECKS_ARMED")
                     checked: testerBackend.listenOnly
                     enabled: !testerBackend.connected && !testerBackend.busy
                     onToggled: testerBackend.setListenOnly(checked)
@@ -133,11 +185,39 @@ ApplicationWindow {
                     color: listenOnly.checked ? "#43db9b" : "#f7b955"
                     wrapMode: Text.WordWrap
                     text: listenOnly.checked
-                        ? "Passive transport mode. Probe commands are blocked."
-                        : "Identity probe transmits only documented queries 0x110 and 0x7F8."
+                        ? testerBackend.uiText("QT_PASSIVE_HELP")
+                        : testerBackend.uiText("QT_ACTIVE_HELP")
                 }
-                Item { Layout.fillHeight: true }
-                Text { text: "This staged deck does not expose any tool actuator controls."; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+                Text { text: testerBackend.uiText("QT_TOOL_PROFILE"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                Text { text: testerBackend.uiText("QT_PROFILE_GUARD"); color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 9 }
+                ListView {
+                    id: profiles
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 210
+                    clip: true
+                    model: testerBackend.toolProfiles
+                    spacing: 3
+                    delegate: Rectangle {
+                        required property var modelData
+                        width: profiles.width
+                        height: 34
+                        radius: 8
+                        color: testerBackend.selectedToolId === modelData.id ? "#1a4967" : panelAlt
+                        border.width: 1
+                        border.color: testerBackend.activeToolId === modelData.id ? "#43db9b" : panelBorder
+                        Row {
+                            anchors.fill: parent
+                            anchors.margins: 7
+                            spacing: 7
+                            Text { text: "#" + modelData.id; color: cyan; font.family: "Cascadia Mono"; font.bold: true; width: 26 }
+                            Text { text: modelData.name; color: textPrimary; font.bold: true; width: 190; elide: Text.ElideRight }
+                            Text { text: modelData.kind.toUpperCase(); color: muted; font.pixelSize: 9 }
+                        }
+                        MouseArea { anchors.fill: parent; enabled: !testerBackend.busy; onClicked: testerBackend.selectToolProfile(modelData.id) }
+                    }
+                }
+                Text { text: testerBackend.uiText("QT_STAGED_LIMIT"); color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
             }
         }
         Card {
@@ -147,9 +227,43 @@ ApplicationWindow {
                 anchors.fill: parent
                 anchors.margins: 16
                 spacing: 12
-                Text { text: "IDENTITY & HEALTH CHECKPOINTS"; color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 14 }
-                Text { text: "1  Connect to the selected production transport\n2  Explicitly arm active checks, if required\n3  Query active tool and board version\n4  Preserve a transparent session log"; color: muted; font.family: "Bahnschrift"; font.pixelSize: 12; lineHeight: 1.55 }
-                GameButton { text: "PROBE ACTIVE TOOL + VERSION"; Layout.fillWidth: true; enabled: testerBackend.canProbe; onClicked: testerBackend.probeIdentity() }
+                Text { text: testerBackend.uiText("QT_IDENTITY_CHECKPOINTS"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 14 }
+                Text { text: testerBackend.uiText("QT_CHECKPOINTS"); color: muted; font.family: "Bahnschrift"; font.pixelSize: 12; lineHeight: 1.55 }
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+                Text { text: testerBackend.uiText("QT_PASSIVE_WINDOW"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                Text { text: testerBackend.uiText("QT_PASSIVE_WINDOW_HELP"); color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                GameButton {
+                    text: testerBackend.uiText("QT_CAPTURE_PASSIVE")
+                    accent: "#24465e"
+                    Layout.fillWidth: true
+                    enabled: testerBackend.canCapturePassive
+                    onClicked: testerBackend.capturePassiveWindow()
+                }
+                Text {
+                    text: testerBackend.hasPassiveSnapshot ? testerBackend.passiveSummary : testerBackend.uiText("QT_NO_PASSIVE_FRAMES")
+                    color: testerBackend.hasPassiveSnapshot ? "#43db9b" : muted
+                    font.family: "Cascadia Mono"
+                    font.pixelSize: 10
+                }
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Math.min(contentHeight, 70)
+                    visible: testerBackend.passiveFrames.length > 0
+                    model: testerBackend.passiveFrames
+                    clip: true
+                    spacing: 2
+                    delegate: Text {
+                        required property var modelData
+                        text: modelData.id + "  " + modelData.data
+                        color: muted
+                        font.family: "Cascadia Mono"
+                        font.pixelSize: 9
+                        width: parent.width
+                        elide: Text.ElideRight
+                    }
+                }
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+                GameButton { text: testerBackend.uiText("QT_PROBE"); Layout.fillWidth: true; enabled: testerBackend.canProbe; onClicked: testerBackend.probeIdentity() }
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 104
@@ -161,13 +275,43 @@ ApplicationWindow {
                         anchors.fill: parent
                         anchors.margins: 11
                         spacing: 5
-                        Text { text: "ACTIVE TOOL"; color: cyan; font.bold: true; font.pixelSize: 10 }
+                        Text { text: testerBackend.uiText("QT_ACTIVE_TOOL"); color: cyan; font.bold: true; font.pixelSize: 10 }
                         Text { text: testerBackend.activeTool; color: textPrimary; width: parent.width; wrapMode: Text.WordWrap }
                         Text { text: testerBackend.boardVersion; color: muted; width: parent.width; elide: Text.ElideRight; font.pixelSize: 11 }
                     }
                 }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
-                Text { text: "ACTIVITY LOG"; color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                Text { text: testerBackend.uiText("QT_MOTION_CONTROL"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                Text {
+                    text: testerBackend.canSendMotion ? testerBackend.uiText("QT_PROFILE_GUARD") : testerBackend.uiText("QT_PROFILE_NOT_MATCHED")
+                    color: testerBackend.canSendMotion ? "#43db9b" : "#f7b955"
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                    font.pixelSize: 9
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    ComboBox { id: motionDirection; model: ["forward", "reverse"]; Layout.preferredWidth: 120; enabled: testerBackend.canSendMotion }
+                    TextField {
+                        id: motionSteps
+                        text: "200"
+                        inputMethodHints: Qt.ImhDigitsOnly
+                        color: textPrimary
+                        placeholderText: testerBackend.uiText("QT_STEPS")
+                        Layout.fillWidth: true
+                        enabled: testerBackend.canSendMotion
+                        background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder }
+                    }
+                    GameButton {
+                        text: testerBackend.uiText("QT_SEND_MOTION")
+                        accent: "#b86a35"
+                        Layout.preferredWidth: 145
+                        enabled: testerBackend.canSendMotion
+                        onClicked: motionConfirm.open()
+                    }
+                }
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+                Text { text: testerBackend.uiText("QT_ACTIVITY_LOG"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
                 ListView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true

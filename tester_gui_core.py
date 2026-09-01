@@ -18,12 +18,12 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
 from tester_config import (
-    _, AVAILABLE_LANGUAGES, BANNER_IMAGE_PATH, BITRATE_500K_SLCAN_CODE, CAN_ID_3DP_HOTEND_FAN_CMD,
+    _, AVAILABLE_LANGUAGES, BITRATE_500K_SLCAN_CODE, CAN_ID_3DP_HOTEND_FAN_CMD,
     CAN_ID_3DP_LAYER_FAN_CMD, CAN_ID_3DP_THERMAL_MOTION, CAN_ID_ACTIVE_TOOL_RESP,
     CAN_ID_DRILL_CMD, CAN_ID_LASER_CMD, CAN_ID_QUERY_ACTIVE_TOOL, CAN_ID_QUERY_VERSION,
     CAN_ID_UV_CURING_CMD, CAN_ID_HOTAIR_CMD,
     CAN_ID_SOLDER_SETPOINT, CAN_ID_VERSION_RESPONSE, CONFIG_PATH, HYDRA_UMC_ICON_FRAMES_DIR, ICON_IMAGE_PATH,
-    LOGS_FOLDER, MOTION_TOOL_IDS, SLCAN_BITRATES, TESTER_AUTHOR, TESTER_VERSION, THIS_HARDWARE_ID,
+    LOGS_FOLDER, MOTION_TOOL_IDS, SLCAN_BITRATES, TESTER_VERSION, THIS_HARDWARE_ID,
     TOOL_NAMES, list_serial_ports, load_language, save_config, _center_geometry,
 )
 from tester_transports import SLCAN, SLCANError, SocketCAN, SocketCANError, list_socketcan_interfaces
@@ -43,6 +43,13 @@ except ImportError:
 
 import socket
 HAVE_SOCKETCAN = hasattr(socket, "AF_CAN")
+
+# Real author/license identity for the About window - same values used
+# across every desktop tool in this ecosystem (see e.g. HYDRA-UMC-SUITE's
+# own ui/about_dialog.py and URTC-FLASHER's own flasher_gui.py).
+ABOUT_AUTHOR_NAME = "JuanenRac (Electro Hobby 3D)"
+ABOUT_AUTHOR_EMAIL = "electrohobby3d@gmail.com"
+ABOUT_LICENSE_NAME = "GNU General Public License v3.0 (GPL-3.0)"
 
 
 class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
@@ -1272,24 +1279,60 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         ttk.Button(win, text=_("BTN_ACCEPT"), command=win.destroy).pack(pady=(0, 8))
 
     def _menu_show_about(self):
+        """Real About window - logo, tagline, description and a real
+        Version/Author/Email/License info block, matching the structure
+        HYDRA-UMC-STUDIO's own About.tsx and the ecosystem's PySide6 tools
+        (and URTC-FLASHER's own Tkinter AboutDialog) already established -
+        not just a banner and one line of text."""
         win = tk.Toplevel(self.root)
-        win.title(_("MENU_ABOUT"))
+        win.title(_("TITLE_ABOUT"))
         win.transient(self.root)
         win.resizable(False, False)
+        win.configure(background=self.PANEL)
+
         try:
-            banner_img = tk.PhotoImage(file=BANNER_IMAGE_PATH)
-            banner_label = ttk.Label(win, image=banner_img)
-            banner_label.image = banner_img  # keep a reference - PhotoImage is garbage-collected otherwise
-            banner_label.pack(padx=8, pady=8)
+            icon_img = tk.PhotoImage(file=ICON_IMAGE_PATH)
+            icon_label = tk.Label(win, image=icon_img, background=self.PANEL, borderwidth=0)
+            icon_label.image = icon_img  # keep a reference - PhotoImage is garbage-collected otherwise
+            icon_label.pack(padx=8, pady=(16, 8))
         except tk.TclError:
-            pass  # banner image missing/unreadable - still show the text below
-        ttk.Label(
-            win, text=f"URTC Tester v{TESTER_VERSION}\n{_('LBL_ABOUT_AUTHOR', author=TESTER_AUTHOR)}",
-            justify="center",
-        ).pack(padx=8, pady=(0, 8))
-        ttk.Button(win, text=_("BTN_ACCEPT"), command=win.destroy).pack(pady=(0, 8))
+            pass  # icon missing/unreadable - still show the text below
+
+        tk.Label(
+            win, text="URTC TESTER", font=("Segoe UI", 15, "bold"),
+            background=self.PANEL, foreground=self.TEXT,
+        ).pack(padx=24, pady=(0, 2))
+        tk.Label(
+            win, text=_("ABOUT_TAGLINE"), font=("Segoe UI", 10, "bold"), justify="center",
+            wraplength=340, background=self.PANEL, foreground=self.ACCENT,
+        ).pack(padx=24, pady=(0, 4))
+        tk.Label(
+            win, text=_("ABOUT_DESCRIPTION"), font=("Segoe UI", 9), justify="center",
+            wraplength=340, background=self.PANEL, foreground="#9DB4C0",
+        ).pack(padx=24, pady=(0, 12))
+
+        rows = tk.Frame(win, background=self.PANEL)
+        rows.pack(fill="x", padx=24, pady=(0, 8))
+        self._about_info_row(rows, _("ABOUT_VERSION"), TESTER_VERSION)
+        self._about_info_row(rows, _("ABOUT_AUTHOR"), ABOUT_AUTHOR_NAME)
+        self._about_info_row(rows, _("ABOUT_EMAIL"), ABOUT_AUTHOR_EMAIL)
+        self._about_info_row(rows, _("ABOUT_LICENSE"), ABOUT_LICENSE_NAME)
+
+        ttk.Button(win, text=_("BTN_CLOSE"), command=win.destroy).pack(pady=(0, 16))
         win.update_idletasks()
         win.geometry(_center_geometry(win, win.winfo_reqwidth(), win.winfo_reqheight()))
+
+    def _about_info_row(self, parent, label, value):
+        row = tk.Frame(parent, background=self.PANEL_ALT, highlightthickness=1, highlightbackground=self.BORDER)
+        row.pack(fill="x", pady=2)
+        tk.Label(
+            row, text=label.upper(), font=("Segoe UI", 8, "bold"),
+            background=self.PANEL_ALT, foreground="#9DB4C0",
+        ).pack(side="left", padx=10, pady=6)
+        tk.Label(
+            row, text=value, font=("Segoe UI", 9),
+            background=self.PANEL_ALT, foreground=self.TEXT,
+        ).pack(side="right", padx=10, pady=6)
 
     def on_close(self):
         self._stop_bus_health_monitor()
