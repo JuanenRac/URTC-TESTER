@@ -511,6 +511,7 @@ Dieses Projekt ist Teil eines größeren Robotik-Ökosystems desselben Autors (J
 
 ### Direkt mit diesem Projekt verbunden
 
+- **[URTC](https://github.com/JuanenRac/URTC)** — genau die Firmware, mit der dieser Tester sich verbindet und die er diagnostiziert, ein Panel pro seiner 25 Werkzeugprofile.
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — führt Audits im Flottenmaßstab durch (der Befehl `audit`), über den Umfang einer einzelnen Platine hinaus, den dieser Tester abdeckt.
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — ergänzt die Live-CAN-Bus-Diagnose dieses Projekts um eigene visuelle Qualitätssicherungs-(QA)-Prüfungen am Werkzeugkopf.
 

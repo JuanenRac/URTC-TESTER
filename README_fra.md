@@ -502,6 +502,7 @@ Ce projet fait partie d'un écosystème robotique plus large du même auteur (Ju
 
 ### Directement liés à ce projet
 
+- **[URTC](https://github.com/JuanenRac/URTC)** — le firmware exact auquel ce testeur se connecte et qu'il diagnostique, un panneau par chacun de ses 25 profils d'outil.
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — réalise des audits à l'échelle de toute la flotte (la commande `audit`), au-delà du périmètre d'une seule carte que couvre ce testeur.
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — complète le diagnostic en direct du bus CAN de ce projet par ses propres contrôles visuels de qualité (QA) sur la tête d'outil.
 

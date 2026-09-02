@@ -364,6 +364,7 @@ ID 列会在原始十六进制 ID 旁边显示该友好名称——对于任何�
 
 ### 与本项目直接相关
 
+- **[URTC](https://github.com/JuanenRac/URTC)** —— 本测试器连接并诊断的正是这个固件,其 25 个工具配置文件各对应一个面板。
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — 一次性对每一个工具头运行车队级审计（`audit` 指令），超出了本测试器所覆盖的单板范围。
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — 用其自身对工具头的视觉质量保证（QA）检查，补充本项目的实时 CAN 总线诊断。
 

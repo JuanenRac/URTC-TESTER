@@ -447,6 +447,7 @@ PEAK PCAN-View / Vector CANalyzer 風のトレースファイルとして保存�
 
 ### 本プロジェクトと直接関連
 
+- **[URTC](https://github.com/JuanenRac/URTC)** —— 本テスターが接続して診断する、まさにそのファームウェア。その25個のツールプロファイルごとに1つのパネルがあります。
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — 本テスターがカバーする単一ボードの範囲を超えて、すべてのツールヘッドに対して一度に車両群全体の監査（`audit` コマンド）を実行します。
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — ツールヘッドに対する独自の視覚的品質保証（QA）チェックで、本プロジェクトのライブ CAN バス診断を補完します。
 
