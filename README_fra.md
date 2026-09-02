@@ -425,10 +425,18 @@ remettre à quiconque déboguant un problème de tête d'outil.
 
 ## 📂 Structure du Dépôt
 
+Le répertoire `assets/` contient aussi `HYDRA_UMC_ICON.svg`, la source
+vectorielle animée maintenue, et `hydra_umc_icon_frames/`, ses douze
+images PNG groupées pour Tkinter. `tools/render_hydra_umc_icon_frames.py`
+les régénère depuis le SVG pendant le développement ; ce n'est pas requis
+pour exécuter l'application.
+
 ```
 /
 ├── urtc_tester.py             Point d'entrée - démarrage sans CLI et écran de
 │                                démarrage
+├── qt_tester.py                Front end Qt Quick - command deck `--qtquick`
+│                                limité, en lecture seule par défaut
 ├── tester_config.py            Constantes de config/langue/protocole (ID CAN,
 │                                noms d'outils, MOTION_TOOL_IDS,
 │                                AVAILABLE_LANGUAGES, EXPANSION_BOARD_TYPES)
@@ -448,16 +456,31 @@ remettre à quiconque déboguant un problème de tête d'outil.
 │                                d'outils (plusieurs outils partagent un même
 │                                constructeur, ex. `_build_motion_panel` couvre à
 │                                lui seul 7 d'entre eux)
-├── requirements.txt            Dépendance unique : pyserial>=3.5
+├── advanced_protocol.py        Encodeurs purs de payload CAN pour les familles de
+│                                contrôles migrées vers Qt Quick - tests sans matériel
+├── hydra_umc_animation.py      Widget d'identité HYDRA-UMC animé pour Tkinter
+├── hydra_umc_deck_widgets.py   Widgets arrondis du command deck HYDRA-UMC
+│                                partagés par les surfaces de diagnostic en direct
+├── tests/
+│   └── test_advanced_protocol.py   Tests sans matériel pour les encodeurs de advanced_protocol.py
+├── requirements.txt            pyserial>=3.5 (tester Tkinter) + PySide6>=6.8,<7 (deck `--qtquick`)
 ├── build_exe.bat               Script de build du binaire Windows autonome
 │                                (PyInstaller)
 ├── build_exe.sh                Le même, pour Linux
+├── build-test.bat              Contrôle build/compilation sans gestion de version
+├── build-test.sh                Le même, pour Linux
+├── bump_version.py             Incrément de version type compteur kilométrique, exécuté par les scripts de build
+├── bump_manifest_version.py    Synchronise la version de hydra-umc.project.json avec la version native (--sync)
 ├── URTC_Tester.spec            Spec PyInstaller utilisée par les deux scripts de
 │                                build
 ├── assets/
 │   ├── URTC_APP_ICON.svg       Source de l'icône fenêtre/barre des tâches (petit
 │                                design autonome)
 │   ├── URTC_LOGO_TESTER.svg    Source de la bannière de démarrage
+│   ├── HYDRA_UMC_ICON.svg      Source vectorielle animée HYDRA-UMC maintenue
+│   ├── hydra_umc_icon_frames/  Douze images PNG pour Tkinter rendues depuis le SVG ci-dessus
+│   ├── qml/
+│   │   └── TesterDeck.qml      UI Qt Quick du command deck `--qtquick` limité
 │   ├── urtc_icon.ico           Icône Windows, générée depuis URTC_APP_ICON.svg
 │   ├── urtc_icon.png           La même, en PNG (Linux)
 │   └── urtc_tester_banner.png  PNG de la bannière de démarrage, rendu depuis le
@@ -471,7 +494,9 @@ remettre à quiconque déboguant un problème de tête d'outil.
 │   ├── spanish.lng
 │   ├── italian.lng
 │   ├── french.lng
-│   └── german.lng
+│   ├── german.lng
+│   ├── japanese.lng
+│   └── chinese.lng
 ├── logs/                       Journaux de session écrits ici à l'exécution (sans
 │                                risque à supprimer)
 ├── LICENSE                     Texte complet de la licence - voir Licence et Avis
@@ -487,6 +512,9 @@ remettre à quiconque déboguant un problème de tête d'outil.
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
 │   └── CANBUS.md
+├── tools/
+│   ├── ci_validate.py                    Validation manifest/CHANGELOG/docs utilisée par la CI
+│   └── render_hydra_umc_icon_frames.py   Régénère assets/hydra_umc_icon_frames/ depuis le SVG (développement uniquement)
 └── README_jpn.md               Traduction japonaise
 ```
 

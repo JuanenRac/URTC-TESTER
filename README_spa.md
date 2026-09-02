@@ -420,10 +420,18 @@ entregar a quien esté depurando un problema de cabezal de herramienta.
 
 ## 📂 Estructura del Repositorio
 
+El directorio `assets/` también contiene `HYDRA_UMC_ICON.svg`, el origen
+vectorial animado mantenido, y `hydra_umc_icon_frames/`, sus doce fotogramas
+PNG empaquetados para Tkinter. `tools/render_hydra_umc_icon_frames.py` los
+regenera a partir del SVG durante el desarrollo; no es necesario para
+ejecutar la aplicación.
+
 ```
 /
 ├── urtc_tester.py             Punto de entrada - arranque sin CLI y la pantalla
 │                                de bienvenida
+├── qt_tester.py                Front end Qt Quick - deck de comandos `--qtquick`
+│                                limitado, de solo lectura por defecto
 ├── tester_config.py            Constantes de configuración/idioma/protocolo (IDs
 │                                CAN, nombres de herramientas, MOTION_TOOL_IDS,
 │                                AVAILABLE_LANGUAGES, EXPANSION_BOARD_TYPES)
@@ -442,15 +450,30 @@ entregar a quien esté depurando un problema de cabezal de herramienta.
 │                                perfiles de herramienta (varias herramientas
 │                                comparten un mismo constructor, p. ej.
 │                                `_build_motion_panel` cubre 7 ella sola)
-├── requirements.txt            Única dependencia: pyserial>=3.5
+├── advanced_protocol.py        Encoders puros de payload CAN para las familias
+│                                de controles migradas a Qt Quick - tests sin hardware
+├── hydra_umc_animation.py      Widget animado de identidad HYDRA-UMC para Tkinter
+├── hydra_umc_deck_widgets.py   Widgets redondeados del command-deck HYDRA-UMC
+│                                compartidos por las superficies de diagnóstico en vivo
+├── tests/
+│   └── test_advanced_protocol.py   Tests sin hardware para los encoders de advanced_protocol.py
+├── requirements.txt            pyserial>=3.5 (tester Tkinter) + PySide6>=6.8,<7 (deck `--qtquick`)
 ├── build_exe.bat               Script de compilación del binario independiente
 │                                para Windows (PyInstaller)
 ├── build_exe.sh                El mismo, para Linux
+├── build-test.bat              Comprobación de build/compilación sin subir versión
+├── build-test.sh                El mismo, para Linux
+├── bump_version.py             Incremento de versión tipo cuentakilómetros, ejecutado por los scripts de build
+├── bump_manifest_version.py    Sincroniza la versión de hydra-umc.project.json con la nativa (--sync)
 ├── URTC_Tester.spec            Spec de PyInstaller usado por ambos scripts de build
 ├── assets/
 │   ├── URTC_APP_ICON.svg       Origen del icono de ventana/barra de tareas (diseño
 │                                pequeño independiente)
 │   ├── URTC_LOGO_TESTER.svg    Origen del banner de arranque
+│   ├── HYDRA_UMC_ICON.svg      Origen vectorial animado HYDRA-UMC mantenido
+│   ├── hydra_umc_icon_frames/  Doce fotogramas PNG para Tkinter renderizados del SVG anterior
+│   ├── qml/
+│   │   └── TesterDeck.qml      UI Qt Quick del deck de comandos `--qtquick` limitado
 │   ├── urtc_icon.ico           Icono de Windows, generado a partir de
 │                                URTC_APP_ICON.svg
 │   ├── urtc_icon.png           El mismo, en formato PNG (Linux)
@@ -466,7 +489,9 @@ entregar a quien esté depurando un problema de cabezal de herramienta.
 │   ├── spanish.lng
 │   ├── italian.lng
 │   ├── french.lng
-│   └── german.lng
+│   ├── german.lng
+│   ├── japanese.lng
+│   └── chinese.lng
 ├── logs/                       Registros de sesión escritos aquí en tiempo de
 │                                ejecución (se pueden borrar sin problema)
 ├── LICENSE                     Texto completo de la licencia - ver Licencia y
@@ -482,6 +507,9 @@ entregar a quien esté depurando un problema de cabezal de herramienta.
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
 │   └── CANBUS.md
+├── tools/
+│   ├── ci_validate.py                    Validación de manifest/CHANGELOG/docs usada por la CI
+│   └── render_hydra_umc_icon_frames.py   Regenera assets/hydra_umc_icon_frames/ desde el SVG (solo desarrollo)
 └── README_jpn.md               Traducción al japonés
 ```
 

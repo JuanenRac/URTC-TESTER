@@ -419,10 +419,18 @@ strumento.
 
 ## 📂 Struttura del Repository
 
+La cartella `assets/` contiene anche `HYDRA_UMC_ICON.svg`, la sorgente
+vettoriale animata mantenuta, e `hydra_umc_icon_frames/`, i suoi dodici
+fotogrammi PNG per Tkinter. `tools/render_hydra_umc_icon_frames.py` li
+rigenera dall'SVG durante lo sviluppo; non è necessario per eseguire
+l'applicazione.
+
 ```
 /
 ├── urtc_tester.py             Punto di ingresso - avvio senza CLI e schermata
 │                                iniziale
+├── qt_tester.py                Front end Qt Quick - command deck `--qtquick`
+│                                limitato, di sola lettura per default
 ├── tester_config.py            Costanti di configurazione/lingua/protocollo (ID
 │                                CAN, nomi strumenti, MOTION_TOOL_IDS,
 │                                AVAILABLE_LANGUAGES, EXPANSION_BOARD_TYPES)
@@ -441,16 +449,31 @@ strumento.
 │                                profili strumento (diversi strumenti condividono
 │                                un solo costruttore, es. `_build_motion_panel` da
 │                                solo ne copre 7)
-├── requirements.txt            Unica dipendenza: pyserial>=3.5
+├── advanced_protocol.py        Encoder puri di payload CAN per le famiglie di
+│                                controlli migrate a Qt Quick - test senza hardware
+├── hydra_umc_animation.py      Widget animato di identità HYDRA-UMC per Tkinter
+├── hydra_umc_deck_widgets.py   Widget arrotondati del command deck HYDRA-UMC
+│                                condivisi dalle superfici di diagnostica live
+├── tests/
+│   └── test_advanced_protocol.py   Test senza hardware per gli encoder di advanced_protocol.py
+├── requirements.txt            pyserial>=3.5 (tester Tkinter) + PySide6>=6.8,<7 (deck `--qtquick`)
 ├── build_exe.bat               Script di build del binario standalone per Windows
 │                                (PyInstaller)
 ├── build_exe.sh                Lo stesso, per Linux
+├── build-test.bat              Controllo build/compilazione senza incremento di versione
+├── build-test.sh                Lo stesso, per Linux
+├── bump_version.py             Incremento di versione stile contachilometri, eseguito dagli script di build
+├── bump_manifest_version.py    Sincronizza la versione di hydra-umc.project.json con quella nativa (--sync)
 ├── URTC_Tester.spec            Spec di PyInstaller usato da entrambi gli script di
 │                                build
 ├── assets/
 │   ├── URTC_APP_ICON.svg       Sorgente dell'icona finestra/barra applicazioni
 │                                (design standalone piccolo)
 │   ├── URTC_LOGO_TESTER.svg    Sorgente del banner di avvio
+│   ├── HYDRA_UMC_ICON.svg      Sorgente vettoriale animata HYDRA-UMC mantenuta
+│   ├── hydra_umc_icon_frames/  Dodici fotogrammi PNG per Tkinter renderizzati dall'SVG sopra
+│   ├── qml/
+│   │   └── TesterDeck.qml      UI Qt Quick del command deck `--qtquick` limitato
 │   ├── urtc_icon.ico           Icona Windows, generata da URTC_APP_ICON.svg
 │   ├── urtc_icon.png           La stessa, in formato PNG (Linux)
 │   └── urtc_tester_banner.png  PNG del banner di avvio, renderizzato dall'SVG
@@ -465,7 +488,9 @@ strumento.
 │   ├── spanish.lng
 │   ├── italian.lng
 │   ├── french.lng
-│   └── german.lng
+│   ├── german.lng
+│   ├── japanese.lng
+│   └── chinese.lng
 ├── logs/                       Log di sessione scritti qui a runtime (sicuri da
 │                                eliminare)
 ├── LICENSE                     Testo completo della licenza - vedi Licenza e Note
@@ -481,6 +506,9 @@ strumento.
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
 │   └── CANBUS.md
+├── tools/
+│   ├── ci_validate.py                    Validazione manifest/CHANGELOG/docs usata dalla CI
+│   └── render_hydra_umc_icon_frames.py   Rigenera assets/hydra_umc_icon_frames/ dall'SVG (solo sviluppo)
 └── README_jpn.md               Traduzione giapponese
 ```
 

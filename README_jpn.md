@@ -379,9 +379,16 @@ PEAK PCAN-View / Vector CANalyzer 風のトレースファイルとして保存�
 
 ## 📂 リポジトリ構成
 
+`assets/` ディレクトリには `HYDRA_UMC_ICON.svg`（維持されているアニメーション
+ベクターソース）と `hydra_umc_icon_frames/`（同梱の 12 枚の Tkinter 用 PNG
+フレーム）も含まれます。`tools/render_hydra_umc_icon_frames.py` は開発中に
+これらを SVG から再生成します。アプリケーションの実行には不要です。
+
 ```
 /
 ├── urtc_tester.py             エントリポイント——CLI なしの起動とスプラッシュ画面
+├── qt_tester.py                Qt Quick フロントエンド——限定的で既定では読み取り専用の
+│                                `--qtquick` コマンドデッキ
 ├── tester_config.py            設定/言語/プロトコル定数（CAN ID、ツール名、
 │                                MOTION_TOOL_IDS、AVAILABLE_LANGUAGES、
 │                                EXPANSION_BOARD_TYPES）
@@ -402,13 +409,29 @@ PEAK PCAN-View / Vector CANalyzer 風のトレースファイルとして保存�
 │                                ビルダーを共有します。例えば
 │                                `_build_motion_panel` はそれだけで
 │                                そのうちの 7 つをカバーします）
-├── requirements.txt            単一の依存関係：pyserial>=3.5
+├── advanced_protocol.py        Qt Quick に移行した制御ファミリー向けの純粋な
+│                                CAN ペイロードエンコーダー——ハードウェア不要のテスト
+├── hydra_umc_animation.py      Tkinter 用のアニメーション HYDRA-UMC アイデンティティ
+│                                ウィジェット
+├── hydra_umc_deck_widgets.py   ライブ診断画面が共有する丸みを帯びた
+│                                HYDRA-UMC コマンドデッキウィジェット
+├── tests/
+│   └── test_advanced_protocol.py   advanced_protocol.py のエンコーダー用ハードウェア不要テスト
+├── requirements.txt            pyserial>=3.5（Tkinter テスター）+ PySide6>=6.8,<7（`--qtquick` デッキ）
 ├── build_exe.bat               独立 Windows バイナリビルドスクリプト（PyInstaller）
 ├── build_exe.sh                同上、Linux 向け
+├── build-test.bat              バージョンを更新しないビルド/コンパイル確認
+├── build-test.sh                同上、Linux 向け
+├── bump_version.py             オドメーター式バージョンインクリメント、ビルドスクリプトが実行
+├── bump_manifest_version.py    hydra-umc.project.json のバージョンをネイティブ側と同期（--sync）
 ├── URTC_Tester.spec            両方のビルドスクリプトが使用する PyInstaller の spec
 ├── assets/
 │   ├── URTC_APP_ICON.svg       ウィンドウ/タスクバーアイコンのソース（独立した小型デザイン）
 │   ├── URTC_LOGO_TESTER.svg    起動バナーのソース
+│   ├── HYDRA_UMC_ICON.svg      維持されているアニメーション HYDRA-UMC ベクターソース
+│   ├── hydra_umc_icon_frames/  上記の SVG からレンダリングされた 12 枚の Tkinter 用 PNG フレーム
+│   ├── qml/
+│   │   └── TesterDeck.qml      限定的な `--qtquick` コマンドデッキの Qt Quick UI
 │   ├── urtc_icon.ico           Windows アイコン、URTC_APP_ICON.svg から構築
 │   ├── urtc_icon.png           同上、PNG 形式（Linux）
 │   └── urtc_tester_banner.png  起動バナー PNG、上記の SVG からレンダリング
@@ -420,19 +443,26 @@ PEAK PCAN-View / Vector CANalyzer 風のトレースファイルとして保存�
 │   ├── spanish.lng
 │   ├── italian.lng
 │   ├── french.lng
-│   └── german.lng
+│   ├── german.lng
+│   ├── japanese.lng
+│   └── chinese.lng
 ├── logs/                       実行時のセッションログがここに書き込まれる（削除しても安全）
 ├── LICENSE                     完全なライセンステキスト——下記のライセンスと著作権表示を参照
-├── README.md                   本ファイル
+├── README.md                   英語版
 ├── README_spa.md               スペイン語翻訳
 ├── README_ita.md               イタリア語翻訳
 ├── README_fra.md               フランス語翻訳
+├── README_deu.md               ドイツ語翻訳
+├── README_zho.md               中国語翻訳
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
 │   └── CANBUS.md
-└── README_deu.md               ドイツ語翻訳
+├── tools/
+│   ├── ci_validate.py                    CI が使用する manifest/CHANGELOG/docs の検証
+│   └── render_hydra_umc_icon_frames.py   assets/hydra_umc_icon_frames/ を SVG から再生成（開発専用）
+└── README_jpn.md               本ファイル
 ```
 
 ## 📸 写真

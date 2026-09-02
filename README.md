@@ -370,6 +370,7 @@ from the SVG during development; it is not required to run the application.
 ```
 /
 ├── urtc_tester.py             Entry point - CLI-free startup and the splash screen
+├── qt_tester.py                Qt Quick front end - bounded, read-only-by-default `--qtquick` command deck
 ├── tester_config.py            Config/language/protocol constants (CAN IDs, tool
 │                                names, MOTION_TOOL_IDS, AVAILABLE_LANGUAGES,
 │                                EXPANSION_BOARD_TYPES)
@@ -387,13 +388,28 @@ from the SVG during development; it is not required to run the application.
 │                                covering all 25 tool profiles (several tools
 │                                share one builder, e.g. `_build_motion_panel`
 │                                alone covers 7 of them)
-├── requirements.txt            Single dependency: pyserial>=3.5
+├── advanced_protocol.py        Pure CAN payload encoders for the migrated Qt
+│                                Quick control families - hardware-free tests
+├── hydra_umc_animation.py      Animated HYDRA-UMC identity widget for Tkinter
+├── hydra_umc_deck_widgets.py   Rounded HYDRA-UMC command-deck widgets shared
+│                                by the live diagnostic surfaces
+├── tests/
+│   └── test_advanced_protocol.py   Hardware-free tests for advanced_protocol.py's encoders
+├── requirements.txt            pyserial>=3.5 (Tkinter tester) + PySide6>=6.8,<7 (`--qtquick` deck)
 ├── build_exe.bat               Standalone Windows binary build script (PyInstaller)
 ├── build_exe.sh                Same, for Linux
+├── build-test.bat              Non-versioning build/compile check
+├── build-test.sh                Same, for Linux
+├── bump_version.py             Odometer-style version bump, run by the build scripts
+├── bump_manifest_version.py    Syncs hydra-umc.project.json's version to the native one (--sync)
 ├── URTC_Tester.spec            PyInstaller spec used by both build scripts
 ├── assets/
 │   ├── URTC_APP_ICON.svg       Window/taskbar icon source (small standalone design)
 │   ├── URTC_LOGO_TESTER.svg    Startup banner source
+│   ├── HYDRA_UMC_ICON.svg      Maintained animated HYDRA-UMC vector source
+│   ├── hydra_umc_icon_frames/  Twelve bundled Tkinter PNG frames rendered from the SVG above
+│   ├── qml/
+│   │   └── TesterDeck.qml      Qt Quick UI for the bounded --qtquick command deck
 │   ├── urtc_icon.ico           Windows icon, built from URTC_APP_ICON.svg
 │   ├── urtc_icon.png           Same, PNG form (Linux)
 │   └── urtc_tester_banner.png  Startup banner PNG, rendered from the SVG above
@@ -405,7 +421,9 @@ from the SVG during development; it is not required to run the application.
 │   ├── spanish.lng
 │   ├── italian.lng
 │   ├── french.lng
-│   └── german.lng
+│   ├── german.lng
+│   ├── japanese.lng
+│   └── chinese.lng
 ├── logs/                       Session logs written here at runtime (safe to delete)
 ├── LICENSE                     Full license text - see License and Copyright
 │                                Notices below
@@ -420,6 +438,9 @@ from the SVG during development; it is not required to run the application.
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
 │   └── CANBUS.md
+├── tools/
+│   ├── ci_validate.py                    Manifest/CHANGELOG/docs validation used by CI
+│   └── render_hydra_umc_icon_frames.py   Regenerates assets/hydra_umc_icon_frames/ from the SVG (dev-only)
 └── README_jpn.md               Japanese translation
 ```
 

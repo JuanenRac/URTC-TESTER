@@ -298,9 +298,16 @@ ID 列会在原始十六进制 ID 旁边显示该友好名称——对于任何�
 
 ## 📂 仓库结构
 
+`assets/` 目录还包含 `HYDRA_UMC_ICON.svg`（维护中的动画矢量源文件）
+和 `hydra_umc_icon_frames/`（其随附的十二帧 Tkinter PNG 帧）。
+`tools/render_hydra_umc_icon_frames.py` 在开发期间从 SVG 重新生成
+这些帧；运行应用程序并不需要它。
+
 ```
 /
 ├── urtc_tester.py             入口点——无 CLI 的启动流程和启动画面
+├── qt_tester.py                Qt Quick 前端——受限、默认只读的
+│                                `--qtquick` 指令面板
 ├── tester_config.py            配置/语言/协议常量（CAN ID、工具名称、
 │                                MOTION_TOOL_IDS、AVAILABLE_LANGUAGES、
 │                                EXPANSION_BOARD_TYPES）
@@ -319,13 +326,28 @@ ID 列会在原始十六进制 ID 旁边显示该友好名称——对于任何�
 │                                （多个工具共享一个构建器，例如
 │                                `_build_motion_panel` 单独覆盖了
 │                                其中 7 个）
-├── requirements.txt            单一依赖：pyserial>=3.5
+├── advanced_protocol.py        为迁移到 Qt Quick 的控制系列提供的纯 CAN
+│                                负载编码器——无需硬件的测试
+├── hydra_umc_animation.py      用于 Tkinter 的动画 HYDRA-UMC 身份标识控件
+├── hydra_umc_deck_widgets.py   实时诊断界面共享的圆角 HYDRA-UMC
+│                                指令面板控件
+├── tests/
+│   └── test_advanced_protocol.py   针对 advanced_protocol.py 编码器的无硬件测试
+├── requirements.txt            pyserial>=3.5（Tkinter 测试器）+ PySide6>=6.8,<7（`--qtquick` 面板）
 ├── build_exe.bat               独立 Windows 二进制文件构建脚本（PyInstaller）
 ├── build_exe.sh                同上，适用于 Linux
+├── build-test.bat              不递增版本号的构建/编译检查
+├── build-test.sh                同上，适用于 Linux
+├── bump_version.py             里程表式版本递增，由构建脚本运行
+├── bump_manifest_version.py    将 hydra-umc.project.json 的版本与原生版本同步（--sync）
 ├── URTC_Tester.spec            两个构建脚本共用的 PyInstaller 规范文件
 ├── assets/
 │   ├── URTC_APP_ICON.svg       窗口/任务栏图标源文件（独立小型设计）
 │   ├── URTC_LOGO_TESTER.svg    启动横幅源文件
+│   ├── HYDRA_UMC_ICON.svg      维护中的动画 HYDRA-UMC 矢量源文件
+│   ├── hydra_umc_icon_frames/  由上方 SVG 渲染出的十二帧 Tkinter PNG 帧
+│   ├── qml/
+│   │   └── TesterDeck.qml      受限 `--qtquick` 指令面板的 Qt Quick UI
 │   ├── urtc_icon.ico           Windows 图标，由 URTC_APP_ICON.svg 构建
 │   ├── urtc_icon.png           同上，PNG 形式（Linux）
 │   └── urtc_tester_banner.png  启动横幅 PNG，由上方的 SVG 渲染而成
@@ -337,19 +359,26 @@ ID 列会在原始十六进制 ID 旁边显示该友好名称——对于任何�
 │   ├── spanish.lng
 │   ├── italian.lng
 │   ├── french.lng
-│   └── german.lng
+│   ├── german.lng
+│   ├── japanese.lng
+│   └── chinese.lng
 ├── logs/                       运行时会话日志写入此处（删除是安全的）
 ├── LICENSE                     完整许可证文本——见下方许可证与版权声明
-├── README.md                   本文件
+├── README.md                   英文原版
 ├── README_spa.md               西班牙语翻译
 ├── README_ita.md               意大利语翻译
 ├── README_fra.md               法语翻译
+├── README_deu.md               德语翻译
+├── README_jpn.md               日语翻译
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
 │   └── CANBUS.md
-└── README_deu.md               德语翻译
+├── tools/
+│   ├── ci_validate.py                    CI 使用的 manifest/CHANGELOG/docs 校验
+│   └── render_hydra_umc_icon_frames.py   从 SVG 重新生成 assets/hydra_umc_icon_frames/（仅限开发）
+└── README_zho.md               本文件
 ```
 
 ## 📸 照片
