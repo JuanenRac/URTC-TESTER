@@ -61,8 +61,10 @@ python3 urtc_tester.py         # Linux
 
 或构建一个独立的二进制文件：Windows 上使用 `build_exe.bat`，Linux 上使用
 `./build_exe.sh`。两者都会先清理 `build/`/`dist/`，并将 `assets/`（横幅
-和图标）打包进可执行文件中——完整的推理见刷写工具自身的 README，因为
-它在这里同样适用。
+和图标）打包进可执行文件中——这些打包脚本所依赖的不递增版本号的验证路径
+（`build-test.bat`/`build-test.sh`）见
+[docs/BUILD_AND_RUN.md](docs/BUILD_AND_RUN.md)，打包脚本本身的完整推理
+见刷写工具自身的 README，因为它在这里同样适用。
 
 **版本管理：** `TESTER_VERSION`（在 `tester_config.py` 中，显示在标题栏、
 关于对话框、会话日志和调试包中）遵循 `MAJOR.MINOR.PATCH`。两个构建脚本
@@ -99,7 +101,7 @@ python urtc_tester.py --qtquick
 
 - **文件** —— 保存日志（将屏幕上的日志保存为纯文本；如需一个包含系统
   诊断信息的更完整的打包，请改用下方的“日志与调试包”），以及退出。
-- **语言** —— 在 5 种可用语言之间切换（翻译的工作方式见上方“语言”）。
+- **语言** —— 在 7 种可用语言之间切换（翻译的工作方式见上方”语言”）。
 - **帮助** —— Readme（在一个只读查看器窗口中打开本文件；一旦当前语言
   存在已翻译的版本，会自动使用该版本）、URTC GitHub（在浏览器中打开
   项目的仓库）、许可证（本工具的 GPL-3.0 许可证，读取自仓库自身的
@@ -112,10 +114,11 @@ python urtc_tester.py --qtquick
 的“📂 仓库结构”一节。
 
 **语言**：默认为英语。通过窗口顶部菜单栏中的**语言**菜单切换，而非主
-窗口中的下拉框——将界面（标签、按钮、对话框和日志消息）切换为 5 种可用
+窗口中的下拉框——将界面（标签、按钮、对话框和日志消息）切换为 7 种可用
 语言中的任意一种，立即保存到本工具旁边的 `config.json`，在下次启动时
 应用。翻译文件以纯文本形式存放在 `language/` 下（`english.lng`、
-`spanish.lng`、`italian.lng`、`french.lng`、`german.lng`），采用简单的
+`spanish.lng`、`italian.lng`、`french.lng`、`german.lng`、`chinese.lng`、
+`japanese.lng`），采用简单的
 `KEY=Value` 键值对，一行一个——以 `#` 开头的行和空行会被忽略，值内部的
 字面 `\n` 会变成真正的换行符（用于少数几个多行对话框消息）。如果某个
 翻译需要修正，可以直接编辑，也可以将其作为新增另一种语言的起点（添加
@@ -138,7 +141,8 @@ README](https://github.com/JuanenRac/URTC-FLASHER) 第 1 和第 2 节，
 而变化的部分。将始终可见的部分拆分到两列，而非全部堆叠在一列中，可以
 防止窗口随着这些部分逐渐增多而变得高到无法适配普通屏幕。3D 打印机自身
 的工具面板（25 个中最高的一个）更进一步，将其自身的控件内部拆分成
-2 个子列，原因相同。
+2 个子列，原因相同。本节所概述的模块级架构，详见
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
 **连接**（第 1 节，与刷写工具完全相同）：选择串口/SLCAN 或 SocketCAN、
 端口/接口，可选地自动检测比特率，然后连接。
@@ -156,7 +160,7 @@ README](https://github.com/JuanenRac/URTC-FLASHER) 第 1 和第 2 节，
 颜色覆盖、环形 LED 颜色和开/关，以及 OLED 显示模式（`0x100`）——这些
 适用于每一个工具，因此它们不会移动到动态面板中。特别是在 AOI 检测
 模式下，这里的环形灯开/关会被忽略，转而使用该工具自身的频闪控制（依据
-`docs/CANBUS.md`）——颜色无论如何仍然适用。
+[docs/CANBUS.md](docs/CANBUS.md)）——颜色无论如何仍然适用。
 
 **扩展板**（第 3 节，始终可见）：`CONN_EXPANSION` 自身的通用 SPI 总线
 和 DIAG0 线——每一个带驱动器的扩展板变体都共享的原始透传。ADS1115 和
@@ -276,6 +280,10 @@ ID 列会在原始十六进制 ID 旁边显示该友好名称——对于任何�
 保存为一个 `.zip` 文件，以便交给正在调试某个工具头问题的人。
 
 ## 6. ⚠️ 已知限制
+
+本工具的证据契约——什么算作 pass/fail/unknown、为什么缺失证据永远是
+unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷写权限——记录
+于 [docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md)。
 
 - **尚未针对真实硬件测试。** 这里的每一部分——传输层、CAN ID/字节
   布局处理、看门狗保活时序——都经过了独立检查（模拟帧，在相关处使用

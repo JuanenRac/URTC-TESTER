@@ -68,9 +68,12 @@ python3 urtc_tester.py         # Linux
 
 Oppure compila un binario standalone: `build_exe.bat` su Windows,
 `./build_exe.sh` su Linux. Entrambi puliscono prima `build/`/`dist/` e
-impacchettano `assets/` (il banner e l'icona) nell'eseguibile - vedi il
-README stesso del flasher per il ragionamento completo dietro questi
-script, poiché si applica identicamente qui.
+impacchettano `assets/` (il banner e l'icona) nell'eseguibile - vedi
+[docs/BUILD_AND_RUN.md](docs/BUILD_AND_RUN.md) per il percorso di
+validazione senza incremento di versione (`build-test.bat`/
+`build-test.sh`) su cui si basano questi script di pacchettizzazione, e
+il README stesso del flasher per il ragionamento completo dietro gli
+script di pacchettizzazione stessi, poiché si applica identicamente qui.
 
 **Versionamento:** `TESTER_VERSION` (in `tester_config.py`, mostrato
 nella barra del titolo, nella finestra Informazioni, nei log di sessione
@@ -122,7 +125,7 @@ il monitoraggio passivo, il routing dei comandi o alcun limite di sicurezza.
 - **File** - Salva Registri (il registro a schermo come testo semplice;
   per un pacchetto più completo che include diagnostica di sistema,
   vedi "Registri e pacchetti di debug" più sotto), ed Esci.
-- **Lingua** - passa tra le 5 lingue disponibili (vedi "Lingua" più
+- **Lingua** - passa tra le 7 lingue disponibili (vedi "Lingua" più
   sopra per come funzionano le traduzioni).
 - **Aiuto** - Readme (apre questo file in una finestra visualizzatore di
   sola lettura; recupera automaticamente una versione tradotta appena
@@ -153,12 +156,12 @@ di ingresso - avvio senza CLI e la schermata di benvenuto.
 **Lingua**: inglese di default. Si cambia tramite il menu **Lingua**
 (nella barra dei menu in alto nella finestra) invece di un menu a
 tendina nella finestra principale - cambia l'interfaccia (etichette,
-pulsanti, dialoghi, e messaggi di registro) a una qualsiasi delle 5
+pulsanti, dialoghi, e messaggi di registro) a una qualsiasi delle 7
 lingue disponibili, salva immediatamente in `config.json` accanto a
 questo strumento, applicato al prossimo avvio. Le traduzioni vivono in
 file di testo semplice sotto `language/` (`english.lng`, `spanish.lng`,
-`italian.lng`, `french.lng`, `german.lng`) come semplici coppie
-`CHIAVE=Valore`, una per riga - le righe che iniziano con `#` e le righe
+`italian.lng`, `french.lng`, `german.lng`, `chinese.lng`,
+`japanese.lng`) come semplici coppie `CHIAVE=Valore`, una per riga - le righe che iniziano con `#` e le righe
 vuote vengono ignorate, e un `\n` letterale dentro un valore diventa un
 vero a capo (usato dalla manciata di messaggi di dialogo multi-riga).
 Modificabile direttamente se una traduzione necessita correzione, o
@@ -189,7 +192,9 @@ tutte in una mantiene la finestra dal crescere abbastanza in altezza da
 non stare in uno schermo ordinario, man mano che più di queste sezioni
 sono state aggiunte nel tempo. Il pannello stesso della stampante 3D (il
 più alto dei 25) va un passo oltre e divide i propri controlli in 2
-sottocolonne internamente, per lo stesso motivo.
+sottocolonne internamente, per lo stesso motivo. Vedi
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) per la guida
+all'architettura a livello di modulo che questa sezione riassume.
 
 **Connetti** (sezione 1, identica al flasher): scegli Seriale/SLCAN o
 SocketCAN, la porta/interfaccia, opzionalmente auto-rileva il bitrate,
@@ -217,7 +222,7 @@ OLED (`0x100`) - questi si applicano a ogni strumento, quindi non si
 spostano nel pannello dinamico. In modalità Ispezione AOI nello
 specifico, l'accensione/spegnimento dell'anello qui viene ignorato a
 favore del controllo strobo proprio di quello strumento (secondo
-`docs/CANBUS.md`) - il colore si applica comunque in entrambi i casi.
+[docs/CANBUS.md](docs/CANBUS.md)) - il colore si applica comunque in entrambi i casi.
 
 **Scheda di Espansione** (sezione 3, sempre visibile): il bus SPI
 generico e la linea DIAG0 proprio di `CONN_EXPANSION` - il passthrough
@@ -385,6 +390,12 @@ per consegnare a chi sta facendo debug di un problema di testa
 strumento.
 
 ## 6. ⚠️ Limitazioni note
+
+Il contratto di evidenza di questo strumento - cosa conta come
+pass/fail/unknown, perché l'assenza di evidenza è sempre unknown e mai
+pass, e perché di per sé non concede alcuna autorità di flashing del
+firmware - è documentato in
+[docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md).
 
 - **Non testato contro hardware reale.** Ogni pezzo qui - il layer di
   trasporto, la gestione ID CAN/layout byte, la temporizzazione

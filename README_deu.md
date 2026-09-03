@@ -72,8 +72,11 @@ python3 urtc_tester.py         # Linux
 Oder erstellen Sie ein eigenständiges Binary: `build_exe.bat` unter
 Windows, `./build_exe.sh` unter Linux. Beide bereinigen zuerst
 `build/`/`dist/` und bündeln `assets/` (das Banner und das Symbol) in
-das Executable - siehe das eigene README des Flashers für die
-vollständige Begründung hinter diesen Skripten, da sie hier identisch
+das Executable - siehe [docs/BUILD_AND_RUN.md](docs/BUILD_AND_RUN.md)
+für den versionsneutralen Validierungspfad
+(`build-test.bat`/`build-test.sh`), auf dem diese Paketierungsskripte
+aufbauen, und das eigene README des Flashers für die vollständige
+Begründung hinter den Paketierungsskripten selbst, da sie hier identisch
 gilt.
 
 **Versionierung:** `TESTER_VERSION` (in `tester_config.py`, angezeigt in
@@ -127,7 +130,7 @@ Monitoring noch Befehlsrouting oder eine Sicherheitsgrenze.
 - **Datei** - Protokolle speichern (das Protokoll auf dem Bildschirm als
   Klartext; für ein vollständigeres Paket mit Systemdiagnose siehe
   stattdessen "Protokolle und Debug-Pakete" weiter unten), und Beenden.
-- **Sprache** - zwischen den 5 verfügbaren Sprachen wechseln (siehe
+- **Sprache** - zwischen den 7 verfügbaren Sprachen wechseln (siehe
   "Sprache" weiter oben, wie Übersetzungen funktionieren).
 - **Hilfe** - Readme (öffnet diese Datei in einem schreibgeschützten
   Betrachterfenster; übernimmt automatisch eine übersetzte Version,
@@ -158,11 +161,12 @@ noch der Einstiegspunkt - CLI-freier Start und der Splash-Screen.
 **Sprache**: Englisch als Standard. Wird über das Menü **Sprache** (in
 der Menüleiste oben im Fenster) gewechselt statt über ein Dropdown im
 Hauptfenster - wechselt die Oberfläche (Beschriftungen, Schaltflächen,
-Dialoge, und Protokollnachrichten) zu einer der 5 verfügbaren Sprachen,
+Dialoge, und Protokollnachrichten) zu einer der 7 verfügbaren Sprachen,
 speichert sofort in `config.json` neben diesem Tool, angewendet beim
 nächsten Start. Übersetzungen leben in reinen Textdateien unter
 `language/` (`english.lng`, `spanish.lng`, `italian.lng`, `french.lng`,
-`german.lng`) als einfache `SCHLÜSSEL=Wert`-Paare, eines pro Zeile -
+`german.lng`, `chinese.lng`, `japanese.lng`) als einfache
+`SCHLÜSSEL=Wert`-Paare, eines pro Zeile -
 Zeilen, die mit `#` beginnen, und leere Zeilen werden ignoriert, und ein
 wörtliches `\n` innerhalb eines Werts wird zu einem echten Zeilenumbruch
 (verwendet von der Handvoll mehrzeiliger Dialognachrichten). Direkt
@@ -195,7 +199,9 @@ mehr auf einen normalen Bildschirm passt, während im Laufe der Zeit
 mehr dieser Abschnitte hinzugefügt wurden. Das eigene Panel des
 3D-Druckers (das höchste der 25) geht noch einen Schritt weiter und
 teilt seine eigenen Steuerelemente intern in 2 Unterspalten, aus
-demselben Grund.
+demselben Grund. Siehe [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) für
+den Architektur-Leitfaden auf Modulebene, den dieser Abschnitt
+zusammenfasst.
 
 **Verbinden** (Abschnitt 1, identisch zum Flasher): wählen Sie
 Seriell/SLCAN oder SocketCAN, den Port/die Schnittstelle, erkennen Sie
@@ -222,7 +228,7 @@ die Ring-LED-Farbe und Ein/Aus, und der OLED-Anzeigemodus (`0x100`) -
 diese gelten für jedes Werkzeug, sodass sie nicht in das dynamische
 Panel wandern. Im AOI-Inspektionsmodus speziell wird das Ein/Aus des
 Rings hier zugunsten der eigenen Stroboskopsteuerung dieses Werkzeugs
-ignoriert (gemäß `docs/CANBUS.md`) - die Farbe gilt in beiden Fällen
+ignoriert (gemäß [docs/CANBUS.md](docs/CANBUS.md)) - die Farbe gilt in beiden Fällen
 trotzdem.
 
 **Erweiterungsplatine** (Abschnitt 3, immer sichtbar): der eigene
@@ -397,6 +403,12 @@ erkanntes Werkzeug) zur Weitergabe an denjenigen, der ein
 Werkzeugkopfproblem debuggt.
 
 ## 6. ⚠️ Bekannte Einschränkungen
+
+Der Evidenz-Vertrag dieses Tools - was als pass/fail/unknown zählt,
+warum fehlende Evidenz immer unknown und nie pass bedeutet, und warum es
+selbst keine Firmware-Flash-Berechtigung erteilt - ist in
+[docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md)
+dokumentiert.
 
 - **Nicht gegen echte Hardware getestet.** Jedes Teil hier - der
   Transport-Layer, die CAN-ID-/Byte-Layout-Handhabung, das

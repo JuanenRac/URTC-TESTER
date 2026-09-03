@@ -71,8 +71,11 @@ python3 urtc_tester.py         # Linux
 Ou construisez un binaire autonome : `build_exe.bat` sous Windows,
 `./build_exe.sh` sous Linux. Les deux nettoient d'abord `build/`/`dist/`
 et empaquettent `assets/` (la bannière et l'icône) dans l'exécutable -
-voir le propre README du flasher pour le raisonnement complet derrière
-ces scripts, puisqu'il s'applique identiquement ici.
+voir [docs/BUILD_AND_RUN.md](docs/BUILD_AND_RUN.md) pour le chemin de
+validation sans gestion de version (`build-test.bat`/`build-test.sh`)
+sur lequel s'appuient ces scripts d'empaquetage, et le propre README du
+flasher pour le raisonnement complet derrière les scripts d'empaquetage
+eux-mêmes, puisqu'il s'applique identiquement ici.
 
 **Versionnage :** `TESTER_VERSION` (dans `tester_config.py`, affiché
 dans la barre de titre, la boîte de dialogue À propos, les logs de
@@ -124,7 +127,7 @@ passive, ni le routage des commandes, ni aucune limite de sécurité.
 - **Fichier** - Enregistrer les journaux (le journal à l'écran en texte
   brut ; pour un paquet plus complet incluant les diagnostics système,
   voir "Journaux et paquets de débogage" plus bas), et Quitter.
-- **Langue** - basculer entre les 5 langues disponibles (voir "Langue"
+- **Langue** - basculer entre les 7 langues disponibles (voir "Langue"
   plus haut pour savoir comment fonctionnent les traductions).
 - **Aide** - Lisez-moi (ouvre ce fichier dans une fenêtre visualiseur en
   lecture seule ; récupère automatiquement une version traduite dès
@@ -156,12 +159,12 @@ démarrage.
 **Langue** : anglais par défaut. Se change via le menu **Langue** (dans
 la barre de menu en haut de la fenêtre) plutôt qu'une liste déroulante
 dans la fenêtre principale - change l'interface (étiquettes, boutons,
-dialogues, et messages de journal) vers l'une des 5 langues disponibles,
+dialogues, et messages de journal) vers l'une des 7 langues disponibles,
 enregistre immédiatement dans `config.json` à côté de cet outil,
 appliqué au prochain démarrage. Les traductions vivent dans des fichiers
 texte brut sous `language/` (`english.lng`, `spanish.lng`, `italian.lng`,
-`french.lng`, `german.lng`) sous forme de paires simples `CLE=Valeur`,
-une par ligne - les lignes commençant par `#` et les lignes vides sont
+`french.lng`, `german.lng`, `chinese.lng`, `japanese.lng`) sous forme de
+paires simples `CLE=Valeur`, une par ligne - les lignes commençant par `#` et les lignes vides sont
 ignorées, et un `\n` littéral dans une valeur devient un vrai saut de
 ligne (utilisé par la poignée de messages de dialogue multi-lignes).
 Modifiable directement si une traduction nécessite une correction, ou
@@ -193,6 +196,8 @@ plus tenir sur un écran ordinaire, à mesure que davantage de ces
 sections ont été ajoutées au fil du temps. Le panneau propre de
 l'imprimante 3D (le plus haut des 25) va un pas plus loin et divise ses
 propres contrôles en 2 sous-colonnes en interne, pour la même raison.
+Voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) pour le guide
+d'architecture au niveau des modules que cette section résume.
 
 **Connecter** (section 1, identique au flasher) : choisissez
 Série/SLCAN ou SocketCAN, le port/interface, détectez éventuellement
@@ -220,7 +225,7 @@ l'allumage/extinction de l'anneau LED, et le mode d'affichage OLED
 déplacent pas vers le panneau dynamique. En mode Inspection AOI
 spécifiquement, l'allumage/extinction de l'anneau ici est ignoré en
 faveur du propre contrôle de stroboscope de cet outil (selon
-`docs/CANBUS.md`) - la couleur s'applique quand même dans les deux cas.
+[docs/CANBUS.md](docs/CANBUS.md)) - la couleur s'applique quand même dans les deux cas.
 
 **Carte d'Extension** (section 3, toujours visible) : le propre bus SPI
 générique et la ligne DIAG0 de `CONN_EXPANSION` - le passage brut
@@ -391,6 +396,12 @@ Python, transport/port/débit binaire actuel, outil détecté) pour
 remettre à quiconque déboguant un problème de tête d'outil.
 
 ## 6. ⚠️ Limitations connues
+
+Le contrat de preuve de cet outil - ce qui compte comme pass/fail/unknown,
+pourquoi l'absence de preuve est toujours unknown et jamais pass, et
+pourquoi il n'accorde par lui-même aucune autorité de flashage de
+firmware - est documenté dans
+[docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md).
 
 - **Non testé contre du matériel réel.** Chaque pièce ici - la couche
   de transport, la gestion ID CAN/disposition d'octets, la

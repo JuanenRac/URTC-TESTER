@@ -66,8 +66,11 @@ python3 urtc_tester.py         # Linux
 
 Or build a standalone binary: `build_exe.bat` on Windows, `./build_exe.sh`
 on Linux. Both clean `build/`/`dist/` first and bundle `assets/` (the
-banner and icon) into the executable - see the flasher's own README for
-the fuller reasoning behind these scripts, since it applies identically here.
+banner and icon) into the executable - see
+[docs/BUILD_AND_RUN.md](docs/BUILD_AND_RUN.md) for the non-versioning
+`build-test.bat`/`build-test.sh` validation path these packaging scripts
+build on, and the flasher's own README for the fuller reasoning behind
+the packaging scripts themselves, since it applies identically here.
 
 **Versioning:** `TESTER_VERSION` (in `tester_config.py`, shown in the
 title bar, About dialog, session logs, and debug bundles) follows
@@ -114,7 +117,7 @@ or any hardware safety boundary.
 - **File** - Save Logs (the on-screen log as plain text; for a fuller
   bundle including system diagnostics, see "Logs and debug bundles"
   below instead), and Exit.
-- **Language** - switch between the 5 available languages (see
+- **Language** - switch between the 7 available languages (see
   "Language" above for how translations work).
 - **Help** - Readme (opens this file in a read-only viewer window;
   picks up a translated version automatically once one exists for the
@@ -133,11 +136,12 @@ the full file-by-file breakdown.
 **Language**: English by default. Switched via the **Language** menu
 (in the menu bar at the top of the window) rather than a dropdown in
 the main window - switches the interface (labels, buttons, dialogs,
-and log messages) to any of the 5 available languages, saved
+and log messages) to any of the 7 available languages, saved
 immediately to `config.json` next to this tool, applied on the next
 launch. Translations live in plain text files under `language/`
 (`english.lng`, `spanish.lng`, `italian.lng`, `french.lng`,
-`german.lng`) as simple `KEY=Value` pairs, one per line - lines starting
+`german.lng`, `chinese.lng`, `japanese.lng`) as simple `KEY=Value`
+pairs, one per line - lines starting
 with `#` and blank lines are ignored, and a literal `\n` inside a value
 becomes a real line break (used by the handful of multi-line dialog
 messages). Editable directly if a translation needs correcting, or as a
@@ -165,7 +169,9 @@ across two columns instead of stacking them all in one keeps the window
 from growing tall enough to not fit on an ordinary screen as more of
 these sections were added over time. The 3D printer's own tool panel
 (the tallest of the 25) goes a step further and splits its own controls
-into 2 sub-columns internally, for the same reason.
+into 2 sub-columns internally, for the same reason. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the module-level
+architecture this section walks through.
 
 **Connect** (section 1, identical to the flasher): pick Serial/SLCAN or
 SocketCAN, the port/interface, optionally auto-detect the bitrate, then
@@ -187,7 +193,7 @@ is active): the status LED color override, the ring LED color and
 on/off, and OLED display mode (`0x100`) - these apply to every tool, so
 they don't move to the dynamic panel. In AOI Inspection mode specifically,
 the ring's on/off here is ignored in favor of that tool's own strobe
-control (per `docs/CANBUS.md`) - color still applies either way.
+control (per [docs/CANBUS.md](docs/CANBUS.md)) - color still applies either way.
 
 **Expansion Board** (section 3, always visible): `CONN_EXPANSION`'s own
 generic SPI bus and DIAG0 line - the raw passthrough every driver-
@@ -334,6 +340,11 @@ diagnostics (OS, Python version, current transport/port/bitrate, detected
 tool) for handing to whoever's debugging a tool head issue.
 
 ## 6. ⚠️ Known limitations
+
+This tool's evidence contract - what counts as pass/fail/unknown, why
+absent evidence is always unknown rather than pass, and why it grants no
+firmware-flash authority of its own - is documented in
+[docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md).
 
 - **Not tested against real hardware.** Every piece here - the transport
   layer, the CAN ID/byte-layout handling, the watchdog keepalive timing -
