@@ -123,6 +123,25 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
   than passing oversized frames to GUI handlers. Valid standard frames are
   unaffected.
 
+## [0.1.2]
+
+- **Real user feedback: button shapes and the header didn't fully match
+  HYDRA-UMC-UPDATER's own visual language, despite `RoundedDeckCard`/
+  `RoundedDeckButton` already existing for exactly that purpose.**
+  Found the real, concrete gap: several genuinely visible buttons
+  (Refresh, Auto-Detect, Export Debug Bundle, and both the License/About
+  dialogs' own Accept/Close) were still plain `ttk.Button` instead of
+  the app's own `RoundedDeckButton` - now consistent. Separately, the
+  animated HYDRA-UMC mark used to live inside the Connect card, nowhere
+  near the app name/slogan - moved into the header row itself
+  (`_build_command_deck_header`), directly left of the "URTC Tester"
+  wordmark, matching UPDATER's own icon-left header layout. Many more
+  `ttk.Button` calls remain in the individual tool panels
+  (`tester_common_panels.py`/`tester_tool_panels.py`) - not converted
+  in this pass, a real, larger follow-up (those are standalone
+  functions without direct access to the app's own
+  `_new_deck_button` factory today).
+
 ## [0.1.1] - Export live graphs to CSV
 
 - `_create_live_graph()` (`tester_panel_helpers.py`) now keeps its own
