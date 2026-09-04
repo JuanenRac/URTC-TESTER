@@ -203,7 +203,7 @@ class PanelHelpersMixin:
             except OSError as e:
                 messagebox.showerror(_("MSG_EXPORT_TITLE"), _("MSG_EXPORT_FAILED", error=str(e)))
 
-        export_btn = ttk.Button(parent, text=_("BTN_EXPORT_CSV"), command=export_csv)
+        export_btn = self._new_deck_button(parent, text=_("BTN_EXPORT_CSV"), command=export_csv)
         export_btn.pack(anchor="w", padx=4, pady=(0, 6))
 
         return add_point

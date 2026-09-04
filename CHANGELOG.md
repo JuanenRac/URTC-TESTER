@@ -123,6 +123,18 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
   than passing oversized frames to GUI handlers. Valid standard frames are
   unaffected.
 
+## [0.1.3]
+
+- **Converted every remaining `ttk.Button` in the tool-specific panels to
+  the app's own `RoundedDeckButton`** (`tester_common_panels.py`,
+  `tester_tool_panels.py`, `tester_panel_helpers.py` - 31 call sites) -
+  the real, larger follow-up v0.1.2's own changelog entry named. Both
+  files are real mixins into `TesterGUI` (per their own module
+  docstrings), so `self._new_deck_button` was already reachable at every
+  one of these call sites without any further plumbing - a mechanical,
+  low-risk change verified with a real launch plus a real syntax check
+  of all 3 files.
+
 ## [0.1.2]
 
 - **Real user feedback: button shapes and the header didn't fully match

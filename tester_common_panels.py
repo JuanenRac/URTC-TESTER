@@ -61,7 +61,7 @@ class CommonPanelsMixin:
             parent, ["Standard", "Night", "Standby"], "OPT", width=12,
         )
         night_combo.grid(row=2, column=1, sticky="w", padx=4, pady=2)
-        ttk.Button(parent, text=_("BTN_SEND"), command=self._send_global_status).grid(row=2, column=2, padx=4, pady=2)
+        self._new_deck_button(parent, text=_("BTN_SEND"), command=self._send_global_status).grid(row=2, column=2, padx=4, pady=2)
         ttk.Label(
             parent,
             text=_("HELP_AOI_RING_IGNORED"),
@@ -97,7 +97,7 @@ class CommonPanelsMixin:
             row=0, column=0, columnspan=2, sticky="w", padx=4, pady=(4, 0))
         ttk.Entry(parent, textvariable=self.spi_send_var, width=30).grid(
             row=1, column=0, sticky="w", padx=4, pady=2)
-        ttk.Button(parent, text=_("BTN_SEND"), command=self._send_expansion_spi).grid(row=1, column=1, padx=4)
+        self._new_deck_button(parent, text=_("BTN_SEND"), command=self._send_expansion_spi).grid(row=1, column=1, padx=4)
         self.spi_response_var = tk.StringVar(value="(nothing sent yet)")
         ttk.Label(parent, text=_("LBL_RESPONSE")).grid(row=2, column=0, sticky="w", padx=4, pady=(4, 0))
         ttk.Label(parent, textvariable=self.spi_response_var, font=("Courier", 9)).grid(
@@ -117,7 +117,7 @@ class CommonPanelsMixin:
         # Simple polled read, not a live/pushed value.
         diag_row = ttk.Frame(parent)
         diag_row.grid(row=6, column=0, columnspan=2, sticky="w", padx=4, pady=(4, 2))
-        ttk.Button(diag_row, text=_("BTN_QUERY_DIAG0"), command=self._query_diag0).pack(side="left")
+        self._new_deck_button(diag_row, text=_("BTN_QUERY_DIAG0"), command=self._query_diag0).pack(side="left")
         self.diag0_var = tk.StringVar(value="(not queried yet)")
         ttk.Label(diag_row, textvariable=self.diag0_var, font=("Courier", 9)).pack(side="left", padx=(8, 0))
 
@@ -133,8 +133,8 @@ class CommonPanelsMixin:
             row=0, column=0, columnspan=2, sticky="w", padx=4, pady=(4, 2))
         btn_row = ttk.Frame(parent)
         btn_row.grid(row=1, column=0, columnspan=2, sticky="w", padx=4)
-        ttk.Button(btn_row, text=_("BTN_QUERY_STATE"), command=self._query_fram_state).pack(side="left")
-        ttk.Button(btn_row, text=_("BTN_ERASE_FRAM"), command=self._erase_fram).pack(side="left", padx=(8, 0))
+        self._new_deck_button(btn_row, text=_("BTN_QUERY_STATE"), command=self._query_fram_state).pack(side="left")
+        self._new_deck_button(btn_row, text=_("BTN_ERASE_FRAM"), command=self._erase_fram).pack(side="left", padx=(8, 0))
         self.fram_state_var = tk.StringVar(value="(not queried yet)")
         ttk.Label(parent, textvariable=self.fram_state_var, wraplength=380, justify="left").grid(
             row=2, column=0, columnspan=2, sticky="w", padx=4, pady=(4, 4))
@@ -144,7 +144,7 @@ class CommonPanelsMixin:
             row=4, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 2))
         exp_type_row = ttk.Frame(parent)
         exp_type_row.grid(row=5, column=0, columnspan=2, sticky="w", padx=4)
-        ttk.Button(exp_type_row, text=_("BTN_QUERY"), command=self._query_expansion_board_type).pack(side="left")
+        self._new_deck_button(exp_type_row, text=_("BTN_QUERY"), command=self._query_expansion_board_type).pack(side="left")
         self.expansion_board_type_var = tk.StringVar(value="(not queried yet)")
         ttk.Label(exp_type_row, textvariable=self.expansion_board_type_var).pack(side="left", padx=(8, 0))
         ttk.Label(
@@ -162,7 +162,7 @@ class CommonPanelsMixin:
             row=7, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 2))
         mlx_variant_row = ttk.Frame(parent)
         mlx_variant_row.grid(row=8, column=0, columnspan=2, sticky="w", padx=4)
-        ttk.Button(mlx_variant_row, text=_("BTN_QUERY"), command=self._query_mlx_sensor_variant).pack(side="left")
+        self._new_deck_button(mlx_variant_row, text=_("BTN_QUERY"), command=self._query_mlx_sensor_variant).pack(side="left")
         self.mlx_sensor_variant_var = tk.StringVar(value="(not queried yet)")
         ttk.Label(mlx_variant_row, textvariable=self.mlx_sensor_variant_var).pack(side="left", padx=(8, 0))
         ttk.Label(
@@ -184,7 +184,7 @@ class CommonPanelsMixin:
             row=11, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 2))
         free_tool_row = ttk.Frame(parent)
         free_tool_row.grid(row=12, column=0, columnspan=2, sticky="w", padx=4)
-        ttk.Button(free_tool_row, text=_("BTN_QUERY"), command=self._query_free_tool_config).pack(side="left")
+        self._new_deck_button(free_tool_row, text=_("BTN_QUERY"), command=self._query_free_tool_config).pack(side="left")
         self.free_tool_config_var = tk.StringVar(value="(not queried yet)")
         ttk.Label(free_tool_row, textvariable=self.free_tool_config_var, wraplength=300, justify="left").pack(
             side="left", padx=(8, 0))
@@ -205,7 +205,7 @@ class CommonPanelsMixin:
             row=15, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 2))
         peripheral_row = ttk.Frame(parent)
         peripheral_row.grid(row=16, column=0, columnspan=2, sticky="w", padx=4)
-        ttk.Button(peripheral_row, text=_("BTN_QUERY"), command=self._query_peripheral_info).pack(side="left")
+        self._new_deck_button(peripheral_row, text=_("BTN_QUERY"), command=self._query_peripheral_info).pack(side="left")
         self.peripheral_info_var = tk.StringVar(value="(not queried yet)")
         ttk.Label(peripheral_row, textvariable=self.peripheral_info_var, wraplength=300, justify="left").pack(
             side="left", padx=(8, 0))
@@ -384,7 +384,7 @@ class CommonPanelsMixin:
             with self._bus_monitor_window_lock:
                 self._bus_monitor_last_tick = None
 
-        ttk.Button(top_row, text=_("BTN_CLEAR"), command=_clear).pack(side="left", padx=(8, 0))
+        self._new_deck_button(top_row, text=_("BTN_CLEAR"), command=_clear).pack(side="left", padx=(8, 0))
 
         def _parse_ts_to_seconds(ts_str):
             # Recorded as "HH:MM:SS.mmm" (see the bus monitor's own _on_frame
@@ -454,8 +454,8 @@ class CommonPanelsMixin:
             except OSError as e:
                 messagebox.showerror(_("TITLE_EXPORT_FAILED"), str(e))
 
-        ttk.Button(top_row, text=_("BTN_EXPORT_TRC"), command=lambda: _export("trc")).pack(side="left", padx=(8, 0))
-        ttk.Button(top_row, text=_("BTN_EXPORT_ASC"), command=lambda: _export("asc")).pack(side="left", padx=(4, 0))
+        self._new_deck_button(top_row, text=_("BTN_EXPORT_TRC"), command=lambda: _export("trc")).pack(side="left", padx=(8, 0))
+        self._new_deck_button(top_row, text=_("BTN_EXPORT_ASC"), command=lambda: _export("asc")).pack(side="left", padx=(4, 0))
         ttk.Label(
             top_row, text=_("HELP_SHOWS_EVERY_FRAME"),
             foreground="gray",
@@ -589,7 +589,7 @@ class CommonPanelsMixin:
 
         btn_row = ttk.Frame(parent)
         btn_row.grid(row=3, column=0, columnspan=2, sticky="w", padx=4, pady=4)
-        ttk.Button(btn_row, text=_("BTN_SEND_ONCE"), command=self._send_custom_frame_once).pack(side="left")
+        self._new_deck_button(btn_row, text=_("BTN_SEND_ONCE"), command=self._send_custom_frame_once).pack(side="left")
 
         self.custom_periodic_var = tk.BooleanVar(value=False)
         self.custom_interval_var = tk.IntVar(value=100)
@@ -607,7 +607,7 @@ class CommonPanelsMixin:
         ).grid(row=4, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 4))
 
         ttk.Separator(parent, orient="horizontal").grid(row=5, column=0, columnspan=2, sticky="ew", pady=4)
-        ttk.Button(parent, text=_("BTN_OPEN_BUS_MONITOR"), command=self._open_bus_monitor).grid(
+        self._new_deck_button(parent, text=_("BTN_OPEN_BUS_MONITOR"), command=self._open_bus_monitor).grid(
             row=6, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 4))
 
     def _parse_custom_frame(self):

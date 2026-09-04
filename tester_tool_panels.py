@@ -128,8 +128,8 @@ class ToolPanelsMixin:
                 self.bus.send(CAN_ID_SOLDER_FEEDER_RESET, bytes([0x52, 0x53, 0x50, 0x30]))
                 self.log(_("LOG_FEEDER_POSITION_RESET"))
 
-        ttk.Button(parent, text=_("BTN_QUERY"), command=_query_position).grid(row=pos_row+1, column=2, padx=8)
-        ttk.Button(parent, text=_("BTN_RESET_FEEDER_POSITION"), command=_reset_position).grid(row=pos_row+2, column=0, columnspan=2, sticky="w", padx=4, pady=(4, 0))
+        self._new_deck_button(parent, text=_("BTN_QUERY"), command=_query_position).grid(row=pos_row+1, column=2, padx=8)
+        self._new_deck_button(parent, text=_("BTN_RESET_FEEDER_POSITION"), command=_reset_position).grid(row=pos_row+2, column=0, columnspan=2, sticky="w", padx=4, pady=(4, 0))
         ttk.Label(
             parent,
             text=_("HELP_FEEDER_POSITION_OPEN_LOOP"),
@@ -171,7 +171,7 @@ class ToolPanelsMixin:
             self.bus.send(cmd_id, data)
             self.log(_("LOG_TOOL_MOVE", tool=tool_name, direction=self._opt_display(direction.get()), n=n))
 
-        ttk.Button(parent, text=_("BTN_MOVE"), command=_send_move).grid(row=r+2, column=2, padx=8)
+        self._new_deck_button(parent, text=_("BTN_MOVE"), command=_send_move).grid(row=r+2, column=2, padx=8)
         ttk.Label(
             parent,
             text=_("HELP_ONE_SHOT_NO_TELEMETRY"),
@@ -255,7 +255,7 @@ class ToolPanelsMixin:
             self._drill_last_sent_speed = spd
             self.bus.send(CAN_ID_DRILL_CMD, bytes([spd, dir_byte]))
 
-        ttk.Button(parent, text=_("BTN_SEND"), command=_send_drill).grid(row=1, column=2, padx=8)
+        self._new_deck_button(parent, text=_("BTN_SEND"), command=_send_drill).grid(row=1, column=2, padx=8)
         ttk.Label(
             parent, text=_("HELP_NO_WATCHDOG_HOLDS_VALUE"),
             foreground="gray", wraplength=380, justify="left",
@@ -295,7 +295,7 @@ class ToolPanelsMixin:
             self.bus.send(CAN_ID_AOI_CMD, data)
             self.log(_("LOG_AOI_MODE_PERIOD", mode=self._opt_display(mode.get()), period=self._safe_int(period_us, 1)))
 
-        ttk.Button(parent, text=_("BTN_SEND"), command=_send_aoi).grid(row=1, column=2, padx=8)
+        self._new_deck_button(parent, text=_("BTN_SEND"), command=_send_aoi).grid(row=1, column=2, padx=8)
         ttk.Label(
             parent, text=_("HELP_RING_COLOR_FROM_GLOBAL"),
             foreground="gray", wraplength=380, justify="left",
@@ -511,7 +511,7 @@ class ToolPanelsMixin:
         extruder_dir_combo.grid(row=1, column=1, sticky="w", padx=4)
         ttk.Label(left, text=_("LBL_EXTRUDER_STEPS")).grid(row=2, column=0, sticky="w", padx=4, pady=4)
         ttk.Spinbox(left, from_=0, to=16777215, textvariable=extruder_steps, width=10).grid(row=2, column=1, sticky="w", padx=4)
-        ttk.Button(left, text=_("BTN_MOVE_EXTRUDER_ONCE"), command=_send_thermal_motion).grid(row=2, column=2, padx=8)
+        self._new_deck_button(left, text=_("BTN_MOVE_EXTRUDER_ONCE"), command=_send_thermal_motion).grid(row=2, column=2, padx=8)
         ttk.Label(
             left, text=_("HELP_EXTRUDER_MOTION_SHARED_FRAME"),
             foreground="gray", wraplength=380, justify="left",
@@ -552,7 +552,7 @@ class ToolPanelsMixin:
         def _send_hotend_fan():
             self.bus.send(CAN_ID_3DP_HOTEND_FAN_CMD, bytes([max(0, min(255, hotend_fan_power.get()))]))
 
-        ttk.Button(right, text=_("BTN_SEND"), command=_send_hotend_fan).grid(row=2, column=3, padx=8)
+        self._new_deck_button(right, text=_("BTN_SEND"), command=_send_hotend_fan).grid(row=2, column=3, padx=8)
         ttk.Label(
             right, text=_("HELP_NO_WATCHDOG_STALL_DETECTOR"),
             foreground="gray", wraplength=380, justify="left",
@@ -655,7 +655,7 @@ class ToolPanelsMixin:
             self.bus.send(cmd_id, bytes([0x01]) + struct.pack(">H", ms))
             self.log(_("LOG_WELD_PULSE_FIRED", ms=ms))
 
-        ttk.Button(parent, text=_("BTN_FIRE_PULSE"), command=_fire).grid(row=0, column=2, sticky="w", padx=8)
+        self._new_deck_button(parent, text=_("BTN_FIRE_PULSE"), command=_fire).grid(row=0, column=2, sticky="w", padx=8)
 
         if has_contact_gate:
             ttk.Label(
@@ -861,13 +861,13 @@ class ToolPanelsMixin:
             self.bus.send(CAN_ID_ADS1115_CONFIG, struct.pack(">H", value))
             self.log(_("LOG_ADS1115_CONFIG_SENT", value=f"0x{value:04X}"))
 
-        ttk.Button(parent, text=_("BTN_SEND"), command=_send_config).grid(row=5, column=2, sticky="w", padx=8)
+        self._new_deck_button(parent, text=_("BTN_SEND"), command=_send_config).grid(row=5, column=2, sticky="w", padx=8)
 
         def _trigger():
             self.bus.send(CAN_ID_ADS1115_TRIGGER, b"")
             self.log(_("LOG_ADS1115_TRIGGERED"))
 
-        ttk.Button(parent, text=_("BTN_TRIGGER_CONVERSION"), command=_trigger).grid(row=6, column=0, sticky="w", padx=4, pady=4)
+        self._new_deck_button(parent, text=_("BTN_TRIGGER_CONVERSION"), command=_trigger).grid(row=6, column=0, sticky="w", padx=4, pady=4)
 
         def _read():
             response = self.bus.wait_for_one(CAN_ID_ADS1115_RESULT, timeout=1.0,
@@ -880,7 +880,7 @@ class ToolPanelsMixin:
             result_var.set(f"{raw} (raw counts)")
             self.log(_("LOG_ADS1115_RESULT", raw=raw))
 
-        ttk.Button(parent, text=_("BTN_READ_RESULT"), command=_read).grid(row=6, column=1, sticky="w", padx=4)
+        self._new_deck_button(parent, text=_("BTN_READ_RESULT"), command=_read).grid(row=6, column=1, sticky="w", padx=4)
         ttk.Label(parent, textvariable=result_var).grid(row=7, column=0, columnspan=2, sticky="w", padx=4, pady=(2, 4))
 
         def _on_basic_telemetry(data):
@@ -909,7 +909,7 @@ class ToolPanelsMixin:
             self.bus.send(CAN_ID_PASTE_JETTING_CONFIG, bytes([ch]) + struct.pack(">H", hz))
             self.log(_("LOG_PASTE_JETTING_CONFIGURED", channel=ch, freq=hz))
 
-        ttk.Button(parent, text=_("BTN_CONFIGURE"), command=_configure).grid(row=1, column=2, sticky="w", padx=8)
+        self._new_deck_button(parent, text=_("BTN_CONFIGURE"), command=_configure).grid(row=1, column=2, sticky="w", padx=8)
 
         ttk.Separator(parent, orient="horizontal").grid(row=2, column=0, columnspan=3, sticky="ew", pady=6)
         ttk.Label(parent, text=_("LBL_DUTY_PERCENT")).grid(row=3, column=0, sticky="w", padx=4, pady=4)
@@ -934,7 +934,7 @@ class ToolPanelsMixin:
             self.bus.send(CAN_ID_PASTE_JETTING_PULSE, bytes([ch, d, ms]))
             self.log(_("LOG_PASTE_JETTING_FIRED", channel=ch, duty=d, ms=ms))
 
-        ttk.Button(parent, text=_("BTN_FIRE_PULSE"), command=_fire).grid(row=4, column=2, sticky="w", padx=8)
+        self._new_deck_button(parent, text=_("BTN_FIRE_PULSE"), command=_fire).grid(row=4, column=2, sticky="w", padx=8)
 
     def _build_thermal_inspection_panel(self, parent):
         # Captured now, at panel-build time - see _tool_panel_generation's
@@ -975,7 +975,7 @@ class ToolPanelsMixin:
             status_var.set(_("LBL_CAPTURE_TRIGGERED"))
             self.log(_("LOG_THERMAL_TRIGGERED"))
 
-        ttk.Button(parent, text=_("BTN_TRIGGER_CAPTURE"), command=_trigger).grid(row=0, column=0, sticky="w", padx=4, pady=4)
+        self._new_deck_button(parent, text=_("BTN_TRIGGER_CAPTURE"), command=_trigger).grid(row=0, column=0, sticky="w", padx=4, pady=4)
 
         def _check_status():
             response = self.bus.wait_for_one(CAN_ID_THERMAL_STATUS, timeout=1.0,
@@ -989,7 +989,7 @@ class ToolPanelsMixin:
             status_var.set(labels.get(code, f"0x{code:02X}"))
             self.log(_("LOG_THERMAL_STATUS", status=status_var.get()))
 
-        ttk.Button(parent, text=_("BTN_CHECK_STATUS"), command=_check_status).grid(row=0, column=1, sticky="w", padx=4)
+        self._new_deck_button(parent, text=_("BTN_CHECK_STATUS"), command=_check_status).grid(row=0, column=1, sticky="w", padx=4)
         ttk.Label(parent, textvariable=status_var).grid(row=1, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 4))
 
         def _paint_cell(row, col, color, gen):
@@ -1053,7 +1053,7 @@ class ToolPanelsMixin:
             if self._tool_panel_generation == panel_gen:
                 self.log(_("LOG_THERMAL_FRAME_READ"))
 
-        ttk.Button(parent, text=_("BTN_READ_THERMAL_IMAGE"), command=lambda: threading.Thread(target=_read_frame, daemon=True).start()
+        self._new_deck_button(parent, text=_("BTN_READ_THERMAL_IMAGE"), command=lambda: threading.Thread(target=_read_frame, daemon=True).start()
                    ).grid(row=0, column=2, sticky="w", padx=8)
         ttk.Label(
             parent, text=_("HELP_THERMAL_READ_SLOW"),
