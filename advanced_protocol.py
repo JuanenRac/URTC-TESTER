@@ -31,6 +31,7 @@ from tester_config import (
     CAN_ID_ULTRASONIC_WELD_CMD,
     CAN_ID_UV_CURING_CMD,
     CAN_ID_VACUUM_TELEMETRY,
+    CAN_ID_IMPACT_EVENT,
     CAN_ID_DRILL_TELEMETRY,
     CAN_ID_AOI_TELEMETRY,
     CAN_ID_LASER_TELEMETRY,
@@ -121,14 +122,36 @@ def watchdog_frames(kind: str, first: str | int, second: str | int) -> tuple[tup
     raise ValueError("unknown watchdog family")
 
 
+def decode_vacuum_frame(data: bytes) -> dict[str, int | bool] | None:
+    """Real decoder for CAN_ID_VACUUM_TELEMETRY (0x145) - the one real
+    shape both qt_tester.py's live watch and this module's own test
+    fixture below decode, so there is exactly one place that shape is
+    ever written down. Returns None on a too-short frame rather than
+    raising - a malformed/truncated frame on the wire is a real
+    condition a live watch must just skip, not a hard error."""
+    if len(data) < 3:
+        return None
+    return {"adc": struct.unpack(">H", data[:2])[0], "detected": bool(data[2])}
+
+
+def is_scan_probe_impact(data: bytes) -> bool:
+    """Real decoder for CAN_ID_IMPACT_EVENT (0x095) - true only for the
+    documented "contact" byte (0x01); any other/empty payload on the same
+    ID is real bus traffic that isn't an actual impact and must not be
+    counted as one."""
+    return len(data) >= 1 and data[0] == 0x01
+
+
 def decode_telemetry_fixture(can_id: int, data: bytes) -> dict[str, int | bool]:
     """Decode only documented telemetry shapes for test fixtures.
 
     This has no UI or transport path, so a test cannot accidentally make
     simulated values appear as a real device reading.
     """
-    if can_id == CAN_ID_VACUUM_TELEMETRY and len(data) >= 3:
-        return {"adc": struct.unpack(">H", data[:2])[0], "detected": bool(data[2])}
+    if can_id == CAN_ID_VACUUM_TELEMETRY:
+        decoded = decode_vacuum_frame(data)
+        if decoded is not None:
+            return decoded
     if can_id == CAN_ID_DRILL_TELEMETRY and len(data) >= 3:
         return {"rpm": struct.unpack(">H", data[:2])[0], "endstop": bool(data[2])}
     if can_id in {CAN_ID_AOI_TELEMETRY, CAN_ID_LASER_TELEMETRY} and data:

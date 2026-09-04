@@ -445,6 +445,75 @@ ApplicationWindow {
                     }
                     Text { visible: testerBackend.thermalCells.length === 0; text: testerBackend.uiText("QT_NO_THERMAL_FRAME"); color: muted; font.pixelSize: 10 }
                 }
+                ColumnLayout {
+                    // Real, continuous telemetry - Vacuum Pickup and Scan
+                    // Probe have no commands at all (see
+                    // tester_tool_panels.py's own _build_vacuum_panel/
+                    // _build_scan_probe_panel), so this is the one
+                    // advanced-control panel with no requestAdvanced()
+                    // confirmation anywhere in it - nothing here can ever
+                    // transmit a real CAN frame.
+                    visible: testerBackend.advancedControlKind === "vacuum" || testerBackend.advancedControlKind === "scan_probe"
+                    Layout.fillWidth: true
+                    spacing: 7
+                    Text {
+                        text: testerBackend.advancedControlKind === "vacuum" ? testerBackend.uiText("TITLE_VACUUM_TELEMETRY") : testerBackend.uiText("TITLE_SCAN_PROBE_TELEMETRY")
+                        color: textPrimary; font.bold: true; font.pixelSize: 12
+                    }
+                    RowLayout {
+                        visible: testerBackend.advancedControlKind === "vacuum"
+                        Layout.fillWidth: true
+                        spacing: 20
+                        ColumnLayout {
+                            spacing: 2
+                            Text { text: testerBackend.uiText("LBL_ANALOG_READING"); color: muted; font.pixelSize: 10 }
+                            Text { text: testerBackend.isWatchingTelemetry ? String(testerBackend.vacuumAdc) : "--"; color: textPrimary; font.bold: true; font.pixelSize: 14 }
+                        }
+                        ColumnLayout {
+                            spacing: 2
+                            Text { text: testerBackend.uiText("LBL_PART_DETECTED_LM393"); color: muted; font.pixelSize: 10 }
+                            Text {
+                                text: testerBackend.isWatchingTelemetry ? (testerBackend.vacuumDetected ? testerBackend.uiText("VAL_PART_PICKED_UP") : testerBackend.uiText("VAL_PART_NOT_DETECTED")) : "--"
+                                color: testerBackend.isWatchingTelemetry && testerBackend.vacuumDetected ? "#43db9b" : textPrimary
+                                font.bold: true; font.pixelSize: 14
+                            }
+                        }
+                    }
+                    RowLayout {
+                        visible: testerBackend.advancedControlKind === "scan_probe"
+                        Layout.fillWidth: true
+                        spacing: 20
+                        ColumnLayout {
+                            spacing: 2
+                            Text { text: testerBackend.uiText("LBL_IMPACTS_DETECTED_SESSION"); color: muted; font.pixelSize: 10 }
+                            Text { text: String(testerBackend.scanProbeImpactCount); color: textPrimary; font.bold: true; font.pixelSize: 14 }
+                        }
+                        ColumnLayout {
+                            spacing: 2
+                            Text { text: testerBackend.uiText("LBL_LAST_IMPACT"); color: muted; font.pixelSize: 10 }
+                            Text { text: testerBackend.scanProbeLastImpact || "--"; color: textPrimary; font.bold: true; font.pixelSize: 14 }
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        GameButton {
+                            text: testerBackend.uiText("QT_WATCH_TELEMETRY")
+                            accent: "#24465e"
+                            Layout.preferredWidth: 220
+                            visible: !testerBackend.isWatchingTelemetry
+                            enabled: testerBackend.canWatchTelemetry
+                            onClicked: testerBackend.watchTelemetry()
+                        }
+                        GameButton {
+                            text: testerBackend.uiText("QT_STOP_WATCHING_TELEMETRY")
+                            accent: "#b86a35"
+                            Layout.preferredWidth: 220
+                            visible: testerBackend.isWatchingTelemetry
+                            enabled: true
+                            onClicked: testerBackend.stopTelemetryWatch()
+                        }
+                    }
+                }
                 RowLayout {
                     visible: testerBackend.advancedControlKind === "solder"
                     Layout.fillWidth: true

@@ -19,6 +19,7 @@ import threading
 import time
 from pathlib import Path
 
+import advanced_protocol as protocol
 from PySide6.QtCore import QObject, Property, QUrl, Signal, Slot
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
@@ -38,6 +39,7 @@ from tester_config import (
     CAN_ID_DRILL_CMD,
     CAN_ID_ELECTROMAGNET_CMD,
     CAN_ID_HOTAIR_CMD,
+    CAN_ID_IMPACT_EVENT,
     CAN_ID_LASER_CMD,
     CAN_ID_MOTION_CMD,
     CAN_ID_PASTE_JETTING_CONFIG,
@@ -52,6 +54,7 @@ from tester_config import (
     CAN_ID_THERMAL_CALIB_CHUNK,
     CAN_ID_THERMAL_CALIB_CHUNK_REQ,
     CAN_ID_THERMAL_TRIGGER,
+    CAN_ID_VACUUM_TELEMETRY,
     ICON_IMAGE_PATH,
     TESTER_VERSION,
     THIS_HARDWARE_ID,
@@ -73,6 +76,16 @@ class TesterQtBridge(QObject):
     _flyingProbeResult = Signal(str, str)
     _thermalResult = Signal(object, str)
     _logRequested = Signal(str)
+    # Real, continuous telemetry - unlike every _XResult signal above (one
+    # bounded worker thread, one final emit), these fire repeatedly for as
+    # long as a watch is running, marshalled the same way _log() already
+    # is (worker thread -> Signal.emit -> Qt's own cross-thread queued
+    # delivery -> a @Slot back on the GUI thread). Vacuum/Scan Probe have
+    # no commands at all (see tester_tool_panels.py's own
+    # _build_vacuum_panel/_build_scan_probe_panel) - nothing here can ever
+    # write to a real actuator.
+    _vacuumTelemetry = Signal(int, bool)
+    _scanProbeImpact = Signal(str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -95,12 +108,26 @@ class TesterQtBridge(QObject):
         self._logs: list[str] = []
         self._watchdog_stops: dict[str, threading.Event] = {}
         self._watchdog_off_frames: dict[str, tuple[int, bytes]] = {}
+        # Continuous telemetry watch - same real threading.Event-keyed-dict
+        # shape as _watchdog_stops above (one real, proven mechanism for
+        # "a background thread that runs until told to stop", not a
+        # second one invented for this), but for a read loop rather than
+        # a periodic send. At most one key is ever active - only one tool
+        # panel is visible at a time - kept as a dict anyway to reuse the
+        # exact same stop/cleanup shape _stop_watchdog already has.
+        self._telemetry_stops: dict[str, threading.Event] = {}
+        self._vacuum_adc = 0
+        self._vacuum_detected = False
+        self._scan_probe_impact_count = 0
+        self._scan_probe_last_impact = ""
         self._connectionResult.connect(self._on_connection_result)
         self._probeResult.connect(self._on_probe_result)
         self._passiveResult.connect(self._on_passive_result)
         self._flyingProbeResult.connect(self._on_flying_probe_result)
         self._thermalResult.connect(self._on_thermal_result)
         self._logRequested.connect(self._append_log)
+        self._vacuumTelemetry.connect(self._on_vacuum_telemetry)
+        self._scanProbeImpact.connect(self._on_scan_probe_impact)
         self.scanPorts()
 
     @Property(str, constant=True)
@@ -178,6 +205,8 @@ class TesterQtBridge(QObject):
             "QT_READ_RESULT": "READ RESULT",
             "QT_THERMAL_CAPTURE": "CAPTURE THERMAL FRAME",
             "QT_NO_THERMAL_FRAME": "No thermal frame captured yet.",
+            "QT_WATCH_TELEMETRY": "START WATCHING",
+            "QT_STOP_WATCHING_TELEMETRY": "STOP WATCHING",
         }.get(key, key)
 
     @Property("QVariantList", notify=changed)
@@ -301,7 +330,38 @@ class TesterQtBridge(QObject):
             19: "hotair",
             17: "flying",
             22: "thermal",
+            4: "vacuum",
+            11: "scan_probe",
         }.get(self._selected_tool_id, "unavailable")
+
+    @Property(bool, notify=changed)
+    def isWatchingTelemetry(self) -> bool:
+        return bool(self._telemetry_stops)
+
+    @Property(bool, notify=changed)
+    def canWatchTelemetry(self) -> bool:
+        """Deliberately NOT canActuateSelectedProfile - that also requires
+        active-checks-armed (not listen-only), a restriction that exists
+        to keep a real command from transmitting while passive. Watching
+        telemetry never transmits, so it stays available in listen-only
+        mode too - see _require_telemetry_profile's own docstring."""
+        return self._require_telemetry_profile({4, 11})
+
+    @Property(int, notify=changed)
+    def vacuumAdc(self) -> int:
+        return self._vacuum_adc
+
+    @Property(bool, notify=changed)
+    def vacuumDetected(self) -> bool:
+        return self._vacuum_detected
+
+    @Property(int, notify=changed)
+    def scanProbeImpactCount(self) -> int:
+        return self._scan_probe_impact_count
+
+    @Property(str, notify=changed)
+    def scanProbeLastImpact(self) -> str:
+        return self._scan_probe_last_impact
 
     @Property("QStringList", notify=changed)
     def activeWatchdogs(self) -> list[str]:
@@ -468,6 +528,22 @@ class TesterQtBridge(QObject):
             return False
         return self._transport is not None
 
+    def _require_telemetry_profile(self, allowed: set[int]) -> bool:
+        """Same real identity-match/connection/busy gate as
+        canActuateSelectedProfile, minus the listen-only restriction -
+        the one real difference between a command and a pure telemetry
+        watch. `not self._listen_only` exists to keep a real CAN
+        transmission from firing while passive - it has nothing to
+        protect against here, since watchTelemetry() never calls
+        transport.send_frame() at all."""
+        return (
+            self._selected_tool_id in allowed
+            and self.connected
+            and not self._busy
+            and self._active_tool_id == self._selected_tool_id
+            and self._transport is not None
+        )
+
     def _stop_watchdog(self, key: str, off_frame: tuple[int, bytes] | None = None) -> None:
         stop = self._watchdog_stops.pop(key, None)
         if stop is not None:
@@ -563,6 +639,87 @@ class TesterQtBridge(QObject):
         else:
             self._stop_watchdog(key, off)
             self._log(f"WATCHDOG_STOPPED key={key} safe_off=1")
+
+    @Slot()
+    def watchTelemetry(self) -> None:
+        """Starts a continuous, read-only watch for the selected profile's
+        own telemetry - Vacuum Pickup (ADC + part-detect) or Scan Probe
+        (impact events). Neither sends a single CAN frame; this Slot
+        exists purely to marshal the board's own periodic/event-driven
+        broadcasts to QML, matching _build_vacuum_panel/
+        _build_scan_probe_panel's exact real semantics in the legacy app.
+
+        Sets busy=True like every other read operation - this transport
+        can only be read from one thread at a time (see
+        tester_bus_monitor.py's own CANBusMonitor docstring for why), so
+        a watch genuinely has to hold the same gate a probe/flying-probe-
+        read/thermal-capture would. Unlike those, this has no natural end;
+        stopTelemetryWatch() (not busy-gated, exactly like
+        _stop_watchdog isn't) is what releases it.
+        """
+        can_id, key, decode = {
+            4: (CAN_ID_VACUUM_TELEMETRY, "vacuum", self._decode_vacuum_frame),
+            11: (CAN_ID_IMPACT_EVENT, "scan_probe", self._decode_scan_probe_frame),
+        }.get(self._selected_tool_id, (None, None, None))
+        if can_id is None or not self._require_telemetry_profile({4, 11}):
+            self._log("TELEMETRY_WATCH_BLOCKED profile identity/connection gate not satisfied")
+            return
+        if self._telemetry_stops:
+            self._log("TELEMETRY_WATCH_BLOCKED a watch is already running")
+            return
+        transport = self._transport
+        if transport is None:
+            return
+        stop = threading.Event()
+        self._telemetry_stops[key] = stop
+        self._set_state(status=f"WATCHING {key.upper()} TELEMETRY", busy=True)
+        self._log(f"TELEMETRY_WATCH_STARTED key={key} can_id=0x{can_id:03X}")
+
+        def _worker() -> None:
+            try:
+                while not stop.is_set():
+                    frame = transport.read_frame(timeout=0.1)
+                    if frame is not None and frame[0] == can_id:
+                        decode(frame[1])
+            except Exception as exc:
+                self._log(f"TELEMETRY_WATCH_FAILED key={key} error={exc}")
+            finally:
+                self._telemetry_stops.pop(key, None)
+                self._set_state(status="ACTIVE CHECKS ARMED", busy=False)
+                self._log(f"TELEMETRY_WATCH_STOPPED key={key}")
+
+        threading.Thread(target=_worker, daemon=True, name=f"urtc-tester-{key}-watch").start()
+
+    @Slot()
+    def stopTelemetryWatch(self) -> None:
+        """Deliberately not busy-gated - see watchTelemetry's own
+        docstring. The worker thread itself clears busy once it actually
+        exits, not this Slot, so a caller can never observe busy=False
+        while the read loop is still genuinely running."""
+        for stop in self._telemetry_stops.values():
+            stop.set()
+
+    def _decode_vacuum_frame(self, data: bytes) -> None:
+        decoded = protocol.decode_vacuum_frame(data)
+        if decoded is not None:
+            self._vacuumTelemetry.emit(decoded["adc"], decoded["detected"])
+
+    @Slot(int, bool)
+    def _on_vacuum_telemetry(self, adc: int, detected: bool) -> None:
+        self._vacuum_adc = adc
+        self._vacuum_detected = detected
+        self.changed.emit()
+
+    def _decode_scan_probe_frame(self, data: bytes) -> None:
+        if protocol.is_scan_probe_impact(data):
+            self._scanProbeImpact.emit(time.strftime("%H:%M:%S"))
+
+    @Slot(str)
+    def _on_scan_probe_impact(self, timestamp: str) -> None:
+        self._scan_probe_impact_count += 1
+        self._scan_probe_last_impact = timestamp
+        self._log(f"SCAN_PROBE_IMPACT ts={timestamp}")
+        self.changed.emit()
 
     @staticmethod
     def _bounded_int(value: str, minimum: int, maximum: int) -> int | None:

@@ -123,6 +123,38 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
   than passing oversized frames to GUI handlers. Valid standard frames are
   unaffected.
 
+## [0.1.4]
+
+- **The Qt Quick deck now watches real, continuous telemetry for Vacuum
+  Pickup and Scan Probe** - the last 2 real tool profiles with no
+  advanced-control panel at all in the deck (both are telemetry-only:
+  neither has a single command to send). A new `watchTelemetry()`/
+  `stopTelemetryWatch()` pair starts/stops a real background read loop
+  (the same `threading.Event`-per-key shape `_start_watchdog`/
+  `_stop_watchdog` already use for a periodic send, adapted for a
+  continuous read instead), holding the same `busy` gate every other
+  read operation already does - this transport can only be read from one
+  thread at a time - except `stopTelemetryWatch()` itself, which (like
+  `_stop_watchdog`) is deliberately not busy-gated, so a running watch
+  can always be stopped. Unlike every other advanced control, watching
+  telemetry is available in listen-only mode too, since it never
+  transmits a single frame - confirmed with a real assertion that
+  `canWatchTelemetry` stays true while `canActuateSelectedProfile`
+  (the general command gate) is correctly false.
+- New pure decoders `decode_vacuum_frame()`/`is_scan_probe_impact()` in
+  `advanced_protocol.py` - the one real place either shape is decoded;
+  `decode_telemetry_fixture()`'s own vacuum case and the live Qt Quick
+  watch both now call the same function rather than duplicating it.
+- New `verify_qt_telemetry_watch.py` (repo root, not `tests/` - needs a
+  real PySide6 event loop, kept out of the hardware-free suite on
+  purpose): a fake transport feeds real frames through a real
+  `queue.Queue` from the test thread, and real assertions cover the
+  full watch lifecycle - start, live value updates via the real
+  cross-thread Signal path, an unrelated frame on the wire correctly
+  ignored, double-start blocked, stop-while-busy working, a real
+  identity mismatch refusing to start a watch at all, and listen-only
+  mode correctly still allowed.
+
 ## [0.1.3]
 
 - **Converted every remaining `ttk.Button` in the tool-specific panels to

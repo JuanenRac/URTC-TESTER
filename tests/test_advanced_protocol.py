@@ -6,7 +6,7 @@
 import unittest
 
 import advanced_protocol as protocol
-from tester_config import CAN_ID_CRIMPING_CMD, CAN_ID_MOTION_CMD, CAN_ID_VACUUM_TELEMETRY
+from tester_config import CAN_ID_CRIMPING_CMD, CAN_ID_MOTION_CMD, CAN_ID_VACUUM_TELEMETRY, CAN_ID_IMPACT_EVENT
 
 
 class AdvancedProtocolTests(unittest.TestCase):
@@ -38,6 +38,24 @@ class AdvancedProtocolTests(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             protocol.decode_telemetry_fixture(CAN_ID_VACUUM_TELEMETRY, b"\x04")
+
+    def test_decode_vacuum_frame_matches_the_real_documented_shape(self):
+        # Real, live-path decoder (qt_tester.py's own continuous watch
+        # calls this directly) - decode_telemetry_fixture above delegates
+        # to this same function for its own vacuum case, so this is the
+        # one real place this shape is decoded, tested from both angles.
+        self.assertEqual(protocol.decode_vacuum_frame(b"\x04\xd2\x01"), {"adc": 1234, "detected": True})
+        self.assertEqual(protocol.decode_vacuum_frame(b"\x00\x00\x00"), {"adc": 0, "detected": False})
+        # A too-short/malformed frame on the wire is a real condition a
+        # live watch must skip, not raise on - None, never a guessed value.
+        self.assertIsNone(protocol.decode_vacuum_frame(b"\x04"))
+        self.assertIsNone(protocol.decode_vacuum_frame(b""))
+
+    def test_is_scan_probe_impact_matches_only_the_documented_contact_byte(self):
+        self.assertTrue(protocol.is_scan_probe_impact(bytes([0x01])))
+        self.assertFalse(protocol.is_scan_probe_impact(bytes([0x00])), "0x00 is real bus traffic, not an impact")
+        self.assertFalse(protocol.is_scan_probe_impact(bytes([0x02])), "any non-0x01 value must not be miscounted as contact")
+        self.assertFalse(protocol.is_scan_probe_impact(b""), "an empty payload must never be read as a real impact")
 
 
 if __name__ == "__main__":
