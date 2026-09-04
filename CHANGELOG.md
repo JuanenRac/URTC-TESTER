@@ -12,6 +12,23 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 ## [Unreleased] - Chinese and Japanese added to the Language menu
 
 ### Added
+- **Custom CAN Frame** is now available in the Qt Quick deck, completing
+  its migration from the legacy Tkinter panel - the last of the
+  tool-independent utility panels. Same real validation as the legacy
+  panel (11-bit ID range, DLC≤8, space-separated hex bytes) and the same
+  no-profile-gating semantics (only `canUseUtilityPanels`: connected,
+  active-check mode, not busy - this panel can address any CAN ID,
+  unlike every profile-gated action elsewhere in the deck). "Repeat
+  every" periodic resend is a real QML `Timer` reading the live text
+  fields each tick (not a Python thread re-checking stale copies), so an
+  edit mid-run takes effect immediately without stopping/restarting,
+  matching the legacy panel's own re-parse-per-tick behavior. Periodic
+  ticks stay silent on an ordinary send and only log on a parse-failure
+  transition (start/stop/skip/resume) - logging every tick at a fast
+  interval would otherwise flood the 14-entry activity log with nothing
+  else. Disconnecting force-stops any running periodic resend, the same
+  real safety net `_stop_all_watchdogs()` already gives every other
+  periodic send.
 - **Real About window**, matching HYDRA-UMC-STUDIO's own `About.tsx` and
   URTC-FLASHER's own Tkinter AboutDialog: a tagline, a one-paragraph
   description, and a real Version/Author/Email/License info block, not

@@ -151,6 +151,16 @@ class TesterQtBridge(QObject):
             "diag0": "",
             "spi_response": "",
         }
+        # Custom CAN Frame - the one real tool-independent action with no
+        # per-field validation beyond frame shape (see HELP_SENDS_RAW_FRAME's
+        # own real text): whatever is typed goes on the bus exactly as
+        # typed. Periodic re-send is owned by a QML Timer (see
+        # sendCustomFramePeriodicTick's own docstring for why), not a
+        # Python thread like _watchdog_stops/_telemetry_stops above - this
+        # flag is the single source of truth the Timer's running binding
+        # and the CheckBox's checked binding both read.
+        self._custom_periodic_active = False
+        self._custom_periodic_last_ok = True
         self._connectionResult.connect(self._on_connection_result)
         self._probeResult.connect(self._on_probe_result)
         self._passiveResult.connect(self._on_passive_result)
@@ -432,6 +442,10 @@ class TesterQtBridge(QObject):
     def spiResponseText(self) -> str:
         return self._query_texts["spi_response"]
 
+    @Property(bool, notify=changed)
+    def customFramePeriodicActive(self) -> bool:
+        return self._custom_periodic_active
+
     @Property("QStringList", notify=changed)
     def activeWatchdogs(self) -> list[str]:
         """Visible state only; never fabricates device telemetry."""
@@ -502,6 +516,7 @@ class TesterQtBridge(QObject):
             return
         if self._transport is not None:
             self._stop_all_watchdogs()
+            self._custom_periodic_active = False
             try:
                 self._transport.close()
             finally:
@@ -949,6 +964,109 @@ class TesterQtBridge(QObject):
         if not self.canUseUtilityPanels:
             return
         self._run_query("peripheral_info", (CAN_ID_PERIPHERAL_INFO_RESP, b""), CAN_ID_PERIPHERAL_INFO_RESP, protocol.decode_peripheral_info)
+
+    # -- Custom CAN Frame - see this class's own __init__ comment on
+    # _custom_periodic_active for why periodic re-send is QML-Timer-owned
+    # rather than a Python thread like every other periodic mechanism
+    # above. ----------------------------------------------------------
+    @staticmethod
+    def _parse_custom_frame(can_id_text: str, data_text: str) -> tuple[int, bytes]:
+        """Same real validation as the legacy Tkinter panel's own
+        _parse_custom_frame (tester_common_panels.py) - 11-bit ID range,
+        DLC<=8, space-separated hex bytes. Raises ValueError with a
+        message suitable for the activity log directly."""
+        try:
+            can_id = int(can_id_text, 16)
+        except (TypeError, ValueError):
+            raise ValueError(f"'{can_id_text}' isn't a valid hex CAN ID.")
+        if not (0 <= can_id <= 0x7FF):
+            raise ValueError(f"CAN ID 0x{can_id:X} is outside the standard 11-bit range (0-0x7FF).")
+        text = data_text.strip()
+        try:
+            values = [int(b, 16) for b in text.split()] if text else []
+        except ValueError:
+            raise ValueError(f"'{text}' isn't valid space-separated hex bytes, e.g. 01 02 03.")
+        out_of_range = [v for v in values if not (0 <= v <= 0xFF)]
+        if out_of_range:
+            raise ValueError(f"{out_of_range[0]:#x} is out of range for a single byte (00-FF).")
+        data = bytes(values)
+        if len(data) > 8:
+            raise ValueError(f"{len(data)} bytes given - a CAN frame carries at most 8.")
+        return can_id, data
+
+    @Slot(str, str)
+    def sendCustomFrame(self, can_id_hex: str, data_hex: str) -> None:
+        """Manual 'Send Once' button - logs every send, matching the
+        legacy panel's own _send_custom_frame_once exactly."""
+        if not self.canUseUtilityPanels:
+            self._log("CUSTOM_FRAME_BLOCKED not connected or not in active-check mode")
+            return
+        try:
+            can_id, data = self._parse_custom_frame(can_id_hex, data_hex)
+        except ValueError as exc:
+            self._log(f"CUSTOM_FRAME_BLOCKED {exc}")
+            return
+        transport = self._transport
+        if transport is None:
+            return
+        transport.send_frame(can_id, data)
+        self._log(f"CUSTOM_FRAME_SENT can_id=0x{can_id:03X} data={data.hex(' ') if data else '(empty)'}")
+
+    @Slot(bool, str, str, str)
+    def setCustomFramePeriodic(self, enabled: bool, can_id_hex: str, data_hex: str, interval_text: str) -> None:
+        """Backend-owned toggle for the 'Repeat every' CheckBox - see
+        _custom_periodic_active's own comment for why this, not the
+        CheckBox's own local state, is the single source of truth.
+        Validates once here at the moment of turning on (same real
+        gate/parse as sendCustomFrame), then leaves each tick's own
+        re-parse to sendCustomFramePeriodicTick - matching the legacy
+        _toggle_custom_periodic/_send split exactly."""
+        if not enabled:
+            self._custom_periodic_active = False
+            self.changed.emit()
+            return
+        if not self.canUseUtilityPanels:
+            self._log("CUSTOM_FRAME_PERIODIC_BLOCKED not connected or not in active-check mode")
+            return
+        try:
+            can_id, data = self._parse_custom_frame(can_id_hex, data_hex)
+        except ValueError as exc:
+            self._log(f"CUSTOM_FRAME_PERIODIC_BLOCKED {exc}")
+            return
+        interval_ms = self._bounded_int(interval_text, 10, 10000) or 100
+        self._custom_periodic_active = True
+        self._custom_periodic_last_ok = True
+        data_str = data.hex(' ') if data else '(empty)'
+        self._log(f"CUSTOM_FRAME_PERIODIC_STARTED interval_ms={interval_ms} can_id=0x{can_id:03X} data={data_str}")
+        self.changed.emit()
+
+    @Slot(str, str)
+    def sendCustomFramePeriodicTick(self, can_id_hex: str, data_hex: str) -> None:
+        """Called every interval by the QML Timer (customFrameTimer in
+        TesterDeck.qml) while 'Repeat every' is checked - re-parses the
+        fields on every tick exactly like the legacy Tkinter panel's own
+        _send closure did, so a live-edited value takes effect without
+        needing to stop/restart. Deliberately silent on an ordinary
+        successful send (unlike sendCustomFrame's manual button) - only
+        logs once on the transition into/out of a parse failure, or the
+        activity log (last 14 entries) would show nothing but this at
+        any interval faster than a few seconds."""
+        if not self.canUseUtilityPanels:
+            return
+        try:
+            can_id, data = self._parse_custom_frame(can_id_hex, data_hex)
+        except ValueError as exc:
+            if self._custom_periodic_last_ok:
+                self._custom_periodic_last_ok = False
+                self._log(f"CUSTOM_FRAME_PERIODIC_SKIPPING {exc}")
+            return
+        if not self._custom_periodic_last_ok:
+            self._custom_periodic_last_ok = True
+            self._log("CUSTOM_FRAME_PERIODIC_RESUMING")
+        transport = self._transport
+        if transport is None:
+            return
+        transport.send_frame(can_id, data)
 
     @staticmethod
     def _bounded_int(value: str, minimum: int, maximum: int) -> int | None:

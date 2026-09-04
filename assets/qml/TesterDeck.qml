@@ -742,6 +742,72 @@ ApplicationWindow {
                 }
 
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+                // -- Custom CAN Frame - the one real tool-independent
+                // action with no validation beyond frame shape (see
+                // HELP_SENDS_RAW_FRAME's own real text below): whatever
+                // is typed goes on the bus exactly as typed, unlike
+                // every other GameButton in this deck which only ever
+                // sends a specific, already-known-safe frame. Periodic
+                // re-send is a real QML Timer, not a Python thread - see
+                // testerBackend.customFramePeriodicActive's own comment
+                // in qt_tester.py for why.
+                Text { text: testerBackend.uiText("TAB_CUSTOM_FRAME"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    Text { text: testerBackend.uiText("LBL_CAN_ID_HEX"); color: muted; font.pixelSize: 10 }
+                    TextField { id: customId; text: "100"; color: textPrimary; Layout.preferredWidth: 80; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    Text { text: testerBackend.uiText("LBL_DATA_BYTES_HEX"); color: muted; font.pixelSize: 10 }
+                    TextField { id: customData; text: ""; color: textPrimary; Layout.fillWidth: true; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+                    GameButton {
+                        text: testerBackend.uiText("BTN_SEND_ONCE")
+                        accent: "#24465e"
+                        Layout.preferredWidth: 130
+                        enabled: testerBackend.canUseUtilityPanels
+                        onClicked: testerBackend.sendCustomFrame(customId.text, customData.text)
+                    }
+                    CheckBox {
+                        id: customPeriodic
+                        text: testerBackend.uiText("LBL_REPEAT_EVERY")
+                        checked: testerBackend.customFramePeriodicActive
+                        enabled: testerBackend.canUseUtilityPanels
+                        contentItem: Text { text: customPeriodic.text; color: muted; leftPadding: customPeriodic.indicator.width + 4; verticalAlignment: Text.AlignVCenter; font.pixelSize: 10 }
+                        onToggled: {
+                            testerBackend.setCustomFramePeriodic(checked, customId.text, customData.text, customInterval.text)
+                            // Explicit re-sync rather than relying on the
+                            // checked: binding above surviving user
+                            // interaction (QML breaks a property binding
+                            // on direct/interactive assignment) - this is
+                            // what makes a backend rejection (not
+                            // connected, bad hex) visibly revert the box,
+                            // matching the legacy panel's own
+                            // custom_periodic_var.set(False).
+                            checked = testerBackend.customFramePeriodicActive
+                        }
+                    }
+                    TextField { id: customInterval; text: "100"; inputMethodHints: Qt.ImhDigitsOnly; color: textPrimary; Layout.preferredWidth: 60; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    Text { text: testerBackend.uiText("LBL_MS_UNIT"); color: muted; font.pixelSize: 10 }
+                }
+                Timer {
+                    id: customFrameTimer
+                    interval: Math.max(10, parseInt(customInterval.text) || 100)
+                    running: testerBackend.customFramePeriodicActive
+                    repeat: true
+                    onTriggered: testerBackend.sendCustomFramePeriodicTick(customId.text, customData.text)
+                }
+                Text {
+                    text: testerBackend.uiText("HELP_SENDS_RAW_FRAME")
+                    color: "#f7b955"
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                    font.pixelSize: 9
+                }
+
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
                 Text { text: testerBackend.uiText("QT_ACTIVITY_LOG"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
                 ListView {
                     Layout.fillWidth: true
