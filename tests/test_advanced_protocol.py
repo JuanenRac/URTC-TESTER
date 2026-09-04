@@ -57,6 +57,77 @@ class AdvancedProtocolTests(unittest.TestCase):
         self.assertFalse(protocol.is_scan_probe_impact(bytes([0x02])), "any non-0x01 value must not be miscounted as contact")
         self.assertFalse(protocol.is_scan_probe_impact(b""), "an empty payload must never be read as a real impact")
 
+    def test_global_status_frame_matches_the_real_documented_shape(self):
+        can_id, data = protocol.global_status_frame((0, 255, 0), "night", (0, 0, 255), True)
+        self.assertEqual((can_id, data), (0x100, bytes([0, 255, 0, 0x01, 0, 0, 255, 0x01])))
+        can_id, data = protocol.global_status_frame((999, -5, 0), "standby", (0, 0, 0), False)
+        self.assertEqual(data, bytes([255, 0, 0, 0x0F, 0, 0, 0, 0x00]), "out-of-range RGB values must clamp, never raise")
+        with self.assertRaises(ValueError):
+            protocol.global_status_frame((0, 0, 0), "not-a-real-mode", (0, 0, 0), False)
+
+    def test_spi_passthrough_frame_bounds_and_rejects_malformed_input(self):
+        self.assertEqual(protocol.spi_passthrough_frame("01 02 03"), (0x180, b"\x03\x01\x02\x03"))
+        with self.assertRaises(ValueError):
+            protocol.spi_passthrough_frame("")  # 0 bytes - below the real 1-byte minimum
+        with self.assertRaises(ValueError):
+            protocol.spi_passthrough_frame(" ".join(["01"] * 8))  # 8 bytes - above the real 7-byte maximum
+        with self.assertRaises(ValueError):
+            protocol.spi_passthrough_frame("zz")
+
+    def test_decode_spi_response_matches_the_real_length_prefixed_shape(self):
+        self.assertEqual(protocol.decode_spi_response(bytes([2, 0xAA, 0xBB])), bytes([0xAA, 0xBB]))
+        self.assertEqual(protocol.decode_spi_response(bytes([0])), b"")
+        self.assertIsNone(protocol.decode_spi_response(bytes([2, 0xAA])), "fewer real bytes than the length prefix claims must not be guessed")
+        self.assertIsNone(protocol.decode_spi_response(b""))
+
+    def test_decode_diag0_matches_the_real_documented_shape(self):
+        self.assertTrue(protocol.decode_diag0(bytes([1])))
+        self.assertFalse(protocol.decode_diag0(bytes([0])))
+        self.assertIsNone(protocol.decode_diag0(b""))
+
+    def test_decode_fram_state_distinguishes_no_response_from_a_real_empty_state(self):
+        # valid=0 - a real, meaningful "nothing was ever saved" state.
+        self.assertEqual(
+            protocol.decode_fram_state(bytes([0, 0, 0, 0, 0, 0, 0, 0])),
+            {"valid": False, "tool_id": 0, "had_error": False, "temp": 0, "speed": 0, "dir_or_interlock": False, "fan": 0},
+        )
+        # valid=1, tool_id=5 (Drill), temp=0x0190=400, speed=128, dir on, fan=200, had_error=1.
+        self.assertEqual(
+            protocol.decode_fram_state(bytes([1, 5, 1, 0x01, 0x90, 128, 1, 200])),
+            {"valid": True, "tool_id": 5, "had_error": True, "temp": 400, "speed": 128, "dir_or_interlock": True, "fan": 200},
+        )
+        self.assertIsNone(protocol.decode_fram_state(bytes([1, 2, 3])), "a too-short response must never be guessed")
+
+    def test_decode_expansion_board_type_and_mlx_variant_are_real_lookup_tables(self):
+        self.assertEqual(protocol.decode_expansion_board_type(bytes([0])), protocol.EXPANSION_BOARD_TYPES[0])
+        self.assertIsNone(protocol.decode_expansion_board_type(bytes([255])), "an out-of-range index is a real older-firmware no-answer, not a guess")
+        self.assertIsNone(protocol.decode_expansion_board_type(b""))
+        self.assertEqual(protocol.decode_mlx_sensor_variant(bytes([0])), protocol.MLX_SENSOR_VARIANTS[0])
+        self.assertIsNone(protocol.decode_mlx_sensor_variant(bytes([255])))
+
+    def test_decode_free_tool_config_resolves_the_real_selection(self):
+        self.assertEqual(
+            protocol.decode_free_tool_config(bytes([31, 5])),
+            {"raw_id_pin": 31, "selection": 5, "tool_name": protocol.TOOL_NAMES[4]},
+        )
+        self.assertEqual(
+            protocol.decode_free_tool_config(bytes([31, 0])),
+            {"raw_id_pin": 31, "selection": 0, "tool_name": None},
+            "selection=0 is a real 'nothing selected' state, not an error",
+        )
+        self.assertIsNone(protocol.decode_free_tool_config(bytes([31])))
+
+    def test_decode_peripheral_info_matches_the_real_documented_shape(self):
+        self.assertEqual(
+            protocol.decode_peripheral_info(bytes([0x03, 42])),
+            {"peripheral_type": 0x03, "serial": 42, "is_urtc": True},
+        )
+        self.assertEqual(
+            protocol.decode_peripheral_info(bytes([0x01, 7])),
+            {"peripheral_type": 0x01, "serial": 7, "is_urtc": False},
+        )
+        self.assertIsNone(protocol.decode_peripheral_info(bytes([0x03])))
+
 
 if __name__ == "__main__":
     unittest.main()

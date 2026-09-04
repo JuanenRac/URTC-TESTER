@@ -36,15 +36,26 @@ from tester_config import (
     CAN_ID_ADS1115_RESULT,
     CAN_ID_ADS1115_TRIGGER,
     CAN_ID_CRIMPING_CMD,
+    CAN_ID_DIAG0_RESP,
     CAN_ID_DRILL_CMD,
     CAN_ID_ELECTROMAGNET_CMD,
+    CAN_ID_ERASE_FRAM,
+    CAN_ID_EXP_SPI_CMD,
+    CAN_ID_EXP_SPI_RESP,
+    CAN_ID_EXPANSION_TYPE_RESP,
+    CAN_ID_FRAM_STATE_RESP,
+    CAN_ID_FREE_TOOL_CONFIG_RESP,
     CAN_ID_HOTAIR_CMD,
     CAN_ID_IMPACT_EVENT,
     CAN_ID_LASER_CMD,
+    CAN_ID_MLX_VARIANT_RESP,
     CAN_ID_MOTION_CMD,
     CAN_ID_PASTE_JETTING_CONFIG,
     CAN_ID_PASTE_JETTING_PULSE,
+    CAN_ID_PERIPHERAL_INFO_RESP,
     CAN_ID_QUERY_ACTIVE_TOOL,
+    CAN_ID_QUERY_DIAG0,
+    CAN_ID_QUERY_FRAM_STATE,
     CAN_ID_QUERY_VERSION,
     CAN_ID_SPOT_WELD_CMD,
     CAN_ID_SOLDER_SETPOINT,
@@ -55,6 +66,7 @@ from tester_config import (
     CAN_ID_THERMAL_CALIB_CHUNK_REQ,
     CAN_ID_THERMAL_TRIGGER,
     CAN_ID_VACUUM_TELEMETRY,
+    ERASE_FRAM_MAGIC,
     ICON_IMAGE_PATH,
     TESTER_VERSION,
     THIS_HARDWARE_ID,
@@ -86,6 +98,12 @@ class TesterQtBridge(QObject):
     # write to a real actuator.
     _vacuumTelemetry = Signal(int, bool)
     _scanProbeImpact = Signal(str)
+    # Real, tool-independent utility queries (Global Controls/Expansion
+    # Board/F-RAM in the legacy Tkinter tabs) - one shared signal rather
+    # than one per action, since they're all the same real shape (a
+    # bounded request/response round trip, or None on timeout); `key`
+    # routes each real result to its own real Property below.
+    _queryResult = Signal(str, object)
 
     def __init__(self) -> None:
         super().__init__()
@@ -120,6 +138,19 @@ class TesterQtBridge(QObject):
         self._vacuum_detected = False
         self._scan_probe_impact_count = 0
         self._scan_probe_last_impact = ""
+        # Real, tool-independent utility panel state - one string per
+        # real result, matching the established flyingProbeResult/
+        # thermalSummary convention (already-translated display text
+        # built once in _on_query_result, not re-translated by QML).
+        self._query_texts: dict[str, str] = {
+            "fram_state": "",
+            "expansion_type": "",
+            "mlx_variant": "",
+            "free_tool_config": "",
+            "peripheral_info": "",
+            "diag0": "",
+            "spi_response": "",
+        }
         self._connectionResult.connect(self._on_connection_result)
         self._probeResult.connect(self._on_probe_result)
         self._passiveResult.connect(self._on_passive_result)
@@ -128,6 +159,7 @@ class TesterQtBridge(QObject):
         self._logRequested.connect(self._append_log)
         self._vacuumTelemetry.connect(self._on_vacuum_telemetry)
         self._scanProbeImpact.connect(self._on_scan_probe_impact)
+        self._queryResult.connect(self._on_query_result)
         self.scanPorts()
 
     @Property(str, constant=True)
@@ -207,6 +239,9 @@ class TesterQtBridge(QObject):
             "QT_NO_THERMAL_FRAME": "No thermal frame captured yet.",
             "QT_WATCH_TELEMETRY": "START WATCHING",
             "QT_STOP_WATCHING_TELEMETRY": "STOP WATCHING",
+            "QT_GLOBAL_CONTROLS": "GLOBAL CONTROLS",
+            "QT_EXPANSION_BOARD": "EXPANSION BOARD",
+            "QT_FRAM_PANEL": "F-RAM",
         }.get(key, key)
 
     @Property("QVariantList", notify=changed)
@@ -362,6 +397,40 @@ class TesterQtBridge(QObject):
     @Property(str, notify=changed)
     def scanProbeLastImpact(self) -> str:
         return self._scan_probe_last_impact
+
+    # -- tool-independent utility panels (Global Controls/Expansion
+    # Board/F-RAM) - real, not gated by a selected tool profile at all. --
+    @Property(bool, notify=changed)
+    def canUseUtilityPanels(self) -> bool:
+        return self.connected and not self._listen_only and not self._busy
+
+    @Property(str, notify=changed)
+    def framStateText(self) -> str:
+        return self._query_texts["fram_state"]
+
+    @Property(str, notify=changed)
+    def expansionBoardTypeText(self) -> str:
+        return self._query_texts["expansion_type"]
+
+    @Property(str, notify=changed)
+    def mlxSensorVariantText(self) -> str:
+        return self._query_texts["mlx_variant"]
+
+    @Property(str, notify=changed)
+    def freeToolConfigText(self) -> str:
+        return self._query_texts["free_tool_config"]
+
+    @Property(str, notify=changed)
+    def peripheralInfoText(self) -> str:
+        return self._query_texts["peripheral_info"]
+
+    @Property(str, notify=changed)
+    def diag0Text(self) -> str:
+        return self._query_texts["diag0"]
+
+    @Property(str, notify=changed)
+    def spiResponseText(self) -> str:
+        return self._query_texts["spi_response"]
 
     @Property("QStringList", notify=changed)
     def activeWatchdogs(self) -> list[str]:
@@ -720,6 +789,166 @@ class TesterQtBridge(QObject):
         self._scan_probe_last_impact = timestamp
         self._log(f"SCAN_PROBE_IMPACT ts={timestamp}")
         self.changed.emit()
+
+    # -- tool-independent utility panels (Global Controls/Expansion
+    # Board/F-RAM) -------------------------------------------------------
+
+    def _run_query(self, key: str, request: tuple[int, bytes] | None, response_id: int, decode, timeout_s: float = 1.0) -> None:
+        """Real, generic bounded request/response worker - every query
+        below (F-RAM state, expansion board type, MLX variant, free tool
+        config, peripheral info, DIAG0, the SPI passthrough) is the exact
+        same real shape: send an optional request, wait up to timeout_s
+        for the matching response CAN ID, decode it, and emit the real
+        result (or None on a genuine timeout - never a guessed value)
+        through the one shared _queryResult signal, keyed so
+        _on_query_result routes it to the right real Property."""
+        transport = self._transport
+        if transport is None:
+            return
+
+        def _worker() -> None:
+            try:
+                if request is not None:
+                    transport.send_frame(*request)
+                deadline = time.monotonic() + timeout_s
+                while time.monotonic() < deadline:
+                    frame = transport.read_frame(timeout=0.1)
+                    if frame is not None and frame[0] == response_id:
+                        self._queryResult.emit(key, decode(frame[1]))
+                        return
+                self._queryResult.emit(key, None)
+            except Exception as exc:
+                self._log(f"QUERY_FAILED key={key} error={exc}")
+                self._queryResult.emit(key, None)
+
+        threading.Thread(target=_worker, daemon=True, name=f"urtc-tester-query-{key}").start()
+
+    @Slot(str, object)
+    def _on_query_result(self, key: str, result: object) -> None:
+        # LBL_NO_RESPONSE_OLDER_FW is a real, pre-existing key (same one
+        # tester_common_panels.py's own Tkinter panels already show for
+        # this exact real condition) - no fallback needed here.
+        no_response = _("LBL_NO_RESPONSE_OLDER_FW")
+        if key == "fram_state":
+            if result is None:
+                text = _("LBL_FRAM_NO_RESPONSE")
+            elif not result["valid"]:
+                text = _("LBL_FRAM_NO_VALID_STATE")
+            else:
+                tool_name = TOOL_NAMES.get(result["tool_id"], f"unknown ({result['tool_id']})")
+                text = _(
+                    "LBL_FRAM_STATE_TEXT", tool=tool_name, temp=result["temp"], speed=result["speed"],
+                    dir_or_interlock=_("VAL_ON") if result["dir_or_interlock"] else _("VAL_OFF"),
+                    fan=result["fan"], had_error=_("VAL_YES") if result["had_error"] else _("VAL_NO"),
+                )
+            self._log(f"FRAM_STATE {result}")
+        elif key == "expansion_type":
+            text = result if result is not None else no_response
+            self._log(f"EXPANSION_BOARD_TYPE {result}")
+        elif key == "mlx_variant":
+            text = result if result is not None else no_response
+            self._log(f"MLX_SENSOR_VARIANT {result}")
+        elif key == "free_tool_config":
+            if result is None:
+                text = no_response
+            else:
+                jumper_desc = _("LBL_FREE_TOOL_JUMPERS_0X1F") if result["raw_id_pin"] == 31 else _("LBL_FREE_TOOL_JUMPERS_OTHER", value=result["raw_id_pin"])
+                selection_desc = result["tool_name"] or _("LBL_FREE_TOOL_NONE_SELECTED")
+                text = f"{jumper_desc}\n{_('LBL_FREE_TOOL_SELECTION', tool=selection_desc)}"
+            self._log(f"FREE_TOOL_CONFIG {result}")
+        elif key == "peripheral_info":
+            if result is None:
+                text = no_response
+            else:
+                type_desc = _("LBL_PERIPHERAL_TYPE_URTC") if result["is_urtc"] else _("LBL_PERIPHERAL_TYPE_UNKNOWN", value=result["peripheral_type"])
+                text = f"{type_desc}\n{_('LBL_DEVICE_SERIAL', serial=result['serial'])}"
+            self._log(f"PERIPHERAL_INFO {result}")
+        elif key == "diag0":
+            text = (_("LBL_DIAG0_HIGH") if result else _("LBL_DIAG0_LOW")) if result is not None else _("LBL_NO_RESPONSE_SHORT")
+            self._log(f"DIAG0 {result}")
+        elif key == "spi_response":
+            text = result.hex(" ") if result else (_("LBL_EMPTY_PARENS") if result == b"" else _("LBL_SPI_NO_RESPONSE"))
+            self._log(f"SPI_RESPONSE {result}")
+        else:
+            return
+        self._query_texts[key] = text
+        self.changed.emit()
+
+    @Slot(str, str, str, str, str, str, str, bool)
+    def sendGlobalStatus(self, status_r: str, status_g: str, status_b: str, night_mode: str, ring_r: str, ring_g: str, ring_b: str, ring_on: bool) -> None:
+        if not self.canUseUtilityPanels:
+            self._log("GLOBAL_STATUS_BLOCKED not connected or not in active-check mode")
+            return
+        try:
+            can_id, data = protocol.global_status_frame((status_r, status_g, status_b), night_mode, (ring_r, ring_g, ring_b), ring_on)
+        except ValueError as exc:
+            self._log(f"GLOBAL_STATUS_BLOCKED {exc}")
+            return
+        transport = self._transport
+        if transport is None:
+            return
+        transport.send_frame(can_id, data)
+        self._log(f"GLOBAL_STATUS_SENT {data.hex(' ')}")
+
+    @Slot(str)
+    def sendExpansionSpi(self, hex_bytes: str) -> None:
+        if not self.canUseUtilityPanels:
+            self._log("EXP_SPI_BLOCKED not connected or not in active-check mode")
+            return
+        try:
+            request = protocol.spi_passthrough_frame(hex_bytes)
+        except ValueError as exc:
+            self._log(f"EXP_SPI_BLOCKED {exc}")
+            return
+        self._run_query("spi_response", request, CAN_ID_EXP_SPI_RESP, protocol.decode_spi_response)
+
+    @Slot()
+    def queryDiag0(self) -> None:
+        if not self.canUseUtilityPanels:
+            return
+        self._run_query("diag0", (CAN_ID_QUERY_DIAG0, b""), CAN_ID_DIAG0_RESP, protocol.decode_diag0)
+
+    @Slot()
+    def queryFramState(self) -> None:
+        if not self.canUseUtilityPanels:
+            return
+        self._run_query("fram_state", (CAN_ID_QUERY_FRAM_STATE, b""), CAN_ID_FRAM_STATE_RESP, protocol.decode_fram_state)
+
+    @Slot()
+    def eraseFram(self) -> None:
+        """QML asks for an explicit confirmation immediately before
+        calling this Slot (same real requestAdvanced-style pattern every
+        other real physical/destructive action in this deck already
+        uses) - a genuine, irreversible erase of the board's own
+        recovered-state memory, not something a stray click should reach."""
+        if not self.canUseUtilityPanels:
+            self._log("ERASE_FRAM_BLOCKED not connected or not in active-check mode")
+            return
+        self._run_query("fram_state", (CAN_ID_ERASE_FRAM, ERASE_FRAM_MAGIC), CAN_ID_FRAM_STATE_RESP, protocol.decode_fram_state)
+
+    @Slot()
+    def queryExpansionBoardType(self) -> None:
+        if not self.canUseUtilityPanels:
+            return
+        self._run_query("expansion_type", (CAN_ID_EXPANSION_TYPE_RESP, b""), CAN_ID_EXPANSION_TYPE_RESP, protocol.decode_expansion_board_type)
+
+    @Slot()
+    def queryMlxSensorVariant(self) -> None:
+        if not self.canUseUtilityPanels:
+            return
+        self._run_query("mlx_variant", (CAN_ID_MLX_VARIANT_RESP, b""), CAN_ID_MLX_VARIANT_RESP, protocol.decode_mlx_sensor_variant)
+
+    @Slot()
+    def queryFreeToolConfig(self) -> None:
+        if not self.canUseUtilityPanels:
+            return
+        self._run_query("free_tool_config", (CAN_ID_FREE_TOOL_CONFIG_RESP, b""), CAN_ID_FREE_TOOL_CONFIG_RESP, protocol.decode_free_tool_config)
+
+    @Slot()
+    def queryPeripheralInfo(self) -> None:
+        if not self.canUseUtilityPanels:
+            return
+        self._run_query("peripheral_info", (CAN_ID_PERIPHERAL_INFO_RESP, b""), CAN_ID_PERIPHERAL_INFO_RESP, protocol.decode_peripheral_info)
 
     @staticmethod
     def _bounded_int(value: str, minimum: int, maximum: int) -> int | None:

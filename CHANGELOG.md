@@ -123,6 +123,60 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
   than passing oversized frames to GUI handlers. Valid standard frames are
   unaffected.
 
+## [0.1.5]
+
+- **The Qt Quick deck now has real Global Controls / Expansion Board /
+  F-RAM sections**, matching the 3 real Tkinter tabs of the same names -
+  the last major real gap left in the deck. Unlike every tool-specific
+  advanced control migrated so far, none of this is gated by which tool
+  profile is selected (see tester_common_panels.py's own
+  `CommonPanelsMixin`): Status LED/ring LED/OLED mode (any tool, one
+  plain Send, no confirmation - low-stakes, reverts to automatic after
+  10s if the override lapses); CONN_EXPANSION's generic SPI passthrough
+  (1-7 raw bytes, real request/response) plus a TMC_DIAG0 level query;
+  and the FM24CL64B's recovered state (query, plus a real, genuinely
+  destructive **Erase** - the one action here that asks for the same
+  real confirmation every other hazardous action in this deck already
+  requires) alongside 3 real read-only EEPROM fields (expansion board
+  type, MLX sensor variant, free tool configuration, peripheral
+  info/serial - all four only ever written by the Flasher, never by
+  this tool).
+- New `_run_query()` in `qt_tester.py` - one real generic bounded
+  request/response worker every one of the 7 queries above shares
+  (send an optional request, wait up to 1s for the matching response
+  CAN ID, decode, emit through one shared `_queryResult` signal keyed
+  by which real query it was) - not 7 near-duplicate workers.
+- New pure decoders in `advanced_protocol.py`
+  (`global_status_frame`/`spi_passthrough_frame`/`decode_spi_response`/
+  `decode_diag0`/`decode_fram_state`/`decode_expansion_board_type`/
+  `decode_mlx_sensor_variant`/`decode_free_tool_config`/
+  `decode_peripheral_info`) - 9 new hardware-free unit tests.
+- The right-hand card **now scrolls** - real content no longer reliably
+  fit the window's own `minimumHeight: 680` once these 3 new sections
+  were added; the Activity Log's own real height, previously
+  `Layout.fillHeight: true` against a fixed-height parent, is now a
+  real fixed 220px viewport instead (meaningless inside a now-scrolling
+  container).
+- New `verify_qt_utility_panels.py` (repo root, not `tests/` - same
+  real reason as `verify_qt_telemetry_watch.py`): a fake transport
+  answers each real request/response pair from a separate thread: real
+  Global Status frame shape (and a real invalid-mode rejection), real
+  SPI round trip, a real F-RAM erase (verified against the real
+  documented magic payload), the 3 read-only EEPROM queries, a genuine
+  timeout producing its own real "no response" text rather than
+  hanging or reusing a stale value, listen-only correctly blocking
+  every one of these (unlike telemetry watching, all of them genuinely
+  transmit), and a final real QML load with zero warnings.
+- **Custom CAN Frame - the one remaining Tkinter tab - was deliberately
+  NOT migrated in this pass.** Every other advanced control in this
+  deck (including the ones added here) is a specific, documented,
+  bounded protocol for a known real register; Custom CAN Frame is a
+  genuinely open-ended raw-frame sender (any CAN ID, any 0-8 data
+  bytes, with an optional unattended periodic repeat) - a real,
+  qualitatively different risk profile from everything else this deck
+  has ever exposed, and porting it deserves its own explicit decision
+  rather than folding it into this same pass.
+
 ## [0.1.4]
 
 - **The Qt Quick deck now watches real, continuous telemetry for Vacuum

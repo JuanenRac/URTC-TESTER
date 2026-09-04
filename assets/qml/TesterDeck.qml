@@ -176,6 +176,18 @@ ApplicationWindow {
         advancedConfirm.open()
     }
 
+    // Same real shared confirmation dialog as requestAdvanced above, for
+    // the one real destructive tool-independent utility action (F-RAM
+    // erase) - gated on canUseUtilityPanels instead of
+    // canActuateSelectedProfile, since this isn't a per-tool-profile
+    // action at all.
+    function requestUtilityAction(action) {
+        if (!testerBackend.canUseUtilityPanels)
+            return
+        pendingAdvancedAction = action
+        advancedConfirm.open()
+    }
+
     header: ToolBar {
         background: Rectangle { color: "#07111e" }
         Card {
@@ -285,9 +297,18 @@ ApplicationWindow {
         Card {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            ColumnLayout {
+            // Real scroll wrapper - added alongside the new Global
+            // Controls/Expansion Board/F-RAM sections below (see their
+            // own header comment), since this card's real content no
+            // longer reliably fits the window's own minimumHeight: 680.
+            ScrollView {
                 anchors.fill: parent
                 anchors.margins: 16
+                clip: true
+                contentWidth: availableWidth
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+            ColumnLayout {
+                width: parent.width
                 spacing: 12
                 Text { text: testerBackend.uiText("QT_IDENTITY_CHECKPOINTS"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 14 }
                 Text { text: testerBackend.uiText("QT_CHECKPOINTS"); color: muted; font.family: "Bahnschrift"; font.pixelSize: 12; lineHeight: 1.55 }
@@ -625,15 +646,118 @@ ApplicationWindow {
                     }
                 }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+
+                // -- Global Controls / Expansion Board / F-RAM - real,
+                // tool-independent utility panels (Status LED/ring/OLED,
+                // CONN_EXPANSION's raw SPI passthrough + TMC_DIAG0, and
+                // the FM24CL64B's recovered state + read-only EEPROM
+                // fields), matching the 3 real Tkinter tabs of the same
+                // names. Always shown - unlike everything above, none of
+                // this depends on which tool profile is selected at all
+                // (see tester_common_panels.py's own CommonPanelsMixin).
+                Text { text: testerBackend.uiText("QT_GLOBAL_CONTROLS"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    TextField { id: statusR; text: "0"; inputMethodHints: Qt.ImhDigitsOnly; color: textPrimary; placeholderText: "R"; Layout.preferredWidth: 60; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    TextField { id: statusG; text: "255"; inputMethodHints: Qt.ImhDigitsOnly; color: textPrimary; placeholderText: "G"; Layout.preferredWidth: 60; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    TextField { id: statusB; text: "0"; inputMethodHints: Qt.ImhDigitsOnly; color: textPrimary; placeholderText: "B"; Layout.preferredWidth: 60; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    Text { text: testerBackend.uiText("LBL_STATUS_LED_OVERRIDE"); color: muted; font.pixelSize: 9; Layout.fillWidth: true; elide: Text.ElideRight }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    TextField { id: ringR; text: "0"; inputMethodHints: Qt.ImhDigitsOnly; color: textPrimary; placeholderText: "R"; Layout.preferredWidth: 60; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    TextField { id: ringG; text: "0"; inputMethodHints: Qt.ImhDigitsOnly; color: textPrimary; placeholderText: "G"; Layout.preferredWidth: 60; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    TextField { id: ringB; text: "255"; inputMethodHints: Qt.ImhDigitsOnly; color: textPrimary; placeholderText: "B"; Layout.preferredWidth: 60; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    CheckBox { id: ringOn; text: testerBackend.uiText("CHK_RING_ON"); contentItem: Text { text: ringOn.text; color: muted; leftPadding: ringOn.indicator.width + 4; verticalAlignment: Text.AlignVCenter; font.pixelSize: 9 } }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    ComboBox { id: oledMode; model: ["standard", "night", "standby"]; Layout.preferredWidth: 130 }
+                    GameButton {
+                        text: testerBackend.uiText("BTN_SEND")
+                        accent: "#24465e"
+                        Layout.fillWidth: true
+                        enabled: testerBackend.canUseUtilityPanels
+                        onClicked: testerBackend.sendGlobalStatus(statusR.text, statusG.text, statusB.text, oledMode.currentText, ringR.text, ringG.text, ringB.text, ringOn.checked)
+                    }
+                }
+
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+                Text { text: testerBackend.uiText("QT_EXPANSION_BOARD"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    TextField { id: spiBytes; text: "01 02 03 04"; color: textPrimary; placeholderText: testerBackend.uiText("LBL_SPI_BYTES_TO_SEND"); Layout.fillWidth: true; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    GameButton { text: testerBackend.uiText("BTN_SEND"); accent: "#24465e"; Layout.preferredWidth: 130; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.sendExpansionSpi(spiBytes.text) }
+                }
+                Text { text: testerBackend.spiResponseText; visible: testerBackend.spiResponseText !== ""; color: muted; font.family: "Cascadia Mono"; font.pixelSize: 10 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton { text: testerBackend.uiText("BTN_QUERY_DIAG0"); accent: "#24465e"; Layout.preferredWidth: 170; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.queryDiag0() }
+                    Text { text: testerBackend.diag0Text; color: muted; font.family: "Cascadia Mono"; font.pixelSize: 10 }
+                }
+
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+                Text { text: testerBackend.uiText("QT_FRAM_PANEL"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton { text: testerBackend.uiText("BTN_QUERY_STATE"); accent: "#24465e"; Layout.preferredWidth: 160; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.queryFramState() }
+                    GameButton {
+                        text: testerBackend.uiText("BTN_ERASE_FRAM")
+                        accent: "#b86a35"
+                        Layout.preferredWidth: 160
+                        enabled: testerBackend.canUseUtilityPanels
+                        onClicked: window.requestUtilityAction(function() { testerBackend.eraseFram() })
+                    }
+                }
+                Text { text: testerBackend.framStateText; visible: testerBackend.framStateText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton { text: testerBackend.uiText("BTN_QUERY") + " " + testerBackend.uiText("LBL_EXPANSION_BOARD_TYPE"); accent: "#24465e"; Layout.preferredWidth: 220; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.queryExpansionBoardType() }
+                    Text { text: testerBackend.expansionBoardTypeText; color: muted; font.pixelSize: 10; Layout.fillWidth: true; elide: Text.ElideRight }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton { text: testerBackend.uiText("BTN_QUERY") + " " + testerBackend.uiText("LBL_MLX_SENSOR_VARIANT"); accent: "#24465e"; Layout.preferredWidth: 220; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.queryMlxSensorVariant() }
+                    Text { text: testerBackend.mlxSensorVariantText; color: muted; font.pixelSize: 10; Layout.fillWidth: true; elide: Text.ElideRight }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton { text: testerBackend.uiText("BTN_QUERY") + " " + testerBackend.uiText("LBL_FREE_TOOL_CONFIG"); accent: "#24465e"; Layout.preferredWidth: 220; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.queryFreeToolConfig() }
+                    Text { text: testerBackend.freeToolConfigText; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton { text: testerBackend.uiText("BTN_QUERY") + " " + testerBackend.uiText("LBL_PERIPHERAL_INFO"); accent: "#24465e"; Layout.preferredWidth: 220; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.queryPeripheralInfo() }
+                    Text { text: testerBackend.peripheralInfoText; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                }
+
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
                 Text { text: testerBackend.uiText("QT_ACTIVITY_LOG"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
                 ListView {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    // Was Layout.fillHeight: true - meaningless now that
+                    // this whole ColumnLayout lives inside a ScrollView
+                    // (see this Card's own comment above) rather than a
+                    // fixed-height parent; a real, generous fixed
+                    // viewport instead, matching the passive-frames
+                    // ListView just above in this same file.
+                    Layout.preferredHeight: 220
                     model: testerBackend.logs
                     clip: true
                     spacing: 4
                     delegate: Text { required property string modelData; text: modelData; color: muted; font.family: "Cascadia Mono"; font.pixelSize: 10; width: parent.width; wrapMode: Text.WrapAnywhere }
                 }
+            }
             }
         }
     }
