@@ -1,8 +1,7 @@
 # Changelog
 
 All notable changes to URTC Tester are summarized here, newest first. This
-is a condensed summary aimed at users of the tool; the full line-by-line
-audit trail (internal, not published) lives in a private internal log.
+is a condensed summary aimed at users of the tool.
 
 Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 `README.md`). Starting with this entry, `TESTER_VERSION` is bumped
@@ -383,4 +382,4 @@ newest first.
 Earlier work (initial feature set: CAN frame injector, raw bus monitor,
 live telemetry graphs, `.trc`/`.asc` log export, Pass/Fail self-test, and
 the original single-file `V0.0` tool) predates this changelog's level of
-detail; the complete record lives in the private internal log.
+detail.
