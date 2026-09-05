@@ -38,6 +38,13 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
   old `LBL_ABOUT_AUTHOR` - full key parity verified.
 
 ### Fixed
+- The Qt Quick deck's own header `ToolBar` relied on the Basic style's
+  implicit sizing, which collapsed to 0 height for this specific window -
+  the branding/status text all overlapped at the top-left corner instead
+  of laying out in a real row. The same real bug HYDRA-UMC-SUITE's own
+  Qt Quick shell already found and fixed (an explicit `height: 84`,
+  sized to fit the header's own 50px icon plus its Card/RowLayout
+  margins) - never propagated back to this sibling app until now.
 - **`QT_PASSIVE_HELP` was defined twice in every one of the 7 `.lng`
   files** (and in `qt_tester.py`'s own fallback dict) with two different
   meanings - the transport-mode explanation next to the Listen-Only
