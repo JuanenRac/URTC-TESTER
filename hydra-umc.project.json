@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "ecosystem": "HYDRA-UMC",
+  "name": "URTC-TESTER",
+  "version": "0.1.6",
+  "role": "tool",
+  "stack": "python-qtquick",
+  "technologies": [
+    "Python",
+    "Tkinter (legacy 25-tool workflow)",
+    "PySide6",
+    "Qt Quick",
+    "live CAN bus diagnostics"
+  ],
+  "deployment_target": "user-pc",
+  "maturity": "established",
+  "family": "URTC Tool Platform",
+  "parent": "URTC",
+  "build": "Standalone Python desktop tool. pip install -r requirements.txt; Qt Quick diagnostics deck is started with --qtquick.",
+  "notes": "Real live CAN-bus diagnostic tool including CSV export of live graphs. Qt Quick is a staged, safety-first connection and identity-probe deck; the established Tkinter UI remains default until 25-tool control parity is complete. advanced_protocol.py's protocol boundary (bounded_int/motion_frame/drill_frame, plus the same class of bug independently duplicated in qt_tester.py and tester_tool_panels.py) now strictly rejects an out-of-range or unrecognized-direction value instead of silently clamping/re-interpreting it as a different valid command.",
+  "native_version": {
+    "file": "tester_config.py",
+    "pattern": "TESTER_VERSION\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""
+  }
+}

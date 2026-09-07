@@ -1,0 +1,601 @@
+<p align="center">
+  <img src="/images/URTC_TESTER_BANNER.svg" alt="URTC Tester Logo" width="100%">
+</p>
+
+# URTC Tester（Windows / Linux）
+
+<p align="center">
+  <a href="README.md">🇺🇸 English</a> |
+  <a href="README_spa.md">🇪🇸 Español</a> |
+  <a href="README_fra.md">🇫🇷 Français</a> |
+  <a href="README_ita.md">🇮🇹 Italiano</a> |
+  <a href="README_deu.md">🇩🇪 Deutsch</a> |
+  <a href="README_zho.md">🇨🇳 简体中文</a> |
+  🇯🇵 <b>日本語</b>
+</p>
+
+
+<p align="center">
+  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
+  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
+  <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
+</p>
+
+
+**バージョン：** 0.1.6 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+
+ライセンス：ソースコードは **GPL-3.0**、本ドキュメントは **CC BY-SA 4.0**——
+本リポジトリの `LICENSE`、または本ドキュメント末尾の「ライセンスと著作権
+表示」セクションを参照してください。
+
+URTC ボード向けのライブ CAN バステスターです。フラッシャーが使用するのと
+同じ USB-CAN アダプター経由で接続し、ボードに現在 25 種類のツールプロファ
+イルのうちどれにジャンパー設定されているかを尋ね、そのツール自身のコント
+ロールとテレメトリのみを表示します——1 つのウィンドウで 25 個すべてを表現
+しようとするのではありません。ここで行うことはすべて、現在実行中のアプリ
+ケーションに対するランタイムコマンドまたはテレメトリの読み取りです。フ
+ラッシュには一切触れないため、これによってボードが開始時より動作しなく
+なることはありません。
+
+## 1. 🆚 フラッシャーとの関係
+
+本ツールと [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) は
+同じトランスポート層を共有しています（SLCAN と SocketCAN のクラスは同一
+です）。どちらも最終的には同じ種類のアダプターとの間で CAN フレームを
+やり取りする必要があるだけですが、両者が行う仕事は根本的に異なります：
+
+| | フラッシャー | テスター |
+|---|---|---|
+| フラッシュに触れる | はい（それがすべての目的） | 決してない |
+| 通信対象 | 主にブートローダー | 実行中のアプリケーション |
+| 目的 | ファームウェアの更新 | ツールヘッドの実際のハードウェアをテスト/検証 |
+
+どちらが必要かわからない場合：ボードがすでにファームウェアを実行してい
+て、あるツールが実際に動作するか（ヒーターが温まる、モーターが回る、
+LED が点灯する）を確認したいなら、これが必要なものです。
+
+## 2. 📦 インストールと実行
+
+フラッシャーと同じパターンです：
+
+```
+pip install -r requirements.txt
+python urtc_tester.py          # Windows
+python3 urtc_tester.py         # Linux
+```
+
+または独立したバイナリをビルドします：Windows では `build_exe.bat`、
+Linux では `./build_exe.sh`。どちらも最初に `build/`/`dist/` をクリーン
+にし、`assets/`（バナーとアイコン）を実行ファイルにバンドルします——
+これらのパッケージングスクリプトが基盤とするバージョン非依存の検証パス
+（`build-test.bat`/`build-test.sh`）については
+[docs/BUILD_AND_RUN.md](docs/BUILD_AND_RUN.md) を、パッケージングスク
+リプト自体の背後にあるより詳しい理由についてはフラッシャー自身の README
+を参照してください。ここでも同様に当てはまります。
+
+**バージョン管理：** `TESTER_VERSION`（`tester_config.py` 内、タイトル
+バー、About ダイアログ、セッションログ、デバッグバンドルに表示）は
+`MAJOR.MINOR.PATCH` に従います。両方のビルドスクリプトは、`bump_version.py`
+を通じて、実際のビルドのたびに自動的にこれを加算します。10 進法の
+「オドメーター」方式です：PATCH +1、PATCH が 9 を超えると MINOR へ繰り
+上がります（例：`0.1.9` → `0.2.0`）。ソースから実行する場合
+（`python urtc_tester.py`）はこれに一切触れません——実際の
+`build_exe.bat`/`build_exe.sh` の実行だけがそうします。MAJOR は自動的
+には決して加算されず、手動でのみ変更されます。バージョン履歴は
+`CHANGELOG.md` を参照してください。
+
+**起動時**、バナーはメインウィンドウが表示される前に 5 秒間画面中央に
+表示され、ウィンドウ自体の内部には存在しません——フラッシャーと同じで、
+理由も同じです（ウィンドウ自体をコンパクトに保つため）。ウィンドウ/
+タスクバーのアイコンも同様に、縮小されたバナーではなく、小さな独立した
+デザインです。
+
+接続パネルにも、公式 HYDRA-UMC マークのアニメーションが表示されます。
+管理対象の SVG ソースは `assets/HYDRA_UMC_ICON.svg` です。付属する 12 枚の
+PNG フレームにより、追加の GUI 実行時依存関係なしで Tkinter と単体実行形式の
+両方でアニメーションを維持します。ネイティブ URTC のウィンドウ/タスクバー
+アイコンは設計上、静的なままです。
+
+### ビジュアル・コマンドデッキ
+
+共有 **Qt Quick** コマンドデッキは、実機接続、リッスンオンリー監視、および明示的に
+有効化した識別プローブに利用できます。
+~~~
+python urtc_tester.py --qtquick
+~~~
+本番用の SLCAN/SocketCAN トランスポートを使用します。リッスンオンリーで起動するため、
+アクティブチェックを意図的に有効化するまで送信できません。このプローブが送信するのは、
+アクティブツールとバージョンに対する文書化済みの問い合わせだけです。25 個の専用パネルを
+安全に移行する間、Tkinter が完全な既定ツールのままです。
+
+確立済みのライブ CAN 診断ワークフローは、ダークネイビー/シアンの操作面を使用します。
+製品ヘッダー、高コントラストの接続カード、明確なツールタブ、暗色のセッションログ、
+見やすい進捗表示を備えます。これは視覚性とアクセシビリティの改善であり、受動監視、
+コマンドルーティング、または安全境界を変更しません。
+
+### メニューバー
+
+- **ファイル** —— ログを保存（画面上のログをプレーンテキストとして；
+  システム診断情報を含む、より完全なバンドルについては、代わりに下記の
+  「ログとデバッグバンドル」を参照）、そして終了。
+- **言語** —— 7 つの利用可能な言語を切り替えます（翻訳の仕組みについて
+  は上の「言語」を参照）。
+- **ヘルプ** —— Readme（本ファイルを読み取り専用のビューアーウィンドウ
+  で開きます；現在の言語向けの翻訳版が存在すれば自動的にそれを使用しま
+  す）、URTC GitHub（プロジェクトのリポジトリをブラウザで開きます）、
+  ライセンス（本ツールの GPL-3.0 ライセンス、リポジトリ自身の
+  `LICENSE` ファイルから読み込まれます）、そしてこのアプリについて
+  （バージョンと作者）。
+
+### ファイル構成
+
+本ツールは可読性のためだけに、責務ごとにモジュールへ整理されています
+——それらを別々のファイルとして持つことと、1 つの大きなファイルとして
+持つこととの間に、機能的な違いはありません。完全なファイルごとの内訳
+は、本ドキュメント末尾近くの「📂 リポジトリ構成」セクションを参照して
+ください。
+
+**言語**：デフォルトは英語です。メインウィンドウ内のドロップダウンでは
+なく、（ウィンドウ上部のメニューバー内の）**言語**メニューから切り替え
+ます——インターフェース（ラベル、ボタン、ダイアログ、ログメッセージ）
+を 7 つの利用可能な言語のいずれかへ切り替え、即座に本ツールの隣にある
+`config.json` に保存され、次回起動時に適用されます。翻訳は `language/`
+下のプレーンテキストファイル（`english.lng`、`spanish.lng`、
+`italian.lng`、`french.lng`、`german.lng`、`chinese.lng`、
+`japanese.lng`）として、シンプルな
+`KEY=Value` ペア、1 行に 1 つの形式で存在します——`#` で始まる行と空行
+は無視され、値の中のリテラルな `\n` は実際の改行になります（数個の
+複数行ダイアログメッセージで使用されています）。翻訳の修正が必要な場合
+は直接編集できますし、他の言語を追加する際の出発点としても使えます
+（`language/<name>.lng` を追加し、`tester_config.py` の先頭付近の
+`AVAILABLE_LANGUAGES` に `("<name>", "現地語名")` を追加し、
+`config.json` に `"language": "<name>"` を設定します）。言語ファイル
+に存在しないキーは、クラッシュするのではなく、そのキー自身の名前をその
+まま表示するようにフォールバックし、欠落した、または読み取れない言語
+ファイル（誤った編集、間違ったファイル名）は、インターフェース全体を
+英語にフォールバックします——いずれの場合も、不一致が解決されるまで
+ツールは使用可能なままです。
+
+**Linux SLCAN/SocketCAN のセットアップ**（アダプターの再フラッシュ、
+シリアル権限、`ip link` の立ち上げ）は、フラッシャーの第 1 節とまった
+く同じです——ここで重複させるのではなく、[URTC Flasher 自身の
+README](https://github.com/JuanenRac/URTC-FLASHER) の第 1 節と第 2 節
+を参照してください。
+
+## 3. ⚙️ 仕組み
+
+ウィンドウは 3 列にレイアウトされています：左列と中央列には下記の常に
+表示されるセクション（第 1-4 節、そして第 6 節）が入り、右列には第 5
+節のツールごとのパネルが入ります。これはウィンドウの中で検出内容に応じ
+て実際に変化する唯一の部分です。常に表示されるセクションを 1 列に積み
+重ねるのではなく 2 列に分割することで、これらのセクションが時間ととも
+に増えるにつれてウィンドウが通常の画面に収まらないほど高くなることを
+防いでいます。3D プリンター自身のツールパネル（25 個中最も高いもの）
+は、同じ理由でさらに進んで、自身のコントロールを内部的に 2 つのサブ
+列に分割しています。このセクションが要約しているモジュール単位の
+アーキテクチャガイドについては、[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+を参照してください。
+
+**接続**（第 1 節、フラッシャーとまったく同じ）：シリアル/SLCAN または
+SocketCAN、ポート/インターフェースを選び、任意でビットレートを自動検出
+し、それから接続します。
+
+**検出は接続時に自動的に行われます**（または**検出**をクリックしてやり
+直せます）：本ツールは `0x110`（現在のツールを照会）と `0x7F8`
+（バージョンを照会）を送信し、その応答を使って以下を行います：
+- 25 種類のツールプロファイルのうちどれがアクティブか、そしてボードの
+  全体的な状態（何らかの宣言されたエラー、CAN バス障害、まだ起動スプ
+  ラッシュ中かどうか）を表示します。
+- 報告された HardwareID とファームウェアバージョンを表示し、それが
+  本プロジェクト自身の `THIS_HARDWARE_ID` と一致しない場合はフラグを
+  立てます。
+- その特定のツール——そしてそのツールのみ——向けの**ツール制御**パネル
+  を右側に構築します。ジャンパー設定されているツールを切り替えて再度
+  検出すると、古いパネルが解体され、新しいパネルがゼロから構築されます。
+
+**グローバル制御**（第 2 節、どのツールがアクティブであっても常に表示）：
+ステータス LED の色のオーバーライド、リング LED の色とオン/オフ、そして
+OLED 表示モード（`0x100`）——これらはすべてのツールに適用されるため、
+動的パネルには移動しません。特に AOI 検査モードでは、ここでのリングの
+オン/オフは無視され、代わりにそのツール自身のストロボ制御が優先されます
+（[docs/CANBUS.md](docs/CANBUS.md) による）——色はいずれにせよ引き続き適用されます。
+
+**拡張ボード**（第 3 節、常に表示）：`CONN_EXPANSION` 自身の汎用 SPI
+バスと DIAG0 ライン——ドライバーを搭載するすべての拡張ボードバリアント
+が共有する生のパススルーです。ADS1115 と MLX9064x センサー、そして圧接
+アクチュエーター自身のドライバーは、ここから制御されるのではなく、それ
+ぞれ自身のツール自身のパネル内に存在します（フライングプローブ、サーマ
+ル検査、圧接アクチュエーター——下記の第 4 節参照）。これらのうちどれが
+実際に適用されるかは、ジャンパー設定されているツールプロファイルに依存
+するためです。
+
+**永続化 F-RAM**（第 4 節、これも常に表示、ただし上記の拡張ボードとは
+意図的に分離）：FM24CL64B は OLED 自身のハードウェア I2C2 バスを共有
+します——これはコアなボードコンポーネントであり、`CONN_EXPANSION` に
+配線されているものではまったくありません。この 2 つをグループ化すると、
+実際には存在しない両者の間の接続を暗示してしまいます——拡張コネクタ自体
+には F-RAM も EEPROM も、不揮発性のものは何もありません。
+- **SPI パススルー**：スペース区切りの16進数バイト（1〜7 個、例：
+  `01 02 03`）を入力し、送信を押すと、同じ転送中に MISO 上で返ってきた
+  内容がそのまま表示されます（`0x180`/`0x181`）——生のバイト伝送であり、
+  TMC5160 のレジスタを認識するものではなく、ファームウェア自身のアプ
+  ローチと一致しています。特定の拡張ボードのレジスタプロトコル向けに
+  専用パネルを構築する価値が出る前に、バス自体をテストするのに便利です。
+- **DIAG0 レベル**：**DIAG0 を照会**は、TMC5160 の失速/障害診断ライン
+  （`0x182`/`0x183`）の現在の状態を読み取ります——HIGH（非アクティブ）
+  または LOW（アサート済み）。単純なポーリング読み取りであり、リアル
+  タイム/プッシュされる値ではありません——更新するにはもう一度ボタンを
+  押してください。
+- **永続化 F-RAM**：**状態を照会**は、電源喪失前にボードが最後に保存し
+  た内容を読み戻します（`0x190`/`0x191`）——それがどのツールだったか、
+  設定値、当時重大エラーがアクティブだったかどうか。**F-RAM を消去...**
+  はそれを消去します（`0x192`、まず確認ダイアログが表示されます——この
+  操作は取り消せません）。
+- **拡張ボードタイプ**：**照会**は、7 つの可能な `CONN_EXPANSION` 構成
+  のうち現在設定されているものを表示します（`0x1A1`——`EXPANSION.TXT`
+  参照）。ここは読み取り専用です——代わりに `URTC Flasher` 自身の CAN
+  OTA セクションから設定してください。これは一度限りのハードウェア構成
+  ステップであり、ライブの診断ツールから気軽に変更するものではないため
+  です。
+- **MLX9064x センサーバリアント**：**照会**は、3 つの MLX9064x ファミリ
+  メンバー（またはまったくなし）のうち現在設定されているものを表示しま
+  す（`0x1A7`——`CANBUS.md` 参照）——上記の拡張ボードタイプが Advanced
+  バリアントまたは Basic+MLX9064x の場合にのみ意味を持ちます。ここも
+  読み取り専用で、理由は上記の拡張ボードタイプと同じです。
+- **自由工具構成**：**照会**は、生の ID ジャンパー読み取り値（0-31）と、
+  F-RAM の `free_tool_selection` レジスタが現在示している内容
+  （`0x1A3`——`EEPROM.TXT` 第 5 節参照）を並べて表示します——ジャンパー
+  が 0x1F/11111b を示すボードでのみ実際に参照されます。ここも読み取り
+  専用で、理由は上記の拡張ボードタイプと同じです——それを書き込む唯一の
+  ツールは `URTC Flasher` です。
+- **周辺機器タイプ & シリアル番号**：**照会**は、固定の周辺機器タイプ
+  （常に URTC/0x03）を、現在設定されているデバイスシリアル番号
+  （`0x1A5`——`EEPROM.TXT` 第 6 節参照）と並べて表示します。これは、
+  同じ CAN バス上で複数の（それ以外は同一の）ボードを区別するための、
+  ホストが割り当てるラベルです。ここも読み取り専用です——`URTC Flasher`
+  がシリアル番号を書き込み、本ツールはそれを読み戻すだけです。
+
+**カスタム CAN フレーム**（第 6 節、これも常に表示）：一次的送信と周期
+的送信の両方に対応した、生の ID + 16進数バイトの入力欄です——ここに
+まだ独自のコントロールがないコマンドや、`docs/CANBUS.md` にまだ
+（あるいはまったく）記載されていないものをテストするのに便利です。
+ID の範囲と DLC≤8 以外の検証はありません。ここで送信するものがそのまま
+バス上に送出されます。同じセクションから**生のバスモニター**も開けます
+（下記参照）。
+
+**自己診断を実行**（検出の隣）：現在検出されているツールに対して、安全
+で静止状態の通信チェックの小さなセットを実行します——現在のツール照会
+とバージョン照会の両方が応答することを確認し、その後（テレメトリを持つ
+ツールについては）安全な設定値/速度/出力 0 を送信し、期待されるテレメト
+リが届くことを確認します。意味のある出力で実際に加熱、発射、または回転
+するものは意図的に一切送信しません——これは通信の往復が機能することを
+検証するものであり、アクチュエーターが物理的に反応することを検証する
+ものではありません。それを確認するにはいずれにせよ人間の観察が必要だか
+らです。何かを送信する前に確認を求めます。テレメトリのないツール（単純
+な動作）や純粋にイベント駆動のツール（スキャンプローブ）は、実際の合格/
+不合格ではなく、情報のみの注記を得ます。**カバレッジは部分的です**：
+25 種類のツールのうち、定義された自己診断ステップを持つのは 7 種類のみ
+です（はんだごて、ドリル、レーザー、3D プリンター、AOI、バキューム、
+スキャンプローブ）——このボタンが押されたとき、他の 18 種類のツールは
+チェックを一切実行しません。
+
+**リアルタイム温度グラフ**：はんだごてと 3D プリンターノズルのパネルは
+どちらも、そのリアルタイム温度読み取り値の隣に小さなスクロール折れ線
+グラフを表示します——単純な Tkinter Canvas ウィジェットであり、新しい
+依存関係ではありません（matplotlib/pyqtgraph は、本ツールの pyserial
+を超えたゼロ依存ポリシーを破ってしまいます）。自動スケーリングではなく
+固定の Y 軸スケール（0 からそのツール自身の設定値の上限まで）なので、
+軸が下でずれ動くのではなく、一目で傾向を読み取りやすくなっています。
+
+**生のバスモニター**（カスタム CAN フレームセクションから開く）：現在の
+ツールパネルとは独立して、見えたすべてのフレーム、任意の ID を表示する
+独立したウィンドウです——ライブスクロールするテーブル（時刻/ID/DLC/
+データ/Δt）、一時停止/クリア、そしておおよそのバス負荷/フレームレート
+の読み取り値（1 秒ごとに更新；この負荷の数値はビットスタッフィングの
+オーバーヘッドをモデル化していないため、認証された測定値ではなく、大ま
+かな診断値として扱ってください）。**エクスポート .trc...**/**エクス
+ポート .asc...** は、現在表示されているテーブルをそれぞれ簡略化された
+PEAK PCAN-View / Vector CANalyzer 風のトレースファイルとして保存します
+——それらの形式を期待するほとんどのツールで読み取れる程度には十分近い
+ものですが、実際のアプリケーションが生成するものとバイト単位で同一で
+あることは保証されません。本スクリプトの隣に `urtc_custom_ids.json`
+が存在する場合（任意、デフォルトでは含まれない——
+`{"0x199": "My Sensor"}`）、ID 列は生の 16 進数 ID の隣にそのわかりやす
+い名前を表示します——本ツールのソースを変更する必要なく、カスタム拡張
+ボード自身のトラフィックをテストする人にとって便利です。
+
+## 4. 🧰 ツールカバレッジ
+
+25 種類のプロファイルのそれぞれが、`docs/CANBUS.md` から直接構築され
+た独自のパネルを持ちます：
+
+| ツール | コントロール | リアルタイムテレメトリ |
+|---|---|---|
+| はんだごて | 設定温度、オン/オフ；送りワイヤーフィーダー方向 + ステップ数（ワンショット）；フィーダー位置照会 + 0 へのリセット | 実際の温度；フィーダー位置（オープンループ推定値） |
+| ペースト/液体ディスペンサー、ドライバー、両方のグリッパー、SMT ピック＆プレース、大判真空グリッパー | 方向 + ステップ数（ワンショット移動） | なし（0x120 を共有、これら 7 つすべてでテレメトリなし） |
+| 真空ピックアップ | なし | アナログ読み取り値、部品検出 |
+| ドリル | 速度 + 方向 | 実際の回転数、エンドストップ |
+| AOI 検査 | リングモード（オフ/ストロボ/連続）+ ストロボ周期 | エンドストップ |
+| レーザー彫刻機 | 出力 + インターロック有効化/安全 | エンドストップ |
+| 3D プリンター | ノズル設定値、エクストルーダー方向/ステップ数、レイヤーファン出力、ホットエンドファン出力 | ホットエンド温度、レイヤーファン回転数、ホットエンドファン回転数 |
+| スキャンプローブ | なし | 衝撃イベント回数 + タイムスタンプ（最優先度 `0x095`） |
+| 電磁石 | 励磁/解放チェックボックス | なし |
+| スポット溶接機 | パルス持続時間 + 発射 | なし（接触センサーが先に HIGH を読み取った場合にのみ発射——`docs/CANBUS.md` 自身の `0x1C0` 参照） |
+| コンフォーマルコーティング、プレスフィットインサーター | なし——情報表示パネルのみ | なし——両方のツール ID には CAN ハンドラーがまったくなく、その自身のアクチュエーターとセンサーはロボット自身のメインボード上にある、`docs/TOOLS.TXT` 参照 |
+| フライングプローブ | 基本読み取りは自動；高度な読み取りには生の ADS1115 設定ワード（16進数）+ 変換トリガー + 結果読み取りが必要 | 基本的なオンボード ADC 読み取り（自動、`0x243`） |
+| UV 硬化 | 出力スライダー（0-255）+ 送信/オフ | なし |
+| ホットエアリワーク | 設定温度、ブロワー出力、オン/オフ | リアルタイム温度（はんだごて自身の `0x135` テレメトリとリアルタイムグラフを共有——同じ物理的熱制御ループ） |
+| 圧接アクチュエーター | 方向 + ステップ数（ワンショット移動、上記の共有動作ツールと同じ形状だが、板載の `0x120` の代わりに `0x1F0` 経由で拡張ボード自身のドライバーに到達） | なし |
+| サーマル検査 | キャプチャトリガー、状態確認、サーマル画像読み取り | 32x24 ピクセルのヒートマップキャンバス（青から赤へのグラデーション）、要求に応じて CAN 経由でチャンクごとに取得——ライブビデオフィードではありません、下記の第 6 節参照 |
+| はんだペースト噴射 | PWM チャンネル + 周波数（設定）、その後デューティ + 持続時間（パルス発射） | なし |
+| 超音波溶接機 | パルス持続時間 + 発射 | なし（スポット溶接機と同じ形状だが、接触センサーのゲートなし） |
+
+**通信ウォッチドッグはあなたに代わって処理されます。** はんだごて、
+ホットエアリワーク（はんだごてと同じ熱制御ループとウォッチドッグを
+共有）、レーザー、そして 3D プリンターノズルはそれぞれファームウェア
+内に 250ms のウォッチドッグを持っています；レイヤーファンは 1000ms
+のものを持っています。関連する「アクティブ」ボックスをチェックすると、
+コマンドを一度送信するだけでなく——そのボックスがチェックされている
+限り（250ms ウォッチドッグのツールでは 150ms、レイヤーファンでは
+400ms）、実際のマスターコントローラーがそうしなければならないのと同じ
+方法で自動的に再送信します。チェックを外すと、単一のゼロ/オフフレーム
+を送信して停止します。ホットエンドファンにはウォッチドッグがありません
+（代わりに失速検出器——`docs/CANBUS.md` 参照）ので、単純なワンショット
+送信です。
+
+## 5. 📋 ログとデバッグバンドル
+
+フラッシャーと同じです：タイムスタンプ付きのセッションログが自動的に
+`logs/`（削除しても安全）に書き込まれ、**デバッグバンドルをエクスポー
+ト**は、現在の画面上のログに加えて基本的なシステム診断情報（OS、Python
+バージョン、現在のトランスポート/ポート/ビットレート、検出されたツール）
+を `.zip` として保存し、ツールヘッドの問題をデバッグしている人へ渡せ
+ます。
+
+## 6. ⚠️ 既知の制限事項
+
+本ツールのエビデンス契約——何が pass/fail/unknown としてカウントされる
+か、証拠がない場合になぜ常に pass ではなく unknown となるのか、そして
+なぜ本ツール自体はファームウェア書き込み権限を一切付与しないのか——は
+[docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md) に文書化さ
+れています。
+
+- **実際のハードウェアに対してテストされていません。** ここにあるすべ
+  ての部分——トランスポート層、CAN ID/バイトレイアウトの処理、ウォッチ
+  ドッグのキープアライブのタイミング——は独立して確認されました（モック
+  化されたフレーム、関連する箇所ではタイミング用の実際のサブプロセス）
+  が、これを構築した環境には USB アクセスがありません。フラッシャー
+  自身の README が求めているのと同じ注意をもって、最初の実際のセッシ
+  ョンに臨んでください。
+- **設計上、一度に 1 つのツールパネル**であり、後で取り除かれるべき現在
+  の制限ではありません——理由は上記の導入部を参照してください。
+- **グローバル LED の色は単純なオーバーライドです**、リアルタイムの
+  読み戻しではありません——ステータス/リング LED が実際に現在何を表示
+  しているかについてのテレメトリはなく、最後に指令された内容のみです。
+- **サーマル検査自身のサーマル画像はプル型であり、ライブフィードでは
+  ありません。** 完全なフレームを読み取るには、CAN 経由で全 48 個の
+  チャンクを順次要求する必要があります（最悪の場合、MLX90640/MLX90642
+  自身の解像度）——これには数秒かかる可能性があり、より速くするための
+  ストリーミングプッシュモードは本ツール自身の CAN プロトコルにはあり
+  ません。サーマル画像読み取りが実際のデータを返す前に、キャプチャが
+  すでにトリガーされ、準備完了と報告されている必要があります（状態確
+  認）——早すぎるタイミングで読み取ると、センサー自身のバッファが最後
+  に保持していたものが何であれ、それが描画されるだけです。
+- **自己診断の実行は 25 種類のツールのうち 7 種類のみをカバーします**
+  （はんだごて、ドリル、レーザー、3D プリンター、AOI、バキューム、
+  スキャンプローブ）——完全な説明は上記の「仕組み」を参照してください。
+  他の 18 種類のツールは、このボタンから自動チェックを受けません；
+  それらを検証するには、依然としてそれぞれ自身のパネルのコントロール
+  に対する実際のハードウェアの反応を観察する必要があります。
+
+## 📂 リポジトリ構成
+
+`assets/` ディレクトリには `HYDRA_UMC_ICON.svg`（維持されているアニメーション
+ベクターソース）と `hydra_umc_icon_frames/`（同梱の 12 枚の Tkinter 用 PNG
+フレーム）も含まれます。`tools/render_hydra_umc_icon_frames.py` は開発中に
+これらを SVG から再生成します。アプリケーションの実行には不要です。
+
+```
+/
+├── urtc_tester.py             エントリポイント——CLI なしの起動とスプラッシュ画面
+├── qt_tester.py                Qt Quick フロントエンド——限定的で既定では読み取り専用の
+│                                `--qtquick` コマンドデッキ
+├── tester_config.py            設定/言語/プロトコル定数（CAN ID、ツール名、
+│                                MOTION_TOOL_IDS、AVAILABLE_LANGUAGES、
+│                                EXPANSION_BOARD_TYPES）
+├── tester_transports.py        SLCAN と SocketCAN のトランスポートクラス
+├── tester_bus_monitor.py       バックグラウンド CAN 読み取りスレッド（CANBusMonitor）
+├── tester_gui_core.py          TesterGUI コア——接続、検出、ウィンドウの
+│                                ライフサイクル、そしてメニューバー；
+│                                下記 3 つのミックスインが組み合わさる
+│                                クラス
+├── tester_common_panels.py     CommonPanelsMixin——グローバル/F-RAM/拡張/
+│                                自己診断/バスモニター/カスタムフレーム
+│                                パネル（常に表示されるセクション）
+├── tester_panel_helpers.py     PanelHelpersMixin——すべてのツールパネル
+│                                ビルダーが使用する共有ユーティリティ
+├── tester_tool_panels.py       ToolPanelsMixin——25 種類のツールプロファ
+│                                イルすべてをカバーする 19 個のツール固有
+│                                パネルビルダー（複数のツールが 1 つの
+│                                ビルダーを共有します。例えば
+│                                `_build_motion_panel` はそれだけで
+│                                そのうちの 7 つをカバーします）
+├── advanced_protocol.py        Qt Quick に移行した制御ファミリー向けの純粋な
+│                                CAN ペイロードエンコーダー——ハードウェア不要のテスト
+├── hydra_umc_animation.py      Tkinter 用のアニメーション HYDRA-UMC アイデンティティ
+│                                ウィジェット
+├── hydra_umc_deck_widgets.py   ライブ診断画面が共有する丸みを帯びた
+│                                HYDRA-UMC コマンドデッキウィジェット
+├── tests/
+│   └── test_advanced_protocol.py   advanced_protocol.py のエンコーダー用ハードウェア不要テスト
+├── requirements.txt            pyserial>=3.5（Tkinter テスター）+ PySide6>=6.8,<7（`--qtquick` デッキ）
+├── build_exe.bat               独立 Windows バイナリビルドスクリプト（PyInstaller）
+├── build_exe.sh                同上、Linux 向け
+├── build-test.bat              バージョンを更新しないビルド/コンパイル確認
+├── build-test.sh                同上、Linux 向け
+├── bump_version.py             オドメーター式バージョンインクリメント、ビルドスクリプトが実行
+├── bump_manifest_version.py    hydra-umc.project.json のバージョンをネイティブ側と同期（--sync）
+├── URTC_Tester.spec            両方のビルドスクリプトが使用する PyInstaller の spec
+├── assets/
+│   ├── URTC_APP_ICON.svg       ウィンドウ/タスクバーアイコンのソース（独立した小型デザイン）
+│   ├── URTC_LOGO_TESTER.svg    起動バナーのソース
+│   ├── HYDRA_UMC_ICON.svg      維持されているアニメーション HYDRA-UMC ベクターソース
+│   ├── hydra_umc_icon_frames/  上記の SVG からレンダリングされた 12 枚の Tkinter 用 PNG フレーム
+│   ├── qml/
+│   │   └── TesterDeck.qml      限定的な `--qtquick` コマンドデッキの Qt Quick UI
+│   ├── urtc_icon.ico           Windows アイコン、URTC_APP_ICON.svg から構築
+│   ├── urtc_icon.png           同上、PNG 形式（Linux）
+│   └── urtc_tester_banner.png  起動バナー PNG、上記の SVG からレンダリング
+├── images/
+│   ├── URTC_LOGO_TESTER.svg    本 README の先頭に表示される Logo バナー
+│   └── URTC_TESTER_V1_1.png    本ツールのメインウィンドウのスクリーンショット（下記の写真を参照）
+├── language/
+│   ├── english.lng             デフォルト言語、プレーンテキストの KEY=Value 文字列
+│   ├── spanish.lng
+│   ├── italian.lng
+│   ├── french.lng
+│   ├── german.lng
+│   ├── japanese.lng
+│   └── chinese.lng
+├── logs/                       実行時のセッションログがここに書き込まれる（削除しても安全）
+├── LICENSE                     完全なライセンステキスト——下記のライセンスと著作権表示を参照
+├── README.md                   英語版
+├── README_spa.md               スペイン語翻訳
+├── README_ita.md               イタリア語翻訳
+├── README_fra.md               フランス語翻訳
+├── README_deu.md               ドイツ語翻訳
+├── README_zho.md               中国語翻訳
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── BUILD_AND_RUN.md
+│   ├── INTEGRATION_CONTRACT.md
+│   └── CANBUS.md
+├── tools/
+│   ├── ci_validate.py                    CI が使用する manifest/CHANGELOG/docs の検証
+│   └── render_hydra_umc_icon_frames.py   assets/hydra_umc_icon_frames/ を SVG から再生成（開発専用）
+└── README_jpn.md               本ファイル
+```
+
+## 📸 写真
+
+<p align="center">
+  <img src="images/URTC_TESTER_V1_1.png" alt="URTC Tester window" width="700">
+</p>
+
+## 🔗 関連プロジェクト
+
+本プロジェクトは、同じ作者(JuanenRac / Electro Hobby 3D)による HYDRA-UMC ロボティクスエコシステムの一部です。リクエストが実はこの中のどれかについてのものである可能性があるため、知っておく価値があります。
+
+**親プロジェクト**
+- **[URTC](https://github.com/JuanenRac/URTC)** — 物理的な Universal Robot Tool Controller 基板向けファームウェア、CAN バス経由の 25 以上のツールプロファイル。本リポジトリは、その自身の CAN バスツール群における特定のツールとして、この親の一部を成す。
+
+**兄弟プロジェクト** —— URTC 自身の CAN バスツール群における他のツール
+- **[URTC-FLASHER](https://github.com/JuanenRac/URTC-FLASHER)** — URTC 基板用のデスクトップ GUI 書き込みツール、CAN-OTA およびフルチップ SWD/JTAG。
+- **[URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — Web Serial API を使ったブラウザベースの URTC-TESTER の代替、ローカルインストール不要。
+
+**直接関連**
+- **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — 実際の安定した終了コード契約を持つフリート CLI、HYDRA-UMC-SERVER 自身の API の本物のライブクライアント ——すべてのツールヘッドを一度に対象とする、フリート全体の監査(`audit` コマンド)を実行し、本テスターがカバーする単一基板の範囲を超える。
+- **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — サーマル/RGB 検査ツールヘッド向けの、ファームウェアと実際の Python ビジョンコンパニオン ——本プロジェクトのライブ CAN バス診断を、ツールヘッドに対する独自の視覚的品質保証チェックで補完する。
+
+**エコシステムの他のプロジェクト**
+
+*コアハードウェア&プラットフォーム*
+- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — 実際のロボットアームのマザーボード——CM5 ホスト + デュアルコア STM32H745、CAN-OTA/SPI-OTA 経由で最大 8 本のツールアームを統括。
+- **[HYDRA-UMC-OS](https://github.com/JuanenRac/HYDRA-UMC-OS)** — CM5 向けの再現可能な Raspberry Pi OS プロダクト層——読み取り専用エージェント、検証済み設定/プロファイル、WiFi 初回接続プロビジョニング。
+- **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** — すべてのブリッジが自身のコマンドを検証する共有 JSON-Schema 契約と安全ゲートの境界。
+- **[HYDRA-UMC-CONNECTOR-HUB](https://github.com/JuanenRac/HYDRA-UMC-CONNECTOR-HUB)** — 外部マシン用コネクタのための宣言的アダプターマニフェストのレジストリとバリデーター。SDK 自身の契約という発想を外部マシンにまで拡張し、産業用ゲートウェイ系のプロジェクトを置き換えることはありません。
+
+*コアバックエンド&クライアント*
+- **[HYDRA-UMC-SERVER](https://github.com/JuanenRac/HYDRA-UMC-SERVER)** — すべての制御クライアントが実際に通信する、本物のヘッドレスバックエンド(REST/WebSocket)。
+- **[HYDRA-UMC-STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)** — リアルタイムのマルチロボット 3D 可視化を備えたウェブ制御ダッシュボード。
+- **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — 複数のサーバーを同時に扱えるデスクトップ(PySide6)スウォームコマンドセンター、スタンドアロン実行ファイルとしてパッケージ化。
+- **[HYDRA-UMC-ANDROID-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-ANDROID-CONTROL)** — 生体認証ログインとペアリングされた Wear OS コンパニオンを備えたネイティブ Android 制御アプリ。
+- **[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL)** — リアルタイム WebSocket 同期を備えた iOS/iPadOS 制御アプリ(Flutter)。
+- **[HYDRA-UMC-DSI](https://github.com/JuanenRac/HYDRA-UMC-DSI)** — 本体搭載の 7 インチ DSI タッチスクリーン向けネイティブタッチ UI、CM5 自体に組み込み。
+- **[HYDRA-UMC-EDITOR-URDF](https://github.com/JuanenRac/HYDRA-UMC-EDITOR-URDF)** — 完成したモデルを STUDIO 自身のカタログへ送信するデスクトップ用グラフィカル URDF 作成/編集ツール。
+- **[HYDRA-UMC-BRIDGE-AMR](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-AMR)** — 実際の VDA 5050 MQTT パブリッシャーによる AGV/AMR フリートの調整境界。
+- **[HYDRA-UMC-BRIDGE-CNC](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-CNC)** — 実際の GRBL ステータス/制御バイトへのアクセスを持つ、CNC セルの高レベルコーディネーター。
+- **[HYDRA-UMC-BRIDGE-DROIDS](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-DROIDS)** — 実際の Boston Dynamics Spot コマンド送信機能を持つ、脚型/ヒューマノイドドロイドの調整境界。
+- **[HYDRA-UMC-BRIDGE-LASER](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-LASER)** — 実際のキー/筐体/インターロック GPIO セーフガード 3 系統を読み取る、レーザーセルの安全コーディネーター。
+- **[HYDRA-UMC-BRIDGE-OPENPNP](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-OPENPNP)** — OpenPnP ピックアンドプレースの基板フローを安全に統括する高レベルコーディネーター。
+- **[HYDRA-UMC-BRIDGE-PRINTER3D](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-PRINTER3D)** — 実際にゲート制御されたジョブコマンドを持つ、Moonraker/Klipper 3D プリンター向けの安全な調整境界。
+- **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** — 実際の遅延インポート rclpy ROS 2 トランスポートを持つ安全コーディネーター。
+- **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** — 実際の MAVLink コマンド送信機能を持つ、カメラ搭載 UAV の調整境界。
+
+*ビジョン AI ノード(Hailo-8)*
+- **[HYDRA-UMC-VISION-NODE](https://github.com/JuanenRac/HYDRA-UMC-VISION-NODE)** — Hailo-8 ビジョンパイプラインの統合ハブ、段階ごとの実際のハードウェア準備状況チェック付き。
+- **[HYDRA-UMC-DETECTION-HEF](https://github.com/JuanenRac/HYDRA-UMC-DETECTION-HEF)** — Hailo アーキテクチャ/チェックサムによる安全読み込み検証を備えた、実際のコンパイル済みモデルレジストリ。
+- **[HYDRA-UMC-VISION-STREAMER](https://github.com/JuanenRac/HYDRA-UMC-VISION-STREAMER)** — 実際の HailoRT 統合境界を持つ、実際の GStreamer パイプライン + MediaMTX 設定生成器。
+- **[HYDRA-UMC-VISUAL-SERVOING-API](https://github.com/JuanenRac/HYDRA-UMC-VISUAL-SERVOING-API)** — 上流のゾーン状態に応じて安全ゲート制御される、実際の Position-Based Visual Servoing 補正則。
+- **[HYDRA-UMC-SAFETY-ZONES](https://github.com/JuanenRac/HYDRA-UMC-SAFETY-ZONES)** — キャリブレーションの鮮度を強制する、実際のゾーン侵入チェックと E-STOP 要求。
+
+*コグニティブ AI ノード(Hailo-10)*
+- **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** — Hailo-10 コグニティブパイプライン(LLM/VLA/音声オーケストレーション)の統合ハブ。
+- **[HYDRA-UMC-VLA-ENGINE](https://github.com/JuanenRac/HYDRA-UMC-VLA-ENGINE)** — Vision-Language-Action モデル向けの、実際のアクショントークンのエンコード/デコードと軌道生成。
+- **[HYDRA-UMC-VOICE-UI](https://github.com/JuanenRac/HYDRA-UMC-VOICE-UI)** — 確認ゲート付きの限定的な Watch リレーを備えた、実際の音声フロントエンド(VAD + 意図解析)。
+- **[HYDRA-UMC-SEMANTIC-PLANNER](https://github.com/JuanenRac/HYDRA-UMC-SEMANTIC-PLANNER)** — MCU エラーコードに対する、実際のルールベースのタスク分解と意味的エラー復旧。
+- **[HYDRA-UMC-DOCS-QA](https://github.com/JuanenRac/HYDRA-UMC-DOCS-QA)** — このエコシステム自身の Markdown ドキュメントに対する、標準ライブラリのみの実際の TF-IDF 文書検索。
+
+*オーケストレーション&スウォーム*
+- **[HYDRA-UMC-ORCHESTRATOR](https://github.com/JuanenRac/HYDRA-UMC-ORCHESTRATOR)** — 実際の gRPC/Protobuf ヘルスレポート契約とミッションステートマシンを持つ統合ハブ。
+- **[HYDRA-UMC-JOB-DISPATCHER](https://github.com/JuanenRac/HYDRA-UMC-JOB-DISPATCHER)** — 実際の HTTP API 上に構築された、優先度ベースの実際のジョブキュー(重複排除付き)。
+- **[HYDRA-UMC-NODE-HEALING](https://github.com/JuanenRac/HYDRA-UMC-NODE-HEALING)** — リトライ/バックオフとアイデンティティ不一致検出を備えた、実際の gRPC ベースのフリートヘルスウォッチドッグ。
+- **[HYDRA-UMC-PATH-PLANNER-3D](https://github.com/JuanenRac/HYDRA-UMC-PATH-PLANNER-3D)** — 実際の障害物/ワークスペース衝突検証を備えた、実際の RRT ベースの 3D 経路プランナー。
+- **[HYDRA-UMC-SWARM-SYNC](https://github.com/JuanenRac/HYDRA-UMC-SWARM-SYNC)** — 複数セルの収束についてプロパティテストされた、実際の CRDT LWW-Element-Map 状態同期。
+
+*デジタルツイン&シミュレーション*
+- **[HYDRA-UMC-TWIN](https://github.com/JuanenRac/HYDRA-UMC-TWIN)** — 実際のバージョン互換性同期契約を持つ、デジタルツインエンジンの統合ハブ。
+- **[HYDRA-UMC-HIL-BRIDGE](https://github.com/JuanenRac/HYDRA-UMC-HIL-BRIDGE)** — シミュレーションと実際のハードウェアの間でコマンドをルーティングする、実際のハードウェア・イン・ザ・ループ安全インターロック。
+- **[HYDRA-UMC-PHYSICS-REPLICA](https://github.com/JuanenRac/HYDRA-UMC-PHYSICS-REPLICA)** — 実際の URDF サブセットに対する、実際の順運動学と関節限界検証。
+- **[HYDRA-UMC-SYNTHETIC-DATA-GEN](https://github.com/JuanenRac/HYDRA-UMC-SYNTHETIC-DATA-GEN)** — YOLO/COCO アノテーションのエクスポート機能を持つ、実際のプロシージャル 2D シーンジェネレーター。
+
+*データ&分析*
+- **[HYDRA-UMC-DATALAKE](https://github.com/JuanenRac/HYDRA-UMC-DATALAKE)** — 実際の取り込み/クエリ HTTP API を備えた、実際の sqlite3 ベースの時系列ストア。
+- **[HYDRA-UMC-ANOMALY-DETECTOR](https://github.com/JuanenRac/HYDRA-UMC-ANOMALY-DETECTOR)** — ドリフト監視を備えた、実際の FFT + 統計ベースラインによる異常検知器。
+- **[HYDRA-UMC-PRODUCTION-REPORTS](https://github.com/JuanenRac/HYDRA-UMC-PRODUCTION-REPORTS)** — DATALAKE の履歴に対する実際の OEE/稼働率計算、再現可能な CSV エクスポート付き。
+- **[HYDRA-UMC-TELEMETRY-COLLECTOR](https://github.com/JuanenRac/HYDRA-UMC-TELEMETRY-COLLECTOR)** — シーケンス重複排除機能を備えた、DATALAKE への実際の CAN/WebSocket 取り込みパイプライン。
+
+*産業用ゲートウェイ*
+- **[HYDRA-UMC-GATEWAY-INDUSTRIAL](https://github.com/JuanenRac/HYDRA-UMC-GATEWAY-INDUSTRIAL)** — 実際のコマンド許可リスト/バックプレッシャー層を持つ、産業用プロトコルへ中継する統合ハブ。
+- **[HYDRA-UMC-OPCUA-SERVER](https://github.com/JuanenRac/HYDRA-UMC-OPCUA-SERVER)** — 実際のバイナリプロトコルクライアントセッションで検証された、実際の OPC-UA アドレス空間。
+- **[HYDRA-UMC-MQTT-BROKER](https://github.com/JuanenRac/HYDRA-UMC-MQTT-BROKER)** — クライアント単位のオプション認証とトピック ACL を備えた、実際の MQTT ブローカー。
+- **[HYDRA-UMC-MTCONNECT-ADAPTER](https://github.com/JuanenRac/HYDRA-UMC-MTCONNECT-ADAPTER)** — 縮退モード出力を備えた、実際の MTConnect `/probe` および `/current` XML エンドポイント。
+
+*補完ツール&エコシステム運用*
+- **[HYDRA-UMC-DASHBOARD-AI](https://github.com/JuanenRac/HYDRA-UMC-DASHBOARD-AI)** — 誠実な統計フォールバックを備えた、DATALAKE/ANOMALY-DETECTOR 上のスマートサマリーと異常ハイライトパネル。
+- **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — 実際の触覚アラートとペアリングされたスマートフォンへの音声リレーを備えた WearOS コンパニオンアプリ。
+- **[URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)** — 実際の工具 ID デコードと Smart Idle 予熱ロジックを備えた、基板搭載ラック用ファームウェア。
+- **[HYDRA-UMC-UPDATER](https://github.com/JuanenRac/HYDRA-UMC-UPDATER)** — このエコシステム内のすべてのリポジトリを検出・クローン・更新する、管理用デスクトップツール。
+- **[HYDRA-UMC-OS-REBUILDER](https://github.com/JuanenRac/HYDRA-UMC-OS-REBUILDER)** — エコシステムの最新バージョンをプリロードした、書き込み可能なCM5イメージを構築するWindows/Linuxデスクトップツール。Raspberry Pi Imager方式の初回起動Wi-Fi/ユーザー/SSH設定を備える。
+- **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — 保守インシデントコーディネーター: 低権限のエッジ役割がサニタイズされたインベントリ/ヘルスのスナップショットを収集し、コントロールプレーン役割がそれを読み取り専用でレンダリングして AI プロバイダーに診断の提案を依頼します - パッチを適用することも、何かをデプロイすることも決してありません。
+
+## 📜 ライセンス
+
+URTC Tester の著作権は (c) 2026 JuanenRac（Electro Hobby 3D）に帰属します。本プロジェクトまたはその派生物を配布する際は、この表示を必ず含めてください。
+
+本プロジェクトはソースコードとそれ自身のドキュメントで構成されており、それぞれ実際にカバーする内容に適した異なるライセンスの下で提供されています：
+
+1. ソースコード（`urtc_tester.py` および各 `tester_*.py` モジュール）と、`build_exe.bat`/`build_exe.sh` を通じてそこから構築されるあらゆるバイナリは、**GNU General Public License v3.0（GPL-3.0）** の下で提供されます。全文は https://www.gnu.org/licenses/gpl-3.0.html を参照してください。
+
+2. ドキュメント（本 README およびその自身の翻訳版——`README_spa.md`、`README_ita.md`、`README_fra.md`、`README_deu.md`）は、**クリエイティブ・コモンズ 表示-継承 4.0 国際（CC BY-SA 4.0）** の下で提供されます。全文は https://creativecommons.org/licenses/by-sa/4.0/ を参照してください。
+
+本ツールは [URTC（Universal Robot Tool Controller）](https://github.com/JuanenRac/URTC) プロジェクトのライブ CAN バス診断コンパニオンです——本ツールがテスト対象としているボードファームウェア、ハードウェア設計、完全なプロトコルドキュメントは、同プロジェクト自身のリポジトリを参照してください。URTC 自身のファームウェアは GPL-3.0 であり、そのハードウェア設計は CERN-OHL-S v2 です。本ツール自身のここでのライセンスはその独立したプロジェクトには及ばず、その逆も同様です。類似の範囲をカバーする Web ベースの代替案も、[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO) に存在します。
+
+本プロジェクトを基に開発を行う際は、このライセンス区分を念頭に置いてください：コードの変更は GPL-3.0 を維持し、ドキュメントの派生物は CC BY-SA を維持してください——いずれも本プロジェクトおよびその作者への帰属表示を伴う必要があります。
+
+---
+
+## 📚 ドキュメント & コミュニティ
+
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** —— プルリクエストのための技術スタックとコーディング指針。
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** —— このコミュニティで期待される行動規範。
+- **[SECURITY.md](SECURITY.md)** —— 脆弱性の報告方法と、このプロジェクトの実際のセキュリティ重点領域。
+- **[SUPPORT.md](SUPPORT.md)** —— 質問の投稿先とバグの報告先。
+- **[LICENSE.md](LICENSE.md)** —— このプロジェクト自身のライセンス。
+
+## 👤 作者
+
+**JuanenRac**（Electro Hobby 3D）
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
