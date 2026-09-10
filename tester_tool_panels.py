@@ -160,8 +160,7 @@ class ToolPanelsMixin:
         ttk.Spinbox(parent, from_=1, to=4294967295, textvariable=steps, width=12).grid(row=r+2, column=1, sticky="w", padx=4)
 
         def _send_move():
-            # TESTER-01 (found in an ecosystem-wide software-improvements
-            # audit, P1): `0x01 if direction.get() == "Forward" else 0x00`
+            # TESTER-01 (P1): `0x01 if direction.get() == "Forward" else 0x00`
             # let ANY value the combobox itself never actually offers
             # (a real bug in the widget, or a future refactor accidentally
             # feeding this a raw untranslated key) silently encode as the
@@ -254,8 +253,7 @@ class ToolPanelsMixin:
         self._drill_last_sent_speed = 0
 
         def _send_drill():
-            # TESTER-01 (found in an ecosystem-wide software-improvements
-            # audit, P1): see _build_motion_panel's own comment above -
+            # TESTER-01 (P1): see _build_motion_panel's own comment above -
             # an unrecognized direction must never silently become the
             # opposite valid one just because the combobox itself is
             # only ever supposed to offer these two labels.

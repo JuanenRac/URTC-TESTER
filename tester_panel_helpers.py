@@ -138,7 +138,7 @@ class PanelHelpersMixin:
         for watching a live trend, not logging one).
 
         `label` names both the CSV export button's tooltip and the value
-        column header (audit idea: "Los gráficos de PID no permiten
+        column header (flagged in review: "Los gráficos de PID no permiten
         exportar los datos a CSV"). Export is backed by
         its OWN unbounded `history` list, separate from the rolling
         `values` the canvas draws from - the live view is deliberately a
