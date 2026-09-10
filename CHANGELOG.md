@@ -148,7 +148,7 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 
 ## [0.1.6] - The protocol boundary can no longer turn invalid input into a different valid command (TESTER-01)
 
-Found in an ecosystem-wide software-improvements audit, P1:
+Found while auditing the code:
 
 - **`advanced_protocol.py`'s `bounded_int()`** used to silently CLAMP an
   out-of-range value into range (a garbled 9999999999-step motion
@@ -365,7 +365,7 @@ newest first.
   serial I/O blocking in keepalives, "soft" SocketCAN listen-only, Bus-Off
   vs Error-Passive distinction, and firmware mailbox starvation (out of
   scope for this repository).
-- **Ecosystem-wide audit fixes:** fixed a real race between `clear_all()`
+- **Fixes found while auditing the code:** fixed a real race between `clear_all()`
   (run on every panel rebuild / Detect) and `wait_for_one()` (used by
   background health polling, Self-Test, and query buttons) silently
   dropping in-flight waiters - split into a separate waiter registry from
