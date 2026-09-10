@@ -50,8 +50,7 @@ def bounded_int(value: str | int, minimum: int, maximum: int) -> int:
     anything malformed or out of range rather than silently reinterpreting
     it as a different, valid command.
 
-    TESTER-01 (found in an ecosystem-wide software-improvements audit,
-    P1): this used to silently CLAMP an out-of-range value into range
+    TESTER-01 (P1): this used to silently CLAMP an out-of-range value into range
     (e.g. a garbled 999999 step count became the protocol's own maximum -
     a real, different command, not an error). A UI widget offering a
     bounded spinbox/slider is a real, separate reason a value might want
