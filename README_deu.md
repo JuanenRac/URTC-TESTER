@@ -40,6 +40,8 @@ Anwendung; es berührt niemals die Flash, sodass es hier nichts gibt, das
 die Platine weniger funktionsfähig zurücklassen könnte, als sie
 begonnen hat.
 
+**Ehrlichkeitscheck - was heute wirklich funktioniert:** die CAN-Payload-Encoder für die auf Qt Quick migrierten Steuerungsfamilien (`advanced_protocol.py`) sind real und durch 20 bestandene Tests abgedeckt (`pytest tests/test_advanced_protocol.py`) - obwohl die eigene CI dieses Repos (`.github/workflows/ci.yml`) nur jede `.py`-Datei kompiliert und `tools/ci_validate.py` ausführt, ruft sie pytest nie tatsächlich auf, sodass eine Regression dort heute keinen Build fehlschlagen ließe. Die drei `verify_qt_*.py`-Skripte im Repo-Root (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) sind echte, bewusst außerhalb von `tests/` gehaltene End-to-End-Prüfungen gegen einen simulierten Transport mit echter Cross-Thread-Signal-Zustellung - alle drei bestehen bei manueller Ausführung mit `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`. Das ist die ehrliche Obergrenze dessen, was automatisch verifiziert wird: die Transportschicht, die CAN-ID-/Byte-Layout-Verarbeitung und die Qt-Quick-Brückenlogik sind real und werden gegen simulierte Frames geprüft, nicht gegen echte Hardware - wie "Known limitations" weiter unten bereits sagt, wurde dies ohne USB-Zugriff gebaut, sodass hier noch nichts gegen eine echte Platine geprüft wurde. `tester_gui_core.py`, `tester_common_panels.py` und `tester_tool_panels.py` sind reale, umfangreiche Implementierungen (zusammen zehntausende Zeilen), die durch die Verify-Skripte und manuelle Nutzung geprüft werden, nicht durch ein entsprechendes Volumen automatisierter Tests.
+
 ## 1. 🆚 Beziehung zum Flasher
 
 Dieses Tool und [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) teilen sich denselben
@@ -481,8 +483,11 @@ nicht erforderlich.
 ├── hydra_umc_animation.py      Animiertes HYDRA-UMC-Identitäts-Widget für Tkinter
 ├── hydra_umc_deck_widgets.py   Abgerundete HYDRA-UMC-Command-Deck-Widgets,
 │                                gemeinsam genutzt von den Live-Diagnoseflächen
+├── verify_qt_custom_frame.py        Echte End-to-End-Prüfung außerhalb von tests/ des Qt-Quick-Panels Custom CAN Frame (braucht eine echte Qt-Ereignisschleife)
+├── verify_qt_telemetry_watch.py     Echte End-to-End-Prüfung außerhalb von tests/ der Qt-Quick-Telemetrie (Vacuum Pickup / Scan Probe)
+├── verify_qt_utility_panels.py      Echte End-to-End-Prüfung außerhalb von tests/ der Qt-Quick-Utility-Panels (Global Controls / Expansion Board / F-RAM)
 ├── tests/
-│   └── test_advanced_protocol.py   Hardwarefreie Tests für die Encoder von advanced_protocol.py
+│   └── test_advanced_protocol.py   Hardwarefreie Tests für die Encoder von advanced_protocol.py - nicht von der CI ausgeführt, siehe Ehrlichkeitscheck oben
 ├── requirements.txt            pyserial>=3.5 (Tkinter-Tester) + PySide6>=6.8,<7 (`--qtquick`-Deck)
 ├── build_exe.bat               Build-Skript für die eigenständige Windows-Binary
 │                                (PyInstaller)
@@ -534,6 +539,7 @@ nicht erforderlich.
 │   ├── INTEGRATION_CONTRACT.md
 │   └── CANBUS.md
 ├── tools/
+│   ├── build_test.py                     Kompilierprüfung ohne Versionserhöhung + Validierung der Qt-Quick-Deck-Quellen
 │   ├── ci_validate.py                    Manifest-/CHANGELOG-/Doku-Validierung, von der CI genutzt
 │   └── render_hydra_umc_icon_frames.py   Regeneriert assets/hydra_umc_icon_frames/ aus dem SVG (nur Entwicklung)
 └── README_jpn.md               Japanische Übersetzung
