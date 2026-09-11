@@ -38,6 +38,8 @@ URTC ボード向けのライブ CAN バステスターです。フラッシャ�
 ラッシュには一切触れないため、これによってボードが開始時より動作しなく
 なることはありません。
 
+**正直な現状確認 - 実際に今動くもの:** Qt Quick に移行した制御系統向けの CAN ペイロードエンコーダー（`advanced_protocol.py`）は本物であり、20件の通過しているテスト（`pytest tests/test_advanced_protocol.py`）でカバーされている——ただしこのリポジトリ自身の CI（`.github/workflows/ci.yml`）は各 `.py` ファイルをコンパイルして `tools/ci_validate.py` を実行するだけで、実際には一度も pytest を呼び出していないため、今日の時点ではそこでのリグレッションがビルドを失敗させることはない。リポジトリ直下にある3つの `verify_qt_*.py` スクリプト（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`）は、意図的に `tests/` の外に置かれた本物のエンドツーエンドチェックであり、本物のクロススレッドシグナル配信を伴う偽のトランスポートに対して検証を行う——`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で手動実行すると3つとも通過する。これが自動的に検証されている範囲の正直な上限だ。トランスポート層、CAN ID/バイトレイアウトの処理、そして Qt Quick ブリッジのロジックは本物であり、模擬フレームに対して検証されているが、実機のハードウェアに対してではない——下記の「Known limitations」がすでに述べている通り、これは USB アクセスのない環境で構築されたため、ここにあるものはまだ何も実機ボードに対して検証されていない。`tester_gui_core.py`、`tester_common_panels.py`、`tester_tool_panels.py` は本物で相当な規模の実装であり（合計で数万行）、これらの検証スクリプトと手動での使用によって検証されているのであって、それに見合う量の自動化されたテストによってではない。
+
 ## 1. 🆚 フラッシャーとの関係
 
 本ツールと [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) は
@@ -427,8 +429,11 @@ PEAK PCAN-View / Vector CANalyzer 風のトレースファイルとして保存�
 │                                ウィジェット
 ├── hydra_umc_deck_widgets.py   ライブ診断画面が共有する丸みを帯びた
 │                                HYDRA-UMC コマンドデッキウィジェット
+├── verify_qt_custom_frame.py        tests/ の外に置かれた、Qt Quick の Custom CAN Frame パネルの本物のエンドツーエンド検証（本物の Qt イベントループが必要）
+├── verify_qt_telemetry_watch.py     tests/ の外に置かれた、Qt Quick のテレメトリ（Vacuum Pickup / Scan Probe）の本物のエンドツーエンド検証
+├── verify_qt_utility_panels.py      tests/ の外に置かれた、Qt Quick のユーティリティパネル（Global Controls / Expansion Board / F-RAM）の本物のエンドツーエンド検証
 ├── tests/
-│   └── test_advanced_protocol.py   advanced_protocol.py のエンコーダー用ハードウェア不要テスト
+│   └── test_advanced_protocol.py   advanced_protocol.py のエンコーダー用ハードウェア不要テスト——CI では実行されない、上記の正直な現状確認を参照
 ├── requirements.txt            pyserial>=3.5（Tkinter テスター）+ PySide6>=6.8,<7（`--qtquick` デッキ）
 ├── build_exe.bat               独立 Windows バイナリビルドスクリプト（PyInstaller）
 ├── build_exe.sh                同上、Linux 向け
@@ -472,6 +477,7 @@ PEAK PCAN-View / Vector CANalyzer 風のトレースファイルとして保存�
 │   ├── INTEGRATION_CONTRACT.md
 │   └── CANBUS.md
 ├── tools/
+│   ├── build_test.py                     バージョンを更新しないコンパイル確認 + Qt Quick デッキのソース検証
 │   ├── ci_validate.py                    CI が使用する manifest/CHANGELOG/docs の検証
 │   └── render_hydra_umc_icon_frames.py   assets/hydra_umc_icon_frames/ を SVG から再生成（開発専用）
 └── README_jpn.md               本ファイル

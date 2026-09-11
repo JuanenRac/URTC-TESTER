@@ -34,6 +34,8 @@
 一切都是针对当前正在运行的应用程序的运行时指令或遥测读取；它从不触碰
 闪存，因此这里没有任何东西会让板卡的可用性比开始时更差。
 
+**诚实核查 - 今天真正能运行的部分：** 为迁移到 Qt Quick 的控制系列所提供的 CAN 负载编码器（`advanced_protocol.py`）是真实的，并由 20 个通过的测试覆盖（`pytest tests/test_advanced_protocol.py`）——尽管这个仓库自己的 CI（`.github/workflows/ci.yml`）只是编译每一个 `.py` 文件并运行 `tools/ci_validate.py`，它从来不会真正调用 pytest，所以今天那里的一个回归并不会导致构建失败。仓库根目录下的三个 `verify_qt_*.py` 脚本（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`）是真实的、刻意放在 `tests/` 之外的端到端检查，针对一个带有真实跨线程信号传递的模拟传输层——手动运行 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 时三者都能通过。这就是自动验证所能达到的诚实上限：传输层、CAN ID/字节布局处理，以及 Qt Quick 桥接逻辑都是真实的，并且针对模拟帧进行了验证，而不是真实硬件——正如下文"Known limitations"已经指出的，这套工具是在没有 USB 访问权限的环境下构建的，所以这里的任何东西都还没有针对真实板卡验证过。`tester_gui_core.py`、`tester_common_panels.py` 和 `tester_tool_panels.py` 都是真实且相当可观的实现（合计数万行代码），它们是通过这些验证脚本和人工使用来验证的，而不是通过等量的自动化测试。
+
 ## 1. 🆚 与刷写工具的关系
 
 本工具与 [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) 共享
@@ -339,8 +341,11 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 ├── hydra_umc_animation.py      用于 Tkinter 的动画 HYDRA-UMC 身份标识控件
 ├── hydra_umc_deck_widgets.py   实时诊断界面共享的圆角 HYDRA-UMC
 │                                指令面板控件
+├── verify_qt_custom_frame.py        真实的、放在 tests/ 之外的端到端检查，验证 Qt Quick Custom CAN Frame 面板（需要真实的 Qt 事件循环）
+├── verify_qt_telemetry_watch.py     真实的、放在 tests/ 之外的端到端检查，验证 Qt Quick 遥测（Vacuum Pickup / Scan Probe）
+├── verify_qt_utility_panels.py      真实的、放在 tests/ 之外的端到端检查，验证 Qt Quick 实用面板（Global Controls / Expansion Board / F-RAM）
 ├── tests/
-│   └── test_advanced_protocol.py   针对 advanced_protocol.py 编码器的无硬件测试
+│   └── test_advanced_protocol.py   针对 advanced_protocol.py 编码器的无硬件测试——CI 不会运行它，见上文诚实核查
 ├── requirements.txt            pyserial>=3.5（Tkinter 测试器）+ PySide6>=6.8,<7（`--qtquick` 面板）
 ├── build_exe.bat               独立 Windows 二进制文件构建脚本（PyInstaller）
 ├── build_exe.sh                同上，适用于 Linux
@@ -384,6 +389,7 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 │   ├── INTEGRATION_CONTRACT.md
 │   └── CANBUS.md
 ├── tools/
+│   ├── build_test.py                     不递增版本号的编译检查 + Qt Quick 面板源码校验
 │   ├── ci_validate.py                    CI 使用的 manifest/CHANGELOG/docs 校验
 │   └── render_hydra_umc_icon_frames.py   从 SVG 重新生成 assets/hydra_umc_icon_frames/（仅限开发）
 └── README_zho.md               本文件
