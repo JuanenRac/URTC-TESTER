@@ -26,16 +26,18 @@ diagnostic: after connecting in listen-only mode it reads traffic for two
 seconds, reports frame and CAN-ID counts, and retains a short visible sample.
 It is disabled in active-check mode and has no transmit path.
 
-The deck also shows the real legacy tool-profile catalogue. Its only
-write-capable Qt Quick control is a deliberately narrow **one-shot motion**
-operation for the existing motion profiles. It remains disabled until all of
-these backend-enforced conditions are true: an active transport is connected,
-listen-only mode is off, the selected profile exactly matches the reported
-identity, and the profile is one of the supported motion profiles. Pressing
-the action opens a second confirmation dialog before the established 0x120
-motion command is emitted. All advanced actuator, configuration and per-tool
-workflows remain in the established Tkinter panels until their individual
-workflows have parity and physical evidence.
+The deck also shows the real legacy tool-profile catalogue. After an active
+identity match, it selects write-capable Qt Quick controls by the reported
+tool profile - see "Advanced Qt Quick profile controls" below for exactly
+which operations have already been migrated (most profile families),
+which stay read-only/telemetry-only on purpose, and which remain an
+external-machine workflow because no CAN actuator route exists for them at
+all. Every one of those energising controls stays disabled until all of
+these backend-enforced conditions are true: an active transport is
+connected, listen-only mode is off, the selected profile exactly matches
+the reported identity, and the profile is one of that operation's own
+supported profiles. Pressing any such action opens a second confirmation
+dialog before the corresponding established CAN command is emitted.
 
 ## Advanced Qt Quick profile controls
 
