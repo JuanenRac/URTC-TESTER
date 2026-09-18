@@ -388,6 +388,7 @@ QT_PASSIVE_WINDOW=PASSIVE BUS WINDOW
 QT_PASSIVE_WINDOW_HELP=Capture live CAN traffic for two seconds. Listen-only mode guarantees no CAN transmission.
 QT_CAPTURE_PASSIVE=CAPTURE PASSIVE WINDOW
 QT_NO_PASSIVE_FRAMES=No passive window captured yet.
+QT_BUS_LOAD=BUS LOAD
 QT_TOOL_PROFILE=TOOL PROFILE
 QT_PROFILE_GUARD=Native controls unlock only when the active identity exactly matches the selected profile and active checks are armed.
 QT_MOTION_CONTROL=ONE-SHOT MOTION

@@ -76,6 +76,12 @@ from tester_config import (
 )
 from tester_transports import SLCAN, SocketCAN, list_socketcan_interfaces
 
+# Matches BITRATE_500K_SLCAN_CODE (tester_config.py) - the real default this
+# tester opens every SLCAN channel at. Only used to turn a real frame count
+# into a real load percentage (see _passive_capture_worker); it does not
+# configure the transport itself.
+CAN_BUS_BITRATE_BPS = 500_000
+
 
 class TesterQtBridge(QObject):
     """QML state model backed by the real CAN transports, not mock telemetry."""
@@ -84,7 +90,7 @@ class TesterQtBridge(QObject):
     logChanged = Signal()
     _connectionResult = Signal(object, str)
     _probeResult = Signal(object, object, str)
-    _passiveResult = Signal(object, str)
+    _passiveResult = Signal(object, str, float)
     _flyingProbeResult = Signal(str, str)
     _thermalResult = Signal(object, str)
     _logRequested = Signal(str)
@@ -120,6 +126,7 @@ class TesterQtBridge(QObject):
         self._version = "No board version received"
         self._passive_frames: list[dict[str, str]] = []
         self._passive_summary = ""
+        self._passive_load_percent = 0.0
         self._flying_probe_result = "No ADS1115 result read yet"
         self._thermal_cells: list[dict[str, object]] = []
         self._thermal_summary = "No thermal frame captured yet"
@@ -206,6 +213,7 @@ class TesterQtBridge(QObject):
             "QT_PASSIVE_WINDOW_HELP": "Capture live CAN traffic for two seconds. Listen-only mode guarantees no CAN transmission.",
             "QT_CAPTURE_PASSIVE": "CAPTURE PASSIVE WINDOW",
             "QT_NO_PASSIVE_FRAMES": "No passive window captured yet.",
+            "QT_BUS_LOAD": "BUS LOAD",
             "QT_TOOL_PROFILE": "TOOL PROFILE",
             "QT_PROFILE_GUARD": "Native controls unlock only when the active identity exactly matches the selected profile and active checks are armed.",
             "QT_MOTION_CONTROL": "ONE-SHOT MOTION",
@@ -325,6 +333,14 @@ class TesterQtBridge(QObject):
     @Property(bool, notify=changed)
     def hasPassiveSnapshot(self) -> bool:
         return bool(self._passive_summary)
+
+    @Property(float, notify=changed)
+    def passiveLoadPercent(self) -> float:
+        """Bus load over the passive capture window, estimated from the
+        same real frame count/timing _passive_capture_worker already
+        collects - see that worker's own comment for the bit-counting
+        method. 0.0 until a window has actually been captured."""
+        return self._passive_load_percent
 
     @Property("QStringList", notify=logChanged)
     def logs(self) -> list[str]:
@@ -1349,6 +1365,17 @@ class TesterQtBridge(QObject):
         count = 0
         identifiers: set[int] = set()
         frames: list[dict[str, str]] = []
+        # Real bus-load estimate, derived from this same 2.0 s window's own
+        # frame count/sizes rather than a second, separate tracking
+        # mechanism. Per-frame bit cost uses the standard CAN 2.0A
+        # 11-bit-ID data-frame overhead (SOF 1 + arbitration 12 + control
+        # 6 + CRC 16 + ACK 2 + EOF 7 + IFS 3 = 47 fixed bits) plus 8 data
+        # bits per byte actually seen - bit stuffing is deliberately not
+        # modeled (it depends on the actual bit pattern, not just frame
+        # count/size), so this reads slightly low on buses with a lot of
+        # same-bit runs, never high.
+        CAN_FRAME_OVERHEAD_BITS = 47
+        total_bits = 0
         try:
             while time.monotonic() < deadline:
                 frame = transport.read_frame(timeout=0.1)
@@ -1357,6 +1384,7 @@ class TesterQtBridge(QObject):
                 can_id, data = frame
                 count += 1
                 identifiers.add(can_id)
+                total_bits += CAN_FRAME_OVERHEAD_BITS + 8 * len(data)
                 frames.append(
                     {
                         "id": f"0x{can_id:03X}",
@@ -1365,15 +1393,17 @@ class TesterQtBridge(QObject):
                 )
                 if len(frames) > 24:
                     frames.pop(0)
-            summary = f"2.0 s • {count} frame(s) • {len(identifiers)} CAN ID(s)"
-            self._passiveResult.emit(frames, summary)
+            load_percent = (total_bits / (CAN_BUS_BITRATE_BPS * 2.0)) * 100.0
+            summary = f"2.0 s • {count} frame(s) • {len(identifiers)} CAN ID(s) • {load_percent:.1f}% bus load"
+            self._passiveResult.emit(frames, summary, load_percent)
         except Exception as exc:
-            self._passiveResult.emit([], f"PASSIVE_CAPTURE_FAILED {exc}")
+            self._passiveResult.emit([], f"PASSIVE_CAPTURE_FAILED {exc}", 0.0)
 
-    @Slot(object, str)
-    def _on_passive_result(self, frames: list[dict[str, str]], summary: str) -> None:
+    @Slot(object, str, float)
+    def _on_passive_result(self, frames: list[dict[str, str]], summary: str, load_percent: float) -> None:
         self._passive_frames = frames
         self._passive_summary = summary
+        self._passive_load_percent = load_percent
         if summary.startswith("PASSIVE_CAPTURE_FAILED"):
             self._set_state(status="PASSIVE CAPTURE FAILED", busy=False)
             self._log(summary)
