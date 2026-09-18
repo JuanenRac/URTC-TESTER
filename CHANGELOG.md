@@ -215,7 +215,7 @@ Found while auditing the code:
   rejection for both `motion_frame` and `drill_frame`); 2 existing
   tests that had asserted the old clamping as correct behavior updated
   to their new, real in-range values.
-- DOC-55: removed 6 dangling references to two private tracking
+- Removed 6 dangling references to two private tracking
   documents across `CHANGELOG.md` and `tester_tool_panels.py` - neither
   file is tracked in this repo.
 
