@@ -8,7 +8,7 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
-## [Unreleased] - Chinese and Japanese added to the Language menu
+## [0.1.7] - Custom CAN Frame panel completes the Qt Quick migration, real About window, Chinese and Japanese added
 
 ### Added
 - **Custom CAN Frame** is now available in the Qt Quick deck, completing
