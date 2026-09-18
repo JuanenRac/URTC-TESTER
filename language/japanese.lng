@@ -388,6 +388,7 @@ QT_PASSIVE_WINDOW=パッシブバスウィンドウ
 QT_PASSIVE_WINDOW_HELP=実際の CAN トラフィックを2秒間取得します。リッスン専用モードでは CAN を送信しません。
 QT_CAPTURE_PASSIVE=パッシブウィンドウを取得
 QT_NO_PASSIVE_FRAMES=まだパッシブウィンドウは取得されていません。
+QT_BUS_LOAD=バス負荷
 QT_TOOL_PROFILE=ツールプロファイル
 QT_PROFILE_GUARD=アクティブな識別情報が選択したプロファイルと完全に一致し、アクティブチェックが有効な場合にのみネイティブ操作が解除されます。
 QT_MOTION_CONTROL=ワンショット移動

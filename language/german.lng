@@ -389,6 +389,7 @@ QT_PASSIVE_WINDOW=PASSIVES BUSFENSTER
 QT_PASSIVE_WINDOW_HELP=Erfasst echten CAN-Verkehr fuer zwei Sekunden. Der Nur-Lauschen-Modus garantiert, dass kein CAN gesendet wird.
 QT_CAPTURE_PASSIVE=PASSIVES FENSTER ERFASSEN
 QT_NO_PASSIVE_FRAMES=Noch kein passives Fenster erfasst.
+QT_BUS_LOAD=BUSAUSLASTUNG
 QT_TOOL_PROFILE=WERKZEUGPROFIL
 QT_PROFILE_GUARD=Native Steuerelemente werden nur freigeschaltet, wenn die aktive Identitaet exakt dem ausgewaehlten Profil entspricht und aktive Pruefungen aktiviert sind.
 QT_MOTION_CONTROL=EINZELBEWEGUNG

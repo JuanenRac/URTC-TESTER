@@ -388,6 +388,7 @@ QT_PASSIVE_WINDOW=被动总线窗口
 QT_PASSIVE_WINDOW_HELP=捕获两秒钟的实时 CAN 流量。仅监听模式保证不会发送 CAN。
 QT_CAPTURE_PASSIVE=捕获被动窗口
 QT_NO_PASSIVE_FRAMES=尚未捕获被动窗口。
+QT_BUS_LOAD=总线负载
 QT_TOOL_PROFILE=工具配置文件
 QT_PROFILE_GUARD=只有当活动身份与所选配置文件完全匹配且活动检查已启用时，原生控件才会解锁。
 QT_MOTION_CONTROL=单次运动

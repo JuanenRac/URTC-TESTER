@@ -8,6 +8,21 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.1.8] - Real-time bus load indicator on the Passive Bus Window
+
+### Added
+- The **Passive Bus Window** capture (Qt Quick deck) now also reports a real
+  CAN bus load percentage alongside its existing frame/ID counts, plus a
+  colour-coded bar (green/yellow/red at 40%/80% thresholds). The percentage
+  is derived from the same real frame count and per-frame byte sizes the
+  2-second capture window already collects - no separate tracking loop was
+  needed. Per-frame bit cost uses the standard CAN 2.0A 11-bit-ID data-frame
+  overhead (47 fixed bits) plus 8 bits per data byte actually seen, divided
+  by the tester's own established 500 kbit/s SLCAN default
+  (`BITRATE_500K_SLCAN_CODE`); bit stuffing is deliberately not modelled,
+  so the estimate reads slightly low rather than ever overstating load.
+  New `QT_BUS_LOAD` key across all 7 languages.
+
 ## [0.1.7] - Custom CAN Frame panel completes the Qt Quick migration, real About window, Chinese and Japanese added
 
 ### Added

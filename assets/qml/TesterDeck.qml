@@ -338,6 +338,49 @@ ApplicationWindow {
                     font.family: "Cascadia Mono"
                     font.pixelSize: 10
                 }
+                // Real-time-window CAN bus load indicator - the load
+                // percentage itself comes from testerBackend's own real
+                // frame count/size tracking during the passive capture
+                // window (see qt_tester.py's _passive_capture_worker),
+                // not a simulated or client-side-guessed value. Only
+                // visible once a real window has actually been captured.
+                RowLayout {
+                    Layout.fillWidth: true
+                    visible: testerBackend.hasPassiveSnapshot
+                    spacing: 8
+                    Text {
+                        text: testerBackend.uiText("QT_BUS_LOAD")
+                        color: muted
+                        font.family: "Bahnschrift"
+                        font.pixelSize: 9
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 10
+                        radius: 5
+                        color: window.panelAlt
+                        border.width: 1
+                        border.color: window.panelBorder
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            radius: 5
+                            width: parent.width * Math.min(testerBackend.passiveLoadPercent / 100.0, 1.0)
+                            color: testerBackend.passiveLoadPercent >= 80 ? "#e05252"
+                                   : testerBackend.passiveLoadPercent >= 40 ? "#e0c552"
+                                   : "#43db9b"
+                        }
+                    }
+                    Text {
+                        text: testerBackend.passiveLoadPercent.toFixed(1) + "%"
+                        color: textPrimary
+                        font.family: "Cascadia Mono"
+                        font.bold: true
+                        font.pixelSize: 10
+                        Layout.preferredWidth: 44
+                    }
+                }
                 ListView {
                     Layout.fillWidth: true
                     Layout.preferredHeight: Math.min(contentHeight, 70)

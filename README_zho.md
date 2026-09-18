@@ -23,7 +23,7 @@
 </p>
 
 
-**版本：** 0.1.7 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**版本：** 0.1.8 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 许可证：源代码为 **GPL-3.0**，本文档为 **CC BY-SA 4.0**——见本仓库中的
 `LICENSE`，或本文档末尾的“许可证与版权声明”一节。

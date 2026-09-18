@@ -389,6 +389,7 @@ QT_PASSIVE_WINDOW=FENETRE PASSIVE DU BUS
 QT_PASSIVE_WINDOW_HELP=Capture le trafic CAN reel pendant deux secondes. Le mode ecoute seule garantit qu'aucune trame CAN n'est emise.
 QT_CAPTURE_PASSIVE=CAPTURER LA FENETRE PASSIVE
 QT_NO_PASSIVE_FRAMES=Aucune fenetre passive n'a encore ete capturee.
+QT_BUS_LOAD=CHARGE DU BUS
 QT_TOOL_PROFILE=PROFIL D'OUTIL
 QT_PROFILE_GUARD=Les controles natifs ne se deverrouillent que lorsque l'identite active correspond exactement au profil selectionne et que les verifications actives sont armees.
 QT_MOTION_CONTROL=MOUVEMENT UNIQUE
