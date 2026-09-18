@@ -23,7 +23,7 @@
 </p>
 
 
-**Version:** 0.1.8 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 0.1.9 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 License: **GPL-3.0** for the source code, **CC BY-SA 4.0** for this
 documentation - see `LICENSE` in this repository, or the "License and
@@ -97,16 +97,20 @@ remains static by design.
 
 ### Visual command deck
 
-The shared **Qt Quick** command deck is available for real connection,
-listen-only monitoring and an explicitly armed identity probe:
+The **Qt Quick** command deck is now the real default:
 ~~~
-python urtc_tester.py --qtquick
+python urtc_tester.py
 ~~~
-It uses the production SLCAN/SocketCAN transports. It starts in listen-only
-mode, so it cannot transmit until you deliberately arm active checks; that
-probe sends only the documented active-tool and version queries. The default
-Tkinter interface remains the complete tool while its 25 per-tool control
-panels are migrated safely.
+It uses the production SLCAN/SocketCAN transports and starts in listen-only
+mode, so it cannot transmit until you deliberately arm active checks. Every
+one of the 25 tool profiles' own commands has real, confirmed coverage here
+(motion, drill, AOI, electromagnet, spot/ultrasonic weld pulse, paste
+jetting, flying probe, thermal inspection, the 5 watchdog-keepalive
+actuators, vacuum/scan-probe telemetry), each gated the same way: an
+identity match, an explicitly armed active mode, and a user confirmation in
+QML before anything transmits. `python urtc_tester.py --legacy` still
+launches the original 25-panel Tkinter GUI. Neither UI has been checked
+against a real board yet - see "Known limitations" below.
 
 The established live-CAN diagnostic workflow now uses a dark navy/cyan
 command-deck surface: product header, high-contrast connection card, clear
@@ -383,7 +387,7 @@ from the SVG during development; it is not required to run the application.
 ```
 /
 ├── urtc_tester.py             Entry point - CLI-free startup and the splash screen
-├── qt_tester.py                Qt Quick front end - bounded, read-only-by-default `--qtquick` command deck
+├── qt_tester.py                Qt Quick front end - real default, read-only-by-default command deck (`--legacy` for the Tkinter GUI)
 ├── tester_config.py            Config/language/protocol constants (CAN IDs, tool
 │                                names, MOTION_TOOL_IDS, AVAILABLE_LANGUAGES,
 │                                EXPANSION_BOARD_TYPES)
@@ -411,7 +415,7 @@ from the SVG during development; it is not required to run the application.
 ├── verify_qt_utility_panels.py      Real, outside-tests/ end-to-end check of the Qt Quick utility panels (Global Controls / Expansion Board / F-RAM)
 ├── tests/
 │   └── test_advanced_protocol.py   Hardware-free tests for advanced_protocol.py's encoders - not run by CI, see Honesty check above
-├── requirements.txt            pyserial>=3.5 (Tkinter tester) + PySide6>=6.8,<7 (`--qtquick` deck)
+├── requirements.txt            pyserial>=3.5 (both UIs) + PySide6>=6.8,<7 (the default Qt Quick deck)
 ├── build_exe.bat               Standalone Windows binary build script (PyInstaller)
 ├── build_exe.sh                Same, for Linux
 ├── build-test.bat              Non-versioning build/compile check
@@ -425,7 +429,7 @@ from the SVG during development; it is not required to run the application.
 │   ├── HYDRA_UMC_ICON.svg      Maintained animated HYDRA-UMC vector source
 │   ├── hydra_umc_icon_frames/  Twelve bundled Tkinter PNG frames rendered from the SVG above
 │   ├── qml/
-│   │   └── TesterDeck.qml      Qt Quick UI for the bounded --qtquick command deck
+│   │   └── TesterDeck.qml      Qt Quick UI for the default command deck
 │   ├── urtc_icon.ico           Windows icon, built from URTC_APP_ICON.svg
 │   ├── urtc_icon.png           Same, PNG form (Linux)
 │   └── urtc_tester_banner.png  Startup banner PNG, rendered from the SVG above

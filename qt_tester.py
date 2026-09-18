@@ -3,13 +3,23 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE
 # =============================================================================
-"""Qt Quick front end for a deliberately bounded, real tester workflow.
+"""Qt Quick front end for the real tester workflow - the app's own default.
 
 The deck reuses the production SLCAN/SocketCAN classes.  It is read-only by
-default.  A bounded one-shot motion command is available only after an
-identity match, explicit active mode and a user confirmation in QML.  The full
-Tkinter tester remains the default until all 25 per-tool control panels have
-Qt Quick parity.
+default.  Every real command is gated on an identity match, explicit active
+mode and a user confirmation in QML.  Every one of the 25 real tool profiles'
+own commands has real, wired coverage here: motion (the 8 profiles sharing
+the plain-stepper 0x120/0x1F0 protocol), drill, AOI, electromagnet, spot/
+ultrasonic weld pulse, paste jetting, flying probe, thermal inspection, the
+5 watchdog-keepalive actuators (solder iron, laser, the printer's own heater
+and layer fan, UV curing, hot-air rework - see `setWatchdogOutput()`) and
+vacuum/scan-probe telemetry.  Conformal Coating and Press-Fit Inserter have
+no panel here, same as the Tkinter GUI's own `_build_no_handler_panel` -
+neither has a real CAN command of its own to expose.  `urtc_tester.py --legacy`
+still launches the original 25-panel Tkinter GUI, kept (not removed).
+Neither UI has been checked against a real board yet - this whole project
+was built with no USB access (see README.md's own "Known limitations") -
+so being the default here is not a hardware-proven claim.
 """
 from __future__ import annotations
 
@@ -203,7 +213,7 @@ class TesterQtBridge(QObject):
             "QT_ACTIVE_CHECKS_ARMED": "ACTIVE CHECKS ARMED",
             "QT_PASSIVE_HELP": "Passive transport mode. Probe commands are blocked.",
             "QT_ACTIVE_HELP": "Identity probe transmits only documented queries 0x110 and 0x7F8.",
-            "QT_STAGED_LIMIT": "The legacy desktop panels remain the authority for advanced actuator workflows. This deck currently exposes only bounded, confirmed motion for matching motion profiles.",
+            "QT_STAGED_LIMIT": "This deck has real, confirmed coverage for every one of the 25 tool profiles' own commands. The legacy Tkinter GUI (--legacy) remains available. Neither UI has been checked against a real board yet - see README.md's own Known limitations.",
             "QT_IDENTITY_CHECKPOINTS": "IDENTITY & HEALTH CHECKPOINTS",
             "QT_CHECKPOINTS": "1  Connect to the selected production transport\n2  Explicitly arm active checks, if required\n3  Query active tool and board version\n4  Preserve a transparent session log",
             "QT_PROBE": "PROBE ACTIVE TOOL + VERSION",

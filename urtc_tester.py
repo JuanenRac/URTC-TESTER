@@ -30,9 +30,21 @@ panels.py, tester_panel_helpers.py, and tester_tool_panels.py.
 
 import sys
 
-# The Qt Quick mode deliberately avoids importing Tkinter and the full legacy
-# 25-panel GUI. This lets the staged desktop deck start on a Qt-only machine.
-if "--qtquick" not in sys.argv:
+# Real parity check, not a guess: every one of the 25 real tool profiles'
+# own commands (motion x8, drill, AOI, electromagnet, spot/ultrasonic weld
+# pulse, paste jetting, flying probe, thermal inspection, the 5 watchdog-
+# keepalive actuators - solder/laser/printer heater+fan/UV/hot-air - and
+# vacuum/scan-probe telemetry) is already wired into the Qt Quick deck's
+# own QML with real buttons and safety gating (qt_tester.py/TesterDeck.qml)
+# - confirmed by reading both files directly, not assumed from an older
+# comment. Qt Quick is now the real default; `--legacy` opts into the
+# original 25-panel Tkinter GUI instead (kept, not removed). Neither UI
+# has been checked against a real board yet - this whole project was
+# built with no USB access (see README.md's own "Known limitations") -
+# so this default choice is not a hardware-proven one either way; treat
+# a first real session with either UI with the same caution the README
+# already asks for.
+if "--legacy" in sys.argv:
     import tkinter as tk
     from tester_config import BANNER_IMAGE_PATH, _center_geometry
     from tester_gui_core import TesterGUI
@@ -97,17 +109,18 @@ def _show_splash_then(root, on_done):
 
 
 def main():
-    if "--qtquick" in sys.argv:
-        # The Qt Quick deck intentionally exposes only connection, passive
-        # monitoring and explicitly armed identity probes. The established
-        # Tkinter UI remains the default until every per-tool panel has
-        # equivalent, hardware-safe Qt Quick coverage.
+    if "--legacy" not in sys.argv:
+        # Qt Quick now has real, wired coverage for every one of the 25
+        # tool profiles (see this file's own top-of-file comment for the
+        # exact verification) - it is the real default. `--legacy` opts
+        # into the original Tkinter GUI instead.
         try:
             from qt_tester import run_qtquick
         except ImportError as exc:
             print(
                 "ERROR: Qt Quick mode requires PySide6. "
-                "Install this repository's requirements.txt first. "
+                "Install this repository's requirements.txt first, or "
+                "pass --legacy to use the original Tkinter GUI instead. "
                 f"Details: {exc}",
                 file=sys.stderr,
             )

@@ -8,6 +8,23 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.1.9] - Qt Quick is now the real default UI
+
+Verified, not assumed: every one of the 25 tool profiles' own commands
+already had real, wired coverage in the Qt Quick deck (`qt_tester.py`/
+`TesterDeck.qml`) - motion (8 profiles), drill, AOI, electromagnet,
+spot/ultrasonic weld pulse, paste jetting, flying probe, thermal
+inspection, the 5 watchdog-keepalive actuators (solder iron, laser, the
+printer's own heater/layer fan, UV curing, hot-air rework), and vacuum/
+scan-probe telemetry - each gated on identity match + explicit active
+mode + a QML confirmation. Only the module docstring, in-app help text
+(`QT_STAGED_LIMIT`, all 7 languages) and README still described this as
+a bounded, motion-only deck. `urtc_tester.py` now launches Qt Quick by
+default; `--legacy` opts into the original 25-panel Tkinter GUI instead
+(kept, not removed). Neither UI has been checked against a real board
+yet - this is a real default-mode change, not a claim that either path
+is hardware-proven.
+
 ## [0.1.8] - Real-time bus load indicator on the Passive Bus Window
 
 ### Added
