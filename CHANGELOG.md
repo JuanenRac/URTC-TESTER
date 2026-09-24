@@ -8,6 +8,10 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.2.2] - Session manifest in the debug bundle
+
+- The exported debug bundle now includes session_manifest.json, which names the session log by its SHA-256 and byte count together with the tester version, transport, port, bitrate and active tool, so an edited log can be told apart from the original.
+
 ## [0.2.1] - Reproducible result records
 
 - `tester_result_record.py`: a `ResultRecord` ties an outcome to the adapter, firmware version,

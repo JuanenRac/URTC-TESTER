@@ -6,6 +6,7 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE
 # =============================================================================
+import json
 import logging
 import os
 import platform
@@ -17,6 +18,7 @@ import zipfile
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
+from tester_result_record import session_manifest
 from tester_config import (
     _, AVAILABLE_LANGUAGES, BITRATE_500K_SLCAN_CODE, CAN_ID_3DP_HOTEND_FAN_CMD,
     CAN_ID_3DP_LAYER_FAN_CMD, CAN_ID_3DP_THERMAL_MOTION, CAN_ID_ACTIVE_TOOL_RESP,
@@ -1142,7 +1144,17 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             return
         try:
             with zipfile.ZipFile(save_path, "w", zipfile.ZIP_DEFLATED) as zf:
-                zf.writestr("session_log.txt", self.log_text.get("1.0", "end"))
+                log_text = self.log_text.get("1.0", "end")
+                zf.writestr("session_log.txt", log_text)
+                zf.writestr("session_manifest.json", json.dumps(session_manifest(
+                    log_text,
+                    tester_version=TESTER_VERSION,
+                    transport=self.transport_var.get(),
+                    port=self.port_var.get(),
+                    bitrate=self.bitrate_var.get(),
+                    connected=self.transport is not None,
+                    active_tool_id=self.active_tool_id,
+                ), indent=2, sort_keys=True))
                 diag = [
                     f"URTC Tester version: {TESTER_VERSION}",
                     f"Python: {sys.version}",
