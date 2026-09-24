@@ -8,6 +8,13 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.2.1] - Reproducible result records
+
+- `tester_result_record.py`: a `ResultRecord` ties an outcome to the adapter, firmware version,
+  bus, bitrate and a log file identified by its SHA-256, saves and loads as JSON, and checks
+  the log against its hash when loaded so an edited log no longer matches its result.
+  Seven new tests. Not yet wired into the test panels.
+
 ## [0.2.0] - Live frame-rate and bus-load readout in the deck header
 
 The Passive Bus Window already showed a bus-load percentage for its own
