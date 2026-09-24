@@ -50,7 +50,7 @@ def bounded_int(value: str | int, minimum: int, maximum: int) -> int:
     anything malformed or out of range rather than silently reinterpreting
     it as a different, valid command.
 
-    TESTER-01 (P1): this used to silently CLAMP an out-of-range value into range
+    this used to silently CLAMP an out-of-range value into range
     (e.g. a garbled 999999 step count became the protocol's own maximum -
     a real, different command, not an error). A UI widget offering a
     bounded spinbox/slider is a real, separate reason a value might want
@@ -90,7 +90,7 @@ def _direction_byte(direction: str, label_for_0x01: str, label_for_0x00: str) ->
     """Strictly validates `direction` against the exact two labels this
     command supports, preserving each call site's own real, pre-existing
     byte assignment (which label was 0x01 vs 0x00 is a real protocol
-    detail, not something this helper gets to choose). TESTER-01: the
+    detail, not something this helper gets to choose). the
     old `0x01 if direction == X else 0x00` pattern let ANY unrecognized
     value (a typo, wrong case, a bool, a stray number) silently fall
     through to the 'else' branch and encode as the OTHER, opposite,
@@ -191,7 +191,7 @@ def global_status_frame(
     night_code = {"standard": 0x00, "night": 0x01, "standby": 0x0F}.get(night_mode)
     if night_code is None:
         raise ValueError("unknown OLED mode")
-    # TESTER-01: RGB status/ring color is the one deliberate exception to
+    # RGB status/ring color is the one deliberate exception to
     # bounded_int()'s own strict rejection - a cosmetic status LED color
     # is explicitly low-stakes (see this function's own header comment
     # on the 10s automatic-fallback hold), never a movement/actuation
