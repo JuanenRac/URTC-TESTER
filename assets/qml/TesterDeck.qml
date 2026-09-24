@@ -225,6 +225,15 @@ ApplicationWindow {
                 }
                 Item { Layout.fillWidth: true }
                 Text { text: testerBackend.status; color: testerBackend.connected ? "#43db9b" : muted; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 11 }
+                Text {
+                    id: busStatsText
+                    visible: testerBackend.connected
+                    color: muted; font.family: "Cascadia Mono"; font.pixelSize: 10
+                    Timer {
+                        interval: 1000; running: testerBackend.connected; repeat: true; triggeredOnStart: true
+                        onTriggered: busStatsText.text = testerBackend.refreshBusStats()
+                    }
+                }
                 Text { text: "v" + testerBackend.version; color: muted; font.family: "Bahnschrift"; font.pixelSize: 10 }
             }
         }

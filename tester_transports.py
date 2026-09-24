@@ -18,6 +18,7 @@ except ImportError:
     HAVE_SERIAL = False  # SLCAN's constructor is what actually needs this - SocketCAN works fine without it
 
 from tester_config import _, BITRATE_500K_SLCAN_CODE
+from tester_bus_monitor import BusStats
 
 class SLCANError(Exception):
     pass
@@ -468,3 +469,27 @@ class SocketCAN:
         # slicing already caps silently at the buffer's real 8-byte length.
         return (can_id, data[:min(dlc, 8)])
 
+
+
+def _instrument_with_bus_stats(cls):
+    """Counts every frame this transport sends or successfully reads into a
+    per-instance BusStats (`transport.stats`), whoever calls it."""
+    original_read, original_send = cls.read_frame, cls.send_frame
+
+    def read_frame(self, *args, **kwargs):
+        frame = original_read(self, *args, **kwargs)
+        if frame is not None:
+            self.__dict__.setdefault("stats", BusStats()).record(len(frame[1]))
+        return frame
+
+    def send_frame(self, can_id, data, *args, **kwargs):
+        result = original_send(self, can_id, data, *args, **kwargs)
+        self.__dict__.setdefault("stats", BusStats()).record(len(data))
+        return result
+
+    cls.read_frame, cls.send_frame = read_frame, send_frame
+    return cls
+
+
+_instrument_with_bus_stats(SLCAN)
+_instrument_with_bus_stats(SocketCAN)

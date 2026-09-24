@@ -4,6 +4,7 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE
 # =============================================================================
+import collections
 import threading
 import time
 
@@ -188,3 +189,45 @@ class CANBusMonitor:
 
 
 
+
+
+class BusStats:
+    """Sliding-window frame rate and estimated bus load, counted at the
+    transport (every frame either direction), so it works for every
+    reader in the app - the Tk GUI's one monitor thread and the Qt UI's
+    many ad-hoc readers alike - without touching any of them.
+
+    Bus load is an ESTIMATE from the standard CAN base-frame size (47 bits
+    of framing/interframe space + 8 per data byte, stuff bits not
+    counted) against the configured bitrate - a real bus with heavy bit
+    stuffing runs a little higher than this reports."""
+
+    FRAME_OVERHEAD_BITS = 47
+
+    def __init__(self, window_s=1.0, clock=time.monotonic):
+        self.window_s = window_s
+        self._clock = clock
+        self._events = collections.deque()  # (timestamp, bits)
+        self._lock = threading.Lock()
+
+    def record(self, data_len):
+        now = self._clock()
+        with self._lock:
+            self._events.append((now, self.FRAME_OVERHEAD_BITS + 8 * data_len))
+            self._trim(now)
+
+    def _trim(self, now):
+        cutoff = now - self.window_s
+        while self._events and self._events[0][0] < cutoff:
+            self._events.popleft()
+
+    def snapshot(self, bitrate_bps=500000):
+        """(frames_per_second, bus_load_percent) over the last window."""
+        now = self._clock()
+        with self._lock:
+            self._trim(now)
+            frames = len(self._events)
+            bits = sum(b for _, b in self._events)
+        fps = frames / self.window_s
+        load = min(100.0, 100.0 * (bits / self.window_s) / bitrate_bps) if bitrate_bps > 0 else 0.0
+        return fps, load

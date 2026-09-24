@@ -8,6 +8,19 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.2.0] - Live frame-rate and bus-load readout in the deck header
+
+The Passive Bus Window already showed a bus-load percentage for its own
+short capture; nothing showed the live rate while just connected. Both
+transports (SLCAN, SocketCAN) now count every frame they send or read into
+a `BusStats` sliding window (`transport.stats`), so it works for every
+reader in the app without touching any of them, and the Qt Quick deck
+header shows `N fps | X% bus` once a second while connected. Same
+estimate as the Passive Bus Window (47 framing bits + 8 per data byte
+against 500 kbit/s, stuff bits not modelled). Hardware-free tests cover
+the window maths and the instrumentation; not yet checked against a real
+adapter.
+
 ## [0.1.9] - Qt Quick is now the real default UI
 
 Verified, not assumed: every one of the 25 tool profiles' own commands
