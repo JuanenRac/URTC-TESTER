@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from tester_result_record import RecordError, ResultRecord, load_record, make_record, save_record  # noqa: E402
+from tester_result_record import RecordError, ResultRecord, load_record, make_record, save_record, session_manifest  # noqa: E402
 
 
 class ResultRecordTests(unittest.TestCase):
@@ -78,6 +78,16 @@ class ResultRecordTests(unittest.TestCase):
             load_record(broken)
         with self.assertRaises(RecordError):
             load_record(self.dir / "absent.json")
+
+    def test_a_session_manifest_names_the_log_by_its_hash(self):
+        import hashlib
+
+        manifest = session_manifest("line one\nline two\n", transport="SLCAN", bitrate=500000)
+        self.assertEqual(manifest["log_sha256"], hashlib.sha256(b"line one\nline two\n").hexdigest())
+        self.assertEqual(manifest["log_bytes"], 18)
+        self.assertEqual((manifest["transport"], manifest["bitrate"]), ("SLCAN", "500000"))
+        self.assertNotIn("outcome", manifest)
+        self.assertNotEqual(manifest["log_sha256"], session_manifest("other", transport="SLCAN")["log_sha256"])
 
 
 if __name__ == "__main__":

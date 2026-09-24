@@ -93,3 +93,19 @@ def load_record(path: Path, log_directory: Path | None = None) -> ResultRecord:
         if _sha256(log) != record.log_sha256:
             raise RecordError(f"the log {record.log_file!r} does not match the hash recorded with this result")
     return record
+
+
+def session_manifest(log_text: str, **context: object) -> dict:
+    """What a saved session log was recorded against.
+
+    A debug bundle is not a pass/fail result, so it carries no outcome: it
+    names the log by its SHA-256 (of the exact UTF-8 text stored in the
+    bundle) and the settings in use, so the log can be shown to be unedited.
+    """
+    data = log_text.encode("utf-8")
+    return {
+        "log_file": "session_log.txt",
+        "log_sha256": hashlib.sha256(data).hexdigest(),
+        "log_bytes": len(data),
+        **{key: str(value) for key, value in sorted(context.items())},
+    }
