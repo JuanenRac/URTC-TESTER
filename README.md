@@ -23,7 +23,7 @@
 </p>
 
 
-**Version:** 0.1.9 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 0.2.0 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 License: **GPL-3.0** for the source code, **CC BY-SA 4.0** for this
 documentation - see `LICENSE` in this repository, or the "License and
