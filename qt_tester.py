@@ -296,6 +296,17 @@ class TesterQtBridge(QObject):
     def status(self) -> str:
         return self._status
 
+    @Slot(result=str)
+    def refreshBusStats(self) -> str:
+        """`"123 fps | 12% bus load"` for the connected transport (an
+        estimate - see tester_bus_monitor.BusStats), `""` when not
+        connected. QML polls this once a second."""
+        stats = getattr(self._transport, "stats", None) if self._transport is not None else None
+        if stats is None:
+            return ""
+        fps, load = stats.snapshot()
+        return f"{fps:.0f} fps | {load:.1f}% bus"
+
     @Property(str, notify=changed)
     def activeTool(self) -> str:
         return self._active_tool
