@@ -191,7 +191,7 @@ is hardware-proven.
   than passing oversized frames to GUI handlers. Valid standard frames are
   unaffected.
 
-## [0.1.6] - The protocol boundary can no longer turn invalid input into a different valid command (TESTER-01)
+## [0.1.6] - The protocol boundary can no longer turn invalid input into a different valid command
 
 Found while auditing the code:
 

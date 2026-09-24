@@ -629,7 +629,7 @@ class TesterQtBridge(QObject):
         if not 1 <= steps <= 0xFFFFFFFF:
             self._log("MOTION_BLOCKED steps outside 1..4294967295")
             return
-        # TESTER-01 (P1): `0x01 if direction == "forward" else 0x00` used to
+        # `0x01 if direction == "forward" else 0x00` used to
         # let ANY unrecognized value (a typo, wrong case, a stray value
         # from a forged/stale UI state) silently encode as "reverse" - a
         # real, different, valid movement - instead of being rejected.
@@ -1120,7 +1120,7 @@ class TesterQtBridge(QObject):
         """Parse an operator value STRICTLY - None on anything malformed
         OR out of range, never a silently clamped substitute.
 
-        TESTER-01 (P1): this used to CLAMP an out-of-range value into range
+        this used to CLAMP an out-of-range value into range
         (e.g. a garbled 999999 became this command's own maximum - a
         real, different command, not an error). Returning None for that
         case too costs nothing at any call site: every one of them
@@ -1146,7 +1146,7 @@ class TesterQtBridge(QObject):
         if speed is None:
             self._log("DRILL_BLOCKED speed must be an integer in range")
             return
-        # TESTER-01: see sendMotion's own comment - an unrecognized
+        # see sendMotion's own comment - an unrecognized
         # direction must never silently become the opposite valid one.
         if direction not in ("clockwise", "counter-clockwise"):
             self._log(f"DRILL_BLOCKED unknown direction {direction!r}")

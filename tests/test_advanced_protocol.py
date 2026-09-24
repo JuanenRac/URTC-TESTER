@@ -20,7 +20,7 @@ class AdvancedProtocolTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             protocol.aoi_frame("invalid", "1000")
 
-    # TESTER-01 (P1): bounded_int() used to silently CLAMP an out-of-range value
+    # bounded_int used to silently CLAMP an out-of-range value
     # into range instead of rejecting it - these two assertions used to
     # assert exactly that clamping as correct ("9999999999 steps becomes
     # the max" / "9999ms weld duration becomes the max 2000ms" / "-4
@@ -58,7 +58,7 @@ class AdvancedProtocolTests(unittest.TestCase):
             protocol.clamp_for_display(True, 0, 255)
 
     def test_motion_frame_rejects_an_unrecognized_direction(self):
-        # TESTER-01's own exact reproduction: an unrecognized direction
+        # this project's own exact reproduction: an unrecognized direction
         # must never silently fall through to encode as the OTHER,
         # opposite, equally-valid physical direction.
         with self.assertRaises(ValueError):
