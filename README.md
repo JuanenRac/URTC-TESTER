@@ -421,7 +421,7 @@ from the SVG during development; it is not required to run the application.
 ├── build-test.bat              Non-versioning build/compile check
 ├── build-test.sh                Same, for Linux
 ├── bump_version.py             Odometer-style version bump, run by the build scripts
-├── bump_manifest_version.py    Syncs hydra-umc.project.json's version to the native one (--sync)
+├── bump_manifest_version.py    Syncs urtc.project.json's version to the native one (--sync)
 ├── URTC_Tester.spec            PyInstaller spec used by both build scripts
 ├── assets/
 │   ├── URTC_APP_ICON.svg       Window/taskbar icon source (small standalone design)

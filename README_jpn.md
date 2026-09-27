@@ -440,7 +440,7 @@ PEAK PCAN-View / Vector CANalyzer 風のトレースファイルとして保存�
 ├── build-test.bat              バージョンを更新しないビルド/コンパイル確認
 ├── build-test.sh                同上、Linux 向け
 ├── bump_version.py             オドメーター式バージョンインクリメント、ビルドスクリプトが実行
-├── bump_manifest_version.py    hydra-umc.project.json のバージョンをネイティブ側と同期（--sync）
+├── bump_manifest_version.py    urtc.project.json のバージョンをネイティブ側と同期（--sync）
 ├── URTC_Tester.spec            両方のビルドスクリプトが使用する PyInstaller の spec
 ├── assets/
 │   ├── URTC_APP_ICON.svg       ウィンドウ/タスクバーアイコンのソース（独立した小型デザイン）

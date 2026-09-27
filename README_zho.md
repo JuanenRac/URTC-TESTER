@@ -352,7 +352,7 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 ├── build-test.bat              不递增版本号的构建/编译检查
 ├── build-test.sh                同上，适用于 Linux
 ├── bump_version.py             里程表式版本递增，由构建脚本运行
-├── bump_manifest_version.py    将 hydra-umc.project.json 的版本与原生版本同步（--sync）
+├── bump_manifest_version.py    将 urtc.project.json 的版本与原生版本同步（--sync）
 ├── URTC_Tester.spec            两个构建脚本共用的 PyInstaller 规范文件
 ├── assets/
 │   ├── URTC_APP_ICON.svg       窗口/任务栏图标源文件（独立小型设计）
