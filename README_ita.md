@@ -479,7 +479,7 @@ l'applicazione.
 ├── build-test.bat              Controllo build/compilazione senza incremento di versione
 ├── build-test.sh                Lo stesso, per Linux
 ├── bump_version.py             Incremento di versione stile contachilometri, eseguito dagli script di build
-├── bump_manifest_version.py    Sincronizza la versione di hydra-umc.project.json con quella nativa (--sync)
+├── bump_manifest_version.py    Sincronizza la versione di urtc.project.json con quella nativa (--sync)
 ├── URTC_Tester.spec            Spec di PyInstaller usato da entrambi gli script di
 │                                build
 ├── assets/
