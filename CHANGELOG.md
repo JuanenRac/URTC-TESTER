@@ -8,6 +8,10 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.2.3] - The Qt Quick Tester can export a session that proves its log
+
+- A new **Export session** button in the Qt Quick deck (`--qtquick`) saves the activity log in `logs/` as a zip with `session_log.txt` and a `session_manifest.json` that names the log by its SHA-256 and size, with the Tester version, the port and whether it was connected, so a saved log can be shown to be unedited. It was already available in the Tk window; the label exists in the seven languages and two tests cover the bundle and the failure to create the folder.
+
 ## [0.2.2] - Session manifest in the debug bundle
 
 - The exported debug bundle now includes session_manifest.json, which names the session log by its SHA-256 and byte count together with the tester version, transport, port, bitrate and active tool, so an edited log can be told apart from the original.
