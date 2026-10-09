@@ -871,6 +871,7 @@ ApplicationWindow {
 
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
                 Text { text: testerBackend.uiText("QT_ACTIVITY_LOG"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                GameButton { text: testerBackend.uiText("QT_EXPORT_SESSION"); accent: "#24465e"; Layout.preferredWidth: 260; onClicked: testerBackend.exportSession() }
                 ListView {
                     Layout.fillWidth: true
                     // Was Layout.fillHeight: true - meaningless now that

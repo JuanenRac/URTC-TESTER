@@ -23,10 +23,13 @@ so being the default here is not a hardware-proven claim.
 """
 from __future__ import annotations
 
+import json
+import os
 import struct
 import sys
 import threading
 import time
+import zipfile
 from pathlib import Path
 
 import advanced_protocol as protocol
@@ -36,6 +39,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 
 from tester_config import (
+    LOGS_FOLDER,
     BITRATE_500K_SLCAN_CODE,
     CAN_ID_ACTIVE_TOOL_RESP,
     CAN_ID_AOI_CMD,
@@ -84,6 +88,7 @@ from tester_config import (
     _,
     list_serial_ports,
 )
+from tester_result_record import session_manifest
 from tester_transports import SLCAN, SocketCAN, list_socketcan_interfaces
 
 # Matches BITRATE_500K_SLCAN_CODE (tester_config.py) - the real default this
@@ -504,6 +509,27 @@ class TesterQtBridge(QObject):
     def _log(self, message: str) -> None:
         """Queue logs from CAN worker threads onto the Qt GUI thread."""
         self._logRequested.emit(str(message))
+
+    @Slot(result=str)
+    def exportSession(self) -> str:
+        """Save the activity log with a manifest naming it by its SHA-256, so the log can be shown to be unedited."""
+        log_text = "\n".join(self._logs) + "\n"
+        try:
+            os.makedirs(LOGS_FOLDER, exist_ok=True)
+            path = os.path.join(LOGS_FOLDER, f"urtc_tester_session_{time.strftime('%Y%m%d_%H%M%S')}.zip")
+            with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as bundle:
+                bundle.writestr("session_log.txt", log_text)
+                bundle.writestr("session_manifest.json", json.dumps(session_manifest(
+                    log_text,
+                    tester_version=TESTER_VERSION,
+                    port=self._selected_port,
+                    connected=self._transport is not None,
+                ), indent=2, sort_keys=True))
+        except OSError as exc:
+            self._log(f"SESSION_EXPORT_FAILED {exc}")
+            return ""
+        self._log(f"SESSION_EXPORTED {path}")
+        return path
 
     @Slot(str)
     def _append_log(self, message: str) -> None:
