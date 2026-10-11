@@ -334,3 +334,80 @@ def decode_telemetry_fixture(can_id: int, data: bytes) -> dict[str, int | bool]:
     if can_id in {CAN_ID_3DP_HOTEND_TELEM, CAN_ID_3DP_LAYER_FAN_RPM, CAN_ID_3DP_HOTEND_FAN_RPM} and len(data) >= 2:
         return {"value": struct.unpack(">H", data[:2])[0]}
     raise ValueError("unsupported or malformed telemetry fixture")
+
+
+# --- URTC firmware 0.3.2+: thermal runaway guard and reset cause --------
+# 0x111 byte 4 is the thermal runaway guard's fault code and byte 5 the RCC
+# reset cause latched at boot; older firmware answers only 4 bytes, so a
+# missing byte means "not reported", never 0 (URTC docs/CANBUS.TXT).
+THERMAL_FAULT_NAMES = {
+    1: "MAXTEMP",
+    2: "HEATING_NO_RISE",
+    3: "DROPPED_AT_TARGET",
+}
+RESET_CAUSE_BITS = (
+    (0x01, "IWDG"), (0x02, "WWDG"), (0x04, "SOFTWARE"), (0x08, "POWER_ON"),
+    (0x10, "PIN"), (0x20, "LOW_POWER"), (0x40, "OPTION_BYTES"),
+)
+
+
+def decode_quick_state(data: bytes) -> dict[str, object] | None:
+    """Decodes CAN_ID_ACTIVE_TOOL_RESP (0x111), including the optional
+    thermal fault code (byte 4) and reset cause (byte 5)."""
+    if len(data) < 4:
+        return None
+    thermal = data[4] if len(data) >= 5 else None
+    reset = data[5] if len(data) >= 6 else None
+    return {
+        "tool_id": data[0],
+        "system_error": bool(data[1]),
+        "can_error": bool(data[2]),
+        "booting": bool(data[3]),
+        "thermal_fault": thermal,
+        "thermal_fault_name": THERMAL_FAULT_NAMES.get(thermal, f"CODE_{thermal}") if thermal else None,
+        "reset_cause": reset,
+        "reset_causes": [name for bit, name in RESET_CAUSE_BITS if reset is not None and reset & bit],
+        "watchdog_reset": bool(reset is not None and reset & 0x01),
+    }
+
+
+def decode_thermal_stats(data: bytes) -> dict[str, object] | None:
+    """Decodes CAN_ID_THERMAL_STATS_RESP (0x1AB): lifetime thermal fault
+    count, total heater-on seconds, last fault code, and whether the
+    counters live in F-RAM (False = F-RAM missing, RAM-only since boot)."""
+    if len(data) < 8:
+        return None
+    last = data[6]
+    return {
+        "fault_count": (data[0] << 8) | data[1],
+        "heater_on_seconds": (data[2] << 24) | (data[3] << 16) | (data[4] << 8) | data[5],
+        "last_fault": last,
+        "last_fault_name": THERMAL_FAULT_NAMES.get(last, f"CODE_{last}") if last else None,
+        "persisted": bool(data[7]),
+    }
+
+
+def evaluate_thermal_runaway_bench_test(before: dict | None, after: dict | None,
+                                        quick: dict | None) -> tuple[bool, list[str]]:
+    """Verdict for the thermal runaway bench test (docs/THERMAL_RUNAWAY_BENCH_TEST.md):
+    `before`/`after` are decode_thermal_stats() results taken before and
+    after provoking the fault, `quick` a decode_quick_state() taken after.
+    Passes only when the board latched a critical error, reported a
+    thermal fault code in 0x111, and counted exactly that fault."""
+    reasons: list[str] = []
+    if before is None or after is None:
+        reasons.append("no 0x1AB answer - the board needs URTC firmware 0.3.3 or newer")
+    if quick is None:
+        reasons.append("no 0x111 answer after the fault")
+    if reasons:
+        return False, reasons
+    if not quick["system_error"]:
+        reasons.append("0x111 byte 1: no critical error latched - the heater was NOT cut")
+    if not quick["thermal_fault"]:
+        reasons.append("0x111 byte 4: no thermal fault code reported")
+    if after["fault_count"] != before["fault_count"] + 1 and after["fault_count"] != 0xFFFF:
+        reasons.append(f"thermal fault counter went {before['fault_count']} -> {after['fault_count']}, expected +1")
+    if quick["thermal_fault"] and after["last_fault"] != quick["thermal_fault"]:
+        reasons.append("0x1AB last fault code does not match 0x111 byte 4")
+    return not reasons, reasons
+

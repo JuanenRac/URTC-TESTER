@@ -119,6 +119,14 @@ def _run() -> None:
     _pump_until(app, lambda: "not been saved" in bridge.framStateText or bridge.framStateText != "400" and "400" not in bridge.framStateText)
     assert transport.sent[-1] == (0x192, ERASE_FRAM_MAGIC), "erase must send the real documented magic payload"
 
+    # --- Lifetime thermal counters (0x1AA -> 0x1AB, URTC firmware 0.3.3+) ---
+    transport.respond(0x1AA, bytes([0, 3, 0, 0, 0x0E, 0x10, 2, 1]), response_can_id=0x1AB)  # 3 faults, 3600 s, HEATING_NO_RISE
+    bridge.queryThermalStats()
+    _pump_until(app, lambda: bridge.thermalStatsText != "")
+    assert "3" in bridge.thermalStatsText and "1.00" in bridge.thermalStatsText and "HEATING_NO_RISE" in bridge.thermalStatsText, \
+        f"real counters must appear in the display text, got {bridge.thermalStatsText!r}"
+    assert transport.sent[-1] == (0x1AA, b""), "the thermal counters query is an empty 0x1AA frame"
+
     # --- F-RAM tab's own 3 read-only EEPROM queries ---
     transport.respond(0x1A1, bytes([2]))  # a real expansion_type index
     bridge.queryExpansionBoardType()

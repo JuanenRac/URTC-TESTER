@@ -23,7 +23,7 @@
 </p>
 
 
-**版本：** 0.2.3 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**版本：** 0.2.4 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 许可证：源代码为 **GPL-3.0**，本文档为 **CC BY-SA 4.0**——见本仓库中的
 `LICENSE`，或本文档末尾的“许可证与版权声明”一节。
@@ -274,6 +274,16 @@ ID 列会在原始十六进制 ID 旁边显示该友好名称——对于任何�
 会发送一次零值/关闭帧然后停止。热端风扇没有看门狗（改为失速检测器——
 见 `docs/CANBUS.md`），因此是一次纯粹的一次性发送。
 
+### 🔥 热失控台架测试（URTC 固件 0.3.2+ / 0.3.3+）
+
+Detect 现在会显示板卡锁定错误的*原因*：`0x111` 的第 4 字节（热失控保护：
+MAXTEMP、HEATING_NO_RISE 或 DROPPED_AT_TARGET）显示在板卡状态中，由硬件看门狗
+引起的复位（`0x111` 的第 5 字节）会记录到日志。**热计数**（两种界面的 F-RAM
+面板）读取 `0x1AA`/`0x1AB`：累计热故障次数、加热器总开启小时数和最后一次故障。
+旧固件的应答（4 字节的 `0x111`，没有 `0x1AB`）显示为“未报告”，绝不会显示为零。
+在真实板卡上验证该保护的分步流程见
+[`docs/THERMAL_RUNAWAY_BENCH_TEST.md`](docs/THERMAL_RUNAWAY_BENCH_TEST.md)。
+
 ## 5. 📋 日志与调试包
 
 与刷写工具相同：一个带时间戳的会话日志会自动写入 `logs/`（删除是安全
@@ -387,7 +397,8 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 │   ├── ARCHITECTURE.md
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
-│   └── CANBUS.md
+│   ├── CANBUS.md
+│   └── THERMAL_RUNAWAY_BENCH_TEST.md
 ├── tools/
 │   ├── build_test.py                     不递增版本号的编译检查 + Qt Quick 面板源码校验
 │   ├── ci_validate.py                    CI 使用的 manifest/CHANGELOG/docs 校验

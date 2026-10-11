@@ -70,6 +70,9 @@ from tester_config import (
     CAN_ID_QUERY_ACTIVE_TOOL,
     CAN_ID_QUERY_DIAG0,
     CAN_ID_QUERY_FRAM_STATE,
+    CAN_ID_QUERY_THERMAL_STATS,
+    CAN_ID_THERMAL_STATS_RESP,
+    format_thermal_stats,
     CAN_ID_QUERY_VERSION,
     CAN_ID_SPOT_WELD_CMD,
     CAN_ID_SOLDER_SETPOINT,
@@ -166,6 +169,7 @@ class TesterQtBridge(QObject):
         # built once in _on_query_result, not re-translated by QML).
         self._query_texts: dict[str, str] = {
             "fram_state": "",
+            "thermal_stats": "",
             "expansion_type": "",
             "mlx_variant": "",
             "free_tool_config": "",
@@ -459,6 +463,10 @@ class TesterQtBridge(QObject):
     @Property(str, notify=changed)
     def framStateText(self) -> str:
         return self._query_texts["fram_state"]
+
+    @Property(str, notify=changed)
+    def thermalStatsText(self) -> str:
+        return self._query_texts["thermal_stats"]
 
     @Property(str, notify=changed)
     def expansionBoardTypeText(self) -> str:
@@ -930,6 +938,9 @@ class TesterQtBridge(QObject):
                     fan=result["fan"], had_error=_("VAL_YES") if result["had_error"] else _("VAL_NO"),
                 )
             self._log(f"FRAM_STATE {result}")
+        elif key == "thermal_stats":
+            text = format_thermal_stats(result)
+            self._log(f"THERMAL_STATS {result}")
         elif key == "expansion_type":
             text = result if result is not None else no_response
             self._log(f"EXPANSION_BOARD_TYPE {result}")
@@ -1001,6 +1012,12 @@ class TesterQtBridge(QObject):
         if not self.canUseUtilityPanels:
             return
         self._run_query("fram_state", (CAN_ID_QUERY_FRAM_STATE, b""), CAN_ID_FRAM_STATE_RESP, protocol.decode_fram_state)
+
+    @Slot()
+    def queryThermalStats(self) -> None:
+        if not self.canUseUtilityPanels:
+            return
+        self._run_query("thermal_stats", (CAN_ID_QUERY_THERMAL_STATS, b""), CAN_ID_THERMAL_STATS_RESP, protocol.decode_thermal_stats)
 
     @Slot()
     def eraseFram(self) -> None:

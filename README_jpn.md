@@ -23,7 +23,7 @@
 </p>
 
 
-**バージョン：** 0.2.3 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**バージョン：** 0.2.4 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 ライセンス：ソースコードは **GPL-3.0**、本ドキュメントは **CC BY-SA 4.0**——
 本リポジトリの `LICENSE`、または本ドキュメント末尾の「ライセンスと著作権
@@ -346,6 +346,17 @@ PEAK PCAN-View / Vector CANalyzer 風のトレースファイルとして保存�
 （代わりに失速検出器——`docs/CANBUS.md` 参照）ので、単純なワンショット
 送信です。
 
+### 🔥 熱暴走のベンチテスト（URTC ファームウェア 0.3.2+ / 0.3.3+）
+
+Detect は、ボードがエラーをラッチした*理由*を表示するようになりました：
+`0x111` のバイト 4（熱暴走保護：MAXTEMP、HEATING_NO_RISE、DROPPED_AT_TARGET）
+がボード状態に表示され、ハードウェアウォッチドッグによるリセット（`0x111` の
+バイト 5）がログに記録されます。**熱カウンタ**（両方の UI の F-RAM パネル）は
+`0x1AA`/`0x1AB` を読み取り、熱異常の累計回数、ヒーター ON の総時間、最後の
+異常を表示します。古いファームウェアの応答（4 バイトの `0x111`、`0x1AB` なし）
+はゼロではなく「未報告」と表示されます。実機ボードで保護を確認する手順は
+[`docs/THERMAL_RUNAWAY_BENCH_TEST.md`](docs/THERMAL_RUNAWAY_BENCH_TEST.md) にあります。
+
 ## 5. 📋 ログとデバッグバンドル
 
 フラッシャーと同じです：タイムスタンプ付きのセッションログが自動的に
@@ -475,7 +486,8 @@ PEAK PCAN-View / Vector CANalyzer 風のトレースファイルとして保存�
 │   ├── ARCHITECTURE.md
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
-│   └── CANBUS.md
+│   ├── CANBUS.md
+│   └── THERMAL_RUNAWAY_BENCH_TEST.md
 ├── tools/
 │   ├── build_test.py                     バージョンを更新しないコンパイル確認 + Qt Quick デッキのソース検証
 │   ├── ci_validate.py                    CI が使用する manifest/CHANGELOG/docs の検証

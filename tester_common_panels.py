@@ -12,12 +12,14 @@ import time
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
+import advanced_protocol as protocol
 from tester_config import (
     _, CAN_ID_3DP_HOTEND_TELEM, CAN_ID_3DP_THERMAL_MOTION, CAN_ID_ACTIVE_TOOL_RESP,
     CAN_ID_AOI_TELEMETRY, CAN_ID_DIAG0_RESP, CAN_ID_DRILL_CMD, CAN_ID_DRILL_TELEMETRY,
     CAN_ID_ERASE_FRAM, CAN_ID_EXPANSION_TYPE_RESP, CAN_ID_EXP_SPI_CMD, CAN_ID_EXP_SPI_RESP,
     CAN_ID_FRAM_STATE_RESP, CAN_ID_FREE_TOOL_CONFIG_RESP, CAN_ID_PERIPHERAL_INFO_RESP, CAN_ID_GLOBAL_STATUS, CAN_ID_LASER_CMD, CAN_ID_LASER_TELEMETRY,
     CAN_ID_QUERY_ACTIVE_TOOL, CAN_ID_QUERY_DIAG0, CAN_ID_QUERY_FRAM_STATE,
+    CAN_ID_QUERY_THERMAL_STATS, CAN_ID_THERMAL_STATS_RESP, format_thermal_stats,
     CAN_ID_QUERY_VERSION, CAN_ID_SOLDER_SETPOINT, CAN_ID_SOLDER_TELEMETRY,
     CAN_ID_VACUUM_TELEMETRY, CAN_ID_VERSION_RESPONSE, CUSTOM_ID_NAMES, ERASE_FRAM_MAGIC,
     CAN_ID_MLX_VARIANT_RESP, MLX_SENSOR_VARIANTS,
@@ -135,9 +137,15 @@ class CommonPanelsMixin:
         btn_row.grid(row=1, column=0, columnspan=2, sticky="w", padx=4)
         self._new_deck_button(btn_row, text=_("BTN_QUERY_STATE"), command=self._query_fram_state).pack(side="left")
         self._new_deck_button(btn_row, text=_("BTN_ERASE_FRAM"), command=self._erase_fram).pack(side="left", padx=(8, 0))
+        # Lifetime thermal counters (0x1AA/0x1AB, URTC firmware 0.3.3+) live
+        # in their own F-RAM record on the same chip.
+        self._new_deck_button(btn_row, text=_("BTN_QUERY_THERMAL_STATS"), command=self._query_thermal_stats).pack(side="left", padx=(8, 0))
+        results = ttk.Frame(parent)
+        results.grid(row=2, column=0, columnspan=2, sticky="w", padx=4, pady=(4, 4))
         self.fram_state_var = tk.StringVar(value="(not queried yet)")
-        ttk.Label(parent, textvariable=self.fram_state_var, wraplength=380, justify="left").grid(
-            row=2, column=0, columnspan=2, sticky="w", padx=4, pady=(4, 4))
+        ttk.Label(results, textvariable=self.fram_state_var, wraplength=380, justify="left").pack(anchor="w")
+        self.thermal_stats_var = tk.StringVar(value="")
+        ttk.Label(results, textvariable=self.thermal_stats_var, wraplength=380, justify="left").pack(anchor="w")
 
         ttk.Separator(parent, orient="horizontal").grid(row=3, column=0, columnspan=2, sticky="ew", pady=4)
         ttk.Label(parent, text=_("LBL_EXPANSION_BOARD_TYPE")).grid(
@@ -734,6 +742,16 @@ class CommonPanelsMixin:
                                           send_after_register=lambda: self.bus.send(CAN_ID_QUERY_FRAM_STATE, b""))
         self._show_fram_state(response)
 
+    def _query_thermal_stats(self):
+        if self.bus is None:
+            messagebox.showerror(_("TITLE_NOT_CONNECTED"), _("MSG_CONNECT_FIRST"))
+            return
+        response = self.bus.wait_for_one(CAN_ID_THERMAL_STATS_RESP, timeout=1.0,
+                                          send_after_register=lambda: self.bus.send(CAN_ID_QUERY_THERMAL_STATS, b""))
+        text = format_thermal_stats(protocol.decode_thermal_stats(response or b""))
+        self.thermal_stats_var.set(text)
+        self.log(text)
+
     def _query_expansion_board_type(self):
         if self.bus is None:
             messagebox.showerror(_("TITLE_NOT_CONNECTED"), _("MSG_CONNECT_FIRST"))
@@ -861,4 +879,3 @@ class CommonPanelsMixin:
     # soldering iron's keepalive still firing while the laser panel is
     # showing.
     # -------------------------------------------------------------------
-

@@ -776,8 +776,10 @@ ApplicationWindow {
                         enabled: testerBackend.canUseUtilityPanels
                         onClicked: window.requestUtilityAction(function() { testerBackend.eraseFram() })
                     }
+                    GameButton { text: testerBackend.uiText("BTN_QUERY_THERMAL_STATS"); accent: "#24465e"; Layout.preferredWidth: 190; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.queryThermalStats() }
                 }
                 Text { text: testerBackend.framStateText; visible: testerBackend.framStateText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                Text { text: testerBackend.thermalStatsText; visible: testerBackend.thermalStatsText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8

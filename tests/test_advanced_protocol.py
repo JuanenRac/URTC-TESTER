@@ -183,5 +183,48 @@ class AdvancedProtocolTests(unittest.TestCase):
         self.assertIsNone(protocol.decode_peripheral_info(bytes([0x03])))
 
 
+
+
+
+# --- URTC firmware 0.3.2+/0.3.3+: thermal runaway guard, reset cause, counters ---
+class ThermalProtocolTests(unittest.TestCase):
+    def test_decode_quick_state_old_firmware_reports_new_fields_as_missing(self):
+        q = protocol.decode_quick_state(bytes([10, 1, 0, 0]))
+        self.assertTrue(q["system_error"])
+        self.assertIsNone(q["thermal_fault"])
+        self.assertIsNone(q["reset_cause"])
+        self.assertFalse(q["watchdog_reset"])
+        self.assertIsNone(protocol.decode_quick_state(bytes([1, 2])))
+
+    def test_decode_quick_state_thermal_fault_and_watchdog_reset(self):
+        q = protocol.decode_quick_state(bytes([0, 1, 0, 0, 2, 0x01 | 0x10]))
+        self.assertEqual(q["thermal_fault_name"], "HEATING_NO_RISE")
+        self.assertTrue(q["watchdog_reset"])
+        self.assertEqual(q["reset_causes"], ["IWDG", "PIN"])
+
+    def test_decode_thermal_stats_big_endian_fields(self):
+        s = protocol.decode_thermal_stats(bytes([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 3, 1]))
+        self.assertEqual(s, {"fault_count": 0x0102, "heater_on_seconds": 0x03040506, "last_fault": 3,
+                             "last_fault_name": "DROPPED_AT_TARGET", "persisted": True})
+        self.assertIsNone(protocol.decode_thermal_stats(bytes(7)))
+
+    def test_thermal_runaway_bench_test_passes_only_on_a_counted_latched_fault(self):
+        before = protocol.decode_thermal_stats(bytes([0, 4, 0, 0, 1, 0, 1, 1]))
+        after = protocol.decode_thermal_stats(bytes([0, 5, 0, 0, 1, 10, 2, 1]))
+        faulted = protocol.decode_quick_state(bytes([0, 1, 0, 0, 2, 0]))
+        ok, reasons = protocol.evaluate_thermal_runaway_bench_test(before, after, faulted)
+        self.assertTrue(ok)
+        self.assertEqual(reasons, [])
+
+        healthy = protocol.decode_quick_state(bytes([0, 0, 0, 0, 0, 0]))
+        ok, reasons = protocol.evaluate_thermal_runaway_bench_test(before, before, healthy)
+        self.assertFalse(ok)
+        self.assertEqual(len(reasons), 3)
+
+        ok, reasons = protocol.evaluate_thermal_runaway_bench_test(None, after, faulted)
+        self.assertFalse(ok)
+        self.assertIn("0.3.3", reasons[0])
+
+
 if __name__ == "__main__":
     unittest.main()

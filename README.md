@@ -23,7 +23,7 @@
 </p>
 
 
-**Version:** 0.2.3 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 0.2.4 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 License: **GPL-3.0** for the source code, **CC BY-SA 4.0** for this
 documentation - see `LICENSE` in this repository, or the "License and
@@ -337,6 +337,17 @@ controller has to. Unchecking it sends a single zero/off frame and
 stops. The hotend fan has no watchdog (a stall detector instead - see
 `docs/CANBUS.md`), so it's a plain one-shot send.
 
+### 🔥 Thermal runaway bench test (URTC firmware 0.3.2+ / 0.3.3+)
+
+Detect now shows *why* a board latched an error: `0x111` byte 4 (thermal
+runaway guard: MAXTEMP, HEATING_NO_RISE or DROPPED_AT_TARGET) is shown in the
+board state, and a reset caused by the hardware watchdog (`0x111` byte 5) is
+logged. **Thermal counters** (F-RAM panel in both UIs) reads `0x1AA`/`0x1AB`:
+lifetime thermal faults, total heater-on hours and the last fault. Answers
+from older firmware (4-byte `0x111`, no `0x1AB`) are reported as "not
+reported", never as zero. The step-by-step procedure to confirm the guard on
+a real board is [`docs/THERMAL_RUNAWAY_BENCH_TEST.md`](docs/THERMAL_RUNAWAY_BENCH_TEST.md).
+
 ## 5. 📋 Logs and debug bundles
 
 Same as the flasher: a timestamped session log is written automatically
@@ -457,7 +468,8 @@ from the SVG during development; it is not required to run the application.
 │   ├── ARCHITECTURE.md
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
-│   └── CANBUS.md
+│   ├── CANBUS.md
+│   └── THERMAL_RUNAWAY_BENCH_TEST.md
 ├── tools/
 │   ├── build_test.py                     Non-versioning build/compile check + Qt Quick deck source validation
 │   ├── ci_validate.py                    Manifest/CHANGELOG/docs validation used by CI

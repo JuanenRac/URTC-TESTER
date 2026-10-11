@@ -23,7 +23,7 @@
 </p>
 
 
-**Versión:** 0.2.3 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Versión:** 0.2.4 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licencia: **GPL-3.0** para el código fuente, **CC BY-SA 4.0** para esta
 documentación - ver `LICENSE` en este repositorio, o la sección
@@ -383,6 +383,19 @@ trama de cero/apagado y para. El ventilador de hotend no tiene watchdog
 (un detector de estancamiento en su lugar - ver `docs/CANBUS.md`), así
 que es un envío simple de una vez.
 
+### 🔥 Prueba de banco de embalamiento térmico (firmware URTC 0.3.2+ / 0.3.3+)
+
+Detect ahora muestra *por qué* una placa enclavó un error: el byte 4 de
+`0x111` (protección contra embalamiento térmico: MAXTEMP, HEATING_NO_RISE o
+DROPPED_AT_TARGET) aparece en el estado de la placa, y un reinicio causado
+por el watchdog de hardware (byte 5 de `0x111`) queda en el registro.
+**Contadores térmicos** (panel F-RAM en ambas interfaces) lee `0x1AA`/`0x1AB`:
+fallos térmicos acumulados, horas totales con el calentador encendido y el
+último fallo. Las respuestas de firmware antiguo (`0x111` de 4 bytes, sin
+`0x1AB`) se muestran como "no informado", nunca como cero. El procedimiento
+paso a paso para confirmar la protección en una placa real está en
+[`docs/THERMAL_RUNAWAY_BENCH_TEST.md`](docs/THERMAL_RUNAWAY_BENCH_TEST.md).
+
 ## 5. 📋 Registros y paquetes de depuración
 
 Igual que el flasher: un registro de sesión con marca de tiempo se
@@ -522,7 +535,8 @@ ejecutar la aplicación.
 │   ├── ARCHITECTURE.md
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
-│   └── CANBUS.md
+│   ├── CANBUS.md
+│   └── THERMAL_RUNAWAY_BENCH_TEST.md
 ├── tools/
 │   ├── build_test.py                     Comprobación de compilación sin subir versión + validación de fuentes del deck Qt Quick
 │   ├── ci_validate.py                    Validación de manifest/CHANGELOG/docs usada por la CI

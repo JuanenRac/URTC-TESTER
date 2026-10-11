@@ -23,7 +23,7 @@
 </p>
 
 
-**Versione:** 0.2.3 · **Autore:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Versione:** 0.2.4 · **Autore:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licenza: **GPL-3.0** per il codice sorgente, **CC BY-SA 4.0** per questa
 documentazione - vedi `LICENSE` in questo repository, o la sezione
@@ -381,6 +381,19 @@ trama zero/spento e si ferma. La ventola hotend non ha watchdog (un
 rilevatore di stallo invece - vedi `docs/CANBUS.md`), quindi è un
 semplice invio singolo.
 
+### 🔥 Test al banco della fuga termica (firmware URTC 0.3.2+ / 0.3.3+)
+
+Detect ora mostra *perché* una scheda ha bloccato un errore: il byte 4 di
+`0x111` (protezione dalla fuga termica: MAXTEMP, HEATING_NO_RISE o
+DROPPED_AT_TARGET) compare nello stato della scheda, e un reset causato dal
+watchdog hardware (byte 5 di `0x111`) viene registrato nel log. **Contatori
+termici** (pannello F-RAM in entrambe le interfacce) legge `0x1AA`/`0x1AB`:
+guasti termici totali, ore totali di riscaldatore acceso e ultimo guasto. Le
+risposte di firmware più vecchi (`0x111` a 4 byte, nessun `0x1AB`) vengono
+mostrate come "non riportato", mai come zero. La procedura passo passo per
+verificare la protezione su una scheda reale è in
+[`docs/THERMAL_RUNAWAY_BENCH_TEST.md`](docs/THERMAL_RUNAWAY_BENCH_TEST.md).
+
 ## 5. 📋 Registri e pacchetti di debug
 
 Come il flasher: un registro di sessione con marca temporale viene
@@ -521,7 +534,8 @@ l'applicazione.
 │   ├── ARCHITECTURE.md
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
-│   └── CANBUS.md
+│   ├── CANBUS.md
+│   └── THERMAL_RUNAWAY_BENCH_TEST.md
 ├── tools/
 │   ├── build_test.py                     Controllo di compilazione senza incremento di versione + validazione delle sorgenti del deck Qt Quick
 │   ├── ci_validate.py                    Validazione manifest/CHANGELOG/docs usata dalla CI

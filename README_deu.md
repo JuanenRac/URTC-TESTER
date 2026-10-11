@@ -23,7 +23,7 @@
 </p>
 
 
-**Version:** 0.2.3 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 0.2.4 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Lizenz: **GPL-3.0** für den Quellcode, **CC BY-SA 4.0** für diese
 Dokumentation - siehe `LICENSE` in diesem Repository, oder den
@@ -394,6 +394,19 @@ einen einzelnen Null-/Aus-Frame und stoppt. Der Hotend-Lüfter hat
 keinen Watchdog (stattdessen einen Stillstandsdetektor - siehe
 `docs/CANBUS.md`), also ist es ein einfaches einmaliges Senden.
 
+### 🔥 Prüfstandstest für thermisches Durchgehen (URTC-Firmware 0.3.2+ / 0.3.3+)
+
+Detect zeigt jetzt, *warum* eine Platine einen Fehler verriegelt hat: Byte 4
+von `0x111` (Schutz vor thermischem Durchgehen: MAXTEMP, HEATING_NO_RISE oder
+DROPPED_AT_TARGET) erscheint im Platinenstatus, und ein vom
+Hardware-Watchdog ausgelöster Reset (Byte 5 von `0x111`) wird protokolliert.
+**Thermik-Zähler** (F-RAM-Bereich in beiden Oberflächen) liest
+`0x1AA`/`0x1AB`: thermische Fehler insgesamt, gesamte Heizstunden und den
+letzten Fehler. Antworten älterer Firmware (`0x111` mit 4 Bytes, kein
+`0x1AB`) werden als "nicht gemeldet" angezeigt, nie als null. Die
+Schritt-für-Schritt-Anleitung zur Prüfung an einer echten Platine steht in
+[`docs/THERMAL_RUNAWAY_BENCH_TEST.md`](docs/THERMAL_RUNAWAY_BENCH_TEST.md).
+
 ## 5. 📋 Protokolle und Debug-Pakete
 
 Wie beim Flasher: ein zeitgestempeltes Sitzungsprotokoll wird
@@ -537,7 +550,8 @@ nicht erforderlich.
 │   ├── ARCHITECTURE.md
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
-│   └── CANBUS.md
+│   ├── CANBUS.md
+│   └── THERMAL_RUNAWAY_BENCH_TEST.md
 ├── tools/
 │   ├── build_test.py                     Kompilierprüfung ohne Versionserhöhung + Validierung der Qt-Quick-Deck-Quellen
 │   ├── ci_validate.py                    Manifest-/CHANGELOG-/Doku-Validierung, von der CI genutzt

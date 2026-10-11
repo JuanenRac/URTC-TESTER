@@ -8,6 +8,23 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.2.4] - Thermal runaway guard and lifetime thermal counters (URTC firmware 0.3.2+/0.3.3+)
+
+- `advanced_protocol.py`: `decode_quick_state()` reads `0x111` byte 4
+  (thermal runaway fault code) and byte 5 (reset cause - bit0 = hardware
+  watchdog); `decode_thermal_stats()` reads `0x1AB` (lifetime faults, heater-on
+  seconds, last fault, F-RAM persisted); `evaluate_thermal_runaway_bench_test()`
+  gives the pass/fail verdict of the bench procedure. Missing bytes from older
+  firmware are "not reported", never zero.
+- Detect shows `THERMAL RUNAWAY: <fault>` in the board state and logs a
+  watchdog reset. New **Thermal counters** button (`0x1AA`) in the F-RAM panel
+  of both the Tk UI and the Qt Quick deck.
+- `docs/THERMAL_RUNAWAY_BENCH_TEST.md` (new): how to confirm the guard on a
+  real board. READMEs in all 7 languages describe it; new strings in all 7
+  `.lng` files.
+- Tests: 4 new unit tests (`tests/test_advanced_protocol.py`) and a new
+  check in `verify_qt_utility_panels.py`.
+
 ## [0.2.3] - The Qt Quick Tester can export a session that proves its log
 
 - A new **Export session** button in the Qt Quick deck (`--qtquick`) saves the activity log in `logs/` as a zip with `session_log.txt` and a `session_manifest.json` that names the log by its SHA-256 and size, with the Tester version, the port and whether it was connected, so a saved log can be shown to be unedited. It was already available in the Tk window; the label exists in the seven languages and two tests cover the bundle and the failure to create the folder.

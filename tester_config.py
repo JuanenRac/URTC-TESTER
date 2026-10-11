@@ -16,7 +16,7 @@ except ImportError:
     HAVE_SERIAL = False
 
 
-TESTER_VERSION = "0.2.3"
+TESTER_VERSION = "0.2.4"
 TESTER_AUTHOR = "JuanenRac"
 
 # THIS_HARDWARE_ID matches bootloader_common.h/firmware_common.h's own constant - used
@@ -251,6 +251,8 @@ CAN_ID_QUERY_DIAG0        = 0x182  # Query TMC_DIAG0's current level
 CAN_ID_DIAG0_RESP         = 0x183  # Answers CAN_ID_QUERY_DIAG0
 CAN_ID_QUERY_FRAM_STATE = 0x190  # Query the FM24CL64B's recovered state
 CAN_ID_FRAM_STATE_RESP  = 0x191  # Answers CAN_ID_QUERY_FRAM_STATE, also sent after an erase
+CAN_ID_QUERY_THERMAL_STATS = 0x1AA  # Query lifetime thermal counters (URTC firmware 0.3.3+)
+CAN_ID_THERMAL_STATS_RESP  = 0x1AB  # Answers CAN_ID_QUERY_THERMAL_STATS
 CAN_ID_ERASE_FRAM       = 0x192  # Magic-payload erase - see ERASE_FRAM_MAGIC below
 CAN_ID_EXPANSION_TYPE_RESP = 0x1A1  # Query (empty payload), or the response - see EXPANSION.TXT
 CAN_ID_FREE_TOOL_CONFIG_RESP = 0x1A3  # Query (empty payload), or the response - see EEPROM.TXT section 5
@@ -328,3 +330,15 @@ def _center_geometry(win, width, height):
     x = max(0, (ws - width) // 2)
     y = max(0, (hs - height) // 2)
     return f"{width}x{height}+{x}+{y}"
+
+
+def format_thermal_stats(stats):
+    """Display text for a decode_thermal_stats() result (None = no answer)."""
+    if stats is None:
+        return _("LBL_THERMAL_STATS_NO_RESPONSE")
+    hours = stats["heater_on_seconds"] / 3600.0
+    text = _("LBL_THERMAL_STATS_TEXT", faults=stats["fault_count"], hours=f"{hours:.2f}",
+             last=stats["last_fault_name"] or _("VAL_NONE"))
+    if not stats["persisted"]:
+        text += "\n" + _("LBL_THERMAL_STATS_NOT_PERSISTED")
+    return text

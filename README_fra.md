@@ -23,7 +23,7 @@
 </p>
 
 
-**Version :** 0.2.3 · **Auteur :** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version :** 0.2.4 · **Auteur :** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licence : **GPL-3.0** pour le code source, **CC BY-SA 4.0** pour cette
 documentation - voir `LICENSE` dans ce dépôt, ou la section « Licence
@@ -388,6 +388,19 @@ envoie une seule trame zéro/arrêt et s'arrête. Le ventilateur hotend
 n'a pas de watchdog (un détecteur de blocage à la place - voir
 `docs/CANBUS.md`), donc c'est un simple envoi unique.
 
+### 🔥 Test de banc d'emballement thermique (firmware URTC 0.3.2+ / 0.3.3+)
+
+Detect affiche désormais *pourquoi* une carte a verrouillé une erreur :
+l'octet 4 de `0x111` (protection contre l'emballement thermique : MAXTEMP,
+HEATING_NO_RISE ou DROPPED_AT_TARGET) apparaît dans l'état de la carte, et un
+redémarrage causé par le watchdog matériel (octet 5 de `0x111`) est
+journalisé. **Compteurs thermiques** (panneau F-RAM dans les deux
+interfaces) lit `0x1AA`/`0x1AB` : défauts thermiques cumulés, heures totales
+de chauffe et dernier défaut. Les réponses d'un ancien firmware (`0x111` sur
+4 octets, pas de `0x1AB`) sont affichées comme « non renseigné », jamais
+comme zéro. La procédure pas à pas pour valider la protection sur une vraie
+carte est dans [`docs/THERMAL_RUNAWAY_BENCH_TEST.md`](docs/THERMAL_RUNAWAY_BENCH_TEST.md).
+
 ## 5. 📋 Journaux et paquets de débogage
 
 Comme le flasher : un journal de session horodaté est écrit
@@ -527,7 +540,8 @@ pour exécuter l'application.
 │   ├── ARCHITECTURE.md
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
-│   └── CANBUS.md
+│   ├── CANBUS.md
+│   └── THERMAL_RUNAWAY_BENCH_TEST.md
 ├── tools/
 │   ├── build_test.py                     Contrôle de compilation sans gestion de version + validation des sources du deck Qt Quick
 │   ├── ci_validate.py                    Validation manifest/CHANGELOG/docs utilisée par la CI

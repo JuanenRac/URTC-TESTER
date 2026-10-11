@@ -19,6 +19,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
 from tester_result_record import session_manifest
+import advanced_protocol as protocol
 from tester_config import (
     _, AVAILABLE_LANGUAGES, BITRATE_500K_SLCAN_CODE, CAN_ID_3DP_HOTEND_FAN_CMD,
     CAN_ID_3DP_LAYER_FAN_CMD, CAN_ID_3DP_THERMAL_MOTION, CAN_ID_ACTIVE_TOOL_RESP,
@@ -883,6 +884,13 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             state_text, is_bad = self._format_board_state(err, can_err, booting)
             self.board_state_label.config(text=state_text, foreground="red" if is_bad else "green")
             self.log(_("LOG_ACTIVE_TOOL_STATE", name=name, tool_id=tool_id, state=state_text))
+            quick = protocol.decode_quick_state(bytes(tool_data))
+            if quick["thermal_fault"]:
+                self.board_state_label.config(text=f"{state_text} - {_('STATE_THERMAL_FAULT', fault=quick['thermal_fault_name'])}",
+                                              foreground="red")
+                self.log(_("STATE_THERMAL_FAULT", fault=quick["thermal_fault_name"]))
+            if quick["watchdog_reset"]:
+                self.log(_("LOG_WATCHDOG_RESET"))
             self.active_tool_id = tool_id
             self.rebuild_tool_panel(tool_id)
             self._notebook.select(self.tool_tab)
