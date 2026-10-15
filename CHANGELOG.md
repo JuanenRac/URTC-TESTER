@@ -8,6 +8,10 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.2.5] - Copy-log icon button
+
+- **Copy-log button:** the activity log has a small copy icon (two sheets) that puts the whole log on the clipboard and flashes green when done.
+
 ## [0.2.4] - Thermal runaway guard and lifetime thermal counters (URTC firmware 0.3.2+/0.3.3+)
 
 - `advanced_protocol.py`: `decode_quick_state()` reads `0x111` byte 4
