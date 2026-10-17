@@ -706,6 +706,13 @@ ApplicationWindow {
                         enabled: testerBackend.canSendMotion
                         onClicked: motionConfirm.open()
                     }
+                    GameButton {
+                        text: testerBackend.uiText("QT_STOP_MOTION")
+                        accent: "#a33a3a"
+                        Layout.preferredWidth: 100
+                        enabled: testerBackend.canSendMotion
+                        onClicked: testerBackend.stopMotion()
+                    }
                 }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
 

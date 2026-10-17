@@ -162,12 +162,14 @@ class PanelHelpersMixin:
 
         def add_point(value):
             import time
-            clamped = max(0, min(y_max, value))
+            clamped = max(0, min(y_max, value))   # only the drawing is clamped to the range of the graph
             values.append(clamped)
             if len(values) > max_points:
                 values.pop(0)
             t = time.monotonic()
-            history.append((t - (history[0][0] if history else t), clamped))
+            history.append((t - (history[0][0] if history else t), value))   # the CSV keeps what was measured, not what fits the graph
+            if len(history) > 200_000:
+                del history[:len(history) - 200_000]   # about eight hours of one point every 150 ms; it no longer grows for ever
             if not canvas.winfo_exists():
                 return
             if len(values) < 2:

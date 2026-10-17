@@ -16,7 +16,7 @@ except ImportError:
     HAVE_SERIAL = False
 
 
-TESTER_VERSION = "0.2.5"
+TESTER_VERSION = "0.2.6"
 TESTER_AUTHOR = "JuanenRac"
 
 # THIS_HARDWARE_ID matches bootloader_common.h/firmware_common.h's own constant - used
@@ -211,6 +211,8 @@ CAN_ID_QUERY_ACTIVE_TOOL = 0x110  # Query which tool profile is active + quick s
 CAN_ID_ACTIVE_TOOL_RESP  = 0x111  # Answers CAN_ID_QUERY_ACTIVE_TOOL
 CAN_ID_MOTION_CMD        = 0x120  # Stepper dir+steps - dispensers/screwdriver/grippers, and (doc #16) the soldering iron's own wire feeder
 CAN_ID_SOLDER_SETPOINT   = 0x130  # T12 setpoint temperature
+# The firmware refuses a setpoint above this (soldering iron, hot air) and declares a latched CRITICAL ERROR (firmware_control_thermal.c): no screen offers more.
+SETPOINT_MAX_C = 445
 CAN_ID_SOLDER_FEEDER_RESET = 0x131  # Reset wire feeder's own open-loop position to 0 - magic payload, see CANBUS.TXT
 CAN_ID_SOLDER_FEEDER_POS   = 0x132  # Query/response: wire feeder's own current position (signed steps)
 CAN_ID_SOLDER_TELEMETRY  = 0x135  # T12 actual temperature only (DLC 2, no endstop byte), see CANBUS.TXT's own 0x135 note

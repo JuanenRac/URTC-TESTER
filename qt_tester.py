@@ -39,6 +39,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 
 from tester_config import (
+    SETPOINT_MAX_C,
     LOGS_FOLDER,
     BITRATE_500K_SLCAN_CODE,
     CAN_ID_ACTIVE_TOOL_RESP,
@@ -239,6 +240,7 @@ class TesterQtBridge(QObject):
             "QT_DIRECTION": "DIRECTION",
             "QT_STEPS": "STEPS",
             "QT_SEND_MOTION": "SEND MOTION",
+            "QT_STOP_MOTION": "STOP",
             "QT_PROFILE_NOT_MATCHED": "Select and verify a matching motion profile first.",
             "QT_CONFIRM_MOTION": "CONFIRM MOTION",
             "QT_CONFIRM_MOTION_HELP": "This sends one real CAN motion command to the verified tool. Confirm the machine is clear and its safety interlock is active.",
@@ -588,6 +590,7 @@ class TesterQtBridge(QObject):
         if self._transport is not None:
             self._stop_all_watchdogs()
             self._custom_periodic_active = False
+            self.stopMotion()   # a move that was left running does not go on turning after the connection is closed
             try:
                 self._transport.close()
             finally:
@@ -642,6 +645,25 @@ class TesterQtBridge(QObject):
         if tool_id in TOOL_NAMES and not self._busy:
             self._selected_tool_id = tool_id
             self.changed.emit()
+
+    def shutdownOutputs(self) -> None:
+        try:
+            self._stop_all_watchdogs()
+            self.stopMotion()
+        except Exception as exc:
+            self._log(f"SHUTDOWN_OUTPUTS_FAILED {exc}")
+
+    @Slot()
+    def stopMotion(self) -> None:
+        """0 steps is the firmware's order to stop a movement (0x120); it is not behind the confirmation, because stopping must always be one press away."""
+        transport = self._transport
+        if transport is None:
+            return
+        try:
+            transport.send_frame(CAN_ID_MOTION_CMD, b"\x00\x00\x00\x00\x00")
+            self._log("MOTION_STOP_SENT")
+        except Exception as exc:
+            self._log(f"MOTION_STOP_FAILED {exc}")
 
     @Slot(str, str)
     def sendMotion(self, direction: str, steps_text: str) -> None:
@@ -769,12 +791,12 @@ class TesterQtBridge(QObject):
         family. A stop always sends that family's documented safe-off frame.
         """
         schemas = {
-            "solder": (0, "solder", 0.15, CAN_ID_SOLDER_SETPOINT, 0, 450),
+            "solder": (0, "solder", 0.15, CAN_ID_SOLDER_SETPOINT, 0, SETPOINT_MAX_C),
             "laser": (9, "laser", 0.15, CAN_ID_LASER_CMD, 0, 255),
             "printer_heater": (10, "printer_heater", 0.15, CAN_ID_3DP_THERMAL_MOTION, 0, 300),
             "layer_fan": (10, "layer_fan", 0.4, CAN_ID_3DP_LAYER_FAN_CMD, 0, 255),
             "uv": (18, "uv", 0.15, CAN_ID_UV_CURING_CMD, 0, 255),
-            "hotair": (19, "hotair", 0.15, CAN_ID_HOTAIR_CMD, 0, 450),
+            "hotair": (19, "hotair", 0.15, CAN_ID_HOTAIR_CMD, 0, SETPOINT_MAX_C),
         }
         schema = schemas.get(kind)
         if schema is None or not self._require_profile({schema[0]}, "WATCHDOG"):
@@ -786,19 +808,13 @@ class TesterQtBridge(QObject):
             return
         profile_id, key, interval_s, command_id, _minimum, _maximum = schema
         del profile_id, _minimum, _maximum
-        if kind == "solder":
-            frame, off = (command_id, struct.pack(">H", value)), (command_id, struct.pack(">H", 0))
-        elif kind == "laser":
-            # Legacy protocol accepts the interlock bit as its second byte.
-            frame, off = (command_id, bytes([value, 0x01 if secondary else 0x00])), (command_id, b"\x00\x00")
-        elif kind == "printer_heater":
-            frame, off = (command_id, struct.pack(">H", value) + b"\x01\x00\x00\x00"), (command_id, b"\x00\x01\x00\x00\x00")
-        elif kind == "layer_fan":
-            frame, off = (command_id, bytes([value])), (command_id, b"\x00")
-        elif kind == "uv":
-            frame, off = (command_id, bytes([value])), (command_id, b"\x00")
-        else:  # hotair
-            frame, off = (command_id, struct.pack(">H", value) + bytes([secondary])), (command_id, b"\x00\x00\x00")
+        # The frames come from the one encoder the tests cover (advanced_protocol.watchdog_frames): this screen had its own copies, and the heater's safe-off had 5 bytes where the
+        # firmware needs 6, so the "safe off" button did not turn the heater off.
+        try:
+            frame, off, _encoded_interval = protocol.watchdog_frames(kind, value, secondary)
+        except ValueError:
+            self._log("WATCHDOG_BLOCKED invalid numeric parameters")
+            return
         if enabled:
             self._start_watchdog(key, interval_s, frame, off)
         else:
@@ -1194,14 +1210,16 @@ class TesterQtBridge(QObject):
         if direction not in ("clockwise", "counter-clockwise"):
             self._log(f"DRILL_BLOCKED unknown direction {direction!r}")
             return
-        try:
-            self._transport.send_frame(
-                CAN_ID_DRILL_CMD,
-                bytes([speed, 0x01 if direction == "counter-clockwise" else 0x00]),
-            )
-            self._log(f"DRILL_SENT speed={speed} direction={direction}")
-        except Exception as exc:
-            self._log(f"DRILL_FAILED {exc}")
+        # The firmware cuts the drill after 250 ms without a new command and latches a CRITICAL ERROR, so a drill that runs is refreshed like the laser and the heaters, and speed 0
+        # (the active brake) stops that refreshing. A single frame used to spin the drill for 250 ms and leave the board in error.
+        frame = (CAN_ID_DRILL_CMD, bytes([speed, 0x01 if direction == "counter-clockwise" else 0x00]))
+        off = (CAN_ID_DRILL_CMD, b"\x00\x00")
+        if speed == 0:
+            self._stop_watchdog("drill", off)
+            self._log(f"DRILL_STOPPED direction={direction} (speed 0, active brake)")
+            return
+        self._start_watchdog("drill", 0.15, frame, off)
+        self._log(f"DRILL_SENT speed={speed} direction={direction} (refreshed every 150 ms)")
 
     @Slot(str, str)
     def sendAoi(self, mode: str, period_text: str) -> None:
@@ -1536,6 +1554,8 @@ def run_qtquick() -> int:
     if not icon.isNull():
         app.setWindowIcon(icon)
     bridge = TesterQtBridge()
+    # Closing the window switches every output off first (the watchdog threads are daemons and die without sending their safe-off frame).
+    app.aboutToQuit.connect(bridge.shutdownOutputs)
     engine = QQmlApplicationEngine()
     engine.rootContext().setContextProperty("testerBackend", bridge)
     qml_path = Path(__file__).resolve().parent / "assets" / "qml" / "TesterDeck.qml"

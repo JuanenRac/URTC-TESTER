@@ -23,7 +23,7 @@ import advanced_protocol as protocol
 from tester_config import (
     _, AVAILABLE_LANGUAGES, BITRATE_500K_SLCAN_CODE, CAN_ID_3DP_HOTEND_FAN_CMD,
     CAN_ID_3DP_LAYER_FAN_CMD, CAN_ID_3DP_THERMAL_MOTION, CAN_ID_ACTIVE_TOOL_RESP,
-    CAN_ID_DRILL_CMD, CAN_ID_LASER_CMD, CAN_ID_QUERY_ACTIVE_TOOL, CAN_ID_QUERY_VERSION,
+    CAN_ID_CRIMPING_CMD, CAN_ID_DRILL_CMD, CAN_ID_LASER_CMD, CAN_ID_MOTION_CMD, CAN_ID_QUERY_ACTIVE_TOOL, CAN_ID_QUERY_VERSION,
     CAN_ID_UV_CURING_CMD, CAN_ID_HOTAIR_CMD,
     CAN_ID_SOLDER_SETPOINT, CAN_ID_VERSION_RESPONSE, CONFIG_PATH, HYDRA_UMC_ICON_FRAMES_DIR, ICON_IMAGE_PATH,
     LOGS_FOLDER, MOTION_TOOL_IDS, SLCAN_BITRATES, TESTER_VERSION, THIS_HARDWARE_ID,
@@ -1047,6 +1047,11 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
                 except Exception as e:
                     self.log(_("LOG_OFF_COMMAND_FAILED_ID", cmd_id=cmd_id, tool_id=self._current_tool_id, e=e))
 
+        def _send_motion_stop():
+            # a plain stepper (or the crimping actuator) keeps turning for as many steps as it was given: 0 steps is the firmware's order to stop
+            stop = bytes([0x00]) + struct.pack(">I", 0)
+            self.bus.send(CAN_ID_CRIMPING_CMD if self._current_tool_id == 21 else CAN_ID_MOTION_CMD, stop)
+
         off_commands = {
             0: lambda: self.bus.send(CAN_ID_SOLDER_SETPOINT, struct.pack(">H", 0)),
             5: lambda: self.bus.send(CAN_ID_DRILL_CMD, bytes([0, 0])),
@@ -1054,6 +1059,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             10: _send_3dp_off,
             18: lambda: self.bus.send(CAN_ID_UV_CURING_CMD, bytes([0])),
             19: lambda: self.bus.send(CAN_ID_HOTAIR_CMD, struct.pack(">H", 0) + bytes([0])),
+            **{tool_id: _send_motion_stop for tool_id in (*MOTION_TOOL_IDS, 21)},
         }.get(self._current_tool_id)
         if off_commands is not None:
             try:
@@ -1363,6 +1369,12 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         ).pack(side="right", padx=10, pady=6)
 
     def on_close(self):
+        # Switch the tool off before anything is torn down: a heater, laser or motor must not be left to the firmware's watchdog (which latches an error) or, for the ones
+        # without a watchdog, left on.
+        try:
+            self._send_tool_off_command()
+        except Exception:
+            pass
         self._stop_bus_health_monitor()
         for job_id in list(self._keepalive_jobs.values()):
             try:

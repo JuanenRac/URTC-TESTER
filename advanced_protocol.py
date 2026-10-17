@@ -14,6 +14,7 @@ from __future__ import annotations
 import struct
 
 from tester_config import (
+    SETPOINT_MAX_C,
     CAN_ID_3DP_HOTEND_FAN_CMD,
     CAN_ID_3DP_LAYER_FAN_CMD,
     CAN_ID_3DP_THERMAL_MOTION,
@@ -144,7 +145,7 @@ def paste_pulse_frame(channel: str | int, duty: str | int, duration_ms: str | in
     return CAN_ID_PASTE_JETTING_PULSE, bytes([
         bounded_int(channel, 0, 3),
         bounded_int(duty, 0, 100),
-        bounded_int(duration_ms, 0, 255),
+        bounded_int(duration_ms, 1, 255),   # 0 would be a continuous pulse that nothing here can stop (CANBUS.TXT 0x231)
     ])
 
 
@@ -164,17 +165,19 @@ def printer_frame(action: str, first: str | int, second: str | int) -> tuple[int
 def watchdog_frames(kind: str, first: str | int, second: str | int) -> tuple[tuple[int, bytes], tuple[int, bytes], float]:
     """Return (refresh frame, safe-off frame, interval seconds)."""
     if kind == "solder":
-        return (CAN_ID_SOLDER_SETPOINT, struct.pack(">H", bounded_int(first, 0, 450))), (CAN_ID_SOLDER_SETPOINT, b"\x00\x00"), 0.15
+        return (CAN_ID_SOLDER_SETPOINT, struct.pack(">H", bounded_int(first, 0, SETPOINT_MAX_C))), (CAN_ID_SOLDER_SETPOINT, b"\x00\x00"), 0.15
     if kind == "laser":
         return (CAN_ID_LASER_CMD, bytes([bounded_int(first, 0, 255), 0x01 if bounded_int(second, 0, 1) else 0x00])), (CAN_ID_LASER_CMD, b"\x00\x00"), 0.15
     if kind == "printer_heater":
         return (CAN_ID_3DP_THERMAL_MOTION, struct.pack(">H", bounded_int(first, 0, 300)) + b"\x01\x00\x00\x00"), (CAN_ID_3DP_THERMAL_MOTION, b"\x00\x00\x01\x00\x00\x00"), 0.15
+    if kind == "drill":
+        return (CAN_ID_DRILL_CMD, bytes([bounded_int(first, 0, 255), 0x01 if bounded_int(second, 0, 1) else 0x00])), (CAN_ID_DRILL_CMD, b"\x00\x00"), 0.15
     if kind == "layer_fan":
         return (CAN_ID_3DP_LAYER_FAN_CMD, bytes([bounded_int(first, 0, 255)])), (CAN_ID_3DP_LAYER_FAN_CMD, b"\x00"), 0.4
     if kind == "uv":
         return (CAN_ID_UV_CURING_CMD, bytes([bounded_int(first, 0, 255)])), (CAN_ID_UV_CURING_CMD, b"\x00"), 0.15
     if kind == "hotair":
-        return (CAN_ID_HOTAIR_CMD, struct.pack(">H", bounded_int(first, 0, 450)) + bytes([bounded_int(second, 0, 255)])), (CAN_ID_HOTAIR_CMD, b"\x00\x00\x00"), 0.15
+        return (CAN_ID_HOTAIR_CMD, struct.pack(">H", bounded_int(first, 0, SETPOINT_MAX_C)) + bytes([bounded_int(second, 0, 255)])), (CAN_ID_HOTAIR_CMD, b"\x00\x00\x00"), 0.15
     raise ValueError("unknown watchdog family")
 
 
@@ -278,12 +281,13 @@ def decode_mlx_sensor_variant(data: bytes) -> str | None:
 
 def decode_free_tool_config(data: bytes) -> dict[str, object] | None:
     """Decodes CAN_ID_FREE_TOOL_CONFIG_RESP (0x1A3) - the real raw
-    ID-jumper reading plus what it resolves to (0 or >12 = none
-    selected), read-only here (only the Flasher ever writes it)."""
+    ID-jumper reading plus what it resolves to (0 = none
+    selected, 1 to 25 = a tool), read-only here (only the Flasher ever writes it)."""
     if len(data) < 2:
         return None
     raw_id_pin, selection = data[0], data[1]
-    tool_name = TOOL_NAMES.get(selection - 1) if 1 <= selection <= 12 else None
+    # 0 = none selected, 1..25 = one of the tools (firmware_can_global_pre.c accepts up to 25); it used to stop at 12, from the time there were 12 profiles
+    tool_name = TOOL_NAMES.get(selection - 1) if 1 <= selection <= len(TOOL_NAMES) else None
     return {"raw_id_pin": raw_id_pin, "selection": selection, "tool_name": tool_name}
 
 

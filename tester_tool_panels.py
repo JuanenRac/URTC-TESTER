@@ -17,7 +17,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 
 from tester_config import (
-    _, CAN_ID_3DP_HOTEND_FAN_CMD, CAN_ID_3DP_HOTEND_FAN_RPM, CAN_ID_3DP_HOTEND_TELEM,
+    SETPOINT_MAX_C, _, CAN_ID_3DP_HOTEND_FAN_CMD, CAN_ID_3DP_HOTEND_FAN_RPM, CAN_ID_3DP_HOTEND_TELEM,
     CAN_ID_3DP_LAYER_FAN_CMD, CAN_ID_3DP_LAYER_FAN_RPM, CAN_ID_3DP_THERMAL_MOTION,
     CAN_ID_AOI_CMD, CAN_ID_AOI_TELEMETRY, CAN_ID_DRILL_CMD, CAN_ID_DRILL_TELEMETRY,
     CAN_ID_IMPACT_EVENT, CAN_ID_LASER_CMD, CAN_ID_LASER_TELEMETRY, CAN_ID_MOTION_CMD,
@@ -40,10 +40,10 @@ class ToolPanelsMixin:
         temp_var = tk.StringVar(value="-- °C")
 
         ttk.Label(parent, text=_("LBL_SETPOINT_TEMPERATURE")).grid(row=0, column=0, sticky="w", padx=4, pady=4)
-        ttk.Spinbox(parent, from_=0, to=450, textvariable=setpoint, width=6).grid(row=0, column=1, sticky="w", padx=4)
+        ttk.Spinbox(parent, from_=0, to=SETPOINT_MAX_C, textvariable=setpoint, width=6).grid(row=0, column=1, sticky="w", padx=4)
 
         def _send_setpoint():
-            value = max(0, min(450, self._safe_int(setpoint, 0)))
+            value = max(0, min(SETPOINT_MAX_C, self._safe_int(setpoint, 0)))
             self.bus.send(CAN_ID_SOLDER_SETPOINT, struct.pack(">H", value))
 
         def _toggle():
@@ -182,6 +182,13 @@ class ToolPanelsMixin:
             self.log(_("LOG_TOOL_MOVE", tool=tool_name, direction=self._opt_display(direction.get()), n=n))
 
         self._new_deck_button(parent, text=_("BTN_MOVE"), command=_send_move).grid(row=r+2, column=2, padx=8)
+
+        def _send_stop():
+            # 0 steps is the firmware's order to stop a movement (firmware_can_motion.c); the Spinbox only allows 1 or more, so this is the one way to stop a long move
+            self.bus.send(cmd_id, bytes([0x00]) + struct.pack(">I", 0))
+            self.log(_("LOG_TOOL_STOP", tool=tool_name))
+
+        self._new_deck_button(parent, text=_("BTN_STOP_MOTION"), command=_send_stop).grid(row=r+2, column=3, padx=8)
         ttk.Label(
             parent,
             text=_("HELP_ONE_SHOT_NO_TELEMETRY"),
@@ -252,28 +259,46 @@ class ToolPanelsMixin:
         # step for exactly that reason.
         self._drill_last_sent_speed = 0
 
-        def _send_drill():
-            # see _build_motion_panel's own comment above -
-            # an unrecognized direction must never silently become the
-            # opposite valid one just because the combobox itself is
-            # only ever supposed to offer these two labels.
+        drill_active = tk.BooleanVar(value=False)
+
+        def _drill_frame():
+            # an unrecognized direction must never silently become the opposite valid one just because the combobox itself is only ever supposed to offer these two labels
             raw_direction = direction.get()
             if raw_direction not in ("Clockwise", "Counter-clockwise"):
                 self.log(_("LOG_TOOL_MOVE_BLOCKED_DIRECTION", tool="Drill", direction=raw_direction))
-                return
+                return None
             dir_byte = 0x01 if raw_direction == "Counter-clockwise" else 0x00
-            spd = max(0, min(255, self._safe_int(speed, 0)))
-            if spd > 0 and self._drill_last_sent_speed == 0:
-                if not messagebox.askyesno(
+            return bytes([max(0, min(255, self._safe_int(speed, 0))), dir_byte])
+
+        def _drill_tick():
+            frame = _drill_frame()
+            if frame is not None:
+                self.bus.send(CAN_ID_DRILL_CMD, frame)
+
+        def _toggle_drill():
+            # The firmware cuts the drill after 250 ms without a new command and latches a CRITICAL ERROR (firmware_telemetry_watchdog.c): it must be refreshed like the laser or
+            # the heaters, and switching it off sends speed 0 (the active brake). A single send used to spin it for 250 ms and leave the board in error.
+            if drill_active.get():
+                frame = _drill_frame()
+                if frame is None:
+                    drill_active.set(False)
+                    return
+                if frame[0] > 0 and not messagebox.askyesno(
                     _("TITLE_CONFIRM_DRILL_ACTIVATION_Q"),
                     _("MSG_CONFIRM_DRILL_ACTIVATION"),
                     icon="warning",
                 ):
+                    drill_active.set(False)
                     return
-            self._drill_last_sent_speed = spd
-            self.bus.send(CAN_ID_DRILL_CMD, bytes([spd, dir_byte]))
+                self._drill_last_sent_speed = frame[0]
+                self._start_keepalive("drill", 150, _drill_tick, on_failure=lambda: drill_active.set(False))
+            else:
+                self._stop_keepalive("drill")
+                self._drill_last_sent_speed = 0
+                self.bus.send(CAN_ID_DRILL_CMD, bytes([0x00, 0x00]))
+                self.log(_("LOG_DRILL_STOPPED"))
 
-        self._new_deck_button(parent, text=_("BTN_SEND"), command=_send_drill).grid(row=1, column=2, padx=8)
+        ttk.Checkbutton(parent, text=_("LBL_ACTIVE_250MS_WATCHDOG"), variable=drill_active, command=_toggle_drill).grid(row=1, column=2, sticky="w", padx=8)
         ttk.Label(
             parent, text=_("HELP_NO_WATCHDOG_HOLDS_VALUE"),
             foreground="gray", wraplength=380, justify="left",
@@ -472,8 +497,10 @@ class ToolPanelsMixin:
         ttk.Label(left, text=_("LBL_NOZZLE_SETPOINT")).grid(row=0, column=0, sticky="w", padx=4, pady=4)
         ttk.Spinbox(left, from_=0, to=300, textvariable=nozzle_setpoint, width=6).grid(row=0, column=1, sticky="w", padx=4)
 
-        def _send_thermal_motion(steps_override=None):
-            temp = max(0, min(300, self._safe_int(nozzle_setpoint, 0)))
+        def _send_thermal_motion(steps_override=None, temp_override=None):
+            # temp_override is how the heater is turned OFF: the frame must say 0 C. Sending the spinbox's setpoint here re-armed the heater with nothing to keep it alive,
+            # and the firmware's 250 ms watchdog then cut it and latched a critical error.
+            temp = max(0, min(300, self._safe_int(nozzle_setpoint, 0))) if temp_override is None else temp_override
             dir_byte = 0x01 if extruder_dir.get() == "Forward" else 0x00
             # steps_override lets a caller force this frame's step count
             # regardless of whatever the Spinbox currently holds - see
@@ -517,7 +544,7 @@ class ToolPanelsMixin:
                 self._start_keepalive("nozzle", 150, _send_temp_keepalive_tick, on_failure=lambda: nozzle_active.set(False))
             else:
                 self._stop_keepalive("nozzle")
-                _send_thermal_motion(steps_override=0)
+                _send_thermal_motion(steps_override=0, temp_override=0)
                 self.log(_("LOG_3DP_NOZZLE_TURNED_OFF"))
 
         ttk.Checkbutton(left, text=_("LBL_HEATER_ACTIVE_250MS"), variable=nozzle_active,
@@ -528,7 +555,8 @@ class ToolPanelsMixin:
         extruder_dir_combo.grid(row=1, column=1, sticky="w", padx=4)
         ttk.Label(left, text=_("LBL_EXTRUDER_STEPS")).grid(row=2, column=0, sticky="w", padx=4, pady=4)
         ttk.Spinbox(left, from_=0, to=16777215, textvariable=extruder_steps, width=10).grid(row=2, column=1, sticky="w", padx=4)
-        self._new_deck_button(left, text=_("BTN_MOVE_EXTRUDER_ONCE"), command=_send_thermal_motion).grid(row=2, column=2, padx=8)
+        # a single move only carries the setpoint when the heater is really on (kept alive); otherwise it must not heat for 250 ms and latch an error
+        self._new_deck_button(left, text=_("BTN_MOVE_EXTRUDER_ONCE"), command=lambda: _send_thermal_motion(temp_override=None if nozzle_active.get() else 0)).grid(row=2, column=2, padx=8)
         ttk.Label(
             left, text=_("HELP_EXTRUDER_MOTION_SHARED_FRAME"),
             foreground="gray", wraplength=380, justify="left",
@@ -760,7 +788,7 @@ class ToolPanelsMixin:
         temp_var = tk.StringVar(value="-- °C")
 
         ttk.Label(parent, text=_("LBL_SETPOINT_TEMPERATURE")).grid(row=0, column=0, sticky="w", padx=4, pady=4)
-        ttk.Spinbox(parent, from_=0, to=450, textvariable=setpoint, width=6).grid(row=0, column=1, sticky="w", padx=4)
+        ttk.Spinbox(parent, from_=0, to=SETPOINT_MAX_C, textvariable=setpoint, width=6).grid(row=0, column=1, sticky="w", padx=4)
 
         ttk.Label(parent, text=_("LBL_BLOWER_0_255")).grid(row=1, column=0, sticky="w", padx=4, pady=4)
         blower_scale = ttk.Scale(parent, from_=0, to=255, variable=blower, orient="horizontal", length=160)
@@ -770,7 +798,7 @@ class ToolPanelsMixin:
         blower_scale.config(command=lambda v: blower_label.config(text=str(int(float(v)))))
 
         def _send_setpoint():
-            temp = max(0, min(450, self._safe_int(setpoint, 0)))
+            temp = max(0, min(SETPOINT_MAX_C, self._safe_int(setpoint, 0)))
             blow = max(0, min(255, blower.get()))
             self.bus.send(CAN_ID_HOTAIR_CMD, struct.pack(">H", temp) + bytes([blow]))
 
@@ -929,7 +957,7 @@ class ToolPanelsMixin:
         ttk.Label(parent, text=_("LBL_DUTY_PERCENT")).grid(row=3, column=0, sticky="w", padx=4, pady=4)
         ttk.Spinbox(parent, from_=0, to=100, textvariable=duty, width=6).grid(row=3, column=1, sticky="w", padx=4)
         ttk.Label(parent, text=_("LBL_PULSE_DURATION_MS")).grid(row=4, column=0, sticky="w", padx=4, pady=4)
-        ttk.Spinbox(parent, from_=0, to=255, textvariable=pulse_ms, width=6).grid(row=4, column=1, sticky="w", padx=4)
+        ttk.Spinbox(parent, from_=1, to=255, textvariable=pulse_ms, width=6).grid(row=4, column=1, sticky="w", padx=4)
 
         def _fire():
             # _require_int, not _safe_int, for the same reason as the weld
