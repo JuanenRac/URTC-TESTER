@@ -44,13 +44,33 @@ set -euo pipefail
 # double-clicking this script in a file manager before anyone could read
 # why it failed) - runs on every exit path, no need to duplicate it at
 # each individual error site.
-trap 'echo; read -p "Press Enter to close this window... " _dummy' EXIT
+#
+# The version bump below happens before the compilation (the executable
+# must carry the new number), so a build that fails afterwards puts the
+# files the bump touched back as they were: a failed build must not leave
+# the tree on a version that was never built.
+BUMP_BACKUP="$(mktemp -d)"
+BUILD_OK=0
+restore_after_failed_build() {
+    if [ "$BUILD_OK" != "1" ] && [ -f "$BUMP_BACKUP/.saved" ]; then
+        echo "      Build failed: restoring the files the version bump changed."
+        for f in "$BUMP_BACKUP"/*; do
+            cp -f "$f" "./$(basename "$f")"
+        done
+    fi
+    rm -rf "$BUMP_BACKUP"
+    echo; read -p "Press Enter to close this window... " _dummy
+}
+trap restore_after_failed_build EXIT
+
+# Tkinter is only needed by the classic window (--legacy); the default Qt
+# Quick deck does not use it, so a missing Tk is a warning, not an error.
 if ! python3 -c "import tkinter" 2>/dev/null; then
-    echo "      tkinter isn't available for this Python install."
+    echo "      Note: tkinter is not available for this Python install, so the"
+    echo "      classic window (--legacy) will not work in the built binary."
     echo "      On Debian/Ubuntu:  sudo apt install python3-tk"
     echo "      On Fedora:         sudo dnf install python3-tkinter"
     echo "      On Arch:           sudo pacman -S tk"
-    exit 1
 fi
 echo "      Found."
 echo
@@ -76,8 +96,12 @@ echo "[4/6] Bumping TESTER_VERSION for this build..."
 # "python3 urtc_tester.py" from source. base-10 "odometer" rule - see
 # bump_version.py for the exact carry logic (e.g. 1.1.9 -> 1.2.0).
 # set -e (top of this script) already aborts the build if this fails.
+for f in tester_config.py urtc.project.json CHANGELOG.md README*.md; do
+    if [ -f "$f" ]; then cp -f "$f" "$BUMP_BACKUP/$f"; fi
+done
+touch "$BUMP_BACKUP/.saved"
 # HYDRA_UMC_SCRIPT_STANDARD_VERSION_STEP
-printf '%s\n' "[1/6] Incrementing project version and synchronising its manifest..."
+printf '%s\n' "      Incrementing project version and synchronising its manifest..."
 python3 bump_version.py || exit 1
 # HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_BEFORE
 HYDRA_UMC_VERSION_BEFORE="$(python3 -c 'import json, pathlib, sys; print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["version"])' "$(dirname "$0")/urtc.project.json")"
@@ -108,6 +132,10 @@ python3 -m PyInstaller --onefile --noconfirm --name "URTC_Tester" \
     --hidden-import tester_common_panels \
     --hidden-import tester_panel_helpers \
     --hidden-import tester_tool_panels \
+    --hidden-import advanced_protocol \
+    --hidden-import tester_result_record \
+    --hidden-import hydra_umc_animation \
+    --hidden-import hydra_umc_deck_widgets \
     --hidden-import qt_tester \
     --hidden-import PySide6.QtQml \
     --hidden-import PySide6.QtQuick \
@@ -122,6 +150,7 @@ fi
 echo "      Done."
 echo
 
+BUILD_OK=1
 echo "[6/6] Copying files that must sit next to the binary, not inside it..."
 # language/ is deliberately NOT bundled into the binary itself (unlike
 # assets/ above) - it's meant to stay editable without a rebuild, same

@@ -27,9 +27,9 @@ from tester_config import (
     CAN_ID_UV_CURING_CMD, CAN_ID_HOTAIR_CMD,
     CAN_ID_FREE_TOOL_CONFIG_RESP, CAN_ID_SOLDER_SETPOINT, CAN_ID_VERSION_RESPONSE, CONFIG_PATH, HYDRA_UMC_ICON_FRAMES_DIR, ICON_IMAGE_PATH,
     LOGS_FOLDER, MOTION_TOOL_IDS, SLCAN_BITRATES, TESTER_VERSION, THIS_HARDWARE_ID,
-    TOOL_NAMES, list_serial_ports, load_language, save_config, _center_geometry,
+    TOOL_NAMES, list_serial_ports, load_config, save_config, _center_geometry,
 )
-from tester_transports import SLCAN, SLCANError, SocketCAN, SocketCANError, list_socketcan_interfaces
+from tester_transports import SLCAN, SLCANError, SocketCAN, list_socketcan_interfaces
 from tester_bus_monitor import CANBusMonitor
 from tester_common_panels import CommonPanelsMixin
 from tester_panel_helpers import PanelHelpersMixin
@@ -38,8 +38,8 @@ from hydra_umc_animation import AnimatedHydraUMCMark
 from hydra_umc_deck_widgets import RoundedDeckButton, RoundedDeckCard
 
 try:
-    import serial
-    import serial.tools.list_ports
+    import serial  # noqa: F401  (availability check only)
+    import serial.tools.list_ports  # noqa: F401  (availability check only)
     HAVE_SERIAL = True
 except ImportError:
     HAVE_SERIAL = False
@@ -53,6 +53,83 @@ HAVE_SOCKETCAN = hasattr(socket, "AF_CAN")
 ABOUT_AUTHOR_NAME = "JuanenRac (Electro Hobby 3D)"
 ABOUT_AUTHOR_EMAIL = "electrohobby3d@gmail.com"
 ABOUT_LICENSE_NAME = "GNU General Public License v3.0 (GPL-3.0)"
+
+
+# Language name (as in tester_config) -> suffix of the README translation shipped for it.
+README_SUFFIXES = {"spanish": "_spa", "italian": "_ita", "french": "_fra", "german": "_deu",
+                   "chinese": "_zho", "japanese": "_jpn", "portuguese": "_por"}
+
+AUTODETECT_ORDER = ("500 kbit/s", "250 kbit/s", "125 kbit/s", "1 Mbit/s",
+                    "100 kbit/s", "50 kbit/s", "20 kbit/s", "10 kbit/s", "800 kbit/s")
+
+
+def scan_bitrates(port, slcan_factory, bitrates, log=None, on_try=None, on_traffic=None,
+                  on_active_phase=None, listen_window=0.3, answer_window=0.8, pause=0.1):
+    """Find the bit rate of the bus behind an SLCAN adapter.
+
+    Phase 1 only listens: the channel is opened listen-only at each
+    candidate, so nothing is transmitted and a wrong rate cannot disturb the
+    other nodes of a live bus. The first rate at which a valid frame is seen
+    is then confirmed by asking for the active tool.
+    Phase 2 runs only when no rate showed any traffic (an idle bus): it
+    transmits a query at each rate, which is the only way left to find a
+    board that is silent until asked.
+    Returns the label of the rate found or None.
+    """
+    codes = dict(bitrates)
+    order = [label for label in AUTODETECT_ORDER if label in codes]
+
+    def attempt(label, listen_only):
+        trial = None
+        try:
+            trial = slcan_factory(port, log=lambda m: None)
+            trial.open_channel(codes[label], listen_only=listen_only)
+            if listen_only:
+                seen = 0
+                deadline = time.monotonic() + listen_window
+                while time.monotonic() < deadline:
+                    if trial.read_frame(timeout=0.05) is not None:
+                        seen += 1
+                return seen
+            trial.send_frame(CAN_ID_QUERY_ACTIVE_TOOL, b"")
+            deadline = time.monotonic() + answer_window
+            while time.monotonic() < deadline:
+                frame = trial.read_frame(timeout=0.2)
+                if frame is not None and frame[0] == CAN_ID_ACTIVE_TOOL_RESP:
+                    return True
+            return False
+        except (SLCANError, OSError):
+            return 0 if listen_only else False
+        finally:
+            if trial is not None:
+                try:
+                    trial.close()
+                except Exception:
+                    pass
+            time.sleep(pause)  # lets Windows serial drivers release the port
+
+    traffic_seen = False
+    for label in order:
+        if on_try:
+            on_try(label)
+        seen = attempt(label, True)
+        if seen:
+            traffic_seen = True
+            if on_traffic:
+                on_traffic(label, seen)
+            if attempt(label, False):
+                return label
+    if traffic_seen:
+        return None  # a bus is alive but nothing answered: do not transmit blind
+    if on_active_phase:
+        on_active_phase()
+    for label in order:
+        if on_try:
+            on_try(label)
+        if attempt(label, False):
+            return label
+    return None
+
 
 
 class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
@@ -314,7 +391,10 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
 
         self.bitrate_label = ttk.Label(conn_frame, text=_("LBL_BITRATE"))
         self.bitrate_label.grid(row=row, column=0, sticky="w", **pad)
-        self.bitrate_var = tk.StringVar(value="500 kbit/s")
+        remembered = load_config()
+        remembered_bitrate = remembered.get("bitrate")
+        self._remembered_port = str(remembered.get("port", ""))
+        self.bitrate_var = tk.StringVar(value=remembered_bitrate if remembered_bitrate in dict(SLCAN_BITRATES) else "500 kbit/s")
         self.bitrate_combo = ttk.Combobox(
             conn_frame, textvariable=self.bitrate_var, width=20, state="readonly",
             values=[label for label, _ in SLCAN_BITRATES],
@@ -362,6 +442,8 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             conn_frame, _("BTN_RUN_SELF_TEST"), self._run_self_test, accent=True
         )
         self.selftest_btn.grid(row=row, column=5, **pad)
+        self.stop_all_btn = self._new_deck_button(conn_frame, _("QT_STOP_ALL_OUTPUTS"), self.stop_all_outputs)
+        self.stop_all_btn.grid(row=row, column=6, **pad)
         row += 1
 
         # ID jumper pins (ID4 down to ID0, matching ECOVIA.TXT's documented
@@ -557,7 +639,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         self.port_combo.config(state="readonly")
         self.port_combo["values"] = ports
         if ports and not self.port_var.get():
-            self.port_var.set(ports[0])
+            self.port_var.set(self._remembered_port if self._remembered_port in ports else ports[0])
 
     def toggle_connect(self):
         if self.transport is None:
@@ -579,6 +661,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
                     self.transport.open_channel(listen_only=listen_only)
                 self.bus = CANBusMonitor(self.transport, self.log, listen_only=listen_only)
                 self.bus.start()
+                save_config({"port": port, **({"bitrate": self.bitrate_var.get()} if is_serial else {})})
                 status_text = _("STATUS_CONNECTED_PORT", port=port)
                 if listen_only:
                     status_text += _("LBL_LISTEN_ONLY_SUFFIX")
@@ -658,64 +741,13 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
     def _auto_detect_worker(self, port):
         found_label = None
         try:
-            try_order = ["500 kbit/s", "250 kbit/s", "125 kbit/s", "1 Mbit/s",
-                         "100 kbit/s", "50 kbit/s", "20 kbit/s", "10 kbit/s", "800 kbit/s"]
-            for label in try_order:
-                code = next(c for l, c in SLCAN_BITRATES if l == label)
-                self.log(_("LOG_AUTODETECT_TRYING", label=label))
-                trial = None
-                try:
-                    trial = SLCAN(port, log=lambda m: None)
-                    trial.open_channel(code)
-                    # Passive listen window before this transmits anything
-                    # of its own - a probe frame sent in blind is aimed at
-                    # a bus this tool has no actual knowledge is idle. If
-                    # some other device is already talking at THIS
-                    # candidate bitrate, that traffic is real and this
-                    # tool's own probe would be landing in the middle of
-                    # it purely by luck of the timing; if some other
-                    # device is talking at a DIFFERENT bitrate than the one
-                    # currently being tried, every byte of it decodes as
-                    # noise on this one, and this tool has no way to tell
-                    # those two cases apart without listening first. A
-                    # short silent window here (~120ms, small next to the
-                    # 0.8s already budgeted per candidate below - 9
-                    # candidates x 120ms adds a little over 1s total to
-                    # the whole scan) means every transmission this tool
-                    # ever makes during auto-detect is at least preceded by
-                    # a real look at what's already on the wire, rather
-                    # than firing blind the instant the channel opens.
-                    passive_deadline = time.time() + 0.12
-                    passive_frames_seen = 0
-                    while time.time() < passive_deadline:
-                        if trial.read_frame(timeout=0.05) is not None:
-                            passive_frames_seen += 1
-                    if passive_frames_seen:
-                        self.log(_("LOG_AUTODETECT_TRAFFIC_SEEN", label=label, n=passive_frames_seen))
-                    trial.send_frame(CAN_ID_QUERY_ACTIVE_TOOL, b"")
-                    deadline = time.time() + 0.8
-                    while time.time() < deadline:
-                        frame = trial.read_frame(timeout=0.2)
-                        if frame is not None and frame[0] == CAN_ID_ACTIVE_TOOL_RESP:
-                            found_label = label
-                            break
-                    if found_label:
-                        break
-                except (SLCANError, OSError):
-                    pass
-                finally:
-                    if trial is not None:
-                        try:
-                            trial.close()
-                        except Exception:
-                            pass
-                    if not found_label:
-                        time.sleep(0.1)  # lets Windows serial drivers
-                        # (FTDI/CH340) actually release the port before the
-                        # next iteration's open attempt - reopening too
-                        # quickly can otherwise fail with PermissionError,
-                        # silently skipping a bitrate that might have been
-                        # the correct one
+            found_label = scan_bitrates(
+                port, SLCAN, SLCAN_BITRATES,
+                log=self.log,
+                on_try=lambda label: self.log(_("LOG_AUTODETECT_TRYING", label=label)),
+                on_traffic=lambda label, n: self.log(_("LOG_AUTODETECT_TRAFFIC_SEEN", label=label, n=n)),
+                on_active_phase=lambda: self.log(_("LOG_AUTODETECT_ACTIVE_PHASE")),
+            )
         finally:
             self.root.after(0, lambda: self._auto_detect_done(found_label))
 
@@ -916,7 +948,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             hw_id = struct.unpack(">I", version_data[1:5])[0]
             ver_major = struct.unpack(">H", version_data[5:7])[0]
             ver_minor = version_data[7]
-            hw_note = "" if hw_id == THIS_HARDWARE_ID else f" (expected 0x{THIS_HARDWARE_ID:08X} - different board/rig?)"
+            hw_note = "" if hw_id == THIS_HARDWARE_ID else " " + _("LOG_HW_NOTE_DIFFERENT", expected=f"{THIS_HARDWARE_ID:08X}")
             self.log(_("LOG_VERSION_INFO", role=role, hw_id=hw_id, hw_note=hw_note, major=ver_major, minor=ver_minor))
 
     # Polling interval for the in-session bus health check below - a
@@ -1083,6 +1115,24 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             except Exception as e:
                 self.log(_("LOG_OFF_COMMAND_FAILED", tool_id=self._current_tool_id, e=e))
 
+    def stop_all_outputs(self):
+        """Software emergency stop: every known "off" goes out whatever tool is fitted, and every refresh stops. Always available while connected, even with a panel mid-edit."""
+        if self.bus is None or self.transport is None:
+            return
+        failures = 0
+        for can_id, data in protocol.all_off_frames():
+            try:
+                self.bus.send(can_id, data)
+            except Exception as e:
+                failures += 1
+                self.log(_("LOG_OFF_COMMAND_FAILED_ID", cmd_id=can_id, tool_id=self._current_tool_id, e=e))
+        for name in list(self._keepalive_jobs):
+            self._stop_keepalive(name)
+        self.custom_periodic_var.set(False)
+        if self._current_tool_id is not None:
+            self.rebuild_tool_panel(self._current_tool_id)  # the "Active" boxes go back to unchecked, as nothing is running any more
+        self.log(_("LOG_STOP_ALL_OUTPUTS", failed=failures))
+
     # Keepalive job names NOT tied to whichever tool panel is currently
     # showing - every keepalive (tool-panel ones and this one alike)
     # shares the same self._keepalive_jobs dict via PanelHelpersMixin's
@@ -1123,7 +1173,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         self._clear_tool_panel()
         self._current_tool_id = tool_id
         name = TOOL_NAMES.get(tool_id, "No tool assigned")
-        self._notebook.tab(self.tool_tab, text=f"Tool Controls - {name}")
+        self._notebook.tab(self.tool_tab, text=_("TAB_TOOL_CONTROLS", name=name))
         builder = {
             0: lambda p: self._build_soldering_iron_panel(p, tool_id, name),
             1: self._build_motion_panel, 2: self._build_motion_panel,
@@ -1152,8 +1202,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         if builder is None:
             ttk.Label(
                 self.tool_panel_inner,
-                text=f"No tool is assigned to this jumper setting (raw ID {tool_id}). "
-                     f"Nothing to test here - set the board's ID jumpers to a real tool profile.",
+                text=_("MSG_NO_TOOL_FOR_JUMPERS", tool_id=tool_id),
                 foreground="gray", wraplength=380, justify="left",
             ).pack(padx=8, pady=8, anchor="w")
             return
@@ -1295,7 +1344,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         # back to the English readme.md if that translation doesn't exist
         # yet - matches the Flasher's identical Readme menu behavior.
         import tester_config
-        lang_suffix = {"spanish": "_spa", "italian": "_ita", "french": "_fra", "german": "_deu", "portuguese": "_por"}.get(
+        lang_suffix = README_SUFFIXES.get(
             tester_config._current_language, ""
         )
         # tester_config.base_dir, not a fresh __file__-based calculation -

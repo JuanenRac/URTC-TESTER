@@ -33,7 +33,7 @@ class FakeTransport:
 
 
 def _run() -> None:
-    app = QGuiApplication.instance() or QGuiApplication(sys.argv)
+    _app = QGuiApplication.instance() or QGuiApplication(sys.argv)  # must stay alive
     bridge = TesterQtBridge()
     transport = FakeTransport()
     bridge._transport = transport

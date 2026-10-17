@@ -67,7 +67,7 @@ class SLCAN:
             try:
                 self.ser.write((cmd + "\r").encode("ascii"))
             except serial.SerialException as e:
-                raise SLCANError(f"serial write failed (adapter disconnected?): {e}")
+                raise SLCANError(f"serial write failed (adapter disconnected?): {e}") from e
 
     def open_channel(self, bitrate_code=BITRATE_500K_SLCAN_CODE, listen_only=False):
         # Close first in case it was already open from a previous session
@@ -162,8 +162,8 @@ class SLCAN:
         # itself) means a slow-arriving line still gets read correctly
         # instead of being split across two reads and silently lost as two
         # separate unparseable fragments.
-        deadline = time.time() + timeout
-        while time.time() < deadline:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
             if b"\r" not in self._rx_buf:
                 # Read everything already sitting in the OS buffer in one
                 # syscall rather than one byte at a time - cuts syscall
@@ -175,7 +175,7 @@ class SLCAN:
                     waiting = self.ser.in_waiting
                     chunk = self.ser.read(waiting if waiting > 0 else 1)
                 except serial.SerialException as e:
-                    raise SLCANError(f"serial read failed (adapter disconnected?): {e}")
+                    raise SLCANError(f"serial read failed (adapter disconnected?): {e}") from e
                 if not chunk:
                     continue  # OS-level read timed out with nothing yet - keep going until our own deadline
                 self._rx_buf += chunk
@@ -361,7 +361,7 @@ class SocketCAN:
                 f"(SocketCAN access typically doesn't need special group "
                 f"membership the way a serial port does, but bringing the "
                 f"interface up in the first place usually needs sudo)."
-            )
+            ) from e
         self.sock.settimeout(0.05)
         self._last_timeout = 0.05  # tracks the last value passed to settimeout,
         # so read_frame below only re-calls it when the timeout actually changes
@@ -417,7 +417,7 @@ class SocketCAN:
             with self._write_lock:
                 self.sock.send(frame)
         except OSError as e:
-            raise SocketCANError(f"send failed on '{self.interface}': {e}")
+            raise SocketCANError(f"send failed on '{self.interface}': {e}") from e
 
     def read_frame(self, timeout=0.05):
         if timeout != self._last_timeout:

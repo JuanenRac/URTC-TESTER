@@ -1,0 +1,6 @@
+# Lint rules: real defects only (undefined names, unused code, syntax errors,
+# exception chaining and loop-variable bugs).
+extend-exclude = [".venv", "build", "dist"]
+
+[lint]
+select = ["E9", "F", "B904", "B007"]

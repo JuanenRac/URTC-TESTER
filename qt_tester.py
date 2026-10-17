@@ -43,20 +43,19 @@ from tester_config import (
     SETPOINT_MAX_C,
     LOGS_FOLDER,
     BITRATE_500K_SLCAN_CODE,
+    SLCAN_BITRATES,
+    bitrate_bps_for_label,
+    load_config,
+    save_config,
     CAN_ID_ACTIVE_TOOL_RESP,
-    CAN_ID_AOI_CMD,
-    CAN_ID_3DP_HOTEND_FAN_CMD,
     CAN_ID_3DP_LAYER_FAN_CMD,
     CAN_ID_3DP_THERMAL_MOTION,
     CAN_ID_ADS1115_CONFIG,
     CAN_ID_ADS1115_RESULT,
     CAN_ID_ADS1115_TRIGGER,
-    CAN_ID_CRIMPING_CMD,
     CAN_ID_DIAG0_RESP,
     CAN_ID_DRILL_CMD,
-    CAN_ID_ELECTROMAGNET_CMD,
     CAN_ID_ERASE_FRAM,
-    CAN_ID_EXP_SPI_CMD,
     CAN_ID_EXP_SPI_RESP,
     CAN_ID_EXPANSION_TYPE_RESP,
     CAN_ID_FRAM_STATE_RESP,
@@ -66,8 +65,6 @@ from tester_config import (
     CAN_ID_LASER_CMD,
     CAN_ID_MLX_VARIANT_RESP,
     CAN_ID_MOTION_CMD,
-    CAN_ID_PASTE_JETTING_CONFIG,
-    CAN_ID_PASTE_JETTING_PULSE,
     CAN_ID_PERIPHERAL_INFO_RESP,
     CAN_ID_QUERY_ACTIVE_TOOL,
     CAN_ID_QUERY_DIAG0,
@@ -76,11 +73,9 @@ from tester_config import (
     CAN_ID_THERMAL_STATS_RESP,
     format_thermal_stats,
     CAN_ID_QUERY_VERSION,
-    CAN_ID_SPOT_WELD_CMD,
     CAN_ID_SOLDER_SETPOINT,
     CAN_ID_UV_CURING_CMD,
     CAN_ID_VERSION_RESPONSE,
-    CAN_ID_ULTRASONIC_WELD_CMD,
     CAN_ID_THERMAL_CALIB_CHUNK,
     CAN_ID_THERMAL_CALIB_CHUNK_REQ,
     CAN_ID_THERMAL_STATUS,
@@ -97,11 +92,6 @@ from tester_config import (
 from tester_result_record import session_manifest
 from tester_transports import SLCAN, SocketCAN, list_socketcan_interfaces
 
-# Matches BITRATE_500K_SLCAN_CODE (tester_config.py) - the real default this
-# tester opens every SLCAN channel at. Only used to turn a real frame count
-# into a real load percentage (see _passive_capture_worker); it does not
-# configure the transport itself.
-CAN_BUS_BITRATE_BPS = 500_000
 
 
 class TesterQtBridge(QObject):
@@ -136,6 +126,10 @@ class TesterQtBridge(QObject):
         super().__init__()
         self._ports: list[str] = []
         self._socketcan_ports: set[str] = set()
+        saved = load_config()
+        self._preferred_port = str(saved.get("port", ""))
+        saved_bitrate = saved.get("bitrate")
+        self._bitrate_label = saved_bitrate if saved_bitrate in dict(SLCAN_BITRATES) else "500 kbit/s"
         self._selected_port = ""
         self._transport = None
         self._listen_only = True
@@ -308,6 +302,23 @@ class TesterQtBridge(QObject):
     @Property(bool, notify=changed)
     def busy(self) -> bool:
         return self._busy
+
+    @Property("QStringList", constant=True)
+    def bitrates(self) -> list[str]:
+        return [label for label, _code in SLCAN_BITRATES]
+
+    @Property(str, notify=changed)
+    def selectedBitrate(self) -> str:
+        return self._bitrate_label
+
+    @Slot(str)
+    def selectBitrate(self, label: str) -> None:
+        """Bit rate of an SLCAN adapter (a SocketCAN interface keeps the one it was brought up with). Remembered for the next session."""
+        if self._transport is None and not self._busy and label in dict(SLCAN_BITRATES):
+            self._bitrate_label = label
+            save_config({"bitrate": label})
+            self._log(f"BITRATE_SELECTED {label}")
+            self.changed.emit()
 
     @Property(str, notify=changed)
     def status(self) -> str:
@@ -576,7 +587,7 @@ class TesterQtBridge(QObject):
             self._socketcan_ports = set()
         self._ports = ports
         if self._selected_port not in ports:
-            self._selected_port = ports[0] if ports else ""
+            self._selected_port = self._preferred_port if self._preferred_port in ports else (ports[0] if ports else "")
         self._log(f"PORT_SCAN count={len(ports)}")
         self.changed.emit()
 
@@ -584,6 +595,8 @@ class TesterQtBridge(QObject):
     def selectPort(self, port: str) -> None:
         if self._transport is None and not self._busy and port in self._ports:
             self._selected_port = port
+            self._preferred_port = port
+            save_config({"port": port})
             self.changed.emit()
 
     @Slot(bool)
@@ -595,6 +608,9 @@ class TesterQtBridge(QObject):
 
     @Slot()
     def toggleConnection(self) -> None:
+        if self._busy and self._telemetry_stops and self._transport is not None:
+            # a telemetry watch has no natural end: disconnecting ends it instead of leaving the app stuck
+            self._end_telemetry_watch()
         if self._busy:
             return
         if self._transport is not None:
@@ -626,7 +642,7 @@ class TesterQtBridge(QObject):
                 transport.open_channel(listen_only=self._listen_only)
             else:
                 transport = SLCAN(self._selected_port, log=self._log)
-                transport.open_channel(BITRATE_500K_SLCAN_CODE, listen_only=self._listen_only)
+                transport.open_channel(dict(SLCAN_BITRATES).get(self._bitrate_label, BITRATE_500K_SLCAN_CODE), listen_only=self._listen_only)
             self._connectionResult.emit(transport, "")
         except Exception as exc:
             self._connectionResult.emit(None, str(exc))
@@ -665,12 +681,27 @@ class TesterQtBridge(QObject):
         """Switch every armed output off. Not gated by the profile or by busy: stopping must always be one press away."""
         self._stop_all_watchdogs()
         if not self._listen_only:
-            self.stopMotion()
+            self._send_all_off()
+
+    def _send_all_off(self) -> None:
+        """Every known "off" (heaters, laser, drill, UV, layer fan, electromagnet, steppers), each tried on its own so one failure never skips the rest."""
+        transport = self._transport
+        if transport is None:
+            return
+        failed = 0
+        for can_id, data in protocol.all_off_frames():
+            try:
+                transport.send_frame(can_id, data)
+            except Exception as exc:
+                failed += 1
+                self._log(f"ALL_OFF_FAILED can_id=0x{can_id:03X} {exc}")
+        self._log(f"ALL_OFF_SENT failed={failed}")
 
     def shutdownOutputs(self) -> None:
         try:
             self._stop_all_watchdogs()
-            self.stopMotion()
+            if not self._listen_only:
+                self._send_all_off()
         except Exception as exc:
             self._log(f"SHUTDOWN_OUTPUTS_FAILED {exc}")
 
@@ -720,9 +751,8 @@ class TesterQtBridge(QObject):
         if transport is None:
             return
         try:
-            direction_byte = 0x01 if direction == "forward" else 0x00
-            command_id = CAN_ID_CRIMPING_CMD if self._selected_tool_id == 21 else CAN_ID_MOTION_CMD
-            transport.send_frame(command_id, bytes([direction_byte]) + struct.pack(">I", steps))
+            command_id, payload = protocol.motion_frame(self._selected_tool_id, direction, steps)
+            transport.send_frame(command_id, payload)
             self._log(
                 f"MOTION_SENT profile={self._selected_tool_id} "
                 f"can_id=0x{command_id:03X} direction={direction} steps={steps}"
@@ -890,7 +920,16 @@ class TesterQtBridge(QObject):
                 self._set_state(status="ACTIVE CHECKS ARMED", busy=False)
                 self._log(f"TELEMETRY_WATCH_STOPPED key={key}")
 
-        threading.Thread(target=_worker, daemon=True, name=f"urtc-tester-{key}-watch").start()
+        self._telemetry_thread = threading.Thread(target=_worker, daemon=True, name=f"urtc-tester-{key}-watch")
+        self._telemetry_thread.start()
+
+    def _end_telemetry_watch(self, wait_s: float = 1.0) -> None:
+        """Ask the running watch to stop and wait for its worker to release the transport."""
+        for stop in list(self._telemetry_stops.values()):
+            stop.set()
+        worker = getattr(self, "_telemetry_thread", None)
+        if worker is not None and worker is not threading.current_thread():
+            worker.join(timeout=wait_s)
 
     @Slot()
     def stopTelemetryWatch(self) -> None:
@@ -1110,14 +1149,14 @@ class TesterQtBridge(QObject):
         try:
             can_id = int(can_id_text, 16)
         except (TypeError, ValueError):
-            raise ValueError(f"'{can_id_text}' isn't a valid hex CAN ID.")
+            raise ValueError(f"'{can_id_text}' isn't a valid hex CAN ID.") from None
         if not (0 <= can_id <= 0x7FF):
             raise ValueError(f"CAN ID 0x{can_id:X} is outside the standard 11-bit range (0-0x7FF).")
         text = data_text.strip()
         try:
             values = [int(b, 16) for b in text.split()] if text else []
         except ValueError:
-            raise ValueError(f"'{text}' isn't valid space-separated hex bytes, e.g. 01 02 03.")
+            raise ValueError(f"'{text}' isn't valid space-separated hex bytes, e.g. 01 02 03.") from None
         out_of_range = [v for v in values if not (0 <= v <= 0xFF)]
         if out_of_range:
             raise ValueError(f"{out_of_range[0]:#x} is out of range for a single byte (00-FF).")
@@ -1238,7 +1277,7 @@ class TesterQtBridge(QObject):
             return
         # The firmware cuts the drill after 250 ms without a new command and latches a CRITICAL ERROR, so a drill that runs is refreshed like the laser and the heaters, and speed 0
         # (the active brake) stops that refreshing. A single frame used to spin the drill for 250 ms and leave the board in error.
-        frame = (CAN_ID_DRILL_CMD, bytes([speed, 0x01 if direction == "counter-clockwise" else 0x00]))
+        frame = protocol.drill_frame(speed, direction)
         off = (CAN_ID_DRILL_CMD, b"\x00\x00")
         if speed == 0:
             self._stop_watchdog("drill", off)
@@ -1252,12 +1291,11 @@ class TesterQtBridge(QObject):
         if not self._require_profile({8}, "AOI"):
             return
         period = self._bounded_int(period_text, 1, AOI_STROBE_MAX_MS)
-        mode_byte = {"off": 0x00, "strobe": 0x01, "continuous": 0x02}.get(mode)
-        if period is None or mode_byte is None:
+        if period is None or mode not in ("off", "strobe", "continuous"):
             self._log("AOI_BLOCKED invalid mode or strobe period")
             return
         try:
-            self._transport.send_frame(CAN_ID_AOI_CMD, bytes([mode_byte]) + struct.pack(">H", period))
+            self._transport.send_frame(*protocol.aoi_frame(mode, period))
             self._log(f"AOI_SENT mode={mode} period_ms={period}")
         except Exception as exc:
             self._log(f"AOI_FAILED {exc}")
@@ -1267,7 +1305,7 @@ class TesterQtBridge(QObject):
         if not self._require_profile({13}, "ELECTROMAGNET"):
             return
         try:
-            self._transport.send_frame(CAN_ID_ELECTROMAGNET_CMD, bytes([0x01 if energized else 0x00]))
+            self._transport.send_frame(*protocol.magnet_frame(energized))
             self._log(f"ELECTROMAGNET_SENT state={'energized' if energized else 'released'}")
         except Exception as exc:
             self._log(f"ELECTROMAGNET_FAILED {exc}")
@@ -1280,9 +1318,8 @@ class TesterQtBridge(QObject):
         if duration is None:
             self._log("WELD_PULSE_BLOCKED duration must be an integer in range")
             return
-        command_id = CAN_ID_SPOT_WELD_CMD if self._selected_tool_id == 14 else CAN_ID_ULTRASONIC_WELD_CMD
         try:
-            self._transport.send_frame(command_id, bytes([0x01]) + struct.pack(">H", duration))
+            self._transport.send_frame(*protocol.weld_frame(self._selected_tool_id, duration))
             self._log(f"WELD_PULSE_SENT profile={self._selected_tool_id} duration_ms={duration}")
         except Exception as exc:
             self._log(f"WELD_PULSE_FAILED {exc}")
@@ -1297,7 +1334,7 @@ class TesterQtBridge(QObject):
             self._log("PASTE_CONFIG_BLOCKED channel/frequency must be integers in range")
             return
         try:
-            self._transport.send_frame(CAN_ID_PASTE_JETTING_CONFIG, bytes([channel]) + struct.pack(">H", frequency))
+            self._transport.send_frame(*protocol.paste_config_frame(channel, frequency))
             self._log(f"PASTE_CONFIG_SENT channel={channel} frequency_hz={frequency}")
         except Exception as exc:
             self._log(f"PASTE_CONFIG_FAILED {exc}")
@@ -1308,12 +1345,12 @@ class TesterQtBridge(QObject):
             return
         channel = self._bounded_int(channel_text, 0, 3)
         duty = self._bounded_int(duty_text, 0, 100)
-        duration = self._bounded_int(duration_text, 0, 255)
+        duration = self._bounded_int(duration_text, 1, 255)   # 0 would be a continuous pulse that nothing here can stop
         if channel is None or duty is None or duration is None:
             self._log("PASTE_PULSE_BLOCKED channel/duty/duration must be integers in range")
             return
         try:
-            self._transport.send_frame(CAN_ID_PASTE_JETTING_PULSE, bytes([channel, duty, duration]))
+            self._transport.send_frame(*protocol.paste_pulse_frame(channel, duty, duration))
             self._log(f"PASTE_PULSE_SENT channel={channel} duty={duty} duration_ms={duration}")
         except Exception as exc:
             self._log(f"PASTE_PULSE_FAILED {exc}")
@@ -1328,17 +1365,14 @@ class TesterQtBridge(QObject):
             if power is None:
                 self._log("PRINTER_BLOCKED hotend fan power must be an integer in range")
                 return
-            frame = (CAN_ID_3DP_HOTEND_FAN_CMD, bytes([power]))
+            frame = protocol.printer_frame(action, power, 0)
         elif action == "extruder":
             steps = self._bounded_int(first_text, 0, 0xFFFFFF)
             temperature = self._bounded_int(second_text, 0, 300)
             if steps is None or temperature is None:
                 self._log("PRINTER_BLOCKED extruder steps/temperature must be integers in range")
                 return
-            frame = (
-                CAN_ID_3DP_THERMAL_MOTION,
-                struct.pack(">H", temperature) + b"\x01" + steps.to_bytes(3, "big"),
-            )
+            frame = protocol.printer_frame(action, steps, temperature)
         else:
             self._log(f"PRINTER_BLOCKED unknown one-shot action={action}")
             return
@@ -1538,7 +1572,7 @@ class TesterQtBridge(QObject):
                 )
                 if len(frames) > 24:
                     frames.pop(0)
-            load_percent = (total_bits / (CAN_BUS_BITRATE_BPS * 2.0)) * 100.0
+            load_percent = (total_bits / (bitrate_bps_for_label(self._bitrate_label) * 2.0)) * 100.0
             summary = f"2.0 s • {count} frame(s) • {len(identifiers)} CAN ID(s) • {load_percent:.1f}% bus load"
             self._passiveResult.emit(frames, summary, load_percent)
         except Exception as exc:
@@ -1587,6 +1621,11 @@ class TesterQtBridge(QObject):
             tool_id, critical, can_error, booting = tool_data[:4]
             name = TOOL_NAMES.get(tool_id, f"Unknown tool {tool_id}")
             state = "CRITICAL" if critical else ("CAN ERROR" if can_error else ("BOOTING" if booting else "NORMAL"))
+            quick = protocol.decode_quick_state(bytes(tool_data))
+            if quick is not None and quick["thermal_fault"]:
+                state = f"{state} - THERMAL FAULT {quick['thermal_fault_name']}"
+            if quick is not None and quick["reset_causes"]:
+                self._log(f"RESET_CAUSE {', '.join(quick['reset_causes'])}")
             self._active_tool = f"{name} (ID {tool_id}) - {state}"
             self._active_tool_id = tool_id
             self._log(f"ACTIVE_TOOL id={tool_id} name={name} state={state}")

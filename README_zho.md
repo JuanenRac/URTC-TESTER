@@ -24,7 +24,7 @@
 </p>
 
 
-**版本：** 0.2.7 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**版本：** 0.2.8 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 许可证：源代码为 **GPL-3.0**，本文档为 **CC BY-SA 4.0**——见本仓库中的
 `LICENSE`，或本文档末尾的“许可证与版权声明”一节。
@@ -35,7 +35,7 @@
 一切都是针对当前正在运行的应用程序的运行时指令或遥测读取；它从不触碰
 闪存，因此这里没有任何东西会让板卡的可用性比开始时更差。
 
-**诚实核查 - 今天真正能运行的部分：** 为迁移到 Qt Quick 的控制系列所提供的 CAN 负载编码器（`advanced_protocol.py`）是真实的，并由 20 个通过的测试覆盖（`pytest tests/test_advanced_protocol.py`）——尽管这个仓库自己的 CI（`.github/workflows/ci.yml`）只是编译每一个 `.py` 文件并运行 `tools/ci_validate.py`，它从来不会真正调用 pytest，所以今天那里的一个回归并不会导致构建失败。仓库根目录下的三个 `verify_qt_*.py` 脚本（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`）是真实的、刻意放在 `tests/` 之外的端到端检查，针对一个带有真实跨线程信号传递的模拟传输层——手动运行 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 时三者都能通过。这就是自动验证所能达到的诚实上限：传输层、CAN ID/字节布局处理，以及 Qt Quick 桥接逻辑都是真实的，并且针对模拟帧进行了验证，而不是真实硬件——正如下文"Known limitations"已经指出的，这套工具是在没有 USB 访问权限的环境下构建的，所以这里的任何东西都还没有针对真实板卡验证过。`tester_gui_core.py`、`tester_common_panels.py` 和 `tester_tool_panels.py` 都是真实且相当可观的实现（合计数万行代码），它们是通过这些验证脚本和人工使用来验证的，而不是通过等量的自动化测试。
+**诚实核查 - 今天真正能运行的部分：** 为迁移到 Qt Quick 的控制系列所提供的 CAN 负载编码器（`advanced_protocol.py`）是真实的，并由 `tests/` 中的测试覆盖（`python -m pytest -q`）。这个仓库自己的 CI（`.github/workflows/ci.yml`）也会运行它们，同时运行 `ruff check`、`tools/ci_validate.py`、对每个 `.py` 文件的语法编译以及三个 `verify_qt_*.py` 脚本，所以那里的回归会导致构建失败。仓库根目录下的三个 `verify_qt_*.py` 脚本（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`）是真实的、刻意放在 `tests/` 之外的端到端检查，针对一个带有真实跨线程信号传递的模拟传输层——运行 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 时三者都能通过，CI 也会运行它们。这就是自动验证所能达到的诚实上限：传输层、CAN ID/字节布局处理，以及 Qt Quick 桥接逻辑都是真实的，并且针对模拟帧进行了验证，而不是真实硬件——正如下文"Known limitations"已经指出的，这套工具是在没有 USB 访问权限的环境下构建的，所以这里的任何东西都还没有针对真实板卡验证过。`tester_gui_core.py`、`tester_common_panels.py` 和 `tester_tool_panels.py` 都是真实且相当可观的实现（合计数千行代码），它们是通过这些验证脚本和人工使用来验证的，而不是通过等量的自动化测试。
 
 ## 1. 🆚 与刷写工具的关系
 
@@ -275,6 +275,14 @@ ID 列会在原始十六进制 ID 旁边显示该友好名称——对于任何�
 会发送一次零值/关闭帧然后停止。热端风扇没有看门狗（改为失速检测器——
 见 `docs/CANBUS.md`），因此是一次纯粹的一次性发送。
 
+**安全与便利说明。**
+
+- **停止所有输出**（两个窗口都有，在已连接且已启用主动检查时可用）无论装的是什么工具，都会发送所有已知的关闭命令——加热器、激光、钻头、UV 灯、层风扇、电磁铁释放、普通步进电机和压接机——并停止所有刷新。热端风扇会特意保持运转，因为喷嘴可能仍然很烫。
+- 单次焊接脉冲、锡膏脉冲和压接在经典窗口中也会要求确认，就像 Qt Quick 面板一直所做的那样。
+- 钻头和 UV 灯与激光和加热器一样会被刷新。保持 3D 打印机加热器期间，其每 150 ms 的刷新带有 0 个挤出机步数，固件会将其视为停止命令：在该状态下启动的挤出机移动会在 150 ms 内被取消，因此在固件提供不干扰挤出机的模式之前，请在关闭加热器的情况下移动挤出机。
+- 端口和波特率会为下次会话记住（`config.json`），Qt Quick 面板有自己的波特率选择器。**自动检测**首先只在每个波特率下监听（在运行中的总线上不发送任何内容），只有当总线完全静默时才在每个波特率下发起询问。
+- 原始总线监视器可以限制为某些 CAN ID（**ID 过滤**）以及数据发生变化的帧（**仅显示变化**）。
+
 ### 🔥 热失控台架测试（URTC 固件 0.3.2+ / 0.3.3+）
 
 Detect 现在会显示板卡锁定错误的*原因*：`0x111` 的第 4 字节（热失控保护：
@@ -354,7 +362,7 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 ├── verify_qt_telemetry_watch.py     真实的、放在 tests/ 之外的端到端检查，验证 Qt Quick 遥测（Vacuum Pickup / Scan Probe）
 ├── verify_qt_utility_panels.py      真实的、放在 tests/ 之外的端到端检查，验证 Qt Quick 实用面板（Global Controls / Expansion Board / F-RAM）
 ├── tests/
-│   └── test_advanced_protocol.py   针对 advanced_protocol.py 编码器的无硬件测试——CI 不会运行它，见上文诚实核查
+│   └── test_advanced_protocol.py   针对 advanced_protocol.py 编码器的无硬件测试——CI 会运行它，见上文诚实核查
 ├── requirements.txt            pyserial>=3.5（Tkinter 测试器）+ PySide6>=6.8,<7（`--qtquick` 面板）
 ├── build_exe.bat               独立 Windows 二进制文件构建脚本（PyInstaller）
 ├── build_exe.sh                同上，适用于 Linux
@@ -515,7 +523,7 @@ URTC Tester 版权所有 (c) 2026 JuanenRac（Electro Hobby 3D）。分发本项
    https://www.gnu.org/licenses/gpl-3.0.html。
 
 2. 文档（本 README 及其自身的翻译版本——`README_spa.md`、`README_ita.md`、
-   `README_fra.md`、`README_deu.md`）依据 **知识共享 署名-相同方式共享
+   `README_fra.md`、`README_deu.md`、`README_jpn.md`、`README_por.md` 以及 `docs/` 中的指南）依据 **知识共享 署名-相同方式共享
    4.0 国际许可协议（CC BY-SA 4.0）** 提供。完整文本见
    https://creativecommons.org/licenses/by-sa/4.0/。
 

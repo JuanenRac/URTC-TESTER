@@ -8,6 +8,23 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.2.8] - A bit rate search that stays silent on a live bus, a stop for every output, confirmations and settings that are remembered
+
+- **The bit rate search no longer transmits on a live bus.** Each rate is first opened listen-only and is accepted only when valid frames are heard there, then confirmed with one query; asking at every rate happens only when the whole bus is silent, and the log says so. A bus that is alive but where nobody answers is never probed blind.
+- **STOP ALL OUTPUTS in the classic window**, next to Detect and Self-test: it sends every known off command (heaters, laser, drill, UV lamp, layer fan, electromagnet release, plain steppers and crimper) whatever tool is fitted, stops every refresh and puts the Active boxes back to unchecked. The Qt deck button now does the same, is shown whenever the deck is connected with active checks armed, and closing the deck sends the same set. The hotend fan is left running on purpose, because the nozzle may still be hot.
+- **Disconnecting ends a telemetry watch** in the Qt deck instead of leaving the app stuck until STOP WATCHING was pressed; a probe or a capture in progress still blocks it.
+- **One encoder for every one-shot output of the Qt deck**: motion, drill, strobe, electromagnet, weld pulses, paste and printer commands are now built by the same functions the tests cover, and new tests compare what each sender puts on the bus with them. A paste pulse of 0 ms (a continuous pulse nothing can stop) is refused in both windows.
+- **Bit rate selector in the Qt deck**, and the port and bit rate are remembered for the next session in both windows (the bus load figure follows the selected rate).
+- **The classic window asks for a confirmation** before a weld pulse, a paste pulse or a crimp, as the Qt deck already did for every physical action.
+- **Raw Bus Monitor filters**: show only some CAN IDs (hex, separated by spaces or commas) and/or only frames whose data changed. The counters keep counting every frame. Exported trace files are written as plain ASCII.
+- **The extruder limitation is stated in both windows.** While the 3D-printer heater is held, its 150 ms refresh carries 0 extruder steps, which the firmware reads as a stop order, so an extruder move started in that state is cancelled; the help text, the log line and a note in the Qt deck say so. Moving the extruder with the heater held needs a firmware mode that leaves the extruder alone.
+- **More of the interface is translated** in the eight languages: the option lists of the Qt deck (directions, strobe modes, display modes), the bus monitor title and statistics, the self-test steps, the tool tab title, the jumper message, the hardware identity note and the empty-state texts.
+- The Qt deck probe shows a latched thermal fault and the reset causes, as the classic window does.
+- Small fixes: the Readme menu opens the Chinese and Japanese translations, deadlines in the transports use the monotonic clock, the classic window is never taller or wider than the screen, and the unused imports and exception chaining flagged by the linter are cleaned up.
+- **Builds**: a failed build puts the version files back as they were instead of leaving a version that was never built, the step numbering is coherent, Tk is only a warning for the Linux build (the default deck does not need it) and every own module is a hidden import.
+- **Checks and documents**: CI now runs pytest, the linter and the three Qt deck checks (headless); the licence file lists every README translation and the guides, the guides carry the documentation licence, and the workflow, issue forms and manifest no longer carry another project name or describe the old default window.
+- Tests: 102 (before 69): the bit rate scan on a live, a silent and an idle bus, the stop for everything in both windows, the confirmations, the monitor filter, the sender-versus-encoder comparison, the remembered settings, the disconnect during a watch, and the eight language files (same keys, same placeholders, every key used exists).
+
 ## [0.2.7] - Reads that no longer collide, a stop for everything, a thermal image that keeps its shape and a board that cannot go silent unnoticed
 
 - **The queries of the classic window no longer freeze it.** F-RAM, thermal counters, DIAG0, the SPI passthrough, the expansion board, the sensor variant, the free tool configuration, the peripheral info, the F-RAM erase, the ADS1115 read and the thermal status wait for the board on a worker thread: while the window waited, the 150 ms refresh of an armed heater, laser or UV lamp stopped and the firmware latched a critical error.
@@ -56,7 +73,7 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 
 ## [0.2.3] - The Qt Quick Tester can export a session that proves its log
 
-- A new **Export session** button in the Qt Quick deck (`--qtquick`) saves the activity log in `logs/` as a zip with `session_log.txt` and a `session_manifest.json` that names the log by its SHA-256 and size, with the Tester version, the port and whether it was connected, so a saved log can be shown to be unedited. It was already available in the Tk window; the label exists in the seven languages and two tests cover the bundle and the failure to create the folder.
+- A new **Export session** button in the Qt Quick deck saves the activity log in `logs/` as a zip with `session_log.txt` and a `session_manifest.json` that names the log by its SHA-256 and size, with the Tester version, the port and whether it was connected, so a saved log can be shown to be unedited. It was already available in the Tk window; the label exists in the seven languages and two tests cover the bundle and the failure to create the folder.
 
 ## [0.2.2] - Session manifest in the debug bundle
 

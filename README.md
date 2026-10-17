@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.2.7 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 0.2.8 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 License: **GPL-3.0** for the source code, **CC BY-SA 4.0** for this
 documentation - see `LICENSE` in this repository, or the "License and
@@ -38,7 +38,7 @@ once. Everything it does is a runtime command or a telemetry read against
 the currently-running application; it never touches flash, so there's
 nothing here that can leave the board any less working than it started.
 
-**Honesty check - what actually runs today:** the CAN payload encoders for the migrated Qt Quick control families (`advanced_protocol.py`) are real and covered by 20 passing tests (`pytest tests/test_advanced_protocol.py`) - though this repo's own CI (`.github/workflows/ci.yml`) only compiles every `.py` file and runs `tools/ci_validate.py`, it never actually invokes pytest, so a regression there wouldn't fail a build today. The three `verify_qt_*.py` scripts at the repo root (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) are real, deliberately-outside-`tests/` end-to-end checks against a fake transport with real cross-thread Signal delivery - all three pass when run manually with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`. That's the honest ceiling of what's automatically verified: the transport layer, CAN ID/byte-layout handling, and the Qt Quick bridge logic are real and exercised against mocked frames, not real hardware - as "Known limitations" below already says, this was built with no USB access, so nothing here has been checked against a real board yet. `tester_gui_core.py`, `tester_common_panels.py` and `tester_tool_panels.py` are real, substantial implementations (tens of thousands of lines combined) exercised by the verify scripts and manual use, not by a matching volume of automated tests.
+**Honesty check - what actually runs today:** the CAN payload encoders for the migrated Qt Quick control families (`advanced_protocol.py`) are real and covered by the tests in `tests/` (`python -m pytest -q`). This repo's own CI (`.github/workflows/ci.yml`) runs them too, together with `ruff check`, `tools/ci_validate.py`, a syntax compile of every `.py` file and the three `verify_qt_*.py` scripts, so a regression there fails the build. The three `verify_qt_*.py` scripts at the repo root (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) are real, deliberately-outside-`tests/` end-to-end checks against a fake transport with real cross-thread Signal delivery - all three pass with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, which CI runs too. That's the honest ceiling of what's automatically verified: the transport layer, CAN ID/byte-layout handling, and the Qt Quick bridge logic are real and exercised against mocked frames, not real hardware - as "Known limitations" below already says, this was built with no USB access, so nothing here has been checked against a real board yet. `tester_gui_core.py`, `tester_common_panels.py` and `tester_tool_panels.py` are real, substantial implementations (thousands of lines combined) exercised by the verify scripts and manual use, not by a matching volume of automated tests.
 
 ## 1. 🆚 Relationship to the flasher
 
@@ -338,6 +338,14 @@ controller has to. Unchecking it sends a single zero/off frame and
 stops. The hotend fan has no watchdog (a stall detector instead - see
 `docs/CANBUS.md`), so it's a plain one-shot send.
 
+**Safety and convenience notes.**
+
+- **STOP ALL OUTPUTS** (in both windows, available while connected with active checks armed) sends every known off command - the heaters, the laser, the drill, the UV lamp, the layer fan, the electromagnet release, the plain steppers and the crimper - whatever tool is fitted, and stops every refresh. The hotend fan is left running on purpose, because the nozzle may still be hot.
+- The one-shot weld pulses, the paste pulse and the crimp ask for a confirmation in the classic window too, as the Qt Quick deck always does.
+- The drill and the UV lamp are refreshed like the laser and the heaters. While the 3D-printer heater is held, its 150 ms refresh carries 0 extruder steps, which the firmware reads as a stop order: an extruder move started in that state is cancelled within 150 ms, so move the extruder with the heater off until the firmware offers a mode that leaves the extruder alone.
+- The port and the bit rate are remembered for the next session (`config.json`) and the Qt Quick deck has its own bit rate selector. **Auto-detect** first only listens at each rate (nothing is transmitted on a live bus) and asks at each rate only when the bus is completely silent.
+- The Raw Bus Monitor can be limited to some CAN IDs (**ID filter**) and to frames whose data changed (**Only changes**).
+
 ### 🔥 Thermal runaway bench test (URTC firmware 0.3.2+ / 0.3.3+)
 
 Detect now shows *why* a board latched an error: `0x111` byte 4 (thermal
@@ -423,7 +431,7 @@ from the SVG during development; it is not required to run the application.
 ├── verify_qt_telemetry_watch.py     Real, outside-tests/ end-to-end check of the Qt Quick telemetry watch (Vacuum Pickup / Scan Probe)
 ├── verify_qt_utility_panels.py      Real, outside-tests/ end-to-end check of the Qt Quick utility panels (Global Controls / Expansion Board / F-RAM)
 ├── tests/
-│   └── test_advanced_protocol.py   Hardware-free tests for advanced_protocol.py's encoders - not run by CI, see Honesty check above
+│   └── test_advanced_protocol.py   Hardware-free tests for advanced_protocol.py's encoders - run by CI, see Honesty check above
 ├── requirements.txt            pyserial>=3.5 (both UIs) + PySide6>=6.8,<7 (the default Qt Quick deck)
 ├── build_exe.bat               Standalone Windows binary build script (PyInstaller)
 ├── build_exe.sh                Same, for Linux
@@ -587,7 +595,7 @@ covers:
 
 2. The documentation (this README and its own translations -
    `README_spa.md`, `README_ita.md`, `README_fra.md`, `README_deu.md`,
-   `README_zho.md`, `README_jpn.md`)
+   `README_zho.md`, `README_jpn.md`, `README_por.md`, and the guides in `docs/`)
    is available under **Creative Commons Attribution-ShareAlike 4.0
    International (CC BY-SA 4.0)**. Full text at
    https://creativecommons.org/licenses/by-sa/4.0/.

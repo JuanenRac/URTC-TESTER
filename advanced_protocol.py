@@ -33,7 +33,6 @@ from tester_config import (
     CAN_ID_ULTRASONIC_WELD_CMD,
     CAN_ID_UV_CURING_CMD,
     CAN_ID_VACUUM_TELEMETRY,
-    CAN_ID_IMPACT_EVENT,
     CAN_ID_DRILL_TELEMETRY,
     CAN_ID_AOI_TELEMETRY,
     CAN_ID_LASER_TELEMETRY,
@@ -180,6 +179,26 @@ def watchdog_frames(kind: str, first: str | int, second: str | int) -> tuple[tup
     if kind == "hotair":
         return (CAN_ID_HOTAIR_CMD, struct.pack(">H", bounded_int(first, 0, SETPOINT_MAX_C)) + bytes([bounded_int(second, 0, 255)])), (CAN_ID_HOTAIR_CMD, b"\x00\x00\x00"), 0.15
     raise ValueError("unknown watchdog family")
+
+
+def all_off_frames() -> list[tuple[int, bytes]]:
+    """Every "off" the firmware understands, whatever tool is fitted: the software emergency stop sends all of them.
+
+    Heaters get 0 degrees, the laser, drill and UV driver get 0, the plain steppers and the crimping actuator get 0 steps (the firmware's order to stop), the layer fan
+    stops and the electromagnet is released. The hotend fan is deliberately not here: stopping it while the nozzle is still hot would make things worse.
+    """
+    return [
+        (CAN_ID_3DP_THERMAL_MOTION, b"\x00\x00\x00\x00\x00"),
+        (CAN_ID_SOLDER_SETPOINT, b"\x00\x00"),
+        (CAN_ID_HOTAIR_CMD, b"\x00\x00\x00"),
+        (CAN_ID_LASER_CMD, b"\x00\x00"),
+        (CAN_ID_DRILL_CMD, b"\x00\x00"),
+        (CAN_ID_UV_CURING_CMD, b"\x00"),
+        (CAN_ID_3DP_LAYER_FAN_CMD, b"\x00"),
+        (CAN_ID_ELECTROMAGNET_CMD, b"\x00"),
+        (CAN_ID_MOTION_CMD, b"\x00\x00\x00\x00\x00"),
+        (CAN_ID_CRIMPING_CMD, b"\x00\x00\x00\x00\x00"),
+    ]
 
 
 def global_status_frame(

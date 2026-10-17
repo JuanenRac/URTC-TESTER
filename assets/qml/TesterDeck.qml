@@ -108,7 +108,7 @@ ApplicationWindow {
                     Layout.preferredWidth: 126
                     onClicked: {
                         motionConfirm.close()
-                        testerBackend.sendMotion(motionDirection.currentText, motionSteps.text)
+                        testerBackend.sendMotion(motionDirection.currentValue, motionSteps.text)
                     }
                 }
             }
@@ -258,6 +258,13 @@ ApplicationWindow {
                     model: testerBackend.ports
                     enabled: !testerBackend.connected && !testerBackend.busy
                     onActivated: testerBackend.selectPort(currentText)
+                }
+                ComboBox {
+                    Layout.fillWidth: true
+                    model: testerBackend.bitrates
+                    currentIndex: Math.max(0, testerBackend.bitrates.indexOf(testerBackend.selectedBitrate))
+                    enabled: !testerBackend.connected && !testerBackend.busy
+                    onActivated: testerBackend.selectBitrate(currentText)
                 }
                 RowLayout {
                     Layout.fillWidth: true
@@ -425,7 +432,7 @@ ApplicationWindow {
                     font.pixelSize: 9
                 }
                 GameButton {
-                    visible: testerBackend.activeWatchdogs.length > 0
+                    visible: testerBackend.connected && !testerBackend.listenOnly
                     text: testerBackend.uiText("QT_STOP_ALL_OUTPUTS")
                     accent: "#a33a3a"
                     Layout.preferredWidth: 200
@@ -447,8 +454,8 @@ ApplicationWindow {
                     RowLayout {
                         Layout.fillWidth: true
                         TextField { id: drillSpeed; text: "0"; inputMethodHints: Qt.ImhDigitsOnly; color: textPrimary; Layout.fillWidth: true; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
-                        ComboBox { id: drillDirection; model: ["clockwise", "counter-clockwise"]; Layout.preferredWidth: 170 }
-                        GameButton { text: testerBackend.uiText("QT_SEND_MOTION"); accent: "#b86a35"; Layout.preferredWidth: 145; enabled: testerBackend.canActuateSelectedProfile; onClicked: window.requestAdvanced(function() { testerBackend.sendDrill(drillSpeed.text, drillDirection.currentText) }) }
+                        ComboBox { id: drillDirection; textRole: "label"; valueRole: "value"; model: [{ value: "clockwise", label: testerBackend.uiText("OPT_CLOCKWISE") }, { value: "counter-clockwise", label: testerBackend.uiText("OPT_COUNTER_CLOCKWISE") }]; Layout.preferredWidth: 170 }
+                        GameButton { text: testerBackend.uiText("QT_SEND_MOTION"); accent: "#b86a35"; Layout.preferredWidth: 145; enabled: testerBackend.canActuateSelectedProfile; onClicked: window.requestAdvanced(function() { testerBackend.sendDrill(drillSpeed.text, drillDirection.currentValue) }) }
                     }
                 }
                 ColumnLayout {
@@ -458,9 +465,9 @@ ApplicationWindow {
                     Text { text: testerBackend.uiText("QT_AOI_MODE"); color: muted; font.pixelSize: 10 }
                     RowLayout {
                         Layout.fillWidth: true
-                        ComboBox { id: aoiMode; model: ["off", "strobe", "continuous"]; Layout.preferredWidth: 150 }
+                        ComboBox { id: aoiMode; textRole: "label"; valueRole: "value"; model: [{ value: "off", label: testerBackend.uiText("OPT_OFF") }, { value: "strobe", label: testerBackend.uiText("OPT_SYNCHRONOUS_STROBE") }, { value: "continuous", label: testerBackend.uiText("OPT_FIXED_CONTINUOUS") }]; Layout.preferredWidth: 150 }
                         TextField { id: aoiPeriod; text: "5"; inputMethodHints: Qt.ImhDigitsOnly; color: textPrimary; Layout.fillWidth: true; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
-                        GameButton { text: testerBackend.uiText("QT_SEND_MOTION"); accent: "#b86a35"; Layout.preferredWidth: 145; enabled: testerBackend.canActuateSelectedProfile; onClicked: window.requestAdvanced(function() { testerBackend.sendAoi(aoiMode.currentText, aoiPeriod.text) }) }
+                        GameButton { text: testerBackend.uiText("QT_SEND_MOTION"); accent: "#b86a35"; Layout.preferredWidth: 145; enabled: testerBackend.canActuateSelectedProfile; onClicked: window.requestAdvanced(function() { testerBackend.sendAoi(aoiMode.currentValue, aoiPeriod.text) }) }
                     }
                 }
                 RowLayout {
@@ -650,6 +657,7 @@ ApplicationWindow {
                         TextField { id: extruderSteps; text: "200"; inputMethodHints: Qt.ImhDigitsOnly; color: textPrimary; placeholderText: testerBackend.uiText("QT_STEPS"); Layout.fillWidth: true; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
                         GameButton { text: testerBackend.uiText("QT_SEND_MOTION"); accent: "#b86a35"; Layout.preferredWidth: 200; enabled: testerBackend.canActuateSelectedProfile; onClicked: window.requestAdvanced(function() { testerBackend.sendPrinterOneShot("extruder", extruderSteps.text, printerHeater.text) }) }
                     }
+                    Text { text: testerBackend.uiText("QT_EXTRUDER_KEEPALIVE_NOTE"); color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 }
                 RowLayout {
                     visible: testerBackend.advancedControlKind === "uv"
@@ -695,7 +703,7 @@ ApplicationWindow {
                 }
                 RowLayout {
                     Layout.fillWidth: true
-                    ComboBox { id: motionDirection; model: ["forward", "reverse"]; Layout.preferredWidth: 120; enabled: testerBackend.canSendMotion }
+                    ComboBox { id: motionDirection; textRole: "label"; valueRole: "value"; model: [{ value: "forward", label: testerBackend.uiText("OPT_FORWARD") }, { value: "reverse", label: testerBackend.uiText("OPT_REVERSE") }]; Layout.preferredWidth: 120; enabled: testerBackend.canSendMotion }
                     TextField {
                         id: motionSteps
                         text: "200"
@@ -751,13 +759,13 @@ ApplicationWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 6
-                    ComboBox { id: oledMode; model: ["standard", "night", "standby"]; Layout.preferredWidth: 130 }
+                    ComboBox { id: oledMode; textRole: "label"; valueRole: "value"; model: [{ value: "standard", label: testerBackend.uiText("OPT_STANDARD") }, { value: "night", label: testerBackend.uiText("OPT_NIGHT") }, { value: "standby", label: testerBackend.uiText("OPT_STANDBY") }]; Layout.preferredWidth: 130 }
                     GameButton {
                         text: testerBackend.uiText("BTN_SEND")
                         accent: "#24465e"
                         Layout.fillWidth: true
                         enabled: testerBackend.canUseUtilityPanels
-                        onClicked: testerBackend.sendGlobalStatus(statusR.text, statusG.text, statusB.text, oledMode.currentText, ringR.text, ringG.text, ringB.text, ringOn.checked)
+                        onClicked: testerBackend.sendGlobalStatus(statusR.text, statusG.text, statusB.text, oledMode.currentValue, ringR.text, ringG.text, ringB.text, ringOn.checked)
                     }
                 }
 

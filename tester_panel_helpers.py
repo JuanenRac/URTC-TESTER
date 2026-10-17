@@ -138,6 +138,10 @@ class PanelHelpersMixin:
         except tk.TclError:
             return default
 
+    def _confirm_physical_action(self):
+        """Ask before a one-shot command that moves or fires something real (weld pulse, paste pulse, crimp), as the Qt Quick deck does for every physical action."""
+        return messagebox.askyesno(_("TITLE_CONFIRM_PHYSICAL_ACTION_Q"), _("MSG_CONFIRM_PHYSICAL_ACTION"), icon="warning")
+
     def _require_int(self, var, error_title_key="TITLE_INVALID_VALUE"):
         """Like _safe_int above, but for one-shot buttons that trigger a
         real PHYSICAL actuation right now (a weld pulse firing, a paste

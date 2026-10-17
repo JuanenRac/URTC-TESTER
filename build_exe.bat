@@ -53,8 +53,18 @@ REM Ecosystem-wide versioning policy: TESTER_VERSION auto-increments on
 REM every REAL build (every run of this script), never just from running
 REM "python urtc_tester.py" from source. base-10 "odometer" rule - see
 REM bump_version.py for the exact carry logic (e.g. 1.1.9 -> 1.2.0).
+REM The bump happens before the compilation (the .exe must carry the new
+REM number), so a build that fails afterwards puts the files the bump
+REM touched back as they were: a failed build must not leave the tree on a
+REM version that was never built.
+set "BUMP_BACKUP=%TEMP%\urtc_tester_bump_backup"
+if exist "%BUMP_BACKUP%" rmdir /s /q "%BUMP_BACKUP%"
+mkdir "%BUMP_BACKUP%"
+for %%f in (tester_config.py urtc.project.json CHANGELOG.md README*.md) do (
+    if exist "%%f" copy /Y "%%f" "%BUMP_BACKUP%\%%f" >nul
+)
 REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_STEP
-echo [1/6] Incrementing project version and synchronising its manifest...
+echo       Incrementing project version and synchronising its manifest...
 python bump_version.py
 if errorlevel 1 ( echo NATIVE VERSION BUMP FAILED. & pause & exit /b 1 )
 REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_BEFORE
@@ -96,6 +106,10 @@ python -m PyInstaller --onefile --windowed --noconfirm --name "URTC_Tester" ^
     --hidden-import tester_common_panels ^
     --hidden-import tester_panel_helpers ^
     --hidden-import tester_tool_panels ^
+    --hidden-import advanced_protocol ^
+    --hidden-import tester_result_record ^
+    --hidden-import hydra_umc_animation ^
+    --hidden-import hydra_umc_deck_widgets ^
     --hidden-import qt_tester ^
     --hidden-import PySide6.QtQml ^
     --hidden-import PySide6.QtQuick ^
@@ -105,6 +119,8 @@ python -m PyInstaller --onefile --windowed --noconfirm --name "URTC_Tester" ^
     urtc_tester.py
 if not exist dist\URTC_Tester.exe (
     echo       ERROR: PyInstaller did not produce dist\URTC_Tester.exe - see the output above.
+    echo       Restoring the files the version bump changed.
+    for %%f in ("%BUMP_BACKUP%\*") do copy /Y "%%f" "%%~nxf" >nul
     pause
     exit /b 1
 )

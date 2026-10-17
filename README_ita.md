@@ -24,7 +24,7 @@
 </p>
 
 
-**Versione:** 0.2.7 · **Autore:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Versione:** 0.2.8 · **Autore:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licenza: **GPL-3.0** per il codice sorgente, **CC BY-SA 4.0** per questa
 documentazione - vedi `LICENSE` in questo repository, o la sezione
@@ -40,7 +40,7 @@ l'applicazione in esecuzione; non tocca mai la flash, quindi non c'è
 nulla qui che possa lasciare la scheda meno funzionante di come ha
 iniziato.
 
-**Verifica di onestà - cosa funziona davvero oggi:** gli encoder di payload CAN per le famiglie di controllo migrate a Qt Quick (`advanced_protocol.py`) sono reali e coperti da 20 test superati (`pytest tests/test_advanced_protocol.py`) - sebbene la CI di questo repository (`.github/workflows/ci.yml`) si limiti a compilare ogni file `.py` ed eseguire `tools/ci_validate.py`, non invoca mai realmente pytest, quindi oggi una regressione lì non farebbe fallire una build. I tre script `verify_qt_*.py` nella radice del repository (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) sono vere verifiche end-to-end, deliberatamente tenute fuori da `tests/`, contro un trasporto fittizio con vera consegna di segnali cross-thread - tutti e tre passano quando eseguiti manualmente con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`. Questo è il tetto onesto di ciò che viene verificato automaticamente: il livello di trasporto, la gestione ID/layout dei byte CAN, e la logica del ponte Qt Quick sono reali ed esercitati contro trame simulate, non hardware reale - come già dice "Known limitations" più sotto, questo è stato costruito senza accesso USB, quindi niente qui è stato ancora verificato contro una scheda reale. `tester_gui_core.py`, `tester_common_panels.py` e `tester_tool_panels.py` sono implementazioni reali e sostanziali (decine di migliaia di righe combinate) esercitate dagli script di verifica e dall'uso manuale, non da un volume equivalente di test automatici.
+**Verifica di onestà - cosa funziona davvero oggi:** gli encoder di payload CAN per le famiglie di controllo migrate a Qt Quick (`advanced_protocol.py`) sono reali e coperti dai test in `tests/` (`python -m pytest -q`). Anche la CI di questo repository (`.github/workflows/ci.yml`) li esegue, insieme a `ruff check`, `tools/ci_validate.py`, una compilazione di sintassi di ogni file `.py` e i tre script `verify_qt_*.py`, quindi una regressione lì fa fallire la build. I tre script `verify_qt_*.py` nella radice del repository (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) sono vere verifiche end-to-end, deliberatamente tenute fuori da `tests/`, contro un trasporto fittizio con vera consegna di segnali cross-thread - tutti e tre passano con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, che la CI esegue a sua volta. Questo è il tetto onesto di ciò che viene verificato automaticamente: il livello di trasporto, la gestione ID/layout dei byte CAN, e la logica del ponte Qt Quick sono reali ed esercitati contro trame simulate, non hardware reale - come già dice "Known limitations" più sotto, questo è stato costruito senza accesso USB, quindi niente qui è stato ancora verificato contro una scheda reale. `tester_gui_core.py`, `tester_common_panels.py` e `tester_tool_panels.py` sono implementazioni reali e sostanziali (migliaia di righe combinate) esercitate dagli script di verifica e dall'uso manuale, non da un volume equivalente di test automatici.
 
 ## 1. 🆚 Relazione con il flasher
 
@@ -382,6 +382,14 @@ trama zero/spento e si ferma. La ventola hotend non ha watchdog (un
 rilevatore di stallo invece - vedi `docs/CANBUS.md`), quindi è un
 semplice invio singolo.
 
+**Note su sicurezza e comodità.**
+
+- **FERMA TUTTE LE USCITE** (in entrambe le finestre, disponibile a connessione stabilita e con i controlli attivi armati) invia tutti i comandi di spegnimento noti - riscaldatori, laser, trapano, lampada UV, ventola di strato, rilascio dell'elettromagnete, motori passo-passo semplici e crimpatrice - qualunque sia lo strumento montato, e ferma ogni refresh. La ventola dell'hotend viene lasciata accesa di proposito, perché l'ugello potrebbe essere ancora caldo.
+- Gli impulsi di saldatura singoli, l'impulso di pasta e la crimpatura chiedono conferma anche nella finestra classica, come fa sempre il deck Qt Quick.
+- Il trapano e la lampada UV vengono rinfrescati come il laser e i riscaldatori. Finché il riscaldatore della stampante 3D è mantenuto, il suo refresh di 150 ms porta 0 passi di estrusore, che il firmware legge come ordine di arresto: un movimento dell'estrusore avviato in quello stato viene annullato entro 150 ms, quindi muovi l'estrusore con il riscaldatore spento finché il firmware non offrirà una modalità che lo lasci in pace.
+- La porta e la velocità vengono ricordate per la sessione successiva (`config.json`) e il deck Qt Quick ha un proprio selettore di velocità. Il **rilevamento automatico** prima ascolta soltanto a ogni velocità (su un bus attivo non si trasmette nulla) e interroga a ogni velocità solo quando il bus è completamente silenzioso.
+- Il Monitor del bus grezzo può essere limitato ad alcuni ID CAN (**Filtro ID**) e ai frame i cui dati sono cambiati (**Solo variazioni**).
+
 ### 🔥 Test al banco della fuga termica (firmware URTC 0.3.2+ / 0.3.3+)
 
 Detect ora mostra *perché* una scheda ha bloccato un errore: il byte 4 di
@@ -482,7 +490,7 @@ l'applicazione.
 ├── verify_qt_telemetry_watch.py     Vera verifica end-to-end, fuori da tests/, della telemetria Qt Quick (Vacuum Pickup / Scan Probe)
 ├── verify_qt_utility_panels.py      Vera verifica end-to-end, fuori da tests/, dei pannelli utility Qt Quick (Global Controls / Expansion Board / F-RAM)
 ├── tests/
-│   └── test_advanced_protocol.py   Test senza hardware per gli encoder di advanced_protocol.py - non eseguiti dalla CI, vedi Verifica di onestà sopra
+│   └── test_advanced_protocol.py   Test senza hardware per gli encoder di advanced_protocol.py - eseguiti dalla CI, vedi Verifica di onestà sopra
 ├── requirements.txt            pyserial>=3.5 (tester Tkinter) + PySide6>=6.8,<7 (deck `--qtquick`)
 ├── build_exe.bat               Script di build del binario standalone per Windows
 │                                (PyInstaller)
@@ -655,7 +663,7 @@ effettivamente copre:
 
 2. La documentazione (questo README e le proprie traduzioni -
    `README_spa.md`, `README_ita.md`, `README_fra.md`, `README_deu.md`,
-   `README_zho.md`, `README_jpn.md`)
+   `README_zho.md`, `README_jpn.md`, `README_por.md` e le guide in `docs/`)
    è disponibile sotto **Creative Commons Attribution-ShareAlike 4.0
    International (CC BY-SA 4.0)**. Testo completo su
    https://creativecommons.org/licenses/by-sa/4.0/.

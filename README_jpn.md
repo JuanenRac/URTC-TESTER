@@ -24,7 +24,7 @@
 </p>
 
 
-**バージョン：** 0.2.7 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**バージョン：** 0.2.8 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 ライセンス：ソースコードは **GPL-3.0**、本ドキュメントは **CC BY-SA 4.0**——
 本リポジトリの `LICENSE`、または本ドキュメント末尾の「ライセンスと著作権
@@ -39,7 +39,7 @@ URTC ボード向けのライブ CAN バステスターです。フラッシャ�
 ラッシュには一切触れないため、これによってボードが開始時より動作しなく
 なることはありません。
 
-**正直な現状確認 - 実際に今動くもの:** Qt Quick に移行した制御系統向けの CAN ペイロードエンコーダー（`advanced_protocol.py`）は本物であり、20件の通過しているテスト（`pytest tests/test_advanced_protocol.py`）でカバーされている——ただしこのリポジトリ自身の CI（`.github/workflows/ci.yml`）は各 `.py` ファイルをコンパイルして `tools/ci_validate.py` を実行するだけで、実際には一度も pytest を呼び出していないため、今日の時点ではそこでのリグレッションがビルドを失敗させることはない。リポジトリ直下にある3つの `verify_qt_*.py` スクリプト（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`）は、意図的に `tests/` の外に置かれた本物のエンドツーエンドチェックであり、本物のクロススレッドシグナル配信を伴う偽のトランスポートに対して検証を行う——`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で手動実行すると3つとも通過する。これが自動的に検証されている範囲の正直な上限だ。トランスポート層、CAN ID/バイトレイアウトの処理、そして Qt Quick ブリッジのロジックは本物であり、模擬フレームに対して検証されているが、実機のハードウェアに対してではない——下記の「Known limitations」がすでに述べている通り、これは USB アクセスのない環境で構築されたため、ここにあるものはまだ何も実機ボードに対して検証されていない。`tester_gui_core.py`、`tester_common_panels.py`、`tester_tool_panels.py` は本物で相当な規模の実装であり（合計で数万行）、これらの検証スクリプトと手動での使用によって検証されているのであって、それに見合う量の自動化されたテストによってではない。
+**正直な現状確認 - 実際に今動くもの:** Qt Quick に移行した制御系統向けの CAN ペイロードエンコーダー（`advanced_protocol.py`）は本物であり、`tests/` のテスト（`python -m pytest -q`）でカバーされている。このリポジトリ自身の CI（`.github/workflows/ci.yml`）もこれらを、`ruff check`、`tools/ci_validate.py`、各 `.py` ファイルの構文コンパイル、3つの `verify_qt_*.py` スクリプトとともに実行するため、そこでのリグレッションはビルドを失敗させる。リポジトリ直下にある3つの `verify_qt_*.py` スクリプト（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`）は、意図的に `tests/` の外に置かれた本物のエンドツーエンドチェックであり、本物のクロススレッドシグナル配信を伴う偽のトランスポートに対して検証を行う——`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で3つとも通過し、CI でも実行される。これが自動的に検証されている範囲の正直な上限だ。トランスポート層、CAN ID/バイトレイアウトの処理、そして Qt Quick ブリッジのロジックは本物であり、模擬フレームに対して検証されているが、実機のハードウェアに対してではない——下記の「Known limitations」がすでに述べている通り、これは USB アクセスのない環境で構築されたため、ここにあるものはまだ何も実機ボードに対して検証されていない。`tester_gui_core.py`、`tester_common_panels.py`、`tester_tool_panels.py` は本物で相当な規模の実装であり（合計で数千行）、これらの検証スクリプトと手動での使用によって検証されているのであって、それに見合う量の自動化されたテストによってではない。
 
 ## 1. 🆚 フラッシャーとの関係
 
@@ -347,6 +347,14 @@ PEAK PCAN-View / Vector CANalyzer 風のトレースファイルとして保存�
 （代わりに失速検出器——`docs/CANBUS.md` 参照）ので、単純なワンショット
 送信です。
 
+**安全性と使い勝手に関する注意。**
+
+- **全出力を停止**（両方のウィンドウにあり、接続済みでアクティブチェックを有効にしている間は常に使えます）は、取り付けられているツールに関係なく、既知のすべてのオフコマンド——ヒーター、レーザー、ドリル、UV ランプ、レイヤーファン、電磁石の解放、単純なステッピングモーター、かしめ機——を送信し、すべての再送を止めます。ノズルがまだ熱い可能性があるため、ホットエンドファンは意図的に回したままにします。
+- 単発の溶接パルス、ペーストパルス、かしめは、Qt Quick デッキが常にそうしているように、クラシックウィンドウでも確認を求めます。
+- ドリルと UV ランプはレーザーやヒーターと同様に再送されます。3D プリンターのヒーターを維持している間は、150 ms ごとの再送が押出機のステップ 0 を運び、ファームウェアはこれを停止命令と解釈します。その状態で開始した押出機の移動は 150 ms 以内に取り消されるため、ファームウェアが押出機に触れないモードを提供するまでは、ヒーターをオフにして押出機を動かしてください。
+- ポートとビットレートは次回のセッションのために記憶され（`config.json`）、Qt Quick デッキには専用のビットレート選択があります。**自動検出**はまず各ビットレートで聞くだけで（稼働中のバスには何も送信しません）、バスが完全に静かなときだけ各ビットレートで問い合わせます。
+- 生バスモニターは、一部の CAN ID（**ID フィルター**）や、データが変化したフレームだけ（**変化のみ**）に絞り込めます。
+
 ### 🔥 熱暴走のベンチテスト（URTC ファームウェア 0.3.2+ / 0.3.3+）
 
 Detect は、ボードがエラーをラッチした*理由*を表示するようになりました：
@@ -442,7 +450,7 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 ├── verify_qt_telemetry_watch.py     tests/ の外に置かれた、Qt Quick のテレメトリ（Vacuum Pickup / Scan Probe）の本物のエンドツーエンド検証
 ├── verify_qt_utility_panels.py      tests/ の外に置かれた、Qt Quick のユーティリティパネル（Global Controls / Expansion Board / F-RAM）の本物のエンドツーエンド検証
 ├── tests/
-│   └── test_advanced_protocol.py   advanced_protocol.py のエンコーダー用ハードウェア不要テスト——CI では実行されない、上記の正直な現状確認を参照
+│   └── test_advanced_protocol.py   advanced_protocol.py のエンコーダー用ハードウェア不要テスト——CI で実行される、上記の正直な現状確認を参照
 ├── requirements.txt            pyserial>=3.5（Tkinter テスター）+ PySide6>=6.8,<7（`--qtquick` デッキ）
 ├── build_exe.bat               独立 Windows バイナリビルドスクリプト（PyInstaller）
 ├── build_exe.sh                同上、Linux 向け
@@ -597,7 +605,7 @@ URTC Tester の著作権は (c) 2026 JuanenRac（Electro Hobby 3D）に帰属し
 
 1. ソースコード（`urtc_tester.py` および各 `tester_*.py` モジュール）と、`build_exe.bat`/`build_exe.sh` を通じてそこから構築されるあらゆるバイナリは、**GNU General Public License v3.0（GPL-3.0）** の下で提供されます。全文は https://www.gnu.org/licenses/gpl-3.0.html を参照してください。
 
-2. ドキュメント（本 README およびその自身の翻訳版——`README_spa.md`、`README_ita.md`、`README_fra.md`、`README_deu.md`）は、**クリエイティブ・コモンズ 表示-継承 4.0 国際（CC BY-SA 4.0）** の下で提供されます。全文は https://creativecommons.org/licenses/by-sa/4.0/ を参照してください。
+2. ドキュメント（本 README およびその自身の翻訳版——`README_spa.md`、`README_ita.md`、`README_fra.md`、`README_deu.md`、`README_zho.md`、`README_por.md`、および `docs/` のガイド）は、**クリエイティブ・コモンズ 表示-継承 4.0 国際（CC BY-SA 4.0）** の下で提供されます。全文は https://creativecommons.org/licenses/by-sa/4.0/ を参照してください。
 
 本ツールは [URTC（Universal Robot Tool Controller）](https://github.com/JuanenRac/URTC) プロジェクトのライブ CAN バス診断コンパニオンです——本ツールがテスト対象としているボードファームウェア、ハードウェア設計、完全なプロトコルドキュメントは、同プロジェクト自身のリポジトリを参照してください。URTC 自身のファームウェアは GPL-3.0 であり、そのハードウェア設計は CERN-OHL-S v2 です。本ツール自身のここでのライセンスはその独立したプロジェクトには及ばず、その逆も同様です。類似の範囲をカバーする Web ベースの代替案も、[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO) に存在します。
 

@@ -1,7 +1,7 @@
 <!-- =============================================================================
 URTC-TESTER - Integration contract
 Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-GPL-3.0-or-later - see LICENSE
+CC BY-SA 4.0 (documentation) - see LICENSE
 ============================================================================= -->
 
 # Integration Contract

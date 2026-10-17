@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.2.7 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 0.2.8 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Lizenz: **GPL-3.0** für den Quellcode, **CC BY-SA 4.0** für diese
 Dokumentation - siehe `LICENSE` in diesem Repository, oder den
@@ -41,7 +41,7 @@ Anwendung; es berührt niemals die Flash, sodass es hier nichts gibt, das
 die Platine weniger funktionsfähig zurücklassen könnte, als sie
 begonnen hat.
 
-**Ehrlichkeitscheck - was heute wirklich funktioniert:** die CAN-Payload-Encoder für die auf Qt Quick migrierten Steuerungsfamilien (`advanced_protocol.py`) sind real und durch 20 bestandene Tests abgedeckt (`pytest tests/test_advanced_protocol.py`) - obwohl die eigene CI dieses Repos (`.github/workflows/ci.yml`) nur jede `.py`-Datei kompiliert und `tools/ci_validate.py` ausführt, ruft sie pytest nie tatsächlich auf, sodass eine Regression dort heute keinen Build fehlschlagen ließe. Die drei `verify_qt_*.py`-Skripte im Repo-Root (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) sind echte, bewusst außerhalb von `tests/` gehaltene End-to-End-Prüfungen gegen einen simulierten Transport mit echter Cross-Thread-Signal-Zustellung - alle drei bestehen bei manueller Ausführung mit `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`. Das ist die ehrliche Obergrenze dessen, was automatisch verifiziert wird: die Transportschicht, die CAN-ID-/Byte-Layout-Verarbeitung und die Qt-Quick-Brückenlogik sind real und werden gegen simulierte Frames geprüft, nicht gegen echte Hardware - wie "Known limitations" weiter unten bereits sagt, wurde dies ohne USB-Zugriff gebaut, sodass hier noch nichts gegen eine echte Platine geprüft wurde. `tester_gui_core.py`, `tester_common_panels.py` und `tester_tool_panels.py` sind reale, umfangreiche Implementierungen (zusammen zehntausende Zeilen), die durch die Verify-Skripte und manuelle Nutzung geprüft werden, nicht durch ein entsprechendes Volumen automatisierter Tests.
+**Ehrlichkeitscheck - was heute wirklich funktioniert:** die CAN-Payload-Encoder für die auf Qt Quick migrierten Steuerungsfamilien (`advanced_protocol.py`) sind real und durch die Tests in `tests/` abgedeckt (`python -m pytest -q`). Die eigene CI dieses Repos (`.github/workflows/ci.yml`) führt sie ebenfalls aus, zusammen mit `ruff check`, `tools/ci_validate.py`, einer Syntaxkompilierung jeder `.py`-Datei und den drei `verify_qt_*.py`-Skripten, sodass eine Regression dort den Build fehlschlagen lässt. Die drei `verify_qt_*.py`-Skripte im Repo-Root (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) sind echte, bewusst außerhalb von `tests/` gehaltene End-to-End-Prüfungen gegen einen simulierten Transport mit echter Cross-Thread-Signal-Zustellung - alle drei bestehen mit `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, was die CI ebenfalls ausführt. Das ist die ehrliche Obergrenze dessen, was automatisch verifiziert wird: die Transportschicht, die CAN-ID-/Byte-Layout-Verarbeitung und die Qt-Quick-Brückenlogik sind real und werden gegen simulierte Frames geprüft, nicht gegen echte Hardware - wie "Known limitations" weiter unten bereits sagt, wurde dies ohne USB-Zugriff gebaut, sodass hier noch nichts gegen eine echte Platine geprüft wurde. `tester_gui_core.py`, `tester_common_panels.py` und `tester_tool_panels.py` sind reale, umfangreiche Implementierungen (zusammen tausende Zeilen), die durch die Verify-Skripte und manuelle Nutzung geprüft werden, nicht durch ein entsprechendes Volumen automatisierter Tests.
 
 ## 1. 🆚 Beziehung zum Flasher
 
@@ -395,6 +395,14 @@ einen einzelnen Null-/Aus-Frame und stoppt. Der Hotend-Lüfter hat
 keinen Watchdog (stattdessen einen Stillstandsdetektor - siehe
 `docs/CANBUS.md`), also ist es ein einfaches einmaliges Senden.
 
+**Hinweise zu Sicherheit und Bedienung.**
+
+- **ALLE AUSGÄNGE STOPPEN** (in beiden Fenstern, verfügbar bei bestehender Verbindung und scharfgeschalteten aktiven Prüfungen) sendet jeden bekannten Aus-Befehl - Heizungen, Laser, Bohrmaschine, UV-Lampe, Schichtlüfter, Freigabe des Elektromagneten, einfache Schrittmotoren und Crimper - egal welches Werkzeug eingebaut ist, und stoppt jede Auffrischung. Der Hotend-Lüfter bleibt absichtlich an, weil die Düse noch heiß sein kann.
+- Die einmaligen Schweißimpulse, der Pasteimpuls und das Crimpen verlangen auch im klassischen Fenster eine Bestätigung, wie es das Qt-Quick-Deck immer tut.
+- Die Bohrmaschine und die UV-Lampe werden wie der Laser und die Heizungen aufgefrischt. Solange die Heizung des 3D-Druckers gehalten wird, enthält ihre 150-ms-Auffrischung 0 Extruderschritte, die die Firmware als Stoppbefehl liest: Eine in diesem Zustand gestartete Extruderbewegung wird innerhalb von 150 ms abgebrochen. Den Extruder daher bei ausgeschalteter Heizung bewegen, bis die Firmware einen Modus bietet, der den Extruder in Ruhe lässt.
+- Port und Bitrate werden für die nächste Sitzung gemerkt (`config.json`), und das Qt-Quick-Deck hat eine eigene Bitraten-Auswahl. Die **automatische Erkennung** hört zuerst nur bei jeder Bitrate zu (auf einem aktiven Bus wird nichts gesendet) und fragt nur dann bei jeder Bitrate nach, wenn der Bus völlig still ist.
+- Der Rohdaten-Busmonitor lässt sich auf einige CAN-IDs (**ID-Filter**) und auf Frames mit geänderten Daten (**Nur Änderungen**) beschränken.
+
 ### 🔥 Prüfstandstest für thermisches Durchgehen (URTC-Firmware 0.3.2+ / 0.3.3+)
 
 Detect zeigt jetzt, *warum* eine Platine einen Fehler verriegelt hat: Byte 4
@@ -498,7 +506,7 @@ nicht erforderlich.
 ├── verify_qt_telemetry_watch.py     Echte End-to-End-Prüfung außerhalb von tests/ der Qt-Quick-Telemetrie (Vacuum Pickup / Scan Probe)
 ├── verify_qt_utility_panels.py      Echte End-to-End-Prüfung außerhalb von tests/ der Qt-Quick-Utility-Panels (Global Controls / Expansion Board / F-RAM)
 ├── tests/
-│   └── test_advanced_protocol.py   Hardwarefreie Tests für die Encoder von advanced_protocol.py - nicht von der CI ausgeführt, siehe Ehrlichkeitscheck oben
+│   └── test_advanced_protocol.py   Hardwarefreie Tests für die Encoder von advanced_protocol.py - von der CI ausgeführt, siehe Ehrlichkeitscheck oben
 ├── requirements.txt            pyserial>=3.5 (Tkinter-Tester) + PySide6>=6.8,<7 (`--qtquick`-Deck)
 ├── build_exe.bat               Build-Skript für die eigenständige Windows-Binary
 │                                (PyInstaller)
@@ -671,7 +679,7 @@ passend zu dem, was sie tatsächlich abdeckt:
 
 2. Die Dokumentation (dieses README und seine eigenen Übersetzungen -
    `README_spa.md`, `README_ita.md`, `README_fra.md`, `README_deu.md`,
-   `README_zho.md`, `README_jpn.md`)
+   `README_zho.md`, `README_jpn.md`, `README_por.md` und die Anleitungen in `docs/`)
    ist unter **Creative Commons Attribution-ShareAlike 4.0
    International (CC BY-SA 4.0)** verfügbar. Vollständiger Text unter
    https://creativecommons.org/licenses/by-sa/4.0/.

@@ -13,6 +13,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
 import advanced_protocol as protocol
+from tester_bus_monitor import FrameFilter
 from tester_config import (
     _, bitrate_bps_for_label, CAN_ID_3DP_HOTEND_TELEM, CAN_ID_3DP_THERMAL_MOTION, CAN_ID_ACTIVE_TOOL_RESP,
     CAN_ID_AOI_TELEMETRY, CAN_ID_DIAG0_RESP, CAN_ID_DRILL_CMD, CAN_ID_DRILL_TELEMETRY,
@@ -100,7 +101,7 @@ class CommonPanelsMixin:
         ttk.Entry(parent, textvariable=self.spi_send_var, width=30).grid(
             row=1, column=0, sticky="w", padx=4, pady=2)
         self._new_deck_button(parent, text=_("BTN_SEND"), command=self._send_expansion_spi).grid(row=1, column=1, padx=4)
-        self.spi_response_var = tk.StringVar(value="(nothing sent yet)")
+        self.spi_response_var = tk.StringVar(value=_("VAL_NOTHING_SENT_YET"))
         ttk.Label(parent, text=_("LBL_RESPONSE")).grid(row=2, column=0, sticky="w", padx=4, pady=(4, 0))
         ttk.Label(parent, textvariable=self.spi_response_var, font=("Courier", 9)).grid(
             row=3, column=0, columnspan=2, sticky="w", padx=4)
@@ -120,7 +121,7 @@ class CommonPanelsMixin:
         diag_row = ttk.Frame(parent)
         diag_row.grid(row=6, column=0, columnspan=2, sticky="w", padx=4, pady=(4, 2))
         self._new_deck_button(diag_row, text=_("BTN_QUERY_DIAG0"), command=self._query_diag0).pack(side="left")
-        self.diag0_var = tk.StringVar(value="(not queried yet)")
+        self.diag0_var = tk.StringVar(value=_("VAL_NOT_QUERIED_YET"))
         ttk.Label(diag_row, textvariable=self.diag0_var, font=("Courier", 9)).pack(side="left", padx=(8, 0))
 
     def _build_fram_panel(self, parent):
@@ -142,7 +143,7 @@ class CommonPanelsMixin:
         self._new_deck_button(btn_row, text=_("BTN_QUERY_THERMAL_STATS"), command=self._query_thermal_stats).pack(side="left", padx=(8, 0))
         results = ttk.Frame(parent)
         results.grid(row=2, column=0, columnspan=2, sticky="w", padx=4, pady=(4, 4))
-        self.fram_state_var = tk.StringVar(value="(not queried yet)")
+        self.fram_state_var = tk.StringVar(value=_("VAL_NOT_QUERIED_YET"))
         ttk.Label(results, textvariable=self.fram_state_var, wraplength=380, justify="left").pack(anchor="w")
         self.thermal_stats_var = tk.StringVar(value="")
         ttk.Label(results, textvariable=self.thermal_stats_var, wraplength=380, justify="left").pack(anchor="w")
@@ -153,7 +154,7 @@ class CommonPanelsMixin:
         exp_type_row = ttk.Frame(parent)
         exp_type_row.grid(row=5, column=0, columnspan=2, sticky="w", padx=4)
         self._new_deck_button(exp_type_row, text=_("BTN_QUERY"), command=self._query_expansion_board_type).pack(side="left")
-        self.expansion_board_type_var = tk.StringVar(value="(not queried yet)")
+        self.expansion_board_type_var = tk.StringVar(value=_("VAL_NOT_QUERIED_YET"))
         ttk.Label(exp_type_row, textvariable=self.expansion_board_type_var).pack(side="left", padx=(8, 0))
         ttk.Label(
             parent,
@@ -171,7 +172,7 @@ class CommonPanelsMixin:
         mlx_variant_row = ttk.Frame(parent)
         mlx_variant_row.grid(row=8, column=0, columnspan=2, sticky="w", padx=4)
         self._new_deck_button(mlx_variant_row, text=_("BTN_QUERY"), command=self._query_mlx_sensor_variant).pack(side="left")
-        self.mlx_sensor_variant_var = tk.StringVar(value="(not queried yet)")
+        self.mlx_sensor_variant_var = tk.StringVar(value=_("VAL_NOT_QUERIED_YET"))
         ttk.Label(mlx_variant_row, textvariable=self.mlx_sensor_variant_var).pack(side="left", padx=(8, 0))
         ttk.Label(
             parent,
@@ -193,7 +194,7 @@ class CommonPanelsMixin:
         free_tool_row = ttk.Frame(parent)
         free_tool_row.grid(row=12, column=0, columnspan=2, sticky="w", padx=4)
         self._new_deck_button(free_tool_row, text=_("BTN_QUERY"), command=self._query_free_tool_config).pack(side="left")
-        self.free_tool_config_var = tk.StringVar(value="(not queried yet)")
+        self.free_tool_config_var = tk.StringVar(value=_("VAL_NOT_QUERIED_YET"))
         ttk.Label(free_tool_row, textvariable=self.free_tool_config_var, wraplength=300, justify="left").pack(
             side="left", padx=(8, 0))
         ttk.Label(
@@ -214,7 +215,7 @@ class CommonPanelsMixin:
         peripheral_row = ttk.Frame(parent)
         peripheral_row.grid(row=16, column=0, columnspan=2, sticky="w", padx=4)
         self._new_deck_button(peripheral_row, text=_("BTN_QUERY"), command=self._query_peripheral_info).pack(side="left")
-        self.peripheral_info_var = tk.StringVar(value="(not queried yet)")
+        self.peripheral_info_var = tk.StringVar(value=_("VAL_NOT_QUERIED_YET"))
         ttk.Label(peripheral_row, textvariable=self.peripheral_info_var, wraplength=300, justify="left").pack(
             side="left", padx=(8, 0))
         ttk.Label(
@@ -307,16 +308,16 @@ class CommonPanelsMixin:
             # gets disconnected mid-test), instead of leaving it stuck
             # disabled for the rest of the session.
             try:
-                _append(f"Testing: {TOOL_NAMES.get(self.active_tool_id, '?')}\n")
+                _append(_("LOG_SELFTEST_TESTING", tool=TOOL_NAMES.get(self.active_tool_id, "?")) + "\n")
                 # Generic checks first - meaningful for every tool.
                 resp = self.bus.wait_for_one(CAN_ID_ACTIVE_TOOL_RESP, timeout=1.5,
                                               send_after_register=lambda: self.bus.send(CAN_ID_QUERY_ACTIVE_TOOL, b""))
                 ok = resp is not None and len(resp) >= 1 and resp[0] == self.active_tool_id
-                _append(f"[{'PASS' if ok else 'FAIL'}] Active-tool query (0x110) confirms detected tool")
+                _append(f"[{'PASS' if ok else 'FAIL'}] " + _("LOG_SELFTEST_ACTIVE_TOOL"))
 
                 resp = self.bus.wait_for_one(CAN_ID_VERSION_RESPONSE, timeout=1.5,
                                               send_after_register=lambda: self.bus.send(CAN_ID_QUERY_VERSION, b"\x00"))
-                _append(f"[{'PASS' if resp is not None else 'FAIL'}] Version query (0x7F8) gets a response")
+                _append(f"[{'PASS' if resp is not None else 'FAIL'}] " + _("LOG_SELFTEST_VERSION"))
 
                 if is_motion:
                     _append("[INFO] This tool has no telemetry to verify - STEP/DIR/EN "
@@ -369,7 +370,7 @@ class CommonPanelsMixin:
             return
 
         win = tk.Toplevel(self.root)
-        win.title("Raw Bus Monitor")
+        win.title(_("TITLE_RAW_BUS_MONITOR"))
         win.geometry("640x460")
         self._bus_monitor_win = win
         self._bus_monitor_paused = False
@@ -391,6 +392,21 @@ class CommonPanelsMixin:
             self._bus_monitor_paused = pause_var.get()
 
         ttk.Checkbutton(top_row, text=_("BTN_PAUSE"), variable=pause_var, command=_toggle_pause).pack(side="left")
+
+        frame_filter = FrameFilter()
+        id_filter_var = tk.StringVar(value="")
+        only_changes_var = tk.BooleanVar(value=False)
+
+        def _apply_filter(*_ignored):
+            frame_filter.set_ids(id_filter_var.get())
+            frame_filter.only_changes = only_changes_var.get()
+            frame_filter.reset()
+
+        ttk.Label(top_row, text=_("LBL_FILTER_IDS")).pack(side="left", padx=(12, 2))
+        id_filter_entry = ttk.Entry(top_row, textvariable=id_filter_var, width=14)
+        id_filter_entry.pack(side="left")
+        id_filter_entry.bind("<KeyRelease>", _apply_filter)
+        ttk.Checkbutton(top_row, text=_("BTN_ONLY_CHANGES"), variable=only_changes_var, command=_apply_filter).pack(side="left", padx=(8, 0))
 
         def _clear():
             tree.delete(*tree.get_children())
@@ -435,7 +451,7 @@ class CommonPanelsMixin:
                 else:
                     offsets_ms.append(i * 10.0)
             try:
-                with open(path, "w") as f:
+                with open(path, "w", encoding="ascii") as f:
                     if fmt == "trc":
                         # Simplified PEAK PCAN-View trace format - the key
                         # structural elements (header, one line per frame
@@ -446,7 +462,7 @@ class CommonPanelsMixin:
                         f.write(";   Message Number\n;   Time Offset (ms)\n;   Type\n"
                                 ";   ID (hex)\n;   Data Length Code\n;   Data Bytes (hex)\n")
                         f.write(";" + "-" * 80 + "\n")
-                        for i, (ts, can_id, dlc, data, dt) in enumerate(rows, start=1):
+                        for i, (_ts, can_id, dlc, data, _dt) in enumerate(rows, start=1):
                             id_hex = str(can_id).split(" ")[0].replace("0x", "").zfill(4)
                             data_hex = str(data)  # already "" for an empty frame (b"".hex() == ""), no special-casing needed
                             f.write(f"{i:>6}) {offsets_ms[i-1]:>10.1f}  Rx    {id_hex}  {dlc}   {data_hex}\n")
@@ -459,7 +475,7 @@ class CommonPanelsMixin:
                         f.write("base hex  timestamps absolute\n")
                         f.write("internal events logged\n")
                         f.write("Begin Triggerblock " + time.strftime("%a %b %d %H:%M:%S.000 %Y") + "\n")
-                        for i, (ts, can_id, dlc, data, dt) in enumerate(rows):
+                        for i, (_ts, can_id, dlc, data, _dt) in enumerate(rows):
                             id_hex = str(can_id).split(" ")[0].replace("0x", "")
                             data_hex = str(data)  # already "" for an empty frame (b"".hex() == ""), no special-casing needed
                             f.write(f"   {offsets_ms[i] / 1000.0:.6f} 1  {id_hex:<15} Rx   d {dlc} {data_hex}\n")
@@ -515,7 +531,8 @@ class CommonPanelsMixin:
                 self._bus_monitor_last_tick = now
                 self._bus_monitor_window_bits += 47 + 8 * len(data)
                 self._bus_monitor_window_frames += 1
-                self._bus_monitor_pending_rows.append((ts, can_id, data, dt_ms))
+                if frame_filter.accept(can_id, data):
+                    self._bus_monitor_pending_rows.append((ts, can_id, data, dt_ms))
 
         def _flush_pending_rows():
             if not win.winfo_exists():
@@ -554,7 +571,7 @@ class CommonPanelsMixin:
 
         bitrate_bps = self._current_bitrate_bps()
         bitrate_text = f"{bitrate_bps / 1000:g} kbit/s"
-        stats_var = tk.StringVar(value=f"Frames/s: -- | Bus load: -- % (approx, {bitrate_text})")
+        stats_var = tk.StringVar(value=_("LBL_BUS_STATS_IDLE", bitrate=bitrate_text))
         ttk.Label(win, textvariable=stats_var, foreground="gray").pack(
             side="bottom", fill="x", padx=6, pady=(0, 6))
 
@@ -567,7 +584,7 @@ class CommonPanelsMixin:
                 self._bus_monitor_window_frames = 0
                 self._bus_monitor_window_bits = 0
             load_pct = min(100.0, bits / bitrate_bps * 100)
-            stats_var.set(f"Frames/s: {frames} | Bus load: {load_pct:.1f}% (approx, {bitrate_text})")
+            stats_var.set(_("LBL_BUS_STATS", frames=frames, load=f"{load_pct:.1f}", bitrate=bitrate_text))
             win.after(1000, _update_stats)
 
         win.after(1000, _update_stats)
@@ -637,14 +654,14 @@ class CommonPanelsMixin:
         try:
             can_id = int(self.custom_id_var.get(), 16)
         except (ValueError, tk.TclError):
-            raise ValueError(f"'{self.custom_id_var.get()}' isn't a valid hex CAN ID.")
+            raise ValueError(f"'{self.custom_id_var.get()}' isn't a valid hex CAN ID.") from None
         if not (0 <= can_id <= 0x7FF):
             raise ValueError(f"CAN ID 0x{can_id:X} is outside the standard 11-bit range (0-0x7FF).")
         text = self.custom_data_var.get().strip()
         try:
             values = [int(b, 16) for b in text.split()] if text else []
         except ValueError:
-            raise ValueError(f"'{text}' isn't valid space-separated hex bytes, e.g. 01 02 03.")
+            raise ValueError(f"'{text}' isn't valid space-separated hex bytes, e.g. 01 02 03.") from None
         out_of_range = [v for v in values if not (0 <= v <= 0xFF)]
         if out_of_range:
             raise ValueError(f"{out_of_range[0]:#x} is out of range for a single byte (00-FF).")

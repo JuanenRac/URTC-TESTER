@@ -46,7 +46,7 @@ import sys
 # already asks for.
 if "--legacy" in sys.argv:
     import tkinter as tk
-    from tester_config import BANNER_IMAGE_PATH, _center_geometry
+    from tester_config import BANNER_IMAGE_PATH, _center_geometry, fit_to_screen
     from tester_gui_core import TesterGUI
 
 
@@ -135,8 +135,9 @@ def main():
     # columns instead of one long stack. Worst case: Spanish for width
     # (1342px measured), German for height (1054px measured). A small
     # margin above those worst-case measurements.
-    root.geometry(_center_geometry(root, 1360, 1075))
-    app = TesterGUI(root)
+    width, height = fit_to_screen(1360, 1075, root.winfo_screenwidth(), root.winfo_screenheight())
+    root.geometry(_center_geometry(root, width, height))
+    TesterGUI(root)  # the window object lives on through root
 
     def _reveal_main():
         root.deiconify()

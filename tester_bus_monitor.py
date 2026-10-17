@@ -256,3 +256,40 @@ class BusStats:
         fps = frames / self.window_s
         load = min(100.0, 100.0 * (bits / self.window_s) / bitrate_bps) if bitrate_bps > 0 else 0.0
         return fps, load
+
+
+class FrameFilter:
+    """What the raw bus monitor window shows: only some CAN IDs, and/or only frames whose data changed.
+
+    The counters of the window keep counting every frame; the filter only decides which ones become rows.
+    """
+
+    def __init__(self):
+        self.ids = None  # None shows every ID
+        self.only_changes = False
+        self._last = {}
+
+    def set_ids(self, text):
+        """Accepts hex IDs separated by spaces or commas ("1A0 0x110, 7F8"). Unreadable tokens are ignored; nothing readable means no filter."""
+        ids = set()
+        for token in str(text).replace(",", " ").split():
+            try:
+                value = int(token, 16)
+            except ValueError:
+                continue
+            if 0 <= value <= 0x7FF:
+                ids.add(value)
+        self.ids = ids or None
+
+    def reset(self):
+        self._last.clear()
+
+    def accept(self, can_id, data):
+        if self.ids is not None and can_id not in self.ids:
+            return False
+        if self.only_changes:
+            data = bytes(data)
+            if self._last.get(can_id) == data:
+                return False
+            self._last[can_id] = data
+        return True

@@ -10,13 +10,13 @@ import json
 import re
 
 try:
-    import serial
+    import serial  # noqa: F401  (availability check only)
     HAVE_SERIAL = True
 except ImportError:
     HAVE_SERIAL = False
 
 
-TESTER_VERSION = "0.2.7"
+TESTER_VERSION = "0.2.8"
 TESTER_AUTHOR = "JuanenRac"
 
 # THIS_HARDWARE_ID matches bootloader_common.h/firmware_common.h's own constant - used
@@ -333,6 +333,16 @@ TOOL_NAMES = {
 # attached, not in the protocol.
 MOTION_TOOL_IDS = {1, 2, 3, 6, 7, 12, 16}
 
+
+
+def fit_to_screen(width, height, screen_w, screen_h, taskbar=80):
+    """Largest size not above (width, height) that still fits the screen.
+
+    A fixed window taller than a 768-pixel laptop screen would put its lower
+    part (and the log) out of reach, so the wanted size is clamped to what
+    the screen has left after the taskbar and the title bar.
+    """
+    return min(width, max(screen_w - 20, 320)), min(height, max(screen_h - taskbar, 240))
 
 
 def _center_geometry(win, width, height):

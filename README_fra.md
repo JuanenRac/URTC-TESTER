@@ -24,7 +24,7 @@
 </p>
 
 
-**Version :** 0.2.7 · **Auteur :** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version :** 0.2.8 · **Auteur :** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licence : **GPL-3.0** pour le code source, **CC BY-SA 4.0** pour cette
 documentation - voir `LICENSE` dans ce dépôt, ou la section « Licence
@@ -40,7 +40,7 @@ d'exécution ou une lecture de télémétrie contre l'application en cours
 d'exécution ; il ne touche jamais la flash, donc il n'y a rien ici qui
 puisse laisser la carte moins fonctionnelle qu'au départ.
 
-**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** les encodeurs de charge utile CAN pour les familles de contrôle migrées vers Qt Quick (`advanced_protocol.py`) sont réels et couverts par 20 tests qui passent (`pytest tests/test_advanced_protocol.py`) - bien que la propre CI de ce dépôt (`.github/workflows/ci.yml`) se contente de compiler chaque fichier `.py` et d'exécuter `tools/ci_validate.py`, elle n'invoque jamais réellement pytest, donc une régression là ne ferait pas échouer un build aujourd'hui. Les trois scripts `verify_qt_*.py` à la racine du dépôt (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) sont de vraies vérifications de bout en bout, délibérément en dehors de `tests/`, contre un faux transport avec une vraie livraison de signaux entre threads - les trois passent lorsqu'ils sont exécutés manuellement avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`. C'est le plafond honnête de ce qui est vérifié automatiquement : la couche de transport, la gestion ID/disposition des octets CAN, et la logique du pont Qt Quick sont réelles et exercées contre des trames simulées, pas du vrai matériel - comme le dit déjà "Known limitations" ci-dessous, ceci a été construit sans accès USB, donc rien ici n'a encore été vérifié contre une vraie carte. `tester_gui_core.py`, `tester_common_panels.py` et `tester_tool_panels.py` sont de vraies implémentations substantielles (des dizaines de milliers de lignes combinées) exercées par les scripts de vérification et l'usage manuel, pas par un volume équivalent de tests automatisés.
+**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** les encodeurs de charge utile CAN pour les familles de contrôle migrées vers Qt Quick (`advanced_protocol.py`) sont réels et couverts par les tests de `tests/` (`python -m pytest -q`). La propre CI de ce dépôt (`.github/workflows/ci.yml`) les exécute aussi, avec `ruff check`, `tools/ci_validate.py`, une compilation de syntaxe de chaque fichier `.py` et les trois scripts `verify_qt_*.py`, donc une régression là fait échouer le build. Les trois scripts `verify_qt_*.py` à la racine du dépôt (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) sont de vraies vérifications de bout en bout, délibérément en dehors de `tests/`, contre un faux transport avec une vraie livraison de signaux entre threads - les trois passent avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que la CI exécute aussi. C'est le plafond honnête de ce qui est vérifié automatiquement : la couche de transport, la gestion ID/disposition des octets CAN, et la logique du pont Qt Quick sont réelles et exercées contre des trames simulées, pas du vrai matériel - comme le dit déjà "Known limitations" ci-dessous, ceci a été construit sans accès USB, donc rien ici n'a encore été vérifié contre une vraie carte. `tester_gui_core.py`, `tester_common_panels.py` et `tester_tool_panels.py` sont de vraies implémentations substantielles (des milliers de lignes combinées) exercées par les scripts de vérification et l'usage manuel, pas par un volume équivalent de tests automatisés.
 
 ## 1. 🆚 Relation avec le flasher
 
@@ -389,6 +389,14 @@ envoie une seule trame zéro/arrêt et s'arrête. Le ventilateur hotend
 n'a pas de watchdog (un détecteur de blocage à la place - voir
 `docs/CANBUS.md`), donc c'est un simple envoi unique.
 
+**Notes de sécurité et de confort.**
+
+- **ARRÊTER TOUTES LES SORTIES** (dans les deux fenêtres, disponible une fois connecté avec les vérifications actives armées) envoie toutes les commandes d'arrêt connues - chauffages, laser, perceuse, lampe UV, ventilateur de couche, relâchement de l'électroaimant, moteurs pas à pas simples et sertisseuse - quel que soit l'outil monté, et arrête tous les rafraîchissements. Le ventilateur du hotend est laissé en marche volontairement, car la buse peut être encore chaude.
+- Les impulsions de soudure ponctuelles, l'impulsion de pâte et le sertissage demandent aussi une confirmation dans la fenêtre classique, comme le fait toujours le deck Qt Quick.
+- La perceuse et la lampe UV sont rafraîchies comme le laser et les chauffages. Tant que le chauffage de l'imprimante 3D est maintenu, son rafraîchissement de 150 ms porte 0 pas d'extrudeur, que le firmware lit comme un ordre d'arrêt : un mouvement d'extrudeur lancé dans cet état est annulé en 150 ms, donc déplacez l'extrudeur chauffage éteint jusqu'à ce que le firmware offre un mode qui le laisse tranquille.
+- Le port et le débit sont mémorisés pour la prochaine session (`config.json`) et le deck Qt Quick a son propre sélecteur de débit. La **détection automatique** commence par écouter à chaque débit (rien n'est émis sur un bus actif) et n'interroge à chaque débit que si le bus est complètement silencieux.
+- Le Moniteur de bus brut peut être limité à certains ID CAN (**Filtre d'ID**) et aux trames dont les données ont changé (**Changements seulement**).
+
 ### 🔥 Test de banc d'emballement thermique (firmware URTC 0.3.2+ / 0.3.3+)
 
 Detect affiche désormais *pourquoi* une carte a verrouillé une erreur :
@@ -488,7 +496,7 @@ pour exécuter l'application.
 ├── verify_qt_telemetry_watch.py     Vraie vérification de bout en bout, hors tests/, de la télémétrie Qt Quick (Vacuum Pickup / Scan Probe)
 ├── verify_qt_utility_panels.py      Vraie vérification de bout en bout, hors tests/, des panneaux utilitaires Qt Quick (Global Controls / Expansion Board / F-RAM)
 ├── tests/
-│   └── test_advanced_protocol.py   Tests sans matériel pour les encodeurs de advanced_protocol.py - non exécutés par la CI, voir Vérification d'honnêteté ci-dessus
+│   └── test_advanced_protocol.py   Tests sans matériel pour les encodeurs de advanced_protocol.py - exécutés par la CI, voir Vérification d'honnêteté ci-dessus
 ├── requirements.txt            pyserial>=3.5 (tester Tkinter) + PySide6>=6.8,<7 (deck `--qtquick`)
 ├── build_exe.bat               Script de build du binaire Windows autonome
 │                                (PyInstaller)
@@ -660,7 +668,7 @@ qu'elle couvre réellement :
 
 2. La documentation (ce README et ses propres traductions -
    `README_spa.md`, `README_ita.md`, `README_fra.md`, `README_deu.md`,
-   `README_zho.md`, `README_jpn.md`)
+   `README_zho.md`, `README_jpn.md`, `README_por.md` et les guides de `docs/`)
    est disponible sous **Creative Commons Attribution-ShareAlike 4.0
    International (CC BY-SA 4.0)**. Texte complet sur
    https://creativecommons.org/licenses/by-sa/4.0/.

@@ -6,7 +6,7 @@
 import unittest
 
 import advanced_protocol as protocol
-from tester_config import CAN_ID_CRIMPING_CMD, CAN_ID_MOTION_CMD, CAN_ID_VACUUM_TELEMETRY, CAN_ID_IMPACT_EVENT
+from tester_config import CAN_ID_CRIMPING_CMD, CAN_ID_MOTION_CMD, CAN_ID_VACUUM_TELEMETRY
 
 
 class AdvancedProtocolTests(unittest.TestCase):

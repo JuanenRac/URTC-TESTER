@@ -178,6 +178,8 @@ class ToolPanelsMixin:
             # empirically) - clamping here is what actually keeps this
             # inside struct.pack(">I", ...)'s valid range.
             n = min(max(1, self._safe_int(steps, 1)), 0xFFFFFFFF)
+            if cmd_id == CAN_ID_CRIMPING_CMD and not self._confirm_physical_action():
+                return
             data = bytes([dir_byte]) + struct.pack(">I", n)
             self.bus.send(cmd_id, data)
             self.log(_("LOG_TOOL_MOVE", tool=tool_name, direction=self._opt_display(direction.get()), n=n))
@@ -448,7 +450,7 @@ class ToolPanelsMixin:
         # No commands at all - this tool only monitors PB3 and fires an
         # instant, max-priority event on contact.
         count_var = tk.StringVar(value="0")
-        last_var = tk.StringVar(value="(none yet)")
+        last_var = tk.StringVar(value=_("VAL_NONE_YET"))
         self._probe_impact_count = 0
 
         ttk.Label(parent, text=_("TITLE_SCAN_PROBE_TELEMETRY"),
@@ -687,6 +689,8 @@ class ToolPanelsMixin:
             if raw is None:
                 return
             ms = max(1, min(2000, raw))
+            if not self._confirm_physical_action():
+                return
             self.bus.send(cmd_id, bytes([0x01]) + struct.pack(">H", ms))
             self.log(_("LOG_WELD_PULSE_FIRED", ms=ms))
 
@@ -964,7 +968,9 @@ class ToolPanelsMixin:
                 return
             ch = max(0, min(3, ch_raw))
             d = max(0, min(100, duty_raw))
-            ms = max(0, min(255, ms_raw))
+            ms = max(1, min(255, ms_raw))
+            if not self._confirm_physical_action():
+                return
             self.bus.send(CAN_ID_PASTE_JETTING_PULSE, bytes([ch, d, ms]))
             self.log(_("LOG_PASTE_JETTING_FIRED", channel=ch, duty=d, ms=ms))
 

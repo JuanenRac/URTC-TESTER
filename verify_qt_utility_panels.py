@@ -18,7 +18,6 @@ SocketCAN transport.
 from __future__ import annotations
 
 import queue
-import struct
 import sys
 import threading
 import time
