@@ -10,6 +10,7 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 
 ## [0.2.6] - Safe-off that really switches off, a drill that no longer trips the board, a stop for the motors and the limits of the firmware
 
+- **Portuguese (Portugal) is a language of the interface** (`language/portuguese.lng`, in the language menu), and the Readme menu opens `README_por.md`; the README exists in Portuguese too.
 - **The hotend heater's safe-off now switches the heater off.** The Qt deck had its own copy of the frames, with a 5-byte "safe off" that the firmware (which needs 6) ignores; every output of the Qt deck now uses the one encoder that the tests cover.
 - **Turning the hotend heater off in the classic window sends 0 °C** instead of the setpoint of the spinbox (which re-armed the heater with nothing to keep it alive and ended in a latched critical error), and "Move extruder once" no longer heats for 250 ms when the heater is not on.
 - **The drill is refreshed like the laser and the heaters** (a tick box and a 150 ms refresh in the classic window; Send starts it and speed 0 stops it in the Qt deck): the firmware cuts a drill that is not refreshed after 250 ms and latches a critical error, which a single frame always caused. Switching it off sends speed 0, the active brake, and the help text says so in the seven languages.

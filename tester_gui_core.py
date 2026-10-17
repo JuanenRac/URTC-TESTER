@@ -1279,7 +1279,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         # back to the English readme.md if that translation doesn't exist
         # yet - matches the Flasher's identical Readme menu behavior.
         import tester_config
-        lang_suffix = {"spanish": "_spa", "italian": "_ita", "french": "_fra", "german": "_deu"}.get(
+        lang_suffix = {"spanish": "_spa", "italian": "_ita", "french": "_fra", "german": "_deu", "portuguese": "_por"}.get(
             tester_config._current_language, ""
         )
         # tester_config.base_dir, not a fresh __file__-based calculation -
