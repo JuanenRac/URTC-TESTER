@@ -5,7 +5,6 @@
 # =============================================================================
 """No board is needed: the SLCAN adapter, the bus and the Tk host are stand-ins."""
 import re
-import threading
 import time
 import unittest
 from pathlib import Path
