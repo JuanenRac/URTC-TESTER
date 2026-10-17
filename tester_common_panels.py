@@ -14,7 +14,7 @@ from tkinter import ttk, messagebox, filedialog
 
 import advanced_protocol as protocol
 from tester_config import (
-    _, CAN_ID_3DP_HOTEND_TELEM, CAN_ID_3DP_THERMAL_MOTION, CAN_ID_ACTIVE_TOOL_RESP,
+    _, bitrate_bps_for_label, CAN_ID_3DP_HOTEND_TELEM, CAN_ID_3DP_THERMAL_MOTION, CAN_ID_ACTIVE_TOOL_RESP,
     CAN_ID_AOI_TELEMETRY, CAN_ID_DIAG0_RESP, CAN_ID_DRILL_CMD, CAN_ID_DRILL_TELEMETRY,
     CAN_ID_ERASE_FRAM, CAN_ID_EXPANSION_TYPE_RESP, CAN_ID_EXP_SPI_CMD, CAN_ID_EXP_SPI_RESP,
     CAN_ID_FRAM_STATE_RESP, CAN_ID_FREE_TOOL_CONFIG_RESP, CAN_ID_PERIPHERAL_INFO_RESP, CAN_ID_GLOBAL_STATUS, CAN_ID_LASER_CMD, CAN_ID_LASER_TELEMETRY,
@@ -353,6 +353,12 @@ class CommonPanelsMixin:
 
         threading.Thread(target=_worker, daemon=True).start()
 
+    def _current_bitrate_bps(self):
+        """Bit rate the load estimate is computed against: the selected one on a serial adapter, 500 kbit/s otherwise (SocketCAN is configured by the OS)."""
+        if self.transport_var.get() != "serial":
+            return 500000
+        return bitrate_bps_for_label(self.bitrate_var.get())
+
     def _open_bus_monitor(self):
         if self.bus is None:
             messagebox.showerror(_("TITLE_NOT_CONNECTED"), _("MSG_CONNECT_FIRST"))
@@ -546,7 +552,9 @@ class CommonPanelsMixin:
         win.after(50, _flush_pending_rows)
         self.bus.register_sniffer(_on_frame)
 
-        stats_var = tk.StringVar(value="Frames/s: -- | Bus load: -- % (approx, 500 kbit/s)")
+        bitrate_bps = self._current_bitrate_bps()
+        bitrate_text = f"{bitrate_bps / 1000:g} kbit/s"
+        stats_var = tk.StringVar(value=f"Frames/s: -- | Bus load: -- % (approx, {bitrate_text})")
         ttk.Label(win, textvariable=stats_var, foreground="gray").pack(
             side="bottom", fill="x", padx=6, pady=(0, 6))
 
@@ -558,32 +566,37 @@ class CommonPanelsMixin:
                 bits = self._bus_monitor_window_bits
                 self._bus_monitor_window_frames = 0
                 self._bus_monitor_window_bits = 0
-            load_pct = min(100.0, bits / 500000 * 100)
-            stats_var.set(f"Frames/s: {frames} | Bus load: {load_pct:.1f}% (approx, 500 kbit/s)")
+            load_pct = min(100.0, bits / bitrate_bps * 100)
+            stats_var.set(f"Frames/s: {frames} | Bus load: {load_pct:.1f}% (approx, {bitrate_text})")
             win.after(1000, _update_stats)
 
         win.after(1000, _update_stats)
 
+        monitor_bus = self.bus  # the monitor this window is attached to, which is the one to detach from (not whichever bus exists when it is closed)
+
         def _on_close():
-            self.bus.unregister_sniffer(_on_frame) if self.bus is not None else None
+            monitor_bus.unregister_sniffer(_on_frame)
             self._bus_monitor_win = None
+            self._bus_monitor_close = None
             win.destroy()
 
+        self._bus_monitor_close = _on_close
         win.protocol("WM_DELETE_WINDOW", _on_close)
 
     def _query_diag0(self):
         if self.bus is None:
             messagebox.showerror(_("TITLE_NOT_CONNECTED"), _("MSG_CONNECT_FIRST"))
             return
-        response = self.bus.wait_for_one(CAN_ID_DIAG0_RESP, timeout=1.0,
-                                          send_after_register=lambda: self.bus.send(CAN_ID_QUERY_DIAG0, b""))
-        if response is None or len(response) < 1:
-            self.diag0_var.set(_("LBL_NO_RESPONSE_SHORT"))
-            self.log(_("LOG_QUERIED_0X182_NO_RESPONSE"))
-            return
-        level = _("LBL_DIAG0_HIGH") if response[0] else _("LBL_DIAG0_LOW")
-        self.diag0_var.set(level)
-        self.log(_("LOG_EXP_TMC_DIAG0_LEVEL", level=level))
+        def _done(response):
+            if response is None or len(response) < 1:
+                self.diag0_var.set(_("LBL_NO_RESPONSE_SHORT"))
+                self.log(_("LOG_QUERIED_0X182_NO_RESPONSE"))
+                return
+            level = _("LBL_DIAG0_HIGH") if response[0] else _("LBL_DIAG0_LOW")
+            self.diag0_var.set(level)
+            self.log(_("LOG_EXP_TMC_DIAG0_LEVEL", level=level))
+
+        self._query_async(CAN_ID_DIAG0_RESP, lambda: self.bus.send(CAN_ID_QUERY_DIAG0, b""), _done)
 
     def _build_custom_frame_panel(self, parent):
         ttk.Label(parent, text=_("LBL_CAN_ID_HEX")).grid(row=0, column=0, sticky="w", padx=4, pady=(4, 0))
@@ -719,52 +732,54 @@ class CommonPanelsMixin:
         # sending first here (rather than registering the wait before
         # sending) is fine - the round trip for a handful of bit-banged
         # SPI bytes is comfortably within the 1s timeout either way.
-        self.bus.send(CAN_ID_EXP_SPI_CMD, data)
-        response = self.bus.wait_for_one(CAN_ID_EXP_SPI_RESP, timeout=1.0)
-        if response is None:
-            self.spi_response_var.set(_("LBL_SPI_NO_RESPONSE"))
-            self.log(_("LOG_SENT_0X180_NO_RESPONSE", tx=tx_bytes.hex(' ')))
-            return
-        n = response[0] if len(response) > 0 else 0
-        rx_bytes = response[1:1 + n]
-        if len(rx_bytes) < n:
-            self.spi_response_var.set(_("LBL_SPI_MALFORMED", n=n, actual=len(rx_bytes)))
-            self.log(_("LOG_SENT_0X180_MALFORMED", tx=tx_bytes.hex(' '), n=n, actual=len(rx_bytes), rx=rx_bytes.hex(' ')))
-            return
-        self.spi_response_var.set(rx_bytes.hex(" ") if rx_bytes else _("LBL_EMPTY_PARENS"))
-        self.log(_("LOG_SENT_0X180_RECEIVED", tx=tx_bytes.hex(' '), rx=rx_bytes.hex(' ')))
+        def _done(response):
+            if response is None:
+                self.spi_response_var.set(_("LBL_SPI_NO_RESPONSE"))
+                self.log(_("LOG_SENT_0X180_NO_RESPONSE", tx=tx_bytes.hex(' ')))
+                return
+            n = response[0] if len(response) > 0 else 0
+            rx_bytes = response[1:1 + n]
+            if len(rx_bytes) < n:
+                self.spi_response_var.set(_("LBL_SPI_MALFORMED", n=n, actual=len(rx_bytes)))
+                self.log(_("LOG_SENT_0X180_MALFORMED", tx=tx_bytes.hex(' '), n=n, actual=len(rx_bytes), rx=rx_bytes.hex(' ')))
+                return
+            self.spi_response_var.set(rx_bytes.hex(" ") if rx_bytes else _("LBL_EMPTY_PARENS"))
+            self.log(_("LOG_SENT_0X180_RECEIVED", tx=tx_bytes.hex(' '), rx=rx_bytes.hex(' ')))
+
+        # the request goes out once the waiter is registered, so a fast answer cannot be missed
+        self._query_async(CAN_ID_EXP_SPI_RESP, lambda: self.bus.send(CAN_ID_EXP_SPI_CMD, data), _done)
 
     def _query_fram_state(self):
         if self.bus is None:
             messagebox.showerror(_("TITLE_NOT_CONNECTED"), _("MSG_CONNECT_FIRST"))
             return
-        response = self.bus.wait_for_one(CAN_ID_FRAM_STATE_RESP, timeout=1.0,
-                                          send_after_register=lambda: self.bus.send(CAN_ID_QUERY_FRAM_STATE, b""))
-        self._show_fram_state(response)
+        self._query_async(CAN_ID_FRAM_STATE_RESP, lambda: self.bus.send(CAN_ID_QUERY_FRAM_STATE, b""), self._show_fram_state)
 
     def _query_thermal_stats(self):
         if self.bus is None:
             messagebox.showerror(_("TITLE_NOT_CONNECTED"), _("MSG_CONNECT_FIRST"))
             return
-        response = self.bus.wait_for_one(CAN_ID_THERMAL_STATS_RESP, timeout=1.0,
-                                          send_after_register=lambda: self.bus.send(CAN_ID_QUERY_THERMAL_STATS, b""))
-        text = format_thermal_stats(protocol.decode_thermal_stats(response or b""))
-        self.thermal_stats_var.set(text)
-        self.log(text)
+        def _done(response):
+            text = format_thermal_stats(protocol.decode_thermal_stats(response or b""))
+            self.thermal_stats_var.set(text)
+            self.log(text)
+
+        self._query_async(CAN_ID_THERMAL_STATS_RESP, lambda: self.bus.send(CAN_ID_QUERY_THERMAL_STATS, b""), _done)
 
     def _query_expansion_board_type(self):
         if self.bus is None:
             messagebox.showerror(_("TITLE_NOT_CONNECTED"), _("MSG_CONNECT_FIRST"))
             return
-        response = self.bus.wait_for_one(CAN_ID_EXPANSION_TYPE_RESP, timeout=1.0,
-                                          send_after_register=lambda: self.bus.send(CAN_ID_EXPANSION_TYPE_RESP, b""))
-        if response is None or len(response) < 1 or response[0] > 6:
-            self.expansion_board_type_var.set(_("LBL_NO_RESPONSE_OLDER_FW"))
-            self.log(_("LOG_QUERIED_0X1A1_NO_RESPONSE"))
-            return
-        label = EXPANSION_BOARD_TYPES[response[0]]
-        self.expansion_board_type_var.set(label)
-        self.log(_("LOG_EXPANSION_BOARD_TYPE", label=label))
+        def _done(response):
+            if response is None or len(response) < 1 or response[0] > 6:
+                self.expansion_board_type_var.set(_("LBL_NO_RESPONSE_OLDER_FW"))
+                self.log(_("LOG_QUERIED_0X1A1_NO_RESPONSE"))
+                return
+            label = EXPANSION_BOARD_TYPES[response[0]]
+            self.expansion_board_type_var.set(label)
+            self.log(_("LOG_EXPANSION_BOARD_TYPE", label=label))
+
+        self._query_async(CAN_ID_EXPANSION_TYPE_RESP, lambda: self.bus.send(CAN_ID_EXPANSION_TYPE_RESP, b""), _done)
 
     # Same read-only pattern as _query_expansion_board_type above, for
     # CAN_ID_MLX_VARIANT_RESP (0x1A7) instead - see MLX_SENSOR_VARIANTS's
@@ -773,15 +788,16 @@ class CommonPanelsMixin:
         if self.bus is None:
             messagebox.showerror(_("TITLE_NOT_CONNECTED"), _("MSG_CONNECT_FIRST"))
             return
-        response = self.bus.wait_for_one(CAN_ID_MLX_VARIANT_RESP, timeout=1.0,
-                                          send_after_register=lambda: self.bus.send(CAN_ID_MLX_VARIANT_RESP, b""))
-        if response is None or len(response) < 1 or response[0] > 3:
-            self.mlx_sensor_variant_var.set(_("LBL_NO_RESPONSE_OLDER_FW"))
-            self.log(_("LOG_QUERIED_0X1A7_NO_RESPONSE"))
-            return
-        label = MLX_SENSOR_VARIANTS[response[0]]
-        self.mlx_sensor_variant_var.set(label)
-        self.log(_("LOG_MLX_SENSOR_VARIANT", label=label))
+        def _done(response):
+            if response is None or len(response) < 1 or response[0] > 3:
+                self.mlx_sensor_variant_var.set(_("LBL_NO_RESPONSE_OLDER_FW"))
+                self.log(_("LOG_QUERIED_0X1A7_NO_RESPONSE"))
+                return
+            label = MLX_SENSOR_VARIANTS[response[0]]
+            self.mlx_sensor_variant_var.set(label)
+            self.log(_("LOG_MLX_SENSOR_VARIANT", label=label))
+
+        self._query_async(CAN_ID_MLX_VARIANT_RESP, lambda: self.bus.send(CAN_ID_MLX_VARIANT_RESP, b""), _done)
 
     def _query_free_tool_config(self):
         if self.bus is None:
@@ -792,24 +808,23 @@ class CommonPanelsMixin:
         # CANBUS.TXT), and this tool never writes this register, only
         # reads it. Empty payload here matches that: nothing to
         # (mis)interpret as a value to set.
-        response = self.bus.wait_for_one(CAN_ID_FREE_TOOL_CONFIG_RESP, timeout=1.0,
-                                          send_after_register=lambda: self.bus.send(CAN_ID_FREE_TOOL_CONFIG_RESP, b""))
-        if response is None or len(response) < 2:
-            self.free_tool_config_var.set(_("LBL_NO_RESPONSE_OLDER_FW"))
-            self.log(_("LOG_QUERIED_0X1A3_NO_RESPONSE"))
-            return
-        raw_id_pin, selection = response[0], response[1]
-        if raw_id_pin != 31:
-            jumper_desc = _("LBL_FREE_TOOL_JUMPERS_OTHER", value=raw_id_pin)
-        else:
-            jumper_desc = _("LBL_FREE_TOOL_JUMPERS_0X1F")
-        if selection == 0 or selection > 12:
-            selection_desc = _("LBL_FREE_TOOL_NONE_SELECTED")
-        else:
-            selection_desc = TOOL_NAMES[selection - 1]
-        text = f"{jumper_desc}\n{_('LBL_FREE_TOOL_SELECTION', tool=selection_desc)}"
-        self.free_tool_config_var.set(text)
-        self.log(_("LOG_FREE_TOOL_CONFIG", jumpers=raw_id_pin, tool=selection_desc))
+        def _done(response):
+            config = protocol.decode_free_tool_config(response or b"")
+            if config is None:
+                self.free_tool_config_var.set(_("LBL_NO_RESPONSE_OLDER_FW"))
+                self.log(_("LOG_QUERIED_0X1A3_NO_RESPONSE"))
+                return
+            raw_id_pin = config["raw_id_pin"]
+            if raw_id_pin != 31:
+                jumper_desc = _("LBL_FREE_TOOL_JUMPERS_OTHER", value=raw_id_pin)
+            else:
+                jumper_desc = _("LBL_FREE_TOOL_JUMPERS_0X1F")
+            selection_desc = config["tool_name"] or _("LBL_FREE_TOOL_NONE_SELECTED")
+            text = f"{jumper_desc}\n{_('LBL_FREE_TOOL_SELECTION', tool=selection_desc)}"
+            self.free_tool_config_var.set(text)
+            self.log(_("LOG_FREE_TOOL_CONFIG", jumpers=raw_id_pin, tool=selection_desc))
+
+        self._query_async(CAN_ID_FREE_TOOL_CONFIG_RESP, lambda: self.bus.send(CAN_ID_FREE_TOOL_CONFIG_RESP, b""), _done)
 
     def _query_peripheral_info(self):
         if self.bus is None:
@@ -819,18 +834,19 @@ class CommonPanelsMixin:
         # byte is interpreted by the firmware as a set command (see
         # CANBUS.TXT), and this tool never writes this register, only
         # reads it.
-        response = self.bus.wait_for_one(CAN_ID_PERIPHERAL_INFO_RESP, timeout=1.0,
-                                          send_after_register=lambda: self.bus.send(CAN_ID_PERIPHERAL_INFO_RESP, b""))
-        if response is None or len(response) < 2:
-            self.peripheral_info_var.set(_("LBL_NO_RESPONSE_OLDER_FW"))
-            self.log(_("LOG_QUERIED_0X1A5_NO_RESPONSE"))
-            return
-        peripheral_type, serial = response[0], response[1]
-        type_desc = _("LBL_PERIPHERAL_TYPE_URTC") if peripheral_type == 0x03 else _(
-            "LBL_PERIPHERAL_TYPE_UNKNOWN", value=peripheral_type)
-        text = f"{type_desc}\n{_('LBL_DEVICE_SERIAL', serial=serial)}"
-        self.peripheral_info_var.set(text)
-        self.log(_("LOG_PERIPHERAL_INFO", type=type_desc, serial=serial))
+        def _done(response):
+            if response is None or len(response) < 2:
+                self.peripheral_info_var.set(_("LBL_NO_RESPONSE_OLDER_FW"))
+                self.log(_("LOG_QUERIED_0X1A5_NO_RESPONSE"))
+                return
+            peripheral_type, serial = response[0], response[1]
+            type_desc = _("LBL_PERIPHERAL_TYPE_URTC") if peripheral_type == 0x03 else _(
+                "LBL_PERIPHERAL_TYPE_UNKNOWN", value=peripheral_type)
+            text = f"{type_desc}\n{_('LBL_DEVICE_SERIAL', serial=serial)}"
+            self.peripheral_info_var.set(text)
+            self.log(_("LOG_PERIPHERAL_INFO", type=type_desc, serial=serial))
+
+        self._query_async(CAN_ID_PERIPHERAL_INFO_RESP, lambda: self.bus.send(CAN_ID_PERIPHERAL_INFO_RESP, b""), _done)
 
     def _show_fram_state(self, response):
         if response is None or len(response) < 8:
@@ -862,15 +878,16 @@ class CommonPanelsMixin:
             icon="warning",
         ):
             return
-        response = self.bus.wait_for_one(CAN_ID_FRAM_STATE_RESP, timeout=1.0,
-                                          send_after_register=lambda: self.bus.send(CAN_ID_ERASE_FRAM, ERASE_FRAM_MAGIC))
-        if response is None:
-            self.log(_("LOG_FRAM_ERASE_NO_CONFIRM"))
-            messagebox.showwarning(_("TITLE_NO_CONFIRMATION"), _("MSG_ERASE_NO_RESPONSE"))
-            return
-        self.log(_("LOG_FRAM_ERASED_CONFIRMED"))
-        self._show_fram_state(response)
-        messagebox.showinfo(_("TITLE_ERASED"), _("MSG_FRAM_ERASED_CONFIRMED"))
+        def _done(response):
+            if response is None:
+                self.log(_("LOG_FRAM_ERASE_NO_CONFIRM"))
+                messagebox.showwarning(_("TITLE_NO_CONFIRMATION"), _("MSG_ERASE_NO_RESPONSE"))
+                return
+            self.log(_("LOG_FRAM_ERASED_CONFIRMED"))
+            self._show_fram_state(response)
+            messagebox.showinfo(_("TITLE_ERASED"), _("MSG_FRAM_ERASED_CONFIRMED"))
+
+        self._query_async(CAN_ID_FRAM_STATE_RESP, lambda: self.bus.send(CAN_ID_ERASE_FRAM, ERASE_FRAM_MAGIC), _done)
 
     # -------------------------------------------------------------------
     # Per-tool panels. Each is only ever built for the ONE tool the board

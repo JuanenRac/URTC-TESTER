@@ -24,7 +24,7 @@
 </p>
 
 
-**Versão:** 0.2.6 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Versão:** 0.2.7 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licença: **GPL-3.0** para o código-fonte, **CC BY-SA 4.0** para esta
 documentação - consulte `LICENSE` neste repositório, ou a secção "License and
@@ -379,10 +379,7 @@ qualquer autoridade própria de gravação de firmware - está documentado em
   transmissão em direto.** Ler uma frame completa implica pedir todos os 48 blocos
   sequencialmente por CAN (no pior caso, a resolução do MLX90640/MLX90642) -
   isto pode demorar alguns segundos, e não existe modo de envio contínuo (streaming)
-  no protocolo CAN desta ferramenta que o torne mais rápido. Uma
-  captura tem de já ter sido acionada e reportada como pronta (Check Status)
-  antes de Read Thermal Image devolver dados reais - ler demasiado cedo limita-se a
-  pintar o que quer que o buffer do sensor tivesse por último.
+  no protocolo CAN desta ferramenta que o torne mais rápido. Primeiro é preciso acionar uma captura; Read Thermal Image espera então até dois segundos que o sensor indique que está pronto e, se não o fizer, não lê nada, porque o firmware não responde aos pedidos de bloco antes disso. Primeiro pergunta-se qual o sensor instalado (48 blocos para o MLX90640/MLX90642, 12 para o MLX90641), e um bloco perdido deixa os seus píxeis em branco em vez de deslocar o resto da imagem.
 - **Run Self-Test só cobre 7 das 25 ferramentas** (ferro de soldar,
   broca, laser, impressora 3D, AOI, vácuo, scan probe) - consulte "Como
   funciona" acima para a explicação completa. As outras 18 ferramentas não recebem qualquer

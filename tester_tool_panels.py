@@ -16,8 +16,9 @@ import time
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+import advanced_protocol as protocol
 from tester_config import (
-    SETPOINT_MAX_C, _, CAN_ID_3DP_HOTEND_FAN_CMD, CAN_ID_3DP_HOTEND_FAN_RPM, CAN_ID_3DP_HOTEND_TELEM,
+    AOI_STROBE_DEFAULT_MS, AOI_STROBE_MAX_MS, SETPOINT_MAX_C, _, CAN_ID_3DP_HOTEND_FAN_CMD, CAN_ID_3DP_HOTEND_FAN_RPM, CAN_ID_3DP_HOTEND_TELEM,
     CAN_ID_3DP_LAYER_FAN_CMD, CAN_ID_3DP_LAYER_FAN_RPM, CAN_ID_3DP_THERMAL_MOTION,
     CAN_ID_AOI_CMD, CAN_ID_AOI_TELEMETRY, CAN_ID_DRILL_CMD, CAN_ID_DRILL_TELEMETRY,
     CAN_ID_IMPACT_EVENT, CAN_ID_LASER_CMD, CAN_ID_LASER_TELEMETRY, CAN_ID_MOTION_CMD,
@@ -28,7 +29,7 @@ from tester_config import (
     CAN_ID_FLYING_PROBE_BASIC, CAN_ID_ADS1115_CONFIG, CAN_ID_ADS1115_TRIGGER,
     CAN_ID_ADS1115_RESULT, CAN_ID_PASTE_JETTING_CONFIG, CAN_ID_PASTE_JETTING_PULSE,
     CAN_ID_THERMAL_TRIGGER, CAN_ID_THERMAL_STATUS, CAN_ID_THERMAL_CALIB_CHUNK_REQ,
-    CAN_ID_THERMAL_CALIB_CHUNK,
+    CAN_ID_THERMAL_CALIB_CHUNK, CAN_ID_MLX_VARIANT_RESP, MLX_SENSOR_VARIANTS,
 )
 
 
@@ -321,7 +322,7 @@ class ToolPanelsMixin:
         self.bus.register(CAN_ID_DRILL_TELEMETRY, _on_telemetry)
 
     def _build_aoi_panel(self, parent):
-        period_us = tk.IntVar(value=1000)
+        period_ms = tk.IntVar(value=AOI_STROBE_DEFAULT_MS)
         endstop_var = tk.StringVar(value="--")
 
         ttk.Label(parent, text=_("LBL_RING_MODE")).grid(row=0, column=0, sticky="w", padx=4, pady=4)
@@ -330,13 +331,13 @@ class ToolPanelsMixin:
         )
         mode_combo.grid(row=0, column=1, sticky="w", padx=4)
         ttk.Label(parent, text=_("LBL_STROBE_PERIOD")).grid(row=1, column=0, sticky="w", padx=4, pady=4)
-        ttk.Spinbox(parent, from_=1, to=65535, textvariable=period_us, width=8).grid(row=1, column=1, sticky="w", padx=4)
+        ttk.Spinbox(parent, from_=1, to=AOI_STROBE_MAX_MS, textvariable=period_ms, width=8).grid(row=1, column=1, sticky="w", padx=4)
 
         def _send_aoi():
             mode_byte = {"Off": 0x00, "Synchronous strobe": 0x01, "Fixed continuous": 0x02}[mode.get()]
-            data = bytes([mode_byte]) + struct.pack(">H", max(1, min(65535, self._safe_int(period_us, 1))))
+            data = bytes([mode_byte]) + struct.pack(">H", max(1, min(AOI_STROBE_MAX_MS, self._safe_int(period_ms, AOI_STROBE_DEFAULT_MS))))
             self.bus.send(CAN_ID_AOI_CMD, data)
-            self.log(_("LOG_AOI_MODE_PERIOD", mode=self._opt_display(mode.get()), period=self._safe_int(period_us, 1)))
+            self.log(_("LOG_AOI_MODE_PERIOD", mode=self._opt_display(mode.get()), period=self._safe_int(period_ms, AOI_STROBE_DEFAULT_MS)))
 
         self._new_deck_button(parent, text=_("BTN_SEND"), command=_send_aoi).grid(row=1, column=2, padx=8)
         ttk.Label(
@@ -511,24 +512,14 @@ class ToolPanelsMixin:
             self.bus.send(CAN_ID_3DP_THERMAL_MOTION, data)
 
         def _send_temp_keepalive_tick():
-            # CAN_ID_3DP_THERMAL_MOTION carries setpoint temperature AND
-            # extruder direction/steps in one combined frame (see
-            # CANBUS.TXT's 0x170) - this heater keepalive's only job is
-            # holding that setpoint alive against the firmware's 250ms
-            # comms watchdog, not moving the extruder. Sending
-            # extruder_steps' current Spinbox value here (as a plain
-            # _send_thermal_motion() call used to) would repeat WHATEVER
-            # move was last configured on every single 150ms tick for as
-            # long as the heater stayed active: press "Move Extruder Once"
-            # (steps defaults to 200, and stays whatever it was last set
-            # to), then simply turn the heater on, and every following
-            # keepalive tick would command another identical extruder
-            # move as a pure side effect of holding a temperature -
-            # continuous, unintended motor motion nobody asked for.
-            # steps_override=0 is what keeps this a pure "hold this
-            # temperature" frame; the explicit "Move Extruder Once" button
-            # below still calls _send_thermal_motion() with no override,
-            # using the real Spinbox value exactly as before.
+            # CAN_ID_3DP_THERMAL_MOTION carries the setpoint temperature AND
+            # the extruder direction/steps in one frame, so the heater
+            # keepalive cannot repeat the Spinbox step count (that would
+            # command another identical move every 150 ms). It sends 0 steps
+            # instead, which the firmware reads as an order to STOP the
+            # extruder: a move started with "Move Extruder Once" while the
+            # heater is armed is cancelled by the next keepalive. Moving the
+            # extruder while a temperature is held needs a firmware change.
             _send_thermal_motion(steps_override=0)
 
         def _toggle_nozzle():
@@ -912,15 +903,16 @@ class ToolPanelsMixin:
         self._new_deck_button(parent, text=_("BTN_TRIGGER_CONVERSION"), command=_trigger).grid(row=6, column=0, sticky="w", padx=4, pady=4)
 
         def _read():
-            response = self.bus.wait_for_one(CAN_ID_ADS1115_RESULT, timeout=1.0,
-                                              send_after_register=lambda: self.bus.send(CAN_ID_ADS1115_RESULT, b""))
-            if response is None or len(response) < 2:
-                result_var.set(_("LBL_NO_RESPONSE"))
-                self.log(_("LOG_ADS1115_READ_NO_RESPONSE"))
-                return
-            raw = struct.unpack(">h", response[0:2])[0]
-            result_var.set(f"{raw} (raw counts)")
-            self.log(_("LOG_ADS1115_RESULT", raw=raw))
+            def _done(response):
+                if response is None or len(response) < 2:
+                    result_var.set(_("LBL_NO_RESPONSE"))
+                    self.log(_("LOG_ADS1115_READ_NO_RESPONSE"))
+                    return
+                raw = struct.unpack(">h", response[0:2])[0]
+                result_var.set(f"{raw} (raw counts)")
+                self.log(_("LOG_ADS1115_RESULT", raw=raw))
+
+            self._query_async(CAN_ID_ADS1115_RESULT, lambda: self.bus.send(CAN_ID_ADS1115_RESULT, b""), _done)
 
         self._new_deck_button(parent, text=_("BTN_READ_RESULT"), command=_read).grid(row=6, column=1, sticky="w", padx=4)
         ttk.Label(parent, textvariable=result_var).grid(row=7, column=0, columnspan=2, sticky="w", padx=4, pady=(2, 4))
@@ -988,11 +980,8 @@ class ToolPanelsMixin:
         # happen in a row.
         panel_gen = self._tool_panel_generation
         status_var = tk.StringVar(value=_("LBL_NOT_TRIGGERED_YET"))
-        # 32x24 max resolution (MLX90640/90642) - MLX90641 (16x12) simply
-        # leaves the unused chunk indices reading back zeroed (per this
-        # tool's own CAN protocol note), which paints as the coldest
-        # color across those cells rather than needing 2 different grid
-        # sizes here.
+        # The canvas is the 32x24 resolution of the MLX90640/90642; the
+        # MLX90641 (16x12) is drawn on it in 2x2 blocks (see _read_frame).
         GRID_W, GRID_H, CELL = 32, 24, 8
         canvas = tk.Canvas(parent, width=GRID_W * CELL, height=GRID_H * CELL, bg="black", highlightthickness=1)
         canvas.grid(row=2, column=0, columnspan=3, padx=4, pady=8)
@@ -1020,16 +1009,17 @@ class ToolPanelsMixin:
         self._new_deck_button(parent, text=_("BTN_TRIGGER_CAPTURE"), command=_trigger).grid(row=0, column=0, sticky="w", padx=4, pady=4)
 
         def _check_status():
-            response = self.bus.wait_for_one(CAN_ID_THERMAL_STATUS, timeout=1.0,
-                                              send_after_register=lambda: self.bus.send(CAN_ID_THERMAL_STATUS, b""))
-            if response is None or len(response) < 1:
-                status_var.set(_("LBL_NO_RESPONSE"))
-                return
-            code = response[0]
-            labels = {0x00: _("LBL_STATUS_IDLE"), 0x01: _("LBL_STATUS_BUSY"),
-                      0x02: _("LBL_STATUS_READY"), 0xFF: _("LBL_STATUS_ERROR")}
-            status_var.set(labels.get(code, f"0x{code:02X}"))
-            self.log(_("LOG_THERMAL_STATUS", status=status_var.get()))
+            def _done(response):
+                if response is None or len(response) < 1:
+                    status_var.set(_("LBL_NO_RESPONSE"))
+                    return
+                code = response[0]
+                labels = {0x00: _("LBL_STATUS_IDLE"), 0x01: _("LBL_STATUS_BUSY"),
+                          0x02: _("LBL_STATUS_READY"), 0xFF: _("LBL_STATUS_ERROR")}
+                status_var.set(labels.get(code, f"0x{code:02X}"))
+                self.log(_("LOG_THERMAL_STATUS", status=status_var.get()))
+
+            self._query_async(CAN_ID_THERMAL_STATUS, lambda: self.bus.send(CAN_ID_THERMAL_STATUS, b""), _done)
 
         self._new_deck_button(parent, text=_("BTN_CHECK_STATUS"), command=_check_status).grid(row=0, column=1, sticky="w", padx=4)
         ttk.Label(parent, textvariable=status_var).grid(row=1, column=0, columnspan=2, sticky="w", padx=4, pady=(0, 4))
@@ -1049,49 +1039,57 @@ class ToolPanelsMixin:
             canvas.itemconfig(cells[row][col], fill=color)
 
         def _read_frame():
-            # Pulls all 48 chunks sequentially (worst case, MLX90640/42's
-            # own resolution - MLX90641's own unused chunks just read
-            # back zeroed, see this panel's own top-of-function note).
-            # A real-time video feed isn't attempted here - each frame
-            # is triggered and read on request, which is what this
-            # tool's own CAN protocol actually supports (no streaming
-            # push mode exists).
-            #
-            # This read can take several seconds (48 chunks x up to 4
-            # attempts x up to 0.3s each, worst case) on a background
-            # thread - if the user switches away mid-read (runs Detect
-            # again, picks a different tool, disconnects), the thread
-            # used to just keep going regardless: still querying the bus
-            # underneath whatever tool panel replaced this one, and
-            # eventually trying to paint cells on a canvas widget that
-            # had already been destroyed (a TclError from inside a
-            # root.after callback). The panel_gen check at the top of
-            # every chunk stops the querying itself as soon as possible
-            # after a rebuild; _paint_cell's own check above stops the
-            # widget access specifically.
-            for chunk_idx in range(48):
+            # Runs on a background thread. Asks which sensor is fitted (0x1A7)
+            # so the right grid is read and painted, waits until the capture
+            # is ready (0x251; the firmware does not answer chunk requests
+            # before that), then reads every chunk. A chunk is 4 consecutive
+            # frames, collected by one persistent waiter, and a lost chunk
+            # leaves its 16 pixels blank instead of shifting the rest of the
+            # image. If the user switches away mid-read (Detect again, another
+            # tool, disconnect) the panel generation check stops the querying
+            # and the painting.
+            bus = self.bus
+            width, height, chunk_count = 32, 24, 48
+            variant = bus.wait_for_one(CAN_ID_MLX_VARIANT_RESP, timeout=0.5,
+                                       send_after_register=lambda: bus.send(CAN_ID_MLX_VARIANT_RESP, b""))
+            if variant:
+                grid = protocol.thermal_grid(variant[0])
+                if grid is None:
+                    self.root.after(0, lambda: status_var.set(MLX_SENSOR_VARIANTS[0]))
+                    return
+                width, height, chunk_count = grid
+            ready = False
+            deadline = time.monotonic() + 2.0
+            while time.monotonic() < deadline and self._tool_panel_generation == panel_gen:
+                status = bus.wait_for_one(CAN_ID_THERMAL_STATUS, timeout=0.25,
+                                          send_after_register=lambda: bus.send(CAN_ID_THERMAL_STATUS, b""))
+                if status and status[0] == protocol.THERMAL_STATUS_READY:
+                    ready = True
+                    break
+                if status and status[0] == 0xFF:
+                    break
+            if not ready:
+                self.root.after(0, lambda: status_var.set(_("LBL_STATUS_BUSY")))
+                return
+            chunks = {}
+            for chunk_idx in range(chunk_count):
                 if self._tool_panel_generation != panel_gen:
                     return
-                frames = []
-                for _attempt in range(4):
-                    frame = self.bus.wait_for_one(CAN_ID_THERMAL_CALIB_CHUNK, timeout=0.3,
-                                                    send_after_register=(
-                                                        lambda ci=chunk_idx: self.bus.send(CAN_ID_THERMAL_CALIB_CHUNK_REQ, bytes([ci]))
-                                                    ) if not frames else None)
-                    if frame is None:
+                for _attempt in range(2):
+                    frames = bus.wait_for_n(
+                        CAN_ID_THERMAL_CALIB_CHUNK, protocol.THERMAL_CHUNK_FRAMES, timeout=0.3,
+                        send_after_register=lambda ci=chunk_idx: bus.send(CAN_ID_THERMAL_CALIB_CHUNK_REQ, bytes([ci])))
+                    decoded = protocol.decode_thermal_chunk(frames)
+                    if decoded is not None:
+                        chunks[chunk_idx] = decoded
                         break
-                    frames.append(frame)
-                if len(frames) < 4:
-                    continue
-                raw32 = b"".join(frames)
-                for i in range(16):
-                    px = struct.unpack(">h", raw32[i*2:i*2+2])[0]
-                    pixel_idx = chunk_idx * 16 + i
-                    if pixel_idx >= GRID_W * GRID_H:
-                        break
-                    row, col = divmod(pixel_idx, GRID_W)
-                    color = _temp_to_color(px)
-                    self.root.after(0, lambda r=row, c=col, col_=color: _paint_cell(r, c, col_, panel_gen))
+            scale = GRID_W // width  # a 16x12 image fills the 32x24 canvas with 2x2 blocks
+            for pixel_idx, value in enumerate(protocol.thermal_pixels(chunks, chunk_count)):
+                row, col = divmod(pixel_idx, width)
+                color = "#202020" if value is None else _temp_to_color(value)
+                for dy in range(scale):
+                    for dx in range(scale):
+                        self.root.after(0, lambda r=row * scale + dy, c=col * scale + dx, col_=color: _paint_cell(r, c, col_, panel_gen))
             if self._tool_panel_generation == panel_gen:
                 self.log(_("LOG_THERMAL_FRAME_READ"))
 

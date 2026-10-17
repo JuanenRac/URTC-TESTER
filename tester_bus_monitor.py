@@ -187,6 +187,31 @@ class CANBusMonitor:
             self._unregister_waiter(can_id, _capture)
         return result["data"]
 
+    def wait_for_n(self, can_id, count, timeout=1.0, send_after_register=None):
+        """Like wait_for_one, for a reply made of several consecutive frames
+        on the same ID (the firmware answers a thermal chunk request with 4
+        frames within about a millisecond). One waiter stays registered
+        until `count` frames arrived or the timeout ran out, so none of the
+        frames after the first falls between two registrations. Returns the
+        list of frames received, which is shorter than `count` on a timeout."""
+        frames = []
+        event = threading.Event()
+
+        def _capture(data):
+            frames.append(data)
+            if len(frames) >= count:
+                self._unregister_waiter(can_id, _capture)
+                event.set()
+
+        self._register_waiter(can_id, _capture)
+        try:
+            if send_after_register is not None:
+                send_after_register()
+            event.wait(timeout=timeout)
+        finally:
+            self._unregister_waiter(can_id, _capture)
+        return list(frames[:count])
+
 
 
 

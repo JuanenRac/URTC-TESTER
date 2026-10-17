@@ -8,6 +8,19 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.2.7] - Reads that no longer collide, a stop for everything, a thermal image that keeps its shape and a board that cannot go silent unnoticed
+
+- **The queries of the classic window no longer freeze it.** F-RAM, thermal counters, DIAG0, the SPI passthrough, the expansion board, the sensor variant, the free tool configuration, the peripheral info, the F-RAM erase, the ADS1115 read and the thermal status wait for the board on a worker thread: while the window waited, the 150 ms refresh of an armed heater, laser or UV lamp stopped and the firmware latched a critical error.
+- **The Qt deck reads the transport one exchange at a time.** Queries launched together used to eat each other's answers (false "no response") and corrupted the SLCAN receive buffer; they now take turns, and a query is refused while another read (probe, thermal capture, telemetry watch) owns the transport.
+- **STOP ALL OUTPUTS in the Qt deck**, always enabled while an output is armed, whatever the profile or the busy state. Selecting another profile or pressing Probe also switches the armed outputs off, so a laser or a heater no longer keeps running behind a different profile.
+- **The thermal image keeps its shape.** The sensor fitted is asked first (16x12 for the MLX90641, 32x24 for the others, drawn at its real size), the capture is waited for until it reports ready, the four frames of a chunk are collected together instead of losing the last three, and a lost chunk leaves blank pixels instead of shifting everything after it.
+- **The ID jumper squares show the real jumper reading** (read from the board), not the resolved tool: with the jumpers on 11111 the tool kept in F-RAM was drawn as if it were the jumpers. They stay "?" on a firmware that does not answer.
+- **The board health check notices a board that stops answering** (two silent polls in a row) and also reports a latched critical error and a thermal fault, instead of treating silence as healthy.
+- **The strobe period is in milliseconds**, 1 to 500 (the firmware's range), default 5: it was labelled microseconds and sent 1000, which the firmware turned into a half-second flash. The label says so in the eight languages.
+- **The raw bus monitor follows the connection**: it closes when the connection does, and its bus load uses the selected bit rate instead of always 500 kbit/s. The classic window's free tool configuration names all 25 tools too.
+- The extruder keepalive note now says what the firmware really does with 0 steps (it stops the extruder); moving the extruder while the hotend is held still needs a firmware change.
+- Tests: 69 (before 49): the strobe range, the thermal geometry and chunk assembly, the multi-frame waiter, the queries off the Tk thread, the board health verdicts, and in the Qt deck the single reader, the stop-all and the thermal capture with a mock board.
+
 ## [0.2.6] - Safe-off that really switches off, a drill that no longer trips the board, a stop for the motors and the limits of the firmware
 
 - **Portuguese (Portugal) is a language of the interface** (`language/portuguese.lng`, in the language menu), and the Readme menu opens `README_por.md`; the README exists in Portuguese too.

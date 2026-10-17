@@ -39,6 +39,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 
 from tester_config import (
+    AOI_STROBE_MAX_MS,
     SETPOINT_MAX_C,
     LOGS_FOLDER,
     BITRATE_500K_SLCAN_CODE,
@@ -82,6 +83,7 @@ from tester_config import (
     CAN_ID_ULTRASONIC_WELD_CMD,
     CAN_ID_THERMAL_CALIB_CHUNK,
     CAN_ID_THERMAL_CALIB_CHUNK_REQ,
+    CAN_ID_THERMAL_STATUS,
     CAN_ID_THERMAL_TRIGGER,
     CAN_ID_VACUUM_TELEMETRY,
     ERASE_FRAM_MAGIC,
@@ -138,6 +140,9 @@ class TesterQtBridge(QObject):
         self._transport = None
         self._listen_only = True
         self._busy = False
+        # The transport can only be read from one thread at a time: every worker that reads from it holds this for the whole exchange.
+        self._io_lock = threading.RLock()
+        self._thermal_columns = 32
         self._status = "READ-ONLY READY"
         self._active_tool = "No active probe yet"
         self._active_tool_id = -1
@@ -241,6 +246,7 @@ class TesterQtBridge(QObject):
             "QT_STEPS": "STEPS",
             "QT_SEND_MOTION": "SEND MOTION",
             "QT_STOP_MOTION": "STOP",
+            "QT_STOP_ALL_OUTPUTS": "STOP ALL OUTPUTS",
             "QT_PROFILE_NOT_MATCHED": "Select and verify a matching motion profile first.",
             "QT_CONFIRM_MOTION": "CONFIRM MOTION",
             "QT_CONFIRM_MOTION_HELP": "This sends one real CAN motion command to the verified tool. Confirm the machine is clear and its safety interlock is active.",
@@ -251,7 +257,7 @@ class TesterQtBridge(QObject):
             "QT_DRILL_SPEED": "DRILL SPEED (0-255)",
             "QT_DRILL_DIRECTION": "DRILL DIRECTION",
             "QT_AOI_MODE": "AOI RING MODE",
-            "QT_AOI_PERIOD": "STROBE PERIOD (us)",
+            "QT_AOI_PERIOD": "STROBE PERIOD (ms)",
             "QT_MAGNET_STATE": "ELECTROMAGNET STATE",
             "QT_PULSE_DURATION": "PULSE DURATION (ms)",
             "QT_PASTE_CHANNEL": "PWM CHANNEL (0-3)",
@@ -511,6 +517,10 @@ class TesterQtBridge(QObject):
     def thermalCells(self) -> list[dict[str, object]]:
         return self._thermal_cells
 
+    @Property(int, notify=changed)
+    def thermalColumns(self) -> int:
+        return self._thermal_columns
+
     @Property(str, notify=changed)
     def thermalSummary(self) -> str:
         return self._thermal_summary
@@ -636,6 +646,7 @@ class TesterQtBridge(QObject):
         if not self.canProbe:
             self._log("PROBE_BLOCKED connect first and explicitly disable listen-only")
             return
+        self._stop_all_watchdogs()
         self._set_state(status="PROBING IDENTITY", busy=True)
         self._log("PROBE_STARTED ids=0x110,0x7F8")
         threading.Thread(target=self._probe_worker, daemon=True, name="urtc-tester-qt-probe").start()
@@ -643,8 +654,18 @@ class TesterQtBridge(QObject):
     @Slot(int)
     def selectToolProfile(self, tool_id: int) -> None:
         if tool_id in TOOL_NAMES and not self._busy:
+            if tool_id != self._selected_tool_id:
+                # an output armed on the previous profile must not keep running behind the new one
+                self._stop_all_watchdogs()
             self._selected_tool_id = tool_id
             self.changed.emit()
+
+    @Slot()
+    def stopAllOutputs(self) -> None:
+        """Switch every armed output off. Not gated by the profile or by busy: stopping must always be one press away."""
+        self._stop_all_watchdogs()
+        if not self._listen_only:
+            self.stopMotion()
 
     def shutdownOutputs(self) -> None:
         try:
@@ -917,21 +938,26 @@ class TesterQtBridge(QObject):
         transport = self._transport
         if transport is None:
             return
+        if self._busy:
+            self._log(f"QUERY_BLOCKED key={key} another read is in progress")
+            return
 
         def _worker() -> None:
-            try:
-                if request is not None:
-                    transport.send_frame(*request)
-                deadline = time.monotonic() + timeout_s
-                while time.monotonic() < deadline:
-                    frame = transport.read_frame(timeout=0.1)
-                    if frame is not None and frame[0] == response_id:
-                        self._queryResult.emit(key, decode(frame[1]))
-                        return
-                self._queryResult.emit(key, None)
-            except Exception as exc:
-                self._log(f"QUERY_FAILED key={key} error={exc}")
-                self._queryResult.emit(key, None)
+            # one exchange at a time: two readers on the same transport would eat each other's answers
+            with self._io_lock:
+                try:
+                    if request is not None:
+                        transport.send_frame(*request)
+                    deadline = time.monotonic() + timeout_s
+                    while time.monotonic() < deadline:
+                        frame = transport.read_frame(timeout=0.1)
+                        if frame is not None and frame[0] == response_id:
+                            self._queryResult.emit(key, decode(frame[1]))
+                            return
+                    self._queryResult.emit(key, None)
+                except Exception as exc:
+                    self._log(f"QUERY_FAILED key={key} error={exc}")
+                    self._queryResult.emit(key, None)
 
         threading.Thread(target=_worker, daemon=True, name=f"urtc-tester-query-{key}").start()
 
@@ -1225,14 +1251,14 @@ class TesterQtBridge(QObject):
     def sendAoi(self, mode: str, period_text: str) -> None:
         if not self._require_profile({8}, "AOI"):
             return
-        period = self._bounded_int(period_text, 1, 65535)
+        period = self._bounded_int(period_text, 1, AOI_STROBE_MAX_MS)
         mode_byte = {"off": 0x00, "strobe": 0x01, "continuous": 0x02}.get(mode)
         if period is None or mode_byte is None:
             self._log("AOI_BLOCKED invalid mode or strobe period")
             return
         try:
             self._transport.send_frame(CAN_ID_AOI_CMD, bytes([mode_byte]) + struct.pack(">H", period))
-            self._log(f"AOI_SENT mode={mode} period_us={period}")
+            self._log(f"AOI_SENT mode={mode} period_ms={period}")
         except Exception as exc:
             self._log(f"AOI_FAILED {exc}")
 
@@ -1353,17 +1379,18 @@ class TesterQtBridge(QObject):
         threading.Thread(target=self._read_flying_probe_worker, args=(self._transport,), daemon=True, name="urtc-flying-probe-read").start()
 
     def _read_flying_probe_worker(self, transport) -> None:
-        try:
-            transport.send_frame(CAN_ID_ADS1115_RESULT, b"")
-            deadline = time.monotonic() + 1.0
-            while time.monotonic() < deadline:
-                frame = transport.read_frame(timeout=0.1)
-                if frame is not None and frame[0] == CAN_ID_ADS1115_RESULT and len(frame[1]) >= 2:
-                    self._flyingProbeResult.emit(str(struct.unpack(">h", frame[1][:2])[0]), "")
-                    return
-            self._flyingProbeResult.emit("", "No ADS1115 response within 1.0 s")
-        except Exception as exc:
-            self._flyingProbeResult.emit("", str(exc))
+        with self._io_lock:
+            try:
+                transport.send_frame(CAN_ID_ADS1115_RESULT, b"")
+                deadline = time.monotonic() + 1.0
+                while time.monotonic() < deadline:
+                    frame = transport.read_frame(timeout=0.1)
+                    if frame is not None and frame[0] == CAN_ID_ADS1115_RESULT and len(frame[1]) >= 2:
+                        self._flyingProbeResult.emit(str(struct.unpack(">h", frame[1][:2])[0]), "")
+                        return
+                self._flyingProbeResult.emit("", "No ADS1115 response within 1.0 s")
+            except Exception as exc:
+                self._flyingProbeResult.emit("", str(exc))
 
     @Slot(str, str)
     def _on_flying_probe_result(self, result: str, error: str) -> None:
@@ -1387,34 +1414,66 @@ class TesterQtBridge(QObject):
         self._set_state(status="CAPTURING THERMAL FRAME", busy=True)
         threading.Thread(target=self._capture_thermal_worker, args=(self._transport,), daemon=True, name="urtc-thermal-capture").start()
 
+    def _read_one(self, transport, can_id: int, timeout: float) -> bytes | None:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            frame = transport.read_frame(timeout=0.05)
+            if frame is not None and frame[0] == can_id:
+                return frame[1]
+        return None
+
     def _capture_thermal_worker(self, transport) -> None:
-        """Read the documented calibrated 32x24 frame without a write path."""
-        cells: list[dict[str, object]] = []
-        chunks = 0
-        try:
-            transport.send_frame(CAN_ID_THERMAL_TRIGGER, b"")
-            for chunk_index in range(48):
-                frames: list[bytes] = []
-                for attempt in range(4):
-                    if not frames:
-                        transport.send_frame(CAN_ID_THERMAL_CALIB_CHUNK_REQ, bytes([chunk_index]))
-                    deadline = time.monotonic() + 0.3
-                    while time.monotonic() < deadline:
-                        frame = transport.read_frame(timeout=0.05)
-                        if frame is not None and frame[0] == CAN_ID_THERMAL_CALIB_CHUNK and len(frame[1]) == 8:
-                            frames.append(frame[1])
-                            break
-                    if len(frames) == 4:
+        """Read the documented calibrated frame without a write path: ask which sensor is fitted, trigger, wait until the capture is ready, then read every chunk."""
+        with self._io_lock:
+            cells: list[dict[str, object]] = []
+            try:
+                transport.send_frame(CAN_ID_MLX_VARIANT_RESP, b"")
+                variant = self._read_one(transport, CAN_ID_MLX_VARIANT_RESP, 0.5)
+                if variant:
+                    grid = protocol.thermal_grid(variant[0])
+                    if grid is None:
+                        self._thermalResult.emit([], "THERMAL_CAPTURE_FAILED no thermal sensor is configured on the board")
+                        return
+                else:
+                    grid = (32, 24, 48)  # firmware without the variant register: the full-size sensor
+                width, height, chunk_count = grid
+                transport.send_frame(CAN_ID_THERMAL_TRIGGER, b"")
+                ready = False
+                deadline = time.monotonic() + 2.0
+                while time.monotonic() < deadline:
+                    transport.send_frame(CAN_ID_THERMAL_STATUS, b"")
+                    status = self._read_one(transport, CAN_ID_THERMAL_STATUS, 0.25)
+                    if status and status[0] == protocol.THERMAL_STATUS_READY:
+                        ready = True
                         break
-                if len(frames) != 4:
-                    continue
-                chunks += 1
-                for pixel in range(16):
-                    temperature = struct.unpack(">h", b"".join(frames)[pixel * 2:pixel * 2 + 2])[0]
-                    cells.append({"temperature": temperature, "color": self._thermal_color(temperature)})
-            self._thermalResult.emit(cells, f"THERMAL_CAPTURE chunks={chunks}/48 cells={len(cells)}")
-        except Exception as exc:
-            self._thermalResult.emit([], f"THERMAL_CAPTURE_FAILED {exc}")
+                    if status and status[0] == 0xFF:
+                        break
+                if not ready:
+                    self._thermalResult.emit([], "THERMAL_CAPTURE_FAILED the sensor did not become ready")
+                    return
+                chunks: dict[int, list[int]] = {}
+                for chunk_index in range(chunk_count):
+                    for _attempt in range(2):
+                        transport.send_frame(CAN_ID_THERMAL_CALIB_CHUNK_REQ, bytes([chunk_index]))
+                        frames: list[bytes] = []
+                        deadline = time.monotonic() + 0.3
+                        while len(frames) < protocol.THERMAL_CHUNK_FRAMES and time.monotonic() < deadline:
+                            frame = transport.read_frame(timeout=0.05)
+                            if frame is not None and frame[0] == CAN_ID_THERMAL_CALIB_CHUNK and len(frame[1]) == 8:
+                                frames.append(frame[1])
+                        decoded = protocol.decode_thermal_chunk(frames)
+                        if decoded is not None:
+                            chunks[chunk_index] = decoded
+                            break
+                self._thermal_columns = width
+                for temperature in protocol.thermal_pixels(chunks, chunk_count):
+                    if temperature is None:
+                        cells.append({"temperature": 0, "color": "#202020", "missing": True})
+                    else:
+                        cells.append({"temperature": temperature, "color": self._thermal_color(temperature), "missing": False})
+                self._thermalResult.emit(cells, f"THERMAL_CAPTURE size={width}x{height} chunks={len(chunks)}/{chunk_count} cells={len(cells)}")
+            except Exception as exc:
+                self._thermalResult.emit([], f"THERMAL_CAPTURE_FAILED {exc}")
 
     @Slot(object, str)
     def _on_thermal_result(self, cells: list[dict[str, object]], summary: str) -> None:
@@ -1443,6 +1502,10 @@ class TesterQtBridge(QObject):
         ).start()
 
     def _passive_capture_worker(self, transport) -> None:
+        with self._io_lock:
+            self._passive_capture_locked(transport)
+
+    def _passive_capture_locked(self, transport) -> None:
         deadline = time.monotonic() + 2.0
         count = 0
         identifiers: set[int] = set()
@@ -1502,17 +1565,18 @@ class TesterQtBridge(QObject):
         return None
 
     def _probe_worker(self) -> None:
-        try:
-            transport = self._transport
-            if transport is None:
-                raise RuntimeError("transport disconnected before identity probe")
-            transport.send_frame(CAN_ID_QUERY_ACTIVE_TOOL, b"")
-            tool_data = self._wait_for(CAN_ID_ACTIVE_TOOL_RESP, 1.5)
-            transport.send_frame(CAN_ID_QUERY_VERSION, b"\x00")
-            version_data = self._wait_for(CAN_ID_VERSION_RESPONSE, 1.5)
-            self._probeResult.emit(tool_data, version_data, "")
-        except Exception as exc:
-            self._probeResult.emit(None, None, str(exc))
+        with self._io_lock:
+            try:
+                transport = self._transport
+                if transport is None:
+                    raise RuntimeError("transport disconnected before identity probe")
+                transport.send_frame(CAN_ID_QUERY_ACTIVE_TOOL, b"")
+                tool_data = self._wait_for(CAN_ID_ACTIVE_TOOL_RESP, 1.5)
+                transport.send_frame(CAN_ID_QUERY_VERSION, b"\x00")
+                version_data = self._wait_for(CAN_ID_VERSION_RESPONSE, 1.5)
+                self._probeResult.emit(tool_data, version_data, "")
+            except Exception as exc:
+                self._probeResult.emit(None, None, str(exc))
 
     def _on_probe_result(self, tool_data, version_data, error: str) -> None:
         if error:

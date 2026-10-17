@@ -24,7 +24,7 @@
 </p>
 
 
-**Version :** 0.2.6 · **Auteur :** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version :** 0.2.7 · **Auteur :** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licence : **GPL-3.0** pour le code source, **CC BY-SA 4.0** pour cette
 documentation - voir `LICENSE` dans ce dépôt, ou la section « Licence
@@ -438,11 +438,7 @@ firmware - est documenté dans
   demander les 48 morceaux séquentiellement via CAN (pire cas, la
   propre résolution de MLX90640/MLX90642) - cela peut prendre plusieurs
   secondes, et il n'existe aucun mode d'envoi en streaming dans le
-  propre protocole CAN de cet outil pour accélérer cela. Une capture
-  doit déjà avoir été déclenchée et signalée prête (Vérifier Statut)
-  avant que Lire Image Thermique ne renvoie de vraies données - lire
-  trop tôt peint simplement ce que le propre tampon du capteur
-  contenait la dernière fois.
+  propre protocole CAN de cet outil pour accélérer cela. Il faut d'abord déclencher une capture ; Lire Image Thermique attend alors jusqu'à deux secondes que le capteur signale qu'il est prêt et, s'il ne le fait pas, ne lit rien, car le firmware ne répond pas aux demandes de morceau avant cela. Le capteur installé est interrogé en premier (48 morceaux pour MLX90640/MLX90642, 12 pour MLX90641), et un morceau perdu laisse ses pixels vides au lieu de décaler le reste de l'image.
 - **Exécuter Self-Test ne couvre que 7 des 25 outils** (fer à souder,
   perceuse, laser, imprimante 3D, AOI, aspiration, sonde de balayage)
   - voir « Comment ça fonctionne » ci-dessus pour l'explication

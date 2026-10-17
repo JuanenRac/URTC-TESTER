@@ -424,6 +424,13 @@ ApplicationWindow {
                     font.bold: true
                     font.pixelSize: 9
                 }
+                GameButton {
+                    visible: testerBackend.activeWatchdogs.length > 0
+                    text: testerBackend.uiText("QT_STOP_ALL_OUTPUTS")
+                    accent: "#a33a3a"
+                    Layout.preferredWidth: 200
+                    onClicked: testerBackend.stopAllOutputs()
+                }
                 Text {
                     visible: testerBackend.advancedControlKind === "unavailable"
                     text: testerBackend.uiText("QT_ADVANCED_UNAVAILABLE")
@@ -452,7 +459,7 @@ ApplicationWindow {
                     RowLayout {
                         Layout.fillWidth: true
                         ComboBox { id: aoiMode; model: ["off", "strobe", "continuous"]; Layout.preferredWidth: 150 }
-                        TextField { id: aoiPeriod; text: "1000"; inputMethodHints: Qt.ImhDigitsOnly; color: textPrimary; Layout.fillWidth: true; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                        TextField { id: aoiPeriod; text: "5"; inputMethodHints: Qt.ImhDigitsOnly; color: textPrimary; Layout.fillWidth: true; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
                         GameButton { text: testerBackend.uiText("QT_SEND_MOTION"); accent: "#b86a35"; Layout.preferredWidth: 145; enabled: testerBackend.canActuateSelectedProfile; onClicked: window.requestAdvanced(function() { testerBackend.sendAoi(aoiMode.currentText, aoiPeriod.text) }) }
                     }
                 }
@@ -510,10 +517,10 @@ ApplicationWindow {
                     GridView {
                         id: thermalGrid
                         Layout.fillWidth: true
-                        Layout.preferredHeight: Math.min(240, Math.ceil(count / 32) * 8)
+                        Layout.preferredHeight: Math.min(240, Math.ceil(count / testerBackend.thermalColumns) * 8)
                         visible: count > 0
                         model: testerBackend.thermalCells
-                        cellWidth: width / 32
+                        cellWidth: width / testerBackend.thermalColumns
                         cellHeight: 8
                         clip: true
                         delegate: Rectangle {
@@ -522,7 +529,7 @@ ApplicationWindow {
                             height: thermalGrid.cellHeight
                             color: modelData.color
                             ToolTip.visible: thermalMouse.containsMouse
-                            ToolTip.text: (modelData.temperature / 100.0).toFixed(2) + " C"
+                            ToolTip.text: modelData.missing ? "--" : (modelData.temperature / 100.0).toFixed(2) + " C"
                             MouseArea { id: thermalMouse; anchors.fill: parent; hoverEnabled: true }
                         }
                     }

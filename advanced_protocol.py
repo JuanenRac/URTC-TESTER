@@ -14,6 +14,7 @@ from __future__ import annotations
 import struct
 
 from tester_config import (
+    AOI_STROBE_MAX_MS,
     SETPOINT_MAX_C,
     CAN_ID_3DP_HOTEND_FAN_CMD,
     CAN_ID_3DP_LAYER_FAN_CMD,
@@ -119,11 +120,11 @@ def drill_frame(speed: str | int, direction: str) -> tuple[int, bytes]:
     return CAN_ID_DRILL_CMD, bytes([bounded_int(speed, 0, 255), _direction_byte(direction, "counter-clockwise", "clockwise")])
 
 
-def aoi_frame(mode: str, period_us: str | int) -> tuple[int, bytes]:
+def aoi_frame(mode: str, period_ms: str | int) -> tuple[int, bytes]:
     mode_byte = {"off": 0x00, "strobe": 0x01, "continuous": 0x02}.get(mode)
     if mode_byte is None:
         raise ValueError("unknown AOI mode")
-    return CAN_ID_AOI_CMD, bytes([mode_byte]) + struct.pack(">H", bounded_int(period_us, 1, 65535))
+    return CAN_ID_AOI_CMD, bytes([mode_byte]) + struct.pack(">H", bounded_int(period_ms, 1, AOI_STROBE_MAX_MS))
 
 
 def magnet_frame(energized: bool) -> tuple[int, bytes]:
@@ -415,3 +416,65 @@ def evaluate_thermal_runaway_bench_test(before: dict | None, after: dict | None,
         reasons.append("0x1AB last fault code does not match 0x111 byte 4")
     return not reasons, reasons
 
+
+
+# --- Thermal image geometry and chunk assembly ---------------------------
+# 0x1A7 byte 0 is the sensor variant. The MLX90641 is 16x12 (12 chunks of 16 pixels); the MLX90640/90642 are 32x24 (48 chunks). A chunk is 4 frames of 8 bytes: 16
+# signed 16-bit centi-degree values.
+THERMAL_CHUNK_PIXELS = 16
+THERMAL_CHUNK_FRAMES = 4
+THERMAL_STATUS_READY = 0x02
+_THERMAL_GRIDS = {1: (32, 24), 2: (16, 12), 3: (32, 24)}
+
+
+def thermal_grid(variant: int | None) -> tuple[int, int, int] | None:
+    """(width, height, chunk count) for a 0x1A7 sensor variant, or None when no sensor is configured or the variant is unknown."""
+    if variant not in _THERMAL_GRIDS:
+        return None
+    width, height = _THERMAL_GRIDS[variant]
+    return width, height, width * height // THERMAL_CHUNK_PIXELS
+
+
+def decode_thermal_chunk(frames: list[bytes]) -> list[int] | None:
+    """The 16 centi-degree values of one chunk from its 4 frames, or None if the chunk is not complete."""
+    if len(frames) != THERMAL_CHUNK_FRAMES or any(len(frame) != 8 for frame in frames):
+        return None
+    raw = b"".join(frames)
+    return [struct.unpack(">h", raw[i * 2:i * 2 + 2])[0] for i in range(THERMAL_CHUNK_PIXELS)]
+
+
+def thermal_pixels(chunks: dict[int, list[int]], chunk_count: int) -> list[int | None]:
+    """All the pixels of an image in position order. A chunk that was lost leaves 16 None, so the pixels after it keep their place instead of sliding."""
+    pixels: list[int | None] = []
+    for index in range(chunk_count):
+        pixels.extend(chunks.get(index) or [None] * THERMAL_CHUNK_PIXELS)
+    return pixels
+
+
+# --- Board health while connected -----------------------------------------
+class BusHealthTracker:
+    """Judges the periodic 0x111 answers. A board that stops answering (broken cable, reset, bus-off) is the worst fault, so consecutive silences count as one; the
+    critical-error (byte 1), CAN-error (byte 2) and thermal-fault (byte 4) bytes count too."""
+
+    NO_RESPONSE_LIMIT = 2
+
+    def __init__(self) -> None:
+        self._misses = 0
+
+    def evaluate(self, tool_data: bytes | None) -> list[tuple[str, dict]] | None:
+        """The problems seen as (translation key, arguments), an empty list when healthy, or None when there is no verdict yet (one silent poll)."""
+        if tool_data is None:
+            self._misses += 1
+            if self._misses >= self.NO_RESPONSE_LIMIT:
+                return [("STATE_BOARD_NOT_RESPONDING", {})]
+            return None
+        self._misses = 0
+        problems: list[tuple[str, dict]] = []
+        if len(tool_data) >= 2 and tool_data[1]:
+            problems.append(("STATE_CRITICAL_ERROR", {}))
+        if len(tool_data) >= 3 and tool_data[2]:
+            problems.append(("STATE_CAN_BUS_ERROR", {}))
+        if len(tool_data) >= 5 and tool_data[4]:
+            fault = THERMAL_FAULT_NAMES.get(tool_data[4], f"CODE_{tool_data[4]}")
+            problems.append(("STATE_THERMAL_FAULT", {"fault": fault}))
+        return problems

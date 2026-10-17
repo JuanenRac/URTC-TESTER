@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.2.6 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 0.2.7 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Lizenz: **GPL-3.0** für den Quellcode, **CC BY-SA 4.0** für diese
 Dokumentation - siehe `LICENSE` in diesem Repository, oder den
@@ -446,10 +446,7 @@ dokumentiert.
   (schlimmster Fall, die eigene Auflösung von MLX90640/MLX90642) - dies
   kann einige Sekunden dauern, und es gibt keinen Streaming-Sendemodus
   im eigenen CAN-Protokoll dieses Werkzeugs, um es schneller zu machen.
-  Eine Erfassung muss bereits ausgelöst und als bereit gemeldet worden
-  sein (Status Prüfen), bevor Wärmebild Lesen echte Daten zurückgibt -
-  zu frühes Lesen zeichnet einfach das, was im eigenen Puffer des
-  Sensors zuletzt gespeichert war.
+  Zuerst muss eine Erfassung ausgelöst werden; Wärmebild Lesen wartet dann bis zu zwei Sekunden darauf, dass der Sensor „bereit“ meldet, und liest andernfalls nichts, weil die Firmware Chunk-Anfragen vorher nicht beantwortet. Zuerst wird abgefragt, welcher Sensor verbaut ist (48 Chunks für MLX90640/MLX90642, 12 für MLX90641), und ein verlorener Chunk lässt seine Pixel leer, statt den Rest des Bildes zu verschieben.
 - **Self-Test ausführen deckt nur 7 der 25 Werkzeuge ab** (Lötkolben,
   Bohrer, Laser, 3D-Drucker, AOI, Vakuum, Scan-Sonde) - siehe „Wie es
   funktioniert" oben für die vollständige Erklärung. Die anderen 18

@@ -25,7 +25,7 @@ from tester_config import (
     CAN_ID_3DP_LAYER_FAN_CMD, CAN_ID_3DP_THERMAL_MOTION, CAN_ID_ACTIVE_TOOL_RESP,
     CAN_ID_CRIMPING_CMD, CAN_ID_DRILL_CMD, CAN_ID_LASER_CMD, CAN_ID_MOTION_CMD, CAN_ID_QUERY_ACTIVE_TOOL, CAN_ID_QUERY_VERSION,
     CAN_ID_UV_CURING_CMD, CAN_ID_HOTAIR_CMD,
-    CAN_ID_SOLDER_SETPOINT, CAN_ID_VERSION_RESPONSE, CONFIG_PATH, HYDRA_UMC_ICON_FRAMES_DIR, ICON_IMAGE_PATH,
+    CAN_ID_FREE_TOOL_CONFIG_RESP, CAN_ID_SOLDER_SETPOINT, CAN_ID_VERSION_RESPONSE, CONFIG_PATH, HYDRA_UMC_ICON_FRAMES_DIR, ICON_IMAGE_PATH,
     LOGS_FOLDER, MOTION_TOOL_IDS, SLCAN_BITRATES, TESTER_VERSION, THIS_HARDWARE_ID,
     TOOL_NAMES, list_serial_ports, load_language, save_config, _center_geometry,
 )
@@ -365,12 +365,11 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         row += 1
 
         # ID jumper pins (ID4 down to ID0, matching ECOVIA.TXT's documented
-        # MSB-to-LSB order) plus the resulting tool number - decoded
-        # straight from the same active_tool byte the 0x111 response
-        # already carries (it IS the raw 5-bit jumper reading - confirmed
-        # against Identify_PhysicalTool() in firmware_identify.c, which
-        # builds it bit by bit from ID0..ID4 the same way), so no separate
-        # query or firmware change is needed for this display.
+        # MSB-to-LSB order) plus the resulting tool number. 0x111 byte 0 is
+        # the RESOLVED tool (with the jumpers on 0x1F it is the tool kept in
+        # F-RAM, and 0x19-0x1E resolve to 25), so it goes in the tool-number
+        # label; the raw 5-bit jumper reading comes from 0x1A3 byte 0 and is
+        # what the squares show.
         ttk.Label(conn_frame, text=_("LBL_ID_PINS")).grid(row=row, column=0, sticky="w", **pad)
         id_pins_frame = ttk.Frame(conn_frame)
         id_pins_frame.grid(row=row, column=1, columnspan=3, sticky="w", **pad)
@@ -618,6 +617,9 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         else:
             self._stop_bus_health_monitor()
             self._clear_tool_panel()
+            close_monitor = getattr(self, "_bus_monitor_close", None)
+            if close_monitor is not None:
+                close_monitor()  # its sniffer belongs to the bus about to be stopped
             if self.bus is not None:
                 self.bus.stop()
                 self.bus = None
@@ -818,16 +820,20 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         self.root.after(0, lambda: self.detect_btn.config(state="normal"))
         self.root.after(0, lambda: self._show_detect_result(tool_data, version_data))
 
-    def _update_id_pin_display(self, tool_id):
-        # bit0=ID0 .. bit4=ID4, matching ECOVIA.TXT's table and
-        # Identify_PhysicalTool()'s own bit-building order in
-        # firmware_identify.c exactly - the squares are drawn
-        # ID4..ID0 (left to right, matching the documented MSB-to-LSB
-        # convention), so index 0 in self._id_pin_squares is ID4, needing
-        # bit 4, down to index 4 being ID0, needing bit 0.
+    def _update_id_pin_display(self, raw_pin, tool_id):
+        # bit0=ID0 .. bit4=ID4, matching ECOVIA.TXT's table - the squares
+        # are drawn ID4..ID0 (left to right, matching the documented
+        # MSB-to-LSB convention), so index 0 in self._id_pin_squares is
+        # ID4, needing bit 4, down to index 4 being ID0, needing bit 0.
+        # raw_pin is the jumper reading (0x1A3) or None while it is not
+        # known (older firmware, no answer): the squares then stay "?" rather
+        # than showing the resolved tool as if it were the jumpers.
         for i, square in enumerate(self._id_pin_squares):
+            if raw_pin is None:
+                square.config(text="?", bg="#DDDDDD", fg="#666666")
+                continue
             bit_index = 4 - i
-            bit_value = (tool_id >> bit_index) & 1
+            bit_value = (raw_pin >> bit_index) & 1
             if bit_value:
                 square.config(text="1", bg="#2E7D32", fg="white")  # jumper installed
             else:
@@ -880,7 +886,13 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             name = TOOL_NAMES.get(tool_id, f"none assigned (raw ID {tool_id})")
             self.active_tool_label.config(text=f"{name} (ID {tool_id})",
                                            foreground="green" if tool_id in TOOL_NAMES else "orange")
-            self._update_id_pin_display(tool_id)
+            self._update_id_pin_display(None, tool_id)
+
+            def _paint_raw_pins(response):
+                config = protocol.decode_free_tool_config(response or b"")
+                self._update_id_pin_display(config["raw_id_pin"] if config else None, tool_id)
+
+            self._query_async(CAN_ID_FREE_TOOL_CONFIG_RESP, lambda: self.bus.send(CAN_ID_FREE_TOOL_CONFIG_RESP, b""), _paint_raw_pins)
             state_text, is_bad = self._format_board_state(err, can_err, booting)
             self.board_state_label.config(text=state_text, foreground="red" if is_bad else "green")
             self.log(_("LOG_ACTIVE_TOOL_STATE", name=name, tool_id=tool_id, state=state_text))
@@ -961,6 +973,7 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
         entirely unmonitored between manual Detects until one of those
         larger changes happens.
         """
+        tracker = protocol.BusHealthTracker()
         while self._bus_health_running and self.bus is bus:
             time.sleep(self._BUS_HEALTH_INTERVAL_S)
             if not self._bus_health_running or self.bus is not bus:
@@ -988,8 +1001,11 @@ class TesterGUI(CommonPanelsMixin, PanelHelpersMixin, ToolPanelsMixin):
             if self.bus is not bus:
                 break  # disconnected (or reconnected to something new) while this was waiting
 
-            is_bad = tool_data is not None and len(tool_data) >= 3 and bool(tool_data[2])
-            reason = _("STATE_CAN_BUS_ERROR") if is_bad else None
+            problems = tracker.evaluate(tool_data)
+            if problems is None:
+                continue  # one silent poll is not a verdict yet
+            is_bad = bool(problems)
+            reason = ", ".join(_(key, **args) for key, args in problems) if is_bad else None
 
             transport = self.transport  # local snapshot - same "main thread
             # can reassign this out from under a background worker" concern

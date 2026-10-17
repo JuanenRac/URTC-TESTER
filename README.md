@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.2.6 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 0.2.7 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 License: **GPL-3.0** for the source code, **CC BY-SA 4.0** for this
 documentation - see `LICENSE` in this repository, or the "License and
@@ -379,10 +379,7 @@ firmware-flash authority of its own - is documented in
   live feed.** Reading a full frame means requesting all 48 chunks
   sequentially over CAN (worst case, MLX90640/MLX90642's own
   resolution) - this can take a few seconds, and there's no streaming
-  push mode in this tool's own CAN protocol to make it faster. A
-  capture has to already be triggered and reported ready (Check Status)
-  before Read Thermal Image returns real data - reading too early just
-  paints whatever the sensor's own buffer happened to hold last.
+  push mode in this tool's own CAN protocol to make it faster. A capture has to be triggered first; Read Thermal Image then waits up to two seconds for the sensor to report ready and, if it does not, reads nothing, because the firmware does not answer chunk requests before that. The sensor fitted is asked first (48 chunks for the MLX90640/MLX90642, 12 for the MLX90641), and a chunk that is lost leaves its pixels blank instead of shifting the rest of the image.
 - **Run Self-Test only covers 7 of the 25 tools** (soldering iron,
   drill, laser, 3D printer, AOI, vacuum, scan probe) - see "How it
   works" above for the full explanation. The other 18 tools get no

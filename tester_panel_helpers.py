@@ -6,6 +6,7 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE
 # =============================================================================
+import threading
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -13,6 +14,35 @@ from tester_config import _
 
 
 class PanelHelpersMixin:
+    def _query_async(self, can_id, request, on_done, timeout=1.0):
+        """Waits for the answer on can_id on a worker thread and then runs
+        on_done(response) on the Tkinter thread (response is None on a
+        timeout). Blocking the Tkinter thread for the wait froze the window
+        and stopped the 150 ms keepalives of every armed output, which the
+        firmware answers with a latched critical error. `request` is called
+        after the waiter is registered (or is None); on_done is dropped if
+        the connection was closed or replaced in the meantime."""
+        bus = self.bus
+        if bus is None:
+            return
+
+        def _work():
+            try:
+                response = bus.wait_for_one(can_id, timeout=timeout, send_after_register=request)
+            except Exception as e:
+                self.log(_("LOG_HANDLER_ERROR", can_id=can_id, e=e))
+                response = None
+
+            def _finish():
+                if self.bus is bus:
+                    on_done(response)
+            try:
+                self.root.after(0, _finish)
+            except (RuntimeError, tk.TclError):
+                pass  # the window is closing
+
+        threading.Thread(target=_work, daemon=True).start()
+
     def _start_keepalive(self, name, interval_ms, send_fn, on_failure=None):
         """Registers a periodic resend under `name`, cancelling whatever
         was previously running under that same name first. Matches what a

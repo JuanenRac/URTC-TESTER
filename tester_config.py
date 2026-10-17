@@ -16,7 +16,7 @@ except ImportError:
     HAVE_SERIAL = False
 
 
-TESTER_VERSION = "0.2.6"
+TESTER_VERSION = "0.2.7"
 TESTER_AUTHOR = "JuanenRac"
 
 # THIS_HARDWARE_ID matches bootloader_common.h/firmware_common.h's own constant - used
@@ -30,6 +30,21 @@ SLCAN_BITRATES = [
     ("100 kbit/s", "3"), ("125 kbit/s", "4"), ("250 kbit/s", "5"),
     ("500 kbit/s", "6"), ("800 kbit/s", "7"), ("1 Mbit/s", "8"),
 ]
+
+
+def bitrate_bps_for_label(label):
+    """Bits per second of a bitrate label such as "500 kbit/s" or "1 Mbit/s" (500000 when it is not recognised)."""
+    parts = str(label).split()
+    try:
+        value = float(parts[0])
+    except (IndexError, ValueError):
+        return 500000
+    unit = parts[1].lower() if len(parts) > 1 else ""
+    if unit.startswith("mbit"):
+        return int(value * 1000000)
+    if unit.startswith("kbit"):
+        return int(value * 1000)
+    return 500000
 
 if getattr(sys, "frozen", False):
     base_dir = os.path.dirname(sys.executable)
@@ -262,7 +277,7 @@ CAN_ID_FREE_TOOL_CONFIG_RESP = 0x1A3  # Query (empty payload), or the response -
 CAN_ID_PERIPHERAL_INFO_RESP = 0x1A5  # Query (empty payload), or the response - see EEPROM.TXT section 6
 CAN_ID_MLX_VARIANT_RESP = 0x1A7  # Query (empty payload), or the response - see CANBUS.TXT
 
-# Same 7 configurations as urtc_flasher.py's own list - kept in sync manually
+# Same 7 configurations as the flasher's own list (flasher_config.py) - kept in sync manually
 # since these two tools don't share a module.
 EXPANSION_BOARD_TYPES = [
     "0 - None installed",
@@ -283,6 +298,9 @@ MLX_SENSOR_VARIANTS = [
     "2 - MLX90641 (16x12)",
     "3 - MLX90642 (32x24, onboard calc)",
 ]
+# The ring light's strobe period is in MILLISECONDS and the firmware limits it to 1..500.
+AOI_STROBE_MAX_MS = 500
+AOI_STROBE_DEFAULT_MS = 5
 ERASE_FRAM_MAGIC = bytes([0xE3, 0xA5, 0xE0, 0xFF])
 CAN_ID_QUERY_VERSION     = 0x7F8  # Answered by app or bootloader, whichever's running
 CAN_ID_VERSION_RESPONSE  = 0x7F9

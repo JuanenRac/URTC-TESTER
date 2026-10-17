@@ -24,7 +24,7 @@
 </p>
 
 
-**Versión:** 0.2.6 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Versión:** 0.2.7 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licencia: **GPL-3.0** para el código fuente, **CC BY-SA 4.0** para esta
 documentación - ver `LICENSE` en este repositorio, o la sección
@@ -433,11 +433,7 @@ firmware - está documentado en
   significa solicitar los 48 chunks secuencialmente por CAN (peor caso,
   la propia resolución de MLX90640/MLX90642) - esto puede tardar varios
   segundos, y no existe un modo de envío en streaming en el propio
-  protocolo CAN de esta herramienta para hacerlo más rápido. Una
-  captura ya debe haberse disparado y reportado lista (Comprobar
-  Estado) antes de que Leer Imagen Térmica devuelva datos reales - leer
-  demasiado pronto simplemente pinta lo que sea que el propio buffer
-  del sensor tuviera guardado la última vez.
+  protocolo CAN de esta herramienta para hacerlo más rápido. Primero hay que disparar una captura; Leer Imagen Térmica espera entonces hasta dos segundos a que el sensor indique que está listo y, si no lo hace, no lee nada, porque el firmware no responde a las peticiones de chunk antes de ese momento. Primero se pregunta qué sensor hay instalado (48 chunks para MLX90640/MLX90642, 12 para MLX90641), y un chunk perdido deja sus píxeles en blanco en lugar de desplazar el resto de la imagen.
 - **Ejecutar Self-Test solo cubre 7 de las 25 herramientas** (soldador,
   taladro, láser, impresora 3D, AOI, vacío, sonda de escaneo) - ver
   "Cómo funciona" arriba para la explicación completa. Las otras 18
