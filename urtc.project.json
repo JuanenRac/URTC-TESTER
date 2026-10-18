@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "ecosystem": "URTC",
   "name": "URTC-TESTER",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "role": "tool",
   "stack": "python-qtquick",
   "technologies": [
@@ -13,11 +13,11 @@
     "live CAN bus diagnostics"
   ],
   "deployment_target": "user-pc",
-  "maturity": "established",
+  "maturity": "functional",
   "family": "URTC Tool Platform",
   "parent": "URTC",
   "build": "Standalone Python desktop tool. pip install -r requirements.txt; the Qt Quick diagnostics deck is the default, --legacy starts the classic Tkinter window.",
-  "notes": "Real live CAN-bus diagnostic tool including CSV export of live graphs. The Qt Quick deck is the default, safety-first interface; the 25-tool Tkinter window is kept behind --legacy. Every output the screens send goes through the encoders in advanced_protocol.py, which reject out-of-range values instead of clamping them.",
+  "notes": "Live CAN-bus diagnostic tool including CSV export of live graphs, exercised only against fake transports and never against a real board. The Qt Quick deck is the default interface and starts in listen-only mode; the 25-tool Tkinter window is kept behind --legacy. Every output the screens send goes through the encoders in advanced_protocol.py, which reject out-of-range values instead of clamping them.",
   "native_version": {
     "file": "tester_config.py",
     "pattern": "TESTER_VERSION\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""

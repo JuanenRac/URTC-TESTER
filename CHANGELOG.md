@@ -8,6 +8,12 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.3.0] - Claims aligned with what has been tested
+
+- Maturity is functional: nothing here has been verified on real hardware yet.
+- The README (all eight languages) no longer calls the SLCAN/SocketCAN transports production transports, states that STOP ALL OUTPUTS is a software command and not an emergency stop, and says that the laser lock output is a firmware output and not a hardware interlock.
+- The README states that nothing here has been tried on a real board.
+
 ## [0.2.9] - Serial reader ignores line noise that looked like a frame
 
 - **Identifiers and data digits must be real hexadecimal.** A signed, `0x`-prefixed or underscore-separated field in a received serial line used to be accepted by the number parser and delivered as a frame; the line is now ignored.

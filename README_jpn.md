@@ -24,7 +24,7 @@
 </p>
 
 
-**バージョン：** 0.2.9 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**バージョン：** 0.3.0 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 ライセンス：ソースコードは **GPL-3.0**、本ドキュメントは **CC BY-SA 4.0**——
 本リポジトリの `LICENSE`、または本ドキュメント末尾の「ライセンスと著作権
@@ -41,12 +41,14 @@ URTC ボード向けのライブ CAN バステスターです。フラッシャ�
 
 **正直な現状確認 - 実際に今動くもの:** Qt Quick に移行した制御系統向けの CAN ペイロードエンコーダー（`advanced_protocol.py`）は本物であり、`tests/` のテスト（`python -m pytest -q`）でカバーされている。このリポジトリ自身の CI（`.github/workflows/ci.yml`）もこれらを、`ruff check`、`tools/ci_validate.py`、各 `.py` ファイルの構文コンパイル、3つの `verify_qt_*.py` スクリプトとともに実行するため、そこでのリグレッションはビルドを失敗させる。リポジトリ直下にある3つの `verify_qt_*.py` スクリプト（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`）は、意図的に `tests/` の外に置かれた本物のエンドツーエンドチェックであり、本物のクロススレッドシグナル配信を伴う偽のトランスポートに対して検証を行う——`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で3つとも通過し、CI でも実行される。これが自動的に検証されている範囲の正直な上限だ。トランスポート層、CAN ID/バイトレイアウトの処理、そして Qt Quick ブリッジのロジックは本物であり、模擬フレームに対して検証されているが、実機のハードウェアに対してではない——下記の「Known limitations」がすでに述べている通り、これは USB アクセスのない環境で構築されたため、ここにあるものはまだ何も実機ボードに対して検証されていない。`tester_gui_core.py`、`tester_common_panels.py`、`tester_tool_panels.py` は本物で相当な規模の実装であり（合計で数千行）、これらの検証スクリプトと手動での使用によって検証されているのであって、それに見合う量の自動化されたテストによってではない。
 
+> **安全性とセキュリティの現状:** このエコシステムは認証された安全システムではなく、実装済みの URTC 基板もまだ存在しません。ブートローダーはファームウェアイメージを CRC32 と共有鍵の HMAC-SHA256 で検査しており、非対称署名ではありません(予定)。公開されているアプリケーションイメージは公開の開発用鍵(`signing_key_kind: dev`)で署名されているため、誰でもブートローダーが受け入れるイメージを作れます。実際の基板には何も送信されていません。ここに書かれた内容を人の安全のために頼る前に、[セキュリティベースライン](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)と[脅威モデル](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)をお読みください。
+
 ## 📋 ひと目で
 
 | | |
 |---|---|
-| バージョン | `0.2.9` |
-| 成熟度 | 確立 |
+| バージョン | `0.3.0` |
+| 成熟度 | 機能する |
 | 技術 | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 対象 | 利用者の PC |
 | 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
@@ -117,15 +119,12 @@ PNG フレームにより、追加の GUI 実行時依存関係なしで Tkinter
 ~~~
 python urtc_tester.py --qtquick
 ~~~
-本番用の SLCAN/SocketCAN トランスポートを使用します。リッスンオンリーで起動するため、
+SLCAN/SocketCAN トランスポートを使用します。リッスンオンリーで起動するため、
 アクティブチェックを意図的に有効化するまで送信できません。このプローブが送信するのは、
 アクティブツールとバージョンに対する文書化済みの問い合わせだけです。25 個の専用パネルを
 安全に移行する間、Tkinter が完全な既定ツールのままです。
 
-確立済みのライブ CAN 診断ワークフローは、ダークネイビー/シアンの操作面を使用します。
-製品ヘッダー、高コントラストの接続カード、明確なツールタブ、暗色のセッションログ、
-見やすい進捗表示を備えます。これは視覚性とアクセシビリティの改善であり、受動監視、
-コマンドルーティング、または安全境界を変更しません。
+既存のライブ CAN 診断ワークフローは、ダークネイビー/シアンの操作面を使用します。製品ヘッダー、高コントラストの接続カード、明確なツールタブ、暗色のセッションログ、見やすい進捗表示を備えます。これは視覚性とアクセシビリティの変更であり、受動監視とコマンドルーティングは変更しません。実機のボードで試したことはありません。
 
 ### メニューバー
 
@@ -330,7 +329,7 @@ PEAK PCAN-View / Vector CANalyzer 風のトレースファイルとして保存�
 | 真空ピックアップ | なし | アナログ読み取り値、部品検出 |
 | ドリル | 速度 + 方向 | 実際の回転数、エンドストップ |
 | AOI 検査 | リングモード（オフ/ストロボ/連続）+ ストロボ周期 | エンドストップ |
-| レーザー彫刻機 | 出力 + インターロック有効化/安全 | エンドストップ |
+| レーザー彫刻機 | 出力 + レーザーロックの有効化/安全（ファームウェアの出力であり、ハードウェアインターロックではありません） | エンドストップ |
 | 3D プリンター | ノズル設定値、エクストルーダー方向/ステップ数、レイヤーファン出力、ホットエンドファン出力 | ホットエンド温度、レイヤーファン回転数、ホットエンドファン回転数 |
 | スキャンプローブ | なし | 衝撃イベント回数 + タイムスタンプ（最優先度 `0x095`） |
 | 電磁石 | 励磁/解放チェックボックス | なし |
@@ -357,9 +356,9 @@ PEAK PCAN-View / Vector CANalyzer 風のトレースファイルとして保存�
 （代わりに失速検出器——`docs/CANBUS.md` 参照）ので、単純なワンショット
 送信です。
 
-**安全性と使い勝手に関する注意。**
+**使い勝手に関する注意（ソフトウェア上の便宜であり、安全機能ではありません）。**
 
-- **全出力を停止**（両方のウィンドウにあり、接続済みでアクティブチェックを有効にしている間は常に使えます）は、取り付けられているツールに関係なく、既知のすべてのオフコマンド——ヒーター、レーザー、ドリル、UV ランプ、レイヤーファン、電磁石の解放、単純なステッピングモーター、かしめ機——を送信し、すべての再送を止めます。ノズルがまだ熱い可能性があるため、ホットエンドファンは意図的に回したままにします。
+- **全出力を停止**（両方のウィンドウにあり、接続済みでアクティブチェックを有効にしている間は常に使えます）は、取り付けられているツールに関係なく、既知のすべてのオフコマンド——ヒーター、レーザー、ドリル、UV ランプ、レイヤーファン、電磁石の解放、単純なステッピングモーター、かしめ機——を送信し、すべての再送を止めます。ノズルがまだ熱い可能性があるため、ホットエンドファンは意図的に回したままにします。 これは CAN バス経由で送るソフトウェアのコマンドであり、非常停止ではありません。バス、アダプター、PC、ボードのいずれかが故障すると作用できません。
 - 単発の溶接パルス、ペーストパルス、かしめは、Qt Quick デッキが常にそうしているように、クラシックウィンドウでも確認を求めます。
 - ドリルと UV ランプはレーザーやヒーターと同様に再送されます。3D プリンターのヒーターを維持している間は、150 ms ごとの再送が押出機のステップ 0 を運び、ファームウェアはこれを停止命令と解釈します。その状態で開始した押出機の移動は 150 ms 以内に取り消されるため、ファームウェアが押出機に触れないモードを提供するまでは、ヒーターをオフにして押出機を動かしてください。
 - ポートとビットレートは次回のセッションのために記憶され（`config.json`）、Qt Quick デッキには専用のビットレート選択があります。**自動検出**はまず各ビットレートで聞くだけで（稼働中のバスには何も送信しません）、バスが完全に静かなときだけ各ビットレートで問い合わせます。
@@ -535,9 +534,9 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 **エコシステムの他のプロジェクト**
 
 *コアハードウェア&プラットフォーム*
-- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — 実際のロボットアームのマザーボード——CM5 ホスト + デュアルコア STM32H745、CAN-OTA/SPI-OTA 経由で最大 8 本のツールアームを統括。
+- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — ロボットアームのマザーボードの設計——CM5 ホスト + デュアルコア STM32H745、CAN-OTA/SPI-OTA 経由で最大 8 本のツールアームを統括することを目指す(ファームウェアは初期段階で、実装済みの基板はまだない)。
 - **[HYDRA-UMC-OS](https://github.com/JuanenRac/HYDRA-UMC-OS)** — CM5 向けの再現可能な Raspberry Pi OS プロダクト層——読み取り専用エージェント、検証済み設定/プロファイル、WiFi 初回接続プロビジョニング。
-- **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** — すべてのブリッジが自身のコマンドを検証する共有 JSON-Schema 契約と安全ゲートの境界。
+- **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** — すべてのブリッジが自身のコマンドを検証する共有 JSON-Schema 契約とソフトウェアのジョブゲート境界(認証済みの安全機能ではない)。
 - **[HYDRA-UMC-CONNECTOR-HUB](https://github.com/JuanenRac/HYDRA-UMC-CONNECTOR-HUB)** — 外部マシン用コネクタのための宣言的アダプターマニフェストのレジストリとバリデーター。SDK 自身の契約という発想を外部マシンにまで拡張し、産業用ゲートウェイ系のプロジェクトを置き換えることはありません。
 
 *コアバックエンド&クライアント*
@@ -549,21 +548,21 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 - **[HYDRA-UMC-DSI](https://github.com/JuanenRac/HYDRA-UMC-DSI)** — 本体搭載の 7 インチ DSI タッチスクリーン向けネイティブタッチ UI、CM5 自体に組み込み。
 - **[HYDRA-UMC-EDITOR-URDF](https://github.com/JuanenRac/HYDRA-UMC-EDITOR-URDF)** — 完成したモデルを STUDIO 自身のカタログへ送信するデスクトップ用グラフィカル URDF 作成/編集ツール。
 - **[HYDRA-UMC-EDITOR-STL](https://github.com/JuanenRac/HYDRA-UMC-EDITOR-STL)** — HYDRA-UMC-EDITOR-URDF も編集する同じモデルカタログ内で、実在するパーツを変換/置換/削除/追加するデスクトップ STL モデルエディタ。
-- **[HYDRA-UMC-BRIDGE-AMR](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-AMR)** — 実際の VDA 5050 MQTT パブリッシャーによる AGV/AMR フリートの調整境界。
-- **[HYDRA-UMC-BRIDGE-CNC](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-CNC)** — 実際の GRBL ステータス/制御バイトへのアクセスを持つ、CNC セルの高レベルコーディネーター。
-- **[HYDRA-UMC-BRIDGE-DROIDS](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-DROIDS)** — 実際の Boston Dynamics Spot コマンド送信機能を持つ、脚型/ヒューマノイドドロイドの調整境界。
-- **[HYDRA-UMC-BRIDGE-LASER](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-LASER)** — 実際のキー/筐体/インターロック GPIO セーフガード 3 系統を読み取る、レーザーセルの安全コーディネーター。
+- **[HYDRA-UMC-BRIDGE-AMR](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-AMR)** — VDA 5050 MQTT パブリッシャーによる AGV/AMR フリートの調整境界(エミュレートしたフリートに対してのみテスト済み)。
+- **[HYDRA-UMC-BRIDGE-CNC](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-CNC)** — GRBL ステータス/制御バイトへのアクセスを持つ、CNC セルの高レベルコーディネーター(エミュレーターに対してのみテスト済み)。
+- **[HYDRA-UMC-BRIDGE-DROIDS](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-DROIDS)** — Boston Dynamics Spot コマンド送信機能を持つ、脚型/ヒューマノイドドロイドの調整境界(エミュレーターに対してのみテスト済み)。
+- **[HYDRA-UMC-BRIDGE-LASER](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-LASER)** — キー/筐体/インターロックの GPIO 信号 3 系統を読み取るレーザーセルのコーディネーター(模擬チップに対してのみテスト済み。レーザーの武装や発射はできない)。
 - **[HYDRA-UMC-BRIDGE-OPENPNP](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-OPENPNP)** — OpenPnP ピックアンドプレースの基板フローを安全に統括する高レベルコーディネーター。
 - **[HYDRA-UMC-BRIDGE-PRINTER3D](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-PRINTER3D)** — 実際にゲート制御されたジョブコマンドを持つ、Moonraker/Klipper 3D プリンター向けの安全な調整境界。
-- **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** — 実際の遅延インポート rclpy ROS 2 トランスポートを持つ安全コーディネーター。
-- **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** — 実際の MAVLink コマンド送信機能を持つ、カメラ搭載 UAV の調整境界。
+- **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** — 遅延インポートの rclpy ROS 2 トランスポートを持つコーディネーター(ROS 2 環境ではまだ実行していない)。
+- **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** — MAVLink コマンド送信機能を持つ、カメラ搭載 UAV の調整境界(エミュレーターに対してのみテスト済み)。
 
 *ビジョン AI ノード(Hailo-8)*
 - **[HYDRA-UMC-VISION-NODE](https://github.com/JuanenRac/HYDRA-UMC-VISION-NODE)** — Hailo-8 ビジョンパイプラインの統合ハブ、段階ごとの実際のハードウェア準備状況チェック付き。
 - **[HYDRA-UMC-DETECTION-HEF](https://github.com/JuanenRac/HYDRA-UMC-DETECTION-HEF)** — Hailo アーキテクチャ/チェックサムによる安全読み込み検証を備えた、実際のコンパイル済みモデルレジストリ。
 - **[HYDRA-UMC-VISION-STREAMER](https://github.com/JuanenRac/HYDRA-UMC-VISION-STREAMER)** — 実際の HailoRT 統合境界を持つ、実際の GStreamer パイプライン + MediaMTX 設定生成器。
-- **[HYDRA-UMC-VISUAL-SERVOING-API](https://github.com/JuanenRac/HYDRA-UMC-VISUAL-SERVOING-API)** — 上流のゾーン状態に応じて安全ゲート制御される、実際の Position-Based Visual Servoing 補正則。
-- **[HYDRA-UMC-SAFETY-ZONES](https://github.com/JuanenRac/HYDRA-UMC-SAFETY-ZONES)** — キャリブレーションの鮮度を強制する、実際のゾーン侵入チェックと E-STOP 要求。
+- **[HYDRA-UMC-VISUAL-SERVOING-API](https://github.com/JuanenRac/HYDRA-UMC-VISUAL-SERVOING-API)** — ゾーン状態を条件に承認する Position-Based Visual Servoing 補正則。カメラによる姿勢推定はまだない。
+- **[HYDRA-UMC-SAFETY-ZONES](https://github.com/JuanenRac/HYDRA-UMC-SAFETY-ZONES)** — ファイルから物体位置を受け取る、ゾーン侵入・キャリブレーション鮮度・E-STOP 要求の v0 ロジック。検出器は接続されておらず、物理 E-STOP もまだ配線されていない。
 
 *コグニティブ AI ノード(Hailo-10)*
 - **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** — Hailo-10 コグニティブパイプライン(LLM/VLA/音声オーケストレーション)の統合ハブ。
@@ -582,7 +581,7 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 
 *デジタルツイン&シミュレーション*
 - **[HYDRA-UMC-TWIN](https://github.com/JuanenRac/HYDRA-UMC-TWIN)** — 実際のバージョン互換性同期契約を持つ、デジタルツインエンジンの統合ハブ。
-- **[HYDRA-UMC-HIL-BRIDGE](https://github.com/JuanenRac/HYDRA-UMC-HIL-BRIDGE)** — シミュレーションと実際のハードウェアの間でコマンドをルーティングする、実際のハードウェア・イン・ザ・ループ安全インターロック。
+- **[HYDRA-UMC-HIL-BRIDGE](https://github.com/JuanenRac/HYDRA-UMC-HIL-BRIDGE)** — シミュレーションと実機の間にソフトウェアの衝突インターロックを備えたハードウェア・イン・ザ・ループのルーター(実機なしでテスト済み)。
 - **[HYDRA-UMC-PHYSICS-REPLICA](https://github.com/JuanenRac/HYDRA-UMC-PHYSICS-REPLICA)** — 実際の URDF サブセットに対する、実際の順運動学と関節限界検証。
 - **[HYDRA-UMC-SYNTHETIC-DATA-GEN](https://github.com/JuanenRac/HYDRA-UMC-SYNTHETIC-DATA-GEN)** — YOLO/COCO アノテーションのエクスポート機能を持つ、実際のプロシージャル 2D シーンジェネレーター。
 
@@ -600,7 +599,7 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 
 *補完ツール&エコシステム運用*
 - **[HYDRA-UMC-DASHBOARD-AI](https://github.com/JuanenRac/HYDRA-UMC-DASHBOARD-AI)** — 誠実な統計フォールバックを備えた、DATALAKE/ANOMALY-DETECTOR 上のスマートサマリーと異常ハイライトパネル。
-- **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — 実際の触覚アラートとペアリングされたスマートフォンへの音声リレーを備えた WearOS コンパニオンアプリ。
+- **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — 触覚アラートのパターンとペアリング済みスマートフォンへの音声リレーを備えた WearOS コンパニオンアプリ(物理的なウォッチではまだ実行していない)。
 - **[URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)** — 実際の工具 ID デコードと Smart Idle 予熱ロジックを備えた、基板搭載ラック用ファームウェア。
 - **[HYDRA-UMC-UPDATER](https://github.com/JuanenRac/HYDRA-UMC-UPDATER)** — このエコシステム内のすべてのリポジトリを検出・クローン・更新する、管理用デスクトップツール。
 - **[HYDRA-UMC-OS-REBUILDER](https://github.com/JuanenRac/HYDRA-UMC-OS-REBUILDER)** — エコシステムの最新バージョンをプリロードした、書き込み可能なCM5イメージを構築するWindows/Linuxデスクトップツール。Raspberry Pi Imager方式の初回起動Wi-Fi/ユーザー/SSH設定を備える。
