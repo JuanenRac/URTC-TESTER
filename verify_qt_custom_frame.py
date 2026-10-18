@@ -2,7 +2,7 @@
 # URTC Tester - real, hardware-free end-to-end check of the Qt Quick
 # Custom CAN Frame panel (manual send + QML-Timer-owned periodic resend)
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Deliberately kept OUTSIDE tests/ - same real reason as
 verify_qt_utility_panels.py's own header: exercises the real bridge

@@ -4,7 +4,7 @@ URTC Tester - live CAN bus exerciser for the URTC (Universal Robot Tool
 Controller) board.
 Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 
-Licensed under the GNU General Public License v3.0 (GPL-3.0), matching the
+Licensed under the GNU General Public License v3.0 or later (GPL-3.0-or-later), matching the
 URTC firmware and the flasher tool. See LICENSE in the repository root.
 
 Connects over the same USB-CAN adapter/interface the flasher uses, asks

@@ -2,7 +2,7 @@
 # URTC Tester - CANBusMonitor: the one background thread reading frames
 # off the transport, dispatching to registered handlers/sniffers
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 import collections
 import threading

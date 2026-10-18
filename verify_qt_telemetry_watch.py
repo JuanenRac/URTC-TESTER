@@ -2,7 +2,7 @@
 # URTC Tester - real, hardware-free end-to-end check of the Qt Quick
 # telemetry watch (Vacuum Pickup / Scan Probe)
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Deliberately kept OUTSIDE tests/ (see that directory's own
 test_advanced_protocol.py header: "hardware-free... without importing a

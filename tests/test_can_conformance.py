@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Tester - tests/test_can_conformance.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The tester's reading of the CAN protocol, against the shared vectors.
 

@@ -2,7 +2,7 @@
 # URTC Tester - Configuration, language/translation loading, and shared
 # constants used by every other module in this project
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 import sys
 import os
@@ -307,6 +307,8 @@ ERASE_FRAM_MAGIC = protocol.MAGIC_ERASE_FRAM
 SOLDER_FEEDER_RESET_MAGIC = protocol.MAGIC_SOLDER_FEEDER_RESET  # ASCII "RSP0": reset the wire feeder position to 0
 CAN_ID_QUERY_VERSION     = protocol.CAN_ID_QUERY_VERSION  # Answered by app or bootloader, whichever's running
 CAN_ID_VERSION_RESPONSE  = protocol.CAN_ID_VERSION_RESPONSE
+CAN_ID_VERSION_PATCH_RESPONSE = protocol.CAN_ID_VERSION_PATCH_RESPONSE  # companion of 0x7F9: patch number of the installed application (URTC firmware 0.3.5+)
+VERSION_PATCH_GRACE_S = protocol.VERSION_PATCH_GRACE_MS / 1000.0  # how long after 0x7F9 the companion frame is waited for
 
 # Layers built-in names (derived from every CAN_ID_* constant just above,
 # via globals() - not a separately hand-maintained list that could drift)

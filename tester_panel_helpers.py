@@ -4,7 +4,7 @@
 # safe widget-value parsing). No standalone class - mixed into TesterGUI
 # in tester_gui_core.py alongside the other panel mixins.
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 import threading
 import tkinter as tk

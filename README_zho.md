@@ -17,7 +17,7 @@
 
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
@@ -26,7 +26,7 @@
 
 **版本：** 0.3.1 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
-许可证：源代码为 **GPL-3.0**，本文档为 **CC BY-SA 4.0**——见本仓库中的
+许可证：源代码为 **GPL-3.0-or-later**，本文档为 **CC BY-SA 4.0**——见本仓库中的
 `LICENSE`，或本文档末尾的“许可证与版权声明”一节。
 
 一款面向 URTC 板卡的实时 CAN 总线测试器。它通过与刷写工具相同的 USB-CAN
@@ -43,7 +43,7 @@
 
 | | |
 |---|---|
-| 版本 | `0.3.0` |
+| 版本 | `0.3.1` |
 | 成熟度 | 可用 |
 | 技术栈 | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 目标 | 使用者的电脑 |
@@ -100,15 +100,19 @@ python3 urtc_tester.py         # Linux
 
 ### 可视化控制台
 
-共享的 **Qt Quick** 命令控制台可用于真实连接、只监听监控以及明确启用的身份探测：
+**Qt Quick** 命令控制台现在是真正的默认界面：
 ~~~
-python urtc_tester.py --qtquick
+python urtc_tester.py
 ~~~
-它使用 SLCAN/SocketCAN 传输。它以只监听模式启动，因此在你明确启用主动检查前
-不会发送任何内容；该探测仅发送已文档化的活动工具与版本查询。在其 25 个专用面板安全迁移
-期间，Tkinter 仍是默认的完整工具。
+它使用 SLCAN/SocketCAN 传输，并以只监听模式启动，因此在你明确启用主动检查前
+不会发送任何内容。25 种工具配置各自的命令在此都有经过确认的真实覆盖
+（运动、钻头、AOI、电磁铁、点焊/超声波焊接脉冲、锡膏喷射、飞针、热成像检测、
+5 个带看门狗保活的执行器、真空/扫描探头遥测），每一项都经过同样的关卡：
+身份匹配、明确启用的主动模式，以及发送前在 QML 中的用户确认。
+`python urtc_tester.py --legacy` 仍会启动原有的 25 面板 Tkinter 界面。
+两个界面都尚未在真实板卡上检查过 —— 见下方“已知限制”。
 
-Qt Quick 窗口的标题栏有语言选择器；所选语言会被保存，并在下次启动时生效。它还可以查询并重置烙铁送丝器的位置（开环估计值；重置需要确认）。
+Qt Quick 窗口的标题栏有语言选择器；所选语言会被保存，并在下次启动时生效。它还可以查询并重置烙铁送丝器的位置（开环估计值；重置需要确认）。 身份探测在电路板发送补丁号时（URTC 固件 0.3.5 及更新版本）也会显示固件补丁号；更旧的固件只显示主版本.次版本。
 
 现有的实时 CAN 诊断流程现在使用深海军蓝/青色控制界面：产品标题、高对比度连接卡、清晰的工具标签页、深色会话日志以及可见的进度通道。这只是视觉与可访问性改动，不会改变被动监控或命令路由，其中任何内容也从未在真实板卡上试过。
 
@@ -119,7 +123,7 @@ Qt Quick 窗口的标题栏有语言选择器；所选语言会被保存，并�
 - **语言** —— 在 7 种可用语言之间切换（翻译的工作方式见上方”语言”）。
 - **帮助** —— Readme（在一个只读查看器窗口中打开本文件；一旦当前语言
   存在已翻译的版本，会自动使用该版本）、URTC GitHub（在浏览器中打开
-  项目的仓库）、许可证（本工具的 GPL-3.0 许可证，读取自仓库自身的
+  项目的仓库）、许可证（本工具的 GPL-3.0-or-later 许可证，读取自仓库自身的
   `LICENSE` 文件），以及关于（版本和作者）。
 
 ### 文件结构
@@ -345,8 +349,8 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 ```
 /
 ├── urtc_tester.py             入口点——无 CLI 的启动流程和启动画面
-├── qt_tester.py                Qt Quick 前端——受限、默认只读的
-│                                `--qtquick` 指令面板
+├── qt_tester.py                Qt Quick 前端——默认的正式指令面板，默认只读
+│                                （Tkinter 界面用 `--legacy`）
 ├── tester_config.py            配置/语言/协议常量（CAN ID、工具名称、
 │                                MOTION_TOOL_IDS、AVAILABLE_LANGUAGES、
 │                                EXPANSION_BOARD_TYPES）
@@ -375,7 +379,7 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 ├── verify_qt_utility_panels.py      真实的、放在 tests/ 之外的端到端检查，验证 Qt Quick 实用面板（Global Controls / Expansion Board / F-RAM）
 ├── tests/
 │   └── test_advanced_protocol.py   针对 advanced_protocol.py 编码器的无硬件测试——CI 会运行它，见上文诚实核查
-├── requirements.txt            pyserial>=3.5（Tkinter 测试器）+ PySide6>=6.8,<7（`--qtquick` 面板）
+├── requirements.txt            pyserial>=3.5（两个界面）+ PySide6>=6.8,<7（默认的 Qt Quick 面板）
 ├── build_exe.bat               独立 Windows 二进制文件构建脚本（PyInstaller）
 ├── build_exe.sh                同上，适用于 Linux
 ├── build-test.bat              不递增版本号的构建/编译检查
@@ -389,7 +393,7 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 │   ├── HYDRA_UMC_ICON.svg      维护中的动画 HYDRA-UMC 矢量源文件
 │   ├── hydra_umc_icon_frames/  由上方 SVG 渲染出的十二帧 Tkinter PNG 帧
 │   ├── qml/
-│   │   └── TesterDeck.qml      受限 `--qtquick` 指令面板的 Qt Quick UI
+│   │   └── TesterDeck.qml      默认指令面板的 Qt Quick UI
 │   ├── urtc_icon.ico           Windows 图标，由 URTC_APP_ICON.svg 构建
 │   ├── urtc_icon.png           同上，PNG 形式（Linux）
 │   └── urtc_tester_banner.png  启动横幅 PNG，由上方的 SVG 渲染而成
@@ -406,6 +410,7 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 │   └── chinese.lng
 ├── logs/                       运行时会话日志写入此处（删除是安全的）
 ├── LICENSE                     完整许可证文本——见下方许可证与版权声明
+├── NOTICE                      版权声明和文档许可证
 ├── README.md                   英文原版
 ├── README_spa.md               西班牙语翻译
 ├── README_ita.md               意大利语翻译
@@ -445,6 +450,7 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 **直接相关**
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — 具备真实、稳定退出码契约的车队 CLI，是 HYDRA-UMC-SERVER 自身 API 的真实在线客户端 —— 对所有工具头同时运行车队级审计(`audit` 命令),超越本测试工具所覆盖的单板范围。
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — 面向热成像/RGB 检测工具头的固件及真实 Python 视觉伴侣程序 —— 以其自身对工具头的视觉质量保证检查,补充本项目的实时 CAN 总线诊断。
+- **[URTC-UPDATER](https://github.com/JuanenRac/URTC-UPDATER)** — 桌面工具，用于检测、安装和更新 URTC 系列的仓库，每次只执行一项明确的操作。
 
 **生态系统中的其他项目**
 
@@ -531,7 +537,7 @@ URTC Tester 版权所有 (c) 2026 JuanenRac（Electro Hobby 3D）。分发本项
 
 1. 源代码（`urtc_tester.py` 及每一个 `tester_*.py` 模块）以及通过
    `build_exe.bat`/`build_exe.sh` 从中构建的任何二进制文件，依据
-   **GNU 通用公共许可证 v3.0（GPL-3.0）** 提供。完整文本见
+   **GNU 通用公共许可证 v3.0（GPL-3.0-or-later）** 提供。完整文本见
    https://www.gnu.org/licenses/gpl-3.0.html。
 
 2. 文档（本 README 及其自身的翻译版本——`README_spa.md`、`README_ita.md`、
@@ -547,7 +553,7 @@ URTC Tester 版权所有 (c) 2026 JuanenRac（Electro Hobby 3D）。分发本项
 [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO)。
 
 如果你基于本项目进行开发，请留意这种许可证划分：代码更改应保持
-GPL-3.0，文档衍生品应保持 CC BY-SA——每一项都需附带指向本项目及其
+GPL-3.0-or-later，文档衍生品应保持 CC BY-SA——每一项都需附带指向本项目及其
 作者的署名。
 
 ---

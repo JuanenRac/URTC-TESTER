@@ -8,7 +8,7 @@
 # _start_keepalive, _create_live_graph) being present on the same
 # instance via multiple inheritance, not imported directly here.
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 import struct
 import threading

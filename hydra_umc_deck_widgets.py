@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Tester - rounded HYDRA-UMC command-deck widgets
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Rounded presentation containers shared by the live diagnostic surfaces.
 

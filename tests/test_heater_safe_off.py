@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Tester - the safe-off frames and the limits of the heaters
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The firmware only processes the hotend frame (0x170) when it has 6 bytes, and refuses (with a latched critical error) a setpoint above 445 C. The Qt deck had its own copy of the
 frames, with a 5-byte "safe off" the firmware ignored, and offered 450 C; it now uses the one encoder these tests cover."""

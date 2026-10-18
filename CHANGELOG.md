@@ -14,6 +14,12 @@ automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 - The header of the Qt Quick deck has a language selector (the eight languages); the choice is saved and applies on the next start.
 - The Qt Quick deck queries and resets the position of the soldering iron's wire feeder (open-loop estimate; the reset asks for confirmation); until now only the Tkinter window could.
 - The build and run scripts read URTC_CI as their non-interactive switch.
+- The identity probe of the Qt Quick deck shows the firmware patch number (v0.3.5 instead of v0.3) when the board sends the companion frame 0x7E9 right after the version answer (URTC firmware 0.3.5 and newer); older firmware keeps showing major.minor and the patch is never guessed. New function firmware_version_text with tests.
+- The six translated READMEs (Spanish, German, French, Italian, Japanese, Chinese) describe the Qt Quick deck as the default and the Tkinter window as --legacy, like the English one; the flag --qtquick, which does not exist, is gone from the text and the file trees.
+- The README of every language lists URTC-UPDATER among the related projects.
+- The CI workflow no longer carries steps for stacks this repository does not have.
+- LICENSE holds the full text of the GNU General Public License v3.0; the copyright notice and the license of the documentation moved to a new NOTICE file. The license is GPL-3.0-or-later everywhere: LICENSE.md, source headers, script banners, About texts and READMEs (eight languages).
+- A test compares hydra_umc_animation.py and hydra_umc_deck_widgets.py with the copies in the other desktop tool (by syntax tree, so comments and layout do not count) and fails when one of them changes alone; it skips when the other repository is not next to this one.
 
 ## [0.3.0] - Claims aligned with what has been tested
 

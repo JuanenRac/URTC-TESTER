@@ -17,7 +17,7 @@
 
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
@@ -26,7 +26,7 @@
 
 **Version:** 0.3.1 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
-License: **GPL-3.0** for the source code, **CC BY-SA 4.0** for this
+License: **GPL-3.0-or-later** for the source code, **CC BY-SA 4.0** for this
 documentation - see `LICENSE` in this repository, or the "License and
 Copyright Notices" section at the end of this document.
 
@@ -46,7 +46,7 @@ nothing here that can leave the board any less working than it started.
 
 | | |
 |---|---|
-| Version | `0.3.0` |
+| Version | `0.3.1` |
 | Maturity | Functional |
 | Stack | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Target | The PC of the person using it |
@@ -125,7 +125,7 @@ QML before anything transmits. `python urtc_tester.py --legacy` still
 launches the original 25-panel Tkinter GUI. Neither UI has been checked
 against a real board yet - see "Known limitations" below.
 
-The header of the Qt Quick window has a language selector; the choice is saved and applies on the next start. It also queries and resets the position of the soldering iron's wire feeder (open-loop estimate; the reset asks for confirmation).
+The header of the Qt Quick window has a language selector; the choice is saved and applies on the next start. It also queries and resets the position of the soldering iron's wire feeder (open-loop estimate; the reset asks for confirmation). The identity probe also shows the firmware patch number when the board sends it (URTC firmware 0.3.5 and newer); older firmware shows major.minor only.
 
 The existing live-CAN diagnostic workflow now uses a dark navy/cyan command-deck surface: product header, high-contrast connection card, clear tool tabs, dark session log and visible progress channel. This visual and accessibility change does not alter passive monitoring or command routing, and none of it has been tried on a real board.
 
@@ -139,7 +139,7 @@ The existing live-CAN diagnostic workflow now uses a dark navy/cyan command-deck
 - **Help** - Readme (opens this file in a read-only viewer window;
   picks up a translated version automatically once one exists for the
   current language), URTC GitHub (opens the project's repository in
-  your browser), License (this tool's GPL-3.0 license, read from the
+  your browser), License (this tool's GPL-3.0-or-later license, read from the
   repository's own `LICENSE` file), and About (version and author).
 
 ### File structure
@@ -474,6 +474,7 @@ from the SVG during development; it is not required to run the application.
 ├── logs/                       Session logs written here at runtime (safe to delete)
 ├── LICENSE                     Full license text - see License and Copyright
 │                                Notices below
+├── NOTICE                      Copyright notice and the license of the documentation
 ├── README.md                   This file
 ├── README_spa.md               Spanish translation
 ├── README_ita.md               Italian translation
@@ -513,6 +514,7 @@ This project is part of the HYDRA-UMC robotics ecosystem by the same author (Jua
 **Directly Related**
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — fleet CLI with a real, stable exit-code contract, a genuine live client of HYDRA-UMC-SERVER's own API — runs fleet-wide audits (the `audit` command) across every tool head at once, going beyond the single-board scope this tester covers.
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — firmware plus a real Python vision companion for a thermal/RGB inspection tool head — complements this project's live CAN-bus diagnostics with its own visual quality-assurance checks on the tool head.
+- **[URTC-UPDATER](https://github.com/JuanenRac/URTC-UPDATER)** — desktop tool that detects, installs and updates the repositories of the URTC family, one explicit action at a time.
 
 **Also Part of the Ecosystem**
 
@@ -600,7 +602,7 @@ covers:
 
 1. The source code (`urtc_tester.py` and every `tester_*.py` module)
    and any binary built from it via `build_exe.bat`/`build_exe.sh` are
-   available under the **GNU General Public License v3.0 (GPL-3.0)**.
+   available under the **GNU General Public License v3.0 or later (GPL-3.0-or-later)**.
    Full text at https://www.gnu.org/licenses/gpl-3.0.html.
 
 2. The documentation (this README and its own translations -
@@ -621,7 +623,7 @@ similar ground also exists at
 [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
 
 If you build on this project, keep the licensing split in mind: code
-changes should stay GPL-3.0, documentation derivatives should stay CC
+changes should stay GPL-3.0-or-later, documentation derivatives should stay CC
 BY-SA - each with attribution back to this project and its author.
 
 ---

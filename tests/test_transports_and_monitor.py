@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Tester - tests/test_transports_and_monitor.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The serial (SLCAN) and SocketCAN transports against stand-ins for the
 adapter and the kernel socket, and the bus monitor that fans received frames

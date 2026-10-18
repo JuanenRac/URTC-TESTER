@@ -17,7 +17,7 @@
 
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
@@ -26,7 +26,7 @@
 
 **バージョン：** 0.3.1 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
-ライセンス：ソースコードは **GPL-3.0**、本ドキュメントは **CC BY-SA 4.0**——
+ライセンス：ソースコードは **GPL-3.0-or-later**、本ドキュメントは **CC BY-SA 4.0**——
 本リポジトリの `LICENSE`、または本ドキュメント末尾の「ライセンスと著作権
 表示」セクションを参照してください。
 
@@ -47,7 +47,7 @@ URTC ボード向けのライブ CAN バステスターです。フラッシャ�
 
 | | |
 |---|---|
-| バージョン | `0.3.0` |
+| バージョン | `0.3.1` |
 | 成熟度 | 機能する |
 | 技術 | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 対象 | 利用者の PC |
@@ -114,17 +114,21 @@ PNG フレームにより、追加の GUI 実行時依存関係なしで Tkinter
 
 ### ビジュアル・コマンドデッキ
 
-共有 **Qt Quick** コマンドデッキは、実機接続、リッスンオンリー監視、および明示的に
-有効化した識別プローブに利用できます。
+**Qt Quick** コマンドデッキが現在の本来の既定です：
 ~~~
-python urtc_tester.py --qtquick
+python urtc_tester.py
 ~~~
-SLCAN/SocketCAN トランスポートを使用します。リッスンオンリーで起動するため、
-アクティブチェックを意図的に有効化するまで送信できません。このプローブが送信するのは、
-アクティブツールとバージョンに対する文書化済みの問い合わせだけです。25 個の専用パネルを
-安全に移行する間、Tkinter が完全な既定ツールのままです。
+SLCAN/SocketCAN トランスポートを使用し、リッスンオンリーで起動するため、
+アクティブチェックを意図的に有効化するまで送信できません。25 のツールプロファイルそれぞれの
+コマンドが、ここで実際に確認済みの形で対応しています（モーション、ドリル、AOI、電磁石、
+スポット/超音波溶接パルス、ペースト噴射、フライングプローブ、熱検査、
+ウォッチドッグ・キープアライブの 5 つのアクチュエーター、真空/スキャンプローブのテレメトリ）。
+どれも同じ関門を通ります：識別の一致、明示的に有効化したアクティブモード、
+送信前の QML でのユーザー確認。`python urtc_tester.py --legacy` で、従来の 25 パネルの
+Tkinter GUI を引き続き起動できます。どちらの UI もまだ実機のボードでは確認されていません ——
+下記の「既知の制限事項」を参照してください。
 
-Qt Quick ウィンドウのヘッダーに言語セレクターがあります。選択は保存され、次回の起動から有効になります。また、はんだごてのワイヤーフィーダーの位置を問い合わせ、リセットできます（開ループの推定値で、リセットには確認が必要です）。
+Qt Quick ウィンドウのヘッダーに言語セレクターがあります。選択は保存され、次回の起動から有効になります。また、はんだごてのワイヤーフィーダーの位置を問い合わせ、リセットできます（開ループの推定値で、リセットには確認が必要です）。 アイデンティティプローブは、ボードが送信した場合（URTC ファームウェア 0.3.5 以降）、ファームウェアのパッチ番号も表示します。それより古いファームウェアでは major.minor のみ表示されます。
 
 既存のライブ CAN 診断ワークフローは、ダークネイビー/シアンの操作面を使用します。製品ヘッダー、高コントラストの接続カード、明確なツールタブ、暗色のセッションログ、見やすい進捗表示を備えます。これは視覚性とアクセシビリティの変更であり、受動監視とコマンドルーティングは変更しません。実機のボードで試したことはありません。
 
@@ -138,7 +142,7 @@ Qt Quick ウィンドウのヘッダーに言語セレクターがあります�
 - **ヘルプ** —— Readme（本ファイルを読み取り専用のビューアーウィンドウ
   で開きます；現在の言語向けの翻訳版が存在すれば自動的にそれを使用しま
   す）、URTC GitHub（プロジェクトのリポジトリをブラウザで開きます）、
-  ライセンス（本ツールの GPL-3.0 ライセンス、リポジトリ自身の
+  ライセンス（本ツールの GPL-3.0-or-later ライセンス、リポジトリ自身の
   `LICENSE` ファイルから読み込まれます）、そしてこのアプリについて
   （バージョンと作者）。
 
@@ -429,8 +433,8 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 ```
 /
 ├── urtc_tester.py             エントリポイント——CLI なしの起動とスプラッシュ画面
-├── qt_tester.py                Qt Quick フロントエンド——限定的で既定では読み取り専用の
-│                                `--qtquick` コマンドデッキ
+├── qt_tester.py                Qt Quick フロントエンド——既定の本番コマンドデッキ（既定では読み取り専用、
+│                                Tkinter GUI は `--legacy`）
 ├── tester_config.py            設定/言語/プロトコル定数（CAN ID、ツール名、
 │                                MOTION_TOOL_IDS、AVAILABLE_LANGUAGES、
 │                                EXPANSION_BOARD_TYPES）
@@ -462,7 +466,7 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 ├── verify_qt_utility_panels.py      tests/ の外に置かれた、Qt Quick のユーティリティパネル（Global Controls / Expansion Board / F-RAM）の本物のエンドツーエンド検証
 ├── tests/
 │   └── test_advanced_protocol.py   advanced_protocol.py のエンコーダー用ハードウェア不要テスト——CI で実行される、上記の正直な現状確認を参照
-├── requirements.txt            pyserial>=3.5（Tkinter テスター）+ PySide6>=6.8,<7（`--qtquick` デッキ）
+├── requirements.txt            pyserial>=3.5（両方の UI）+ PySide6>=6.8,<7（既定の Qt Quick デッキ）
 ├── build_exe.bat               独立 Windows バイナリビルドスクリプト（PyInstaller）
 ├── build_exe.sh                同上、Linux 向け
 ├── build-test.bat              バージョンを更新しないビルド/コンパイル確認
@@ -476,7 +480,7 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 │   ├── HYDRA_UMC_ICON.svg      維持されているアニメーション HYDRA-UMC ベクターソース
 │   ├── hydra_umc_icon_frames/  上記の SVG からレンダリングされた 12 枚の Tkinter 用 PNG フレーム
 │   ├── qml/
-│   │   └── TesterDeck.qml      限定的な `--qtquick` コマンドデッキの Qt Quick UI
+│   │   └── TesterDeck.qml      既定のコマンドデッキの Qt Quick UI
 │   ├── urtc_icon.ico           Windows アイコン、URTC_APP_ICON.svg から構築
 │   ├── urtc_icon.png           同上、PNG 形式（Linux）
 │   └── urtc_tester_banner.png  起動バナー PNG、上記の SVG からレンダリング
@@ -493,6 +497,7 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 │   └── chinese.lng
 ├── logs/                       実行時のセッションログがここに書き込まれる（削除しても安全）
 ├── LICENSE                     完全なライセンステキスト——下記のライセンスと著作権表示を参照
+├── NOTICE                      著作権表示とドキュメントのライセンス
 ├── README.md                   英語版
 ├── README_spa.md               スペイン語翻訳
 ├── README_ita.md               イタリア語翻訳
@@ -532,6 +537,7 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 **直接関連**
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — 実際の安定した終了コード契約を持つフリート CLI、HYDRA-UMC-SERVER 自身の API の本物のライブクライアント ——すべてのツールヘッドを一度に対象とする、フリート全体の監査(`audit` コマンド)を実行し、本テスターがカバーする単一基板の範囲を超える。
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — サーマル/RGB 検査ツールヘッド向けの、ファームウェアと実際の Python ビジョンコンパニオン ——本プロジェクトのライブ CAN バス診断を、ツールヘッドに対する独自の視覚的品質保証チェックで補完する。
+- **[URTC-UPDATER](https://github.com/JuanenRac/URTC-UPDATER)** — URTC ファミリーのリポジトリを検出・インストール・更新するデスクトップツール。操作は一つずつ明示的に行います。
 
 **エコシステムの他のプロジェクト**
 
@@ -614,13 +620,13 @@ URTC Tester の著作権は (c) 2026 JuanenRac（Electro Hobby 3D）に帰属し
 
 本プロジェクトはソースコードとそれ自身のドキュメントで構成されており、それぞれ実際にカバーする内容に適した異なるライセンスの下で提供されています：
 
-1. ソースコード（`urtc_tester.py` および各 `tester_*.py` モジュール）と、`build_exe.bat`/`build_exe.sh` を通じてそこから構築されるあらゆるバイナリは、**GNU General Public License v3.0（GPL-3.0）** の下で提供されます。全文は https://www.gnu.org/licenses/gpl-3.0.html を参照してください。
+1. ソースコード（`urtc_tester.py` および各 `tester_*.py` モジュール）と、`build_exe.bat`/`build_exe.sh` を通じてそこから構築されるあらゆるバイナリは、**GNU General Public License v3.0（GPL-3.0-or-later）** の下で提供されます。全文は https://www.gnu.org/licenses/gpl-3.0.html を参照してください。
 
 2. ドキュメント（本 README およびその自身の翻訳版——`README_spa.md`、`README_ita.md`、`README_fra.md`、`README_deu.md`、`README_zho.md`、`README_por.md`、および `docs/` のガイド）は、**クリエイティブ・コモンズ 表示-継承 4.0 国際（CC BY-SA 4.0）** の下で提供されます。全文は https://creativecommons.org/licenses/by-sa/4.0/ を参照してください。
 
 本ツールは [URTC（Universal Robot Tool Controller）](https://github.com/JuanenRac/URTC) プロジェクトのライブ CAN バス診断コンパニオンです——本ツールがテスト対象としているボードファームウェア、ハードウェア設計、完全なプロトコルドキュメントは、同プロジェクト自身のリポジトリを参照してください。URTC 自身のファームウェアは GPL-3.0 であり、そのハードウェア設計は CERN-OHL-S v2 です。本ツール自身のここでのライセンスはその独立したプロジェクトには及ばず、その逆も同様です。類似の範囲をカバーする Web ベースの代替案も、[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO) に存在します。
 
-本プロジェクトを基に開発を行う際は、このライセンス区分を念頭に置いてください：コードの変更は GPL-3.0 を維持し、ドキュメントの派生物は CC BY-SA を維持してください——いずれも本プロジェクトおよびその作者への帰属表示を伴う必要があります。
+本プロジェクトを基に開発を行う際は、このライセンス区分を念頭に置いてください：コードの変更は GPL-3.0-or-later を維持し、ドキュメントの派生物は CC BY-SA を維持してください——いずれも本プロジェクトおよびその作者への帰属表示を伴う必要があります。
 
 ---
 

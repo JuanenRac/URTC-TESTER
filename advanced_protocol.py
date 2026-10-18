@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Tester - Pure encoders for the migrated Qt Quick control families
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Pure CAN payload encoders used as hardware-free migration evidence.
 
@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import struct
 
+from urtc_can import protocol
 from tester_config import (
     AOI_STROBE_MAX_MS,
     SETPOINT_MAX_C,
@@ -505,3 +506,14 @@ class BusHealthTracker:
             fault = THERMAL_FAULT_NAMES.get(tool_data[4], f"CODE_{tool_data[4]}")
             problems.append(("STATE_THERMAL_FAULT", {"fault": fault}))
         return problems
+
+
+def firmware_version_text(major: int, minor: int, patch_frame: bytes | None) -> str:
+    """The firmware version as the board reported it. 0x7F9 carries only major and minor; firmware from 0.3.5 on adds the
+    patch in the companion frame 0x7E9 right after it. Without that frame, or with the patch marked unknown (0xFF), the patch is not
+    guessed: the text stays "major.minor"."""
+    fields = protocol.decode_version_patch_response(patch_frame) if patch_frame else None
+    patch = fields["patch"] if fields else None
+    if patch is None or patch == protocol.PATCH_UNKNOWN:
+        return f"{major}.{minor}"
+    return f"{major}.{minor}.{patch}"

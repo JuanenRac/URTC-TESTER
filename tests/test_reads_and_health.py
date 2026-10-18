@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Tester - reads that must not collide, thermal image assembly, board health
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Mock CAN transports: no board is needed. They cover the strobe period unit, the thermal image geometry and chunk assembly, the multi-frame waiter, the queries that
 run off the Tkinter thread, the board-health verdicts, and the Qt deck's single reader and stop-everything behaviour."""

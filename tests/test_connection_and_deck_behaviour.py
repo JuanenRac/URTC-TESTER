@@ -1,10 +1,11 @@
 # =============================================================================
 # URTC Tester - bit rate scan, saved settings, the stop for everything, confirmations and the monitor filter
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """No board is needed: the SLCAN adapter, the bus and the Tk host are stand-ins."""
 import re
+import struct
 import time
 import unittest
 from pathlib import Path
@@ -486,6 +487,28 @@ class QtDeckTests(unittest.TestCase):
         bridge._on_probe_result(bytes([0, 0, 0, 0, 1, 0x01]), None, "")
         self.assertIn("THERMAL FAULT", bridge.activeTool)
         self.assertTrue(any(line.startswith("RESET_CAUSE") for line in logs))
+
+    def test_the_firmware_patch_number_is_shown_when_the_board_sends_it(self):
+        bridge = self.bridge
+        logs = []
+        bridge._log = logs.append
+        version = bytes([0x00]) + struct.pack(">I", tester_config.THIS_HARDWARE_ID) + struct.pack(">H", 0) + bytes([3])
+        bridge._version_patch_frame = bytes([0x00, 5, 0x01])
+        bridge._on_probe_result(None, version, "")
+        self.assertIn("v0.3.5", bridge._version)
+        bridge._version_patch_frame = None
+        bridge._on_probe_result(None, version, "")
+        self.assertIn("v0.3 ", bridge._version)
+        self.assertNotIn("v0.3.", bridge._version)
+
+
+class FirmwareVersionTextTests(unittest.TestCase):
+    def test_the_patch_is_added_only_when_the_board_reported_one(self):
+        self.assertEqual(protocol.firmware_version_text(0, 3, bytes([0x00, 5, 0x01])), "0.3.5")
+        self.assertEqual(protocol.firmware_version_text(0, 3, None), "0.3")
+        self.assertEqual(protocol.firmware_version_text(0, 3, b""), "0.3")
+        self.assertEqual(protocol.firmware_version_text(0, 3, bytes([0x00, 0xFF, 0x00])), "0.3")
+        self.assertEqual(protocol.firmware_version_text(0, 3, bytes([0x00])), "0.3", "a frame that is too short is not a patch")
 
 
 if __name__ == "__main__":

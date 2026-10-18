@@ -4,7 +4,7 @@
 # right before every real PyInstaller build (never when just running from
 # source with "python urtc_tester.py") - ecosystem-wide versioning policy.
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Increments TESTER_VERSION in tester_config.py in place, following a
 base-10 "odometer" rule applied to the last 2 parts of MAJOR.MINOR.PATCH:

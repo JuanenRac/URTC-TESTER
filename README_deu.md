@@ -17,7 +17,7 @@
 
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Lizenz-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/Lizenz-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Sprache-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protokoll-CAN-yellow.svg" alt="CAN">
@@ -26,7 +26,7 @@
 
 **Version:** 0.3.1 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
-Lizenz: **GPL-3.0** für den Quellcode, **CC BY-SA 4.0** für diese
+Lizenz: **GPL-3.0-or-later** für den Quellcode, **CC BY-SA 4.0** für diese
 Dokumentation - siehe `LICENSE` in diesem Repository, oder den
 Abschnitt „Lizenz und Urheberrechtshinweise" am Ende dieses Dokuments.
 
@@ -49,7 +49,7 @@ begonnen hat.
 
 | | |
 |---|---|
-| Version | `0.3.0` |
+| Version | `0.3.1` |
 | Reifegrad | Funktionsfähig |
 | Technik | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Ziel | Der PC der Person, die es benutzt |
@@ -122,19 +122,23 @@ bleibt bewusst statisch.
 
 ### Visuelles Steuerpult
 
-Das gemeinsame **Qt-Quick**-Kommandopult steht für echte Verbindung,
-Nur-Lese-Überwachung und eine ausdrücklich aktivierte Identitätsabfrage
-bereit:
+Das **Qt-Quick**-Kommandopult ist jetzt der echte Standard:
 ~~~
-python urtc_tester.py --qtquick
+python urtc_tester.py
 ~~~
-Es nutzt die Transporte SLCAN/SocketCAN. Es startet im
-Nur-Lese-Modus und kann erst senden, wenn aktive Prüfungen bewusst aktiviert
-werden; diese Abfrage sendet nur die dokumentierten Anfragen nach aktivem Tool
-und Version. Tkinter bleibt während der sicheren Migration seiner 25
-spezifischen Panels das vollständige Standardwerkzeug.
+Es nutzt die Transporte SLCAN/SocketCAN und startet im
+Nur-Lese-Modus, kann also erst senden, wenn aktive Prüfungen bewusst aktiviert
+werden. Jeder der Befehle der 25 Werkzeugprofile ist hier real und bestätigt
+abgedeckt (Bewegung, Bohrer, AOI, Elektromagnet, Punkt-/Ultraschall-
+Schweißpuls, Pastendosierung, Flying Probe, Thermoinspektion, die 5 Aktoren
+mit Watchdog-Keepalive, Vakuum-/Scan-Probe-Telemetrie), jeweils gleich
+abgesichert: eine Identitätsübereinstimmung, ein ausdrücklich aktivierter
+aktiver Modus und eine Benutzerbestätigung in QML, bevor etwas gesendet wird.
+`python urtc_tester.py --legacy` startet weiterhin die ursprüngliche
+Tkinter-Oberfläche mit 25 Panels. Keine der beiden Oberflächen wurde bisher an
+einer echten Platine geprüft - siehe „Bekannte Einschränkungen“ unten.
 
-Der Kopf des Qt-Quick-Fensters hat eine Sprachauswahl; die Auswahl wird gespeichert und gilt beim nächsten Start. Außerdem fragt es die Position des Drahtvorschubs des Lötkolbens ab und setzt sie zurück (Schätzung im offenen Regelkreis; das Zurücksetzen verlangt eine Bestätigung).
+Der Kopf des Qt-Quick-Fensters hat eine Sprachauswahl; die Auswahl wird gespeichert und gilt beim nächsten Start. Außerdem fragt es die Position des Drahtvorschubs des Lötkolbens ab und setzt sie zurück (Schätzung im offenen Regelkreis; das Zurücksetzen verlangt eine Bestätigung). Die Identitätsabfrage zeigt auch die Patch-Nummer der Firmware, wenn die Platine sie sendet (URTC-Firmware 0.3.5 und neuer); ältere Firmware zeigt nur Major.Minor.
 
 Der bestehende Live-CAN-Diagnoseablauf verwendet jetzt eine dunkelblau-cyanfarbene Steueroberfläche: Produktkopf, kontrastreiche Verbindungskarte, klare Werkzeug-Tabs, dunkles Sitzungsprotokoll und sichtbarer Fortschritt. Diese Änderung von Darstellung und Zugänglichkeit verändert weder passives Monitoring noch Befehlsrouting, und nichts davon wurde auf einer echten Platine ausprobiert.
 
@@ -485,8 +489,8 @@ nicht erforderlich.
 /
 ├── urtc_tester.py             Einstiegspunkt - Start ohne CLI und der
 │                                Startbildschirm
-├── qt_tester.py                Qt-Quick-Frontend - begrenztes, standardmäßig
-│                                schreibgeschütztes `--qtquick`-Command-Deck
+├── qt_tester.py                Qt-Quick-Frontend - echtes Standard-Command-Deck, standardmäßig
+│                                schreibgeschützt (`--legacy` für die Tkinter-Oberfläche)
 ├── tester_config.py            Konfigurations-/Sprach-/Protokollkonstanten
 │                                (CAN-IDs, Werkzeugnamen, MOTION_TOOL_IDS,
 │                                AVAILABLE_LANGUAGES, EXPANSION_BOARD_TYPES)
@@ -517,7 +521,7 @@ nicht erforderlich.
 ├── verify_qt_utility_panels.py      Echte End-to-End-Prüfung außerhalb von tests/ der Qt-Quick-Utility-Panels (Global Controls / Expansion Board / F-RAM)
 ├── tests/
 │   └── test_advanced_protocol.py   Hardwarefreie Tests für die Encoder von advanced_protocol.py - von der CI ausgeführt, siehe Ehrlichkeitscheck oben
-├── requirements.txt            pyserial>=3.5 (Tkinter-Tester) + PySide6>=6.8,<7 (`--qtquick`-Deck)
+├── requirements.txt            pyserial>=3.5 (beide Oberflächen) + PySide6>=6.8,<7 (das Standard-Qt-Quick-Deck)
 ├── build_exe.bat               Build-Skript für die eigenständige Windows-Binary
 │                                (PyInstaller)
 ├── build_exe.sh                Dasselbe, für Linux
@@ -534,7 +538,7 @@ nicht erforderlich.
 │   ├── HYDRA_UMC_ICON.svg      Gepflegte animierte HYDRA-UMC-Vektorquelle
 │   ├── hydra_umc_icon_frames/  Zwölf aus dem obigen SVG gerenderte Tkinter-PNG-Frames
 │   ├── qml/
-│   │   └── TesterDeck.qml      Qt-Quick-UI des begrenzten `--qtquick`-Command-Decks
+│   │   └── TesterDeck.qml      Qt-Quick-UI des Standard-Command-Decks
 │   ├── urtc_icon.ico           Windows-Icon, erzeugt aus URTC_APP_ICON.svg
 │   ├── urtc_icon.png           Dasselbe, als PNG (Linux)
 │   └── urtc_tester_banner.png  PNG des Start-Banners, gerendert aus dem obigen
@@ -556,6 +560,7 @@ nicht erforderlich.
 │                                geschrieben werden (gefahrlos löschbar)
 ├── LICENSE                     Vollständiger Lizenztext - siehe Lizenz und
 │                                Urheberrechtshinweise unten
+├── NOTICE                      Copyright-Hinweis und Lizenz der Dokumentation
 ├── README.md                   Englische Version
 ├── README_spa.md               Spanische Übersetzung
 ├── README_ita.md               Italienische Übersetzung
@@ -595,6 +600,7 @@ Dieses Projekt ist Teil des HYDRA-UMC-Robotik-Ökosystems desselben Autors (Juan
 **Direkt verwandt**
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — Flotten-CLI mit einem echten, stabilen Exit-Code-Vertrag, ein echter Live-Client der eigenen API von HYDRA-UMC-SERVER — führt flottenweite Audits (der Befehl `audit`) über alle Werkzeugköpfe gleichzeitig durch, über den Einzelplatinen-Umfang dieses Testers hinaus.
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — Firmware plus ein echter Python-Vision-Begleiter für einen Thermal-/RGB-Inspektionswerkzeugkopf — ergänzt die Live-CAN-Bus-Diagnose dieses Projekts mit den eigenen visuellen Qualitätssicherungsprüfungen am Werkzeugkopf.
+- **[URTC-UPDATER](https://github.com/JuanenRac/URTC-UPDATER)** — Desktop-Werkzeug, das die Repositories der URTC-Familie erkennt, installiert und aktualisiert, jeweils mit einer ausdrücklichen Aktion.
 
 **Ebenfalls Teil des Ökosystems**
 
@@ -683,7 +689,7 @@ passend zu dem, was sie tatsächlich abdeckt:
 
 1. Der Quellcode (`urtc_tester.py` und jedes `tester_*.py`-Modul) und
    jedes daraus über `build_exe.bat`/`build_exe.sh` erstellte Binary
-   sind unter der **GNU General Public License v3.0 (GPL-3.0)**
+   sind unter der **GNU General Public License v3.0 or later (GPL-3.0-or-later)**
    verfügbar. Vollständiger Text unter
    https://www.gnu.org/licenses/gpl-3.0.html.
 
@@ -699,14 +705,14 @@ Dieses Tool ist der Live-CAN-Bus-Diagnose-Begleiter des
 -Projekts - siehe das eigene Repository dieses Projekts für die
 Platinen-Firmware, Hardware-Designs und die vollständige
 Protokolldokumentation, die dieses Tool ausübt. Die eigene Firmware von
-URTC ist GPL-3.0 und ihre Hardware-Designs sind CERN-OHL-S v2; die
+URTC ist GPL-3.0-or-later und ihre Hardware-Designs sind CERN-OHL-S v2; die
 eigene Lizenz dieses Tools erstreckt sich hier nicht auf dieses
 separate Projekt, und umgekehrt. Eine webbasierte Alternative, die
 ähnliches Terrain abdeckt, existiert ebenfalls unter
 [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
 
 Wenn Sie auf diesem Projekt aufbauen, denken Sie an die Lizenztrennung:
-Codeänderungen sollten GPL-3.0 bleiben, Dokumentationsableitungen
+Codeänderungen sollten GPL-3.0-or-later bleiben, Dokumentationsableitungen
 sollten CC BY-SA bleiben - jeweils mit Zuschreibung zurück an dieses
 Projekt und seinen Autor.
 

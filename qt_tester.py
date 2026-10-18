@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Tester - Qt Quick live CAN diagnostics command deck
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Qt Quick front end for the real tester workflow - the app's own default.
 
@@ -80,6 +80,8 @@ from tester_config import (
     CAN_ID_SOLDER_SETPOINT,
     CAN_ID_UV_CURING_CMD,
     CAN_ID_VERSION_RESPONSE,
+    CAN_ID_VERSION_PATCH_RESPONSE,
+    VERSION_PATCH_GRACE_S,
     CAN_ID_THERMAL_CALIB_CHUNK,
     CAN_ID_THERMAL_CALIB_CHUNK_REQ,
     CAN_ID_THERMAL_STATUS,
@@ -147,6 +149,7 @@ class TesterQtBridge(QObject):
         self._active_tool_id = -1
         self._selected_tool_id = 0
         self._version = "No board version received"
+        self._version_patch_frame: bytes | None = None
         self._passive_frames: list[dict[str, str]] = []
         self._passive_summary = ""
         self._passive_load_percent = 0.0
@@ -658,6 +661,7 @@ class TesterQtBridge(QObject):
                 self._active_tool = "No active probe yet"
                 self._active_tool_id = -1
                 self._version = "No board version received"
+                self._version_patch_frame = None
                 self._passive_frames = []
                 self._passive_summary = ""
                 self._set_state(status="DISCONNECTED")
@@ -1661,6 +1665,8 @@ class TesterQtBridge(QObject):
                 tool_data = self._wait_for(CAN_ID_ACTIVE_TOOL_RESP, 1.5)
                 transport.send_frame(CAN_ID_QUERY_VERSION, b"\x00")
                 version_data = self._wait_for(CAN_ID_VERSION_RESPONSE, 1.5)
+                # Firmware 0.3.5 and newer sends the patch number in the next frame; older firmware sends nothing.
+                self._version_patch_frame = self._wait_for(CAN_ID_VERSION_PATCH_RESPONSE, VERSION_PATCH_GRACE_S) if version_data is not None else None
                 self._probeResult.emit(tool_data, version_data, "")
             except Exception as exc:
                 self._probeResult.emit(None, None, str(exc))
@@ -1692,7 +1698,8 @@ class TesterQtBridge(QObject):
             major = struct.unpack(">H", version_data[5:7])[0]
             minor = version_data[7]
             identity = "MATCH" if hardware_id == THIS_HARDWARE_ID else "DIFFERENT BOARD"
-            self._version = f"{role} v{major}.{minor} - HW 0x{hardware_id:08X} ({identity})"
+            version_text = protocol.firmware_version_text(major, minor, self._version_patch_frame)
+            self._version = f"{role} v{version_text} - HW 0x{hardware_id:08X} ({identity})"
             self._log(f"BOARD_VERSION {self._version}")
         else:
             self._version = "No response to version query"

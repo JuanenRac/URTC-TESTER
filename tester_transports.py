@@ -3,7 +3,7 @@
 # shared in spirit with urtc_flasher.py's own transport layer (same
 # protocol, no shared module between the two tools)
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 import os
 import socket

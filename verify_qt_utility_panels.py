@@ -2,7 +2,7 @@
 # URTC Tester - real, hardware-free end-to-end check of the Qt Quick
 # utility panels (Global Controls / Expansion Board / F-RAM)
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Deliberately kept OUTSIDE tests/ - same real reason as
 verify_qt_telemetry_watch.py's own header: needs a real PySide6 event
