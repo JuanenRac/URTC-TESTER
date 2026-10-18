@@ -40,6 +40,16 @@ estava ao início.
 
 **Verificação de honestidade - o que realmente funciona hoje:** os codificadores de payload CAN para as famílias de controlo Qt Quick migradas (`advanced_protocol.py`) são reais e estão cobertos pelos testes de `tests/` (`python -m pytest -q`). O CI deste repositório (`.github/workflows/ci.yml`) também os executa, juntamente com `ruff check`, `tools/ci_validate.py`, uma compilação de sintaxe de cada ficheiro `.py` e os três scripts `verify_qt_*.py`, pelo que uma regressão aí faz falhar a compilação. Os três scripts `verify_qt_*.py` na raiz do repositório (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) são verificações end-to-end reais, deliberadamente fora de `tests/`, contra um transporte simulado com entrega real de Signals entre threads - os três passam com `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que o CI também executa. Esse é o limite honesto do que é verificado automaticamente: a camada de transporte, o tratamento dos IDs CAN/disposição de bytes e a lógica da ponte Qt Quick são reais e exercitados com frames simuladas, não com hardware real - como as "Limitações conhecidas" abaixo já indicam, isto foi construído sem acesso a USB, pelo que nada aqui foi ainda verificado numa placa real. `tester_gui_core.py`, `tester_common_panels.py` e `tester_tool_panels.py` são implementações reais e substanciais (milhares de linhas no total) exercitadas pelos scripts de verificação e pela utilização manual, e não por um volume equivalente de testes automatizados.
 
+## 📋 Num relance
+
+| | |
+|---|---|
+| Versão | `0.2.8` |
+| Maturidade | Estabelecido |
+| Tecnologia | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
+| Destino | O PC de quem o usa |
+| Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |
+
 ## 1. 🆚 Relação com o flasher
 
 Esta ferramenta e o [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) partilham a mesma camada de transporte (as classes SLCAN e

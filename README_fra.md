@@ -42,6 +42,16 @@ puisse laisser la carte moins fonctionnelle qu'au départ.
 
 **Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** les encodeurs de charge utile CAN pour les familles de contrôle migrées vers Qt Quick (`advanced_protocol.py`) sont réels et couverts par les tests de `tests/` (`python -m pytest -q`). La propre CI de ce dépôt (`.github/workflows/ci.yml`) les exécute aussi, avec `ruff check`, `tools/ci_validate.py`, une compilation de syntaxe de chaque fichier `.py` et les trois scripts `verify_qt_*.py`, donc une régression là fait échouer le build. Les trois scripts `verify_qt_*.py` à la racine du dépôt (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) sont de vraies vérifications de bout en bout, délibérément en dehors de `tests/`, contre un faux transport avec une vraie livraison de signaux entre threads - les trois passent avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que la CI exécute aussi. C'est le plafond honnête de ce qui est vérifié automatiquement : la couche de transport, la gestion ID/disposition des octets CAN, et la logique du pont Qt Quick sont réelles et exercées contre des trames simulées, pas du vrai matériel - comme le dit déjà "Known limitations" ci-dessous, ceci a été construit sans accès USB, donc rien ici n'a encore été vérifié contre une vraie carte. `tester_gui_core.py`, `tester_common_panels.py` et `tester_tool_panels.py` sont de vraies implémentations substantielles (des milliers de lignes combinées) exercées par les scripts de vérification et l'usage manuel, pas par un volume équivalent de tests automatisés.
 
+## 📋 En un coup d'œil
+
+| | |
+|---|---|
+| Version | `0.2.8` |
+| Maturité | Établi |
+| Technologie | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
+| Cible | Le PC de la personne qui l'utilise |
+| Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
+
 ## 1. 🆚 Relation avec le flasher
 
 Cet outil et [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) partagent la même couche de transport

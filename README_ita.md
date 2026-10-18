@@ -42,6 +42,16 @@ iniziato.
 
 **Verifica di onestà - cosa funziona davvero oggi:** gli encoder di payload CAN per le famiglie di controllo migrate a Qt Quick (`advanced_protocol.py`) sono reali e coperti dai test in `tests/` (`python -m pytest -q`). Anche la CI di questo repository (`.github/workflows/ci.yml`) li esegue, insieme a `ruff check`, `tools/ci_validate.py`, una compilazione di sintassi di ogni file `.py` e i tre script `verify_qt_*.py`, quindi una regressione lì fa fallire la build. I tre script `verify_qt_*.py` nella radice del repository (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) sono vere verifiche end-to-end, deliberatamente tenute fuori da `tests/`, contro un trasporto fittizio con vera consegna di segnali cross-thread - tutti e tre passano con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, che la CI esegue a sua volta. Questo è il tetto onesto di ciò che viene verificato automaticamente: il livello di trasporto, la gestione ID/layout dei byte CAN, e la logica del ponte Qt Quick sono reali ed esercitati contro trame simulate, non hardware reale - come già dice "Known limitations" più sotto, questo è stato costruito senza accesso USB, quindi niente qui è stato ancora verificato contro una scheda reale. `tester_gui_core.py`, `tester_common_panels.py` e `tester_tool_panels.py` sono implementazioni reali e sostanziali (migliaia di righe combinate) esercitate dagli script di verifica e dall'uso manuale, non da un volume equivalente di test automatici.
 
+## 📋 In breve
+
+| | |
+|---|---|
+| Versione | `0.2.8` |
+| Maturità | Consolidato |
+| Tecnologia | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
+| Destinazione | Il PC di chi lo usa |
+| Su hardware reale | Solo simulato: provato con emulatori, test double o simulatori; per questa versione non risulta alcuna esecuzione su hardware reale |
+
 ## 1. 🆚 Relazione con il flasher
 
 Questo strumento e [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) condividono lo stesso layer di

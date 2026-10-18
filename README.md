@@ -40,6 +40,16 @@ nothing here that can leave the board any less working than it started.
 
 **Honesty check - what actually runs today:** the CAN payload encoders for the migrated Qt Quick control families (`advanced_protocol.py`) are real and covered by the tests in `tests/` (`python -m pytest -q`). This repo's own CI (`.github/workflows/ci.yml`) runs them too, together with `ruff check`, `tools/ci_validate.py`, a syntax compile of every `.py` file and the three `verify_qt_*.py` scripts, so a regression there fails the build. The three `verify_qt_*.py` scripts at the repo root (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) are real, deliberately-outside-`tests/` end-to-end checks against a fake transport with real cross-thread Signal delivery - all three pass with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, which CI runs too. That's the honest ceiling of what's automatically verified: the transport layer, CAN ID/byte-layout handling, and the Qt Quick bridge logic are real and exercised against mocked frames, not real hardware - as "Known limitations" below already says, this was built with no USB access, so nothing here has been checked against a real board yet. `tester_gui_core.py`, `tester_common_panels.py` and `tester_tool_panels.py` are real, substantial implementations (thousands of lines combined) exercised by the verify scripts and manual use, not by a matching volume of automated tests.
 
+## 📋 At a glance
+
+| | |
+|---|---|
+| Version | `0.2.8` |
+| Maturity | Established |
+| Stack | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
+| Target | The PC of the person using it |
+| On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |
+
 ## 1. 🆚 Relationship to the flasher
 
 This tool and [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) share the same transport layer (SLCAN and

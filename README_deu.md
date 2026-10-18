@@ -43,6 +43,16 @@ begonnen hat.
 
 **Ehrlichkeitscheck - was heute wirklich funktioniert:** die CAN-Payload-Encoder für die auf Qt Quick migrierten Steuerungsfamilien (`advanced_protocol.py`) sind real und durch die Tests in `tests/` abgedeckt (`python -m pytest -q`). Die eigene CI dieses Repos (`.github/workflows/ci.yml`) führt sie ebenfalls aus, zusammen mit `ruff check`, `tools/ci_validate.py`, einer Syntaxkompilierung jeder `.py`-Datei und den drei `verify_qt_*.py`-Skripten, sodass eine Regression dort den Build fehlschlagen lässt. Die drei `verify_qt_*.py`-Skripte im Repo-Root (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) sind echte, bewusst außerhalb von `tests/` gehaltene End-to-End-Prüfungen gegen einen simulierten Transport mit echter Cross-Thread-Signal-Zustellung - alle drei bestehen mit `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, was die CI ebenfalls ausführt. Das ist die ehrliche Obergrenze dessen, was automatisch verifiziert wird: die Transportschicht, die CAN-ID-/Byte-Layout-Verarbeitung und die Qt-Quick-Brückenlogik sind real und werden gegen simulierte Frames geprüft, nicht gegen echte Hardware - wie "Known limitations" weiter unten bereits sagt, wurde dies ohne USB-Zugriff gebaut, sodass hier noch nichts gegen eine echte Platine geprüft wurde. `tester_gui_core.py`, `tester_common_panels.py` und `tester_tool_panels.py` sind reale, umfangreiche Implementierungen (zusammen tausende Zeilen), die durch die Verify-Skripte und manuelle Nutzung geprüft werden, nicht durch ein entsprechendes Volumen automatisierter Tests.
 
+## 📋 Auf einen Blick
+
+| | |
+|---|---|
+| Version | `0.2.8` |
+| Reifegrad | Etabliert |
+| Technik | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
+| Ziel | Der PC der Person, die es benutzt |
+| Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
+
 ## 1. 🆚 Beziehung zum Flasher
 
 Dieses Tool und [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) teilen sich denselben

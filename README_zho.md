@@ -37,6 +37,16 @@
 
 **诚实核查 - 今天真正能运行的部分：** 为迁移到 Qt Quick 的控制系列所提供的 CAN 负载编码器（`advanced_protocol.py`）是真实的，并由 `tests/` 中的测试覆盖（`python -m pytest -q`）。这个仓库自己的 CI（`.github/workflows/ci.yml`）也会运行它们，同时运行 `ruff check`、`tools/ci_validate.py`、对每个 `.py` 文件的语法编译以及三个 `verify_qt_*.py` 脚本，所以那里的回归会导致构建失败。仓库根目录下的三个 `verify_qt_*.py` 脚本（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`）是真实的、刻意放在 `tests/` 之外的端到端检查，针对一个带有真实跨线程信号传递的模拟传输层——运行 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 时三者都能通过，CI 也会运行它们。这就是自动验证所能达到的诚实上限：传输层、CAN ID/字节布局处理，以及 Qt Quick 桥接逻辑都是真实的，并且针对模拟帧进行了验证，而不是真实硬件——正如下文"Known limitations"已经指出的，这套工具是在没有 USB 访问权限的环境下构建的，所以这里的任何东西都还没有针对真实板卡验证过。`tester_gui_core.py`、`tester_common_panels.py` 和 `tester_tool_panels.py` 都是真实且相当可观的实现（合计数千行代码），它们是通过这些验证脚本和人工使用来验证的，而不是通过等量的自动化测试。
 
+## 📋 速览
+
+| | |
+|---|---|
+| 版本 | `0.2.8` |
+| 成熟度 | 成熟 |
+| 技术栈 | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
+| 目标 | 使用者的电脑 |
+| 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
+
 ## 1. 🆚 与刷写工具的关系
 
 本工具与 [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) 共享

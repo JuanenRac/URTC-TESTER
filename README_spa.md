@@ -42,6 +42,16 @@ de lo que estaba al empezar.
 
 **Comprobación de honestidad - lo que realmente funciona hoy:** los codificadores de payload CAN para las familias de control migradas a Qt Quick (`advanced_protocol.py`) son reales y están cubiertos por los tests de `tests/` (`python -m pytest -q`). La propia CI de este repositorio (`.github/workflows/ci.yml`) también los ejecuta, junto con `ruff check`, `tools/ci_validate.py`, una compilación de sintaxis de cada archivo `.py` y los tres scripts `verify_qt_*.py`, así que una regresión ahí hace fallar la build. Los tres scripts `verify_qt_*.py` en la raíz del repositorio (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) son comprobaciones reales de extremo a extremo, deliberadamente fuera de `tests/`, contra un transporte falso con entrega real de señales entre hilos - los tres pasan con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que la CI también ejecuta. Ese es el techo honesto de lo que se verifica automáticamente: la capa de transporte, el manejo de ID/diseño de bytes CAN, y la lógica del puente Qt Quick son reales y se ejercitan contra tramas simuladas, no hardware real - como ya dice "Known limitations" más abajo, esto se construyó sin acceso USB, así que nada de esto se ha comprobado todavía contra una placa real. `tester_gui_core.py`, `tester_common_panels.py` y `tester_tool_panels.py` son implementaciones reales y sustanciales (miles de líneas combinadas) ejercitadas por los scripts de verificación y el uso manual, no por un volumen equivalente de tests automatizados.
 
+## 📋 De un vistazo
+
+| | |
+|---|---|
+| Versión | `0.2.8` |
+| Madurez | Establecido |
+| Tecnología | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
+| Destino | El PC de quien lo usa |
+| En hardware real | Solo simulado: probado con emuladores, dobles de prueba o simuladores; no consta ninguna ejecución en hardware real para esta versión |
+
 ## 1. 🆚 Relación con el flasher
 
 Esta herramienta y [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) comparten la misma capa de

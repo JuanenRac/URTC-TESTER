@@ -41,6 +41,16 @@ URTC ボード向けのライブ CAN バステスターです。フラッシャ�
 
 **正直な現状確認 - 実際に今動くもの:** Qt Quick に移行した制御系統向けの CAN ペイロードエンコーダー（`advanced_protocol.py`）は本物であり、`tests/` のテスト（`python -m pytest -q`）でカバーされている。このリポジトリ自身の CI（`.github/workflows/ci.yml`）もこれらを、`ruff check`、`tools/ci_validate.py`、各 `.py` ファイルの構文コンパイル、3つの `verify_qt_*.py` スクリプトとともに実行するため、そこでのリグレッションはビルドを失敗させる。リポジトリ直下にある3つの `verify_qt_*.py` スクリプト（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`）は、意図的に `tests/` の外に置かれた本物のエンドツーエンドチェックであり、本物のクロススレッドシグナル配信を伴う偽のトランスポートに対して検証を行う——`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で3つとも通過し、CI でも実行される。これが自動的に検証されている範囲の正直な上限だ。トランスポート層、CAN ID/バイトレイアウトの処理、そして Qt Quick ブリッジのロジックは本物であり、模擬フレームに対して検証されているが、実機のハードウェアに対してではない——下記の「Known limitations」がすでに述べている通り、これは USB アクセスのない環境で構築されたため、ここにあるものはまだ何も実機ボードに対して検証されていない。`tester_gui_core.py`、`tester_common_panels.py`、`tester_tool_panels.py` は本物で相当な規模の実装であり（合計で数千行）、これらの検証スクリプトと手動での使用によって検証されているのであって、それに見合う量の自動化されたテストによってではない。
 
+## 📋 ひと目で
+
+| | |
+|---|---|
+| バージョン | `0.2.8` |
+| 成熟度 | 確立 |
+| 技術 | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
+| 対象 | 利用者の PC |
+| 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
+
 ## 1. 🆚 フラッシャーとの関係
 
 本ツールと [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) は
