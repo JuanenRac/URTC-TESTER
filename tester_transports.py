@@ -20,6 +20,9 @@ except ImportError:
 from tester_config import _, BITRATE_500K_SLCAN_CODE
 from tester_bus_monitor import BusStats
 
+_HEX_DIGITS = frozenset("0123456789abcdefABCDEF")
+
+
 class SLCANError(Exception):
     pass
 
@@ -216,6 +219,10 @@ class SLCAN:
                 # already discards extended/RTR/error frames before
                 # masking for exactly this reason (see its own comment) -
                 # this matches that same treatment for SLCAN.
+                continue
+            if any(ch not in _HEX_DIGITS for ch in line[1:]):
+                # int(..., 16) alone also accepts a sign, a "0x" prefix and
+                # underscores, turning line noise into a plausible frame.
                 continue
             try:
                 can_id = int(line[1:4], 16)

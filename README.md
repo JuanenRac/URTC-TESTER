@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.2.8 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 0.2.9 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 License: **GPL-3.0** for the source code, **CC BY-SA 4.0** for this
 documentation - see `LICENSE` in this repository, or the "License and
@@ -44,7 +44,7 @@ nothing here that can leave the board any less working than it started.
 
 | | |
 |---|---|
-| Version | `0.2.8` |
+| Version | `0.2.9` |
 | Maturity | Established |
 | Stack | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Target | The PC of the person using it |

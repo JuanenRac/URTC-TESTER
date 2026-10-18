@@ -24,7 +24,7 @@
 </p>
 
 
-**版本：** 0.2.8 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**版本：** 0.2.9 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 许可证：源代码为 **GPL-3.0**，本文档为 **CC BY-SA 4.0**——见本仓库中的
 `LICENSE`，或本文档末尾的“许可证与版权声明”一节。
@@ -41,7 +41,7 @@
 
 | | |
 |---|---|
-| 版本 | `0.2.8` |
+| 版本 | `0.2.9` |
 | 成熟度 | 成熟 |
 | 技术栈 | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 目标 | 使用者的电脑 |

@@ -24,7 +24,7 @@
 </p>
 
 
-**Version :** 0.2.8 · **Auteur :** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version :** 0.2.9 · **Auteur :** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licence : **GPL-3.0** pour le code source, **CC BY-SA 4.0** pour cette
 documentation - voir `LICENSE` dans ce dépôt, ou la section « Licence
@@ -46,7 +46,7 @@ puisse laisser la carte moins fonctionnelle qu'au départ.
 
 | | |
 |---|---|
-| Version | `0.2.8` |
+| Version | `0.2.9` |
 | Maturité | Établi |
 | Technologie | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Cible | Le PC de la personne qui l'utilise |

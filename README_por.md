@@ -24,7 +24,7 @@
 </p>
 
 
-**Versão:** 0.2.8 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Versão:** 0.2.9 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licença: **GPL-3.0** para o código-fonte, **CC BY-SA 4.0** para esta
 documentação - consulte `LICENSE` neste repositório, ou a secção "License and
@@ -44,7 +44,7 @@ estava ao início.
 
 | | |
 |---|---|
-| Versão | `0.2.8` |
+| Versão | `0.2.9` |
 | Maturidade | Estabelecido |
 | Tecnologia | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destino | O PC de quem o usa |

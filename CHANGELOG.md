@@ -8,6 +8,11 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.2.9] - Serial reader ignores line noise that looked like a frame
+
+- **Identifiers and data digits must be real hexadecimal.** A signed, `0x`-prefixed or underscore-separated field in a received serial line used to be accepted by the number parser and delivered as a frame; the line is now ignored.
+- **More of the tool is covered by tests.** The CAN protocol is checked against vectors shared with the other URTC tools (identifiers, magic payloads, serial framing, the 0x111 quick-state answer), and the serial and SocketCAN transports and the bus monitor now have their own tests (listen-only never transmits, extended/remote/error frames are dropped, one failing callback never stops the others).
+
 ## [0.2.8] - A bit rate search that stays silent on a live bus, a stop for every output, confirmations and settings that are remembered
 
 - **The bit rate search no longer transmits on a live bus.** Each rate is first opened listen-only and is accepted only when valid frames are heard there, then confirmed with one query; asking at every rate happens only when the whole bus is silent, and the log says so. A bus that is alive but where nobody answers is never probed blind.
