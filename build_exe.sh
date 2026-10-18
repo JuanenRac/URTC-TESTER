@@ -59,7 +59,7 @@ restore_after_failed_build() {
         done
     fi
     rm -rf "$BUMP_BACKUP"
-    echo; read -p "Press Enter to close this window... " _dummy
+    echo; if [ -t 0 ] && [ "${HYDRA_UMC_CI:-}" != "1" ] && [ -z "${CI:-}" ]; then read -r -p "Press Enter to close this window... " _ || true; fi
 }
 trap restore_after_failed_build EXIT
 
