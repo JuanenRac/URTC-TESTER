@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.3.1 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 0.3.2 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Lizenz: **GPL-3.0-or-later** für den Quellcode, **CC BY-SA 4.0** für diese
 Dokumentation - siehe `LICENSE` in diesem Repository, oder den
@@ -49,7 +49,7 @@ begonnen hat.
 
 | | |
 |---|---|
-| Version | `0.3.1` |
+| Version | `0.3.2` |
 | Reifegrad | Funktionsfähig |
 | Technik | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Ziel | Der PC der Person, die es benutzt |
@@ -153,7 +153,7 @@ Der bestehende Live-CAN-Diagnoseablauf verwendet jetzt eine dunkelblau-cyanfarbe
   Betrachterfenster; übernimmt automatisch eine übersetzte Version,
   sobald eine für die aktuelle Sprache existiert), URTC GitHub (öffnet
   das Repository des Projekts in Ihrem Browser), Lizenz (die
-  GPL-3.0-Lizenz dieses Tools, gelesen aus der eigenen `LICENSE`-Datei
+  GPL-3.0-or-later-Lizenz dieses Tools, gelesen aus der eigenen `LICENSE`-Datei
   des Repositorys), und Über (Version und Autor).
 
 ### Dateistruktur
@@ -527,6 +527,7 @@ nicht erforderlich.
 ├── build_exe.sh                Dasselbe, für Linux
 ├── build-test.bat              Build-/Kompilierprüfung ohne Versionserhöhung
 ├── build-test.sh                Dasselbe, für Linux
+├── bump.py                     Ausdrücklicher Befehl zum Erhöhen der Version (Kompilieren erhöht nie)
 ├── bump_version.py             Versionserhöhung im Kilometerzähler-Stil, von den Build-Skripten ausgeführt
 ├── bump_manifest_version.py    Synchronisiert die Version von urtc.project.json mit der nativen (--sync)
 ├── URTC_Tester.spec            PyInstaller-Spec, die von beiden Build-Skripten

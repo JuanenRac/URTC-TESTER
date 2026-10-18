@@ -4,9 +4,14 @@ All notable changes to URTC Tester are summarized here, newest first. This
 is a condensed summary aimed at users of the tool.
 
 Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
-`README.md`). Starting with this entry, `TESTER_VERSION` is bumped
-automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
+`README.md`). Starting with this entry, `TESTER_VERSION` is raised
+only by the explicit `python bump.py` step (building never changes it), base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
+
+## [0.3.2] - An explicit bump command: building never changes the version
+
+- Building no longer changes the version: build_exe.bat and build_exe.sh only read TESTER_VERSION, and raising it is the explicit `python bump.py` step.
+- Every licence statement and source header says GPL-3.0-or-later.
 
 ## [0.3.1] - Shared protocol constants, language selector and wire feeder position
 

@@ -24,7 +24,7 @@
 </p>
 
 
-**Versión:** 0.3.1 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Versión:** 0.3.2 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licencia: **GPL-3.0-or-later** para el código fuente, **CC BY-SA 4.0** para esta
 documentación - ver `LICENSE` en este repositorio, o la sección
@@ -48,7 +48,7 @@ de lo que estaba al empezar.
 
 | | |
 |---|---|
-| Versión | `0.3.1` |
+| Versión | `0.3.2` |
 | Madurez | Funcional |
 | Tecnología | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destino | El PC de quien lo usa |
@@ -512,6 +512,7 @@ ejecutar la aplicación.
 ├── build_exe.sh                El mismo, para Linux
 ├── build-test.bat              Comprobación de build/compilación sin subir versión
 ├── build-test.sh                El mismo, para Linux
+├── bump.py                     Orden explícita de subir versión (compilar nunca la sube)
 ├── bump_version.py             Incremento de versión tipo cuentakilómetros, ejecutado por los scripts de build
 ├── bump_manifest_version.py    Sincroniza la versión de urtc.project.json con la nativa (--sync)
 ├── URTC_Tester.spec            Spec de PyInstaller usado por ambos scripts de build

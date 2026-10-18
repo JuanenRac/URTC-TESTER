@@ -13,13 +13,13 @@
 # HYDRA_UMC_SCRIPT_STANDARD_BANNER_BEGIN
 printf '\n*******************************************************************************\n'
 printf '%s\n' "* URTC-TESTER - build_exe.sh"
-printf '%s\n' "* Mode      : INCREMENTAL BUILD"
+printf '%s\n' "* Mode      : BUILD (no version change)"
 printf '%s\n' "* Author    : JuanenRac (Electro Hobby 3D)"
 printf '%s\n' "* Email     : electrohobby3d@gmail.com"
 printf '%s\n' "* Copyright : (C) 2026 JuanenRac"
 printf '%s\n' "* License   : GPL-3.0-or-later - see LICENSE"
 printf '%s\n' "* ------------------------------------------------------------------------- *"
-printf '%s\n' "* 1. Increment the project version and synchronise its manifest."
+printf '%s\n' "* 1. Read the project version (compiling never changes it; run bump.py to raise it)."
 printf '%s\n' "* 2. Run this project's declared build, verification and packaging commands."
 printf '%s\n' "* 3. Report the result and keep an interactive terminal open."
 printf '%s\n' "*******************************************************************************"
@@ -90,28 +90,25 @@ rm -rf build dist
 echo "      Done."
 echo
 
-echo "[4/6] Bumping TESTER_VERSION for this build..."
-# Ecosystem-wide versioning policy: TESTER_VERSION auto-increments on
-# every REAL build (every run of this script), never just from running
-# "python3 urtc_tester.py" from source. base-10 "odometer" rule - see
-# bump_version.py for the exact carry logic (e.g. 1.1.9 -> 1.2.0).
+echo "[4/6] Reading TESTER_VERSION (compiling never changes it; raise it with bump.py first)..."
+# Versioning policy: compiling never changes TESTER_VERSION. Raise it
+# explicitly with bump.py (see bump_version.py for the base-10 odometer
+# carry, e.g. 1.1.9 -> 1.2.0) BEFORE building.
 # set -e (top of this script) already aborts the build if this fails.
 for f in tester_config.py urtc.project.json CHANGELOG.md README*.md; do
     if [ -f "$f" ]; then cp -f "$f" "$BUMP_BACKUP/$f"; fi
 done
 touch "$BUMP_BACKUP/.saved"
 # HYDRA_UMC_SCRIPT_STANDARD_VERSION_STEP
-printf '%s\n' "      Incrementing project version and synchronising its manifest..."
-python3 bump_version.py || exit 1
+printf '%s\n' "      Reading the project version (compiling never changes it; raise it with bump.py first)..."
 # HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_BEFORE
 HYDRA_UMC_VERSION_BEFORE="$(python3 -c 'import json, pathlib, sys; print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["version"])' "$(dirname "$0")/urtc.project.json")"
-python3 "$(dirname "$0")/bump_manifest_version.py" --sync || exit 1
 # HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_AFTER
 HYDRA_UMC_VERSION_AFTER="$(python3 -c 'import json, pathlib, sys; print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["version"])' "$(dirname "$0")/urtc.project.json")"
 printf '\n*******************************************************************************\n'
-printf '%s\n' '* VERSION INCREMENT COMPLETED'
+printf '%s\n' '* VERSION UNCHANGED BY THIS BUILD'
 printf '%s\n' "* v${HYDRA_UMC_VERSION_BEFORE:-unknown} -> v${HYDRA_UMC_VERSION_AFTER:-unknown}"
-printf '%s\n' '* Project manifest has been synchronised by the project build flow.'
+printf '%s\n' '* Raise the version explicitly with bump.py before a release build.'
 printf '%s\n' '*******************************************************************************'
 printf '\n'
 echo "      Done."

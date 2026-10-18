@@ -24,7 +24,7 @@
 </p>
 
 
-**版本：** 0.3.1 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**版本：** 0.3.2 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 许可证：源代码为 **GPL-3.0-or-later**，本文档为 **CC BY-SA 4.0**——见本仓库中的
 `LICENSE`，或本文档末尾的“许可证与版权声明”一节。
@@ -43,7 +43,7 @@
 
 | | |
 |---|---|
-| 版本 | `0.3.1` |
+| 版本 | `0.3.2` |
 | 成熟度 | 可用 |
 | 技术栈 | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 目标 | 使用者的电脑 |
@@ -384,6 +384,7 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 ├── build_exe.sh                同上，适用于 Linux
 ├── build-test.bat              不递增版本号的构建/编译检查
 ├── build-test.sh                同上，适用于 Linux
+├── bump.py                     显式的版本递增命令（编译从不递增）
 ├── bump_version.py             里程表式版本递增，由构建脚本运行
 ├── bump_manifest_version.py    将 urtc.project.json 的版本与原生版本同步（--sync）
 ├── URTC_Tester.spec            两个构建脚本共用的 PyInstaller 规范文件
@@ -547,7 +548,7 @@ URTC Tester 版权所有 (c) 2026 JuanenRac（Electro Hobby 3D）。分发本项
 
 本工具是 [URTC（Universal Robot Tool Controller）](https://github.com/JuanenRac/URTC)
 项目的实时 CAN 总线诊断配套工具——本工具所测试对接的板卡固件、硬件设计
-和完整协议文档见该项目自身的仓库。URTC 自身的固件为 GPL-3.0，其硬件
+和完整协议文档见该项目自身的仓库。URTC 自身的固件为 GPL-3.0-or-later，其硬件
 设计为 CERN-OHL-S v2；本工具自身的许可证并不延伸至那个独立的项目，
 反之亦然。一个覆盖类似功能范围的基于网页的替代方案也存在，位于
 [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO)。

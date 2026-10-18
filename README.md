@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.3.1 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 0.3.2 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 License: **GPL-3.0-or-later** for the source code, **CC BY-SA 4.0** for this
 documentation - see `LICENSE` in this repository, or the "License and
@@ -46,7 +46,7 @@ nothing here that can leave the board any less working than it started.
 
 | | |
 |---|---|
-| Version | `0.3.1` |
+| Version | `0.3.2` |
 | Maturity | Functional |
 | Stack | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Target | The PC of the person using it |
@@ -89,11 +89,11 @@ the packaging scripts themselves, since it applies identically here.
 
 **Versioning:** `TESTER_VERSION` (in `tester_config.py`, shown in the
 title bar, About dialog, session logs, and debug bundles) follows
-`MAJOR.MINOR.PATCH`. Both build scripts auto-increment it right before
-every real build via `bump_version.py`, base-10 "odometer" style: PATCH
+`MAJOR.MINOR.PATCH`. It is raised only by the explicit `python bump.py` step
+(through `bump_version.py`), base-10 "odometer" style: PATCH
 +1, carrying into MINOR once PATCH passes 9 (e.g. `0.1.9` → `0.2.0`).
-Running from source (`python urtc_tester.py`) never touches it - only an
-actual `build_exe.bat`/`build_exe.sh` run does. MAJOR is never bumped
+Running from source (`python urtc_tester.py`) and building
+(`build_exe.bat`/`build_exe.sh`) never touch it. MAJOR is never bumped
 automatically, only by hand. See `CHANGELOG.md` for the version history.
 
 **On startup**, the banner shows centered on screen for 5 seconds before
@@ -447,7 +447,8 @@ from the SVG during development; it is not required to run the application.
 ├── build_exe.sh                Same, for Linux
 ├── build-test.bat              Non-versioning build/compile check
 ├── build-test.sh                Same, for Linux
-├── bump_version.py             Odometer-style version bump, run by the build scripts
+├── bump.py                     Explicit version bump command (building never bumps)
+├── bump_version.py             Odometer-style version bump, called by bump.py
 ├── bump_manifest_version.py    Syncs urtc.project.json's version to the native one (--sync)
 ├── URTC_Tester.spec            PyInstaller spec used by both build scripts
 ├── assets/
@@ -616,7 +617,7 @@ This tool is the live CAN-bus diagnostic companion to the
 [URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC)
 project - see that project's own repository for the board firmware,
 hardware designs, and full protocol documentation this tool exercises
-against. URTC's own firmware is GPL-3.0 and its hardware designs are
+against. URTC's own firmware is GPL-3.0-or-later and its hardware designs are
 CERN-OHL-S v2; this tool's own license here doesn't extend to that
 separate project, and vice versa. A web-based alternative covering
 similar ground also exists at

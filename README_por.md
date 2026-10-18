@@ -24,7 +24,7 @@
 </p>
 
 
-**Versão:** 0.3.1 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Versão:** 0.3.2 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 Licença: **GPL-3.0-or-later** para o código-fonte, **CC BY-SA 4.0** para esta
 documentação - consulte `LICENSE` neste repositório, ou a secção "License and
@@ -46,7 +46,7 @@ estava ao início.
 
 | | |
 |---|---|
-| Versão | `0.3.1` |
+| Versão | `0.3.2` |
 | Maturidade | Funcional |
 | Tecnologia | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destino | O PC de quem o usa |
@@ -447,6 +447,7 @@ a partir do SVG durante o desenvolvimento; não é necessário para executar a a
 ├── build_exe.sh                Same, for Linux
 ├── build-test.bat              Non-versioning build/compile check
 ├── build-test.sh                Same, for Linux
+├── bump.py                     Comando explícito para subir a versão (compilar nunca a sobe)
 ├── bump_version.py             Odometer-style version bump, run by the build scripts
 ├── bump_manifest_version.py    Syncs urtc.project.json's version to the native one (--sync)
 ├── URTC_Tester.spec            PyInstaller spec used by both build scripts
@@ -616,7 +617,7 @@ Esta ferramenta é o companheiro de diagnóstico CAN em direto do projeto
 [URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC)
 - consulte o repositório desse projeto para o firmware da placa,
 os desenhos de hardware e a documentação completa do protocolo contra o qual esta ferramenta
-é exercitada. O firmware do próprio URTC é GPL-3.0 e os seus desenhos de hardware são
+é exercitada. O firmware do próprio URTC é GPL-3.0-or-later e os seus desenhos de hardware são
 CERN-OHL-S v2; a licença desta ferramenta aqui não se estende a esse
 projeto separado, e vice-versa. Existe também uma alternativa baseada na web que cobre
 um âmbito semelhante em

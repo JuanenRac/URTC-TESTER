@@ -18,7 +18,7 @@ except ImportError:
     HAVE_SERIAL = False
 
 
-TESTER_VERSION = "0.3.1"
+TESTER_VERSION = "0.3.2"
 TESTER_AUTHOR = "JuanenRac"
 
 # THIS_HARDWARE_ID matches bootloader_common.h/firmware_common.h's own constant - used
