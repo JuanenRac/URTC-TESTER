@@ -89,6 +89,7 @@ def test_the_feeder_reset_panel_sends_the_shared_magic():
     assert sent is not None
     assert bytes(int(token, 16) for token in sent.group(1).split(",")) == _hex(magic["data"])
     assert tester_config.CAN_ID_SOLDER_FEEDER_RESET == _id(magic["id"])
+    assert tester_config.SOLDER_FEEDER_RESET_MAGIC == _hex(magic["data"])
 
 
 @pytest.mark.parametrize("vector", VECTORS["slcan_encode"], ids=lambda vector: vector["line"])

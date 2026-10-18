@@ -39,6 +39,8 @@ from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 
 from tester_config import (
+    AVAILABLE_LANGUAGES,
+    _current_language,
     AOI_STROBE_MAX_MS,
     SETPOINT_MAX_C,
     LOGS_FOLDER,
@@ -73,6 +75,8 @@ from tester_config import (
     CAN_ID_THERMAL_STATS_RESP,
     format_thermal_stats,
     CAN_ID_QUERY_VERSION,
+    CAN_ID_SOLDER_FEEDER_POS,
+    CAN_ID_SOLDER_FEEDER_RESET,
     CAN_ID_SOLDER_SETPOINT,
     CAN_ID_UV_CURING_CMD,
     CAN_ID_VERSION_RESPONSE,
@@ -82,6 +86,7 @@ from tester_config import (
     CAN_ID_THERMAL_TRIGGER,
     CAN_ID_VACUUM_TELEMETRY,
     ERASE_FRAM_MAGIC,
+    SOLDER_FEEDER_RESET_MAGIC,
     ICON_IMAGE_PATH,
     TESTER_VERSION,
     THIS_HARDWARE_ID,
@@ -174,6 +179,7 @@ class TesterQtBridge(QObject):
             "mlx_variant": "",
             "free_tool_config": "",
             "peripheral_info": "",
+            "feeder_position": "",
             "diag0": "",
             "spi_response": "",
         }
@@ -205,6 +211,30 @@ class TesterQtBridge(QObject):
     @Property(str, constant=True)
     def version(self) -> str:
         return TESTER_VERSION
+
+    @Property("QStringList", constant=True)
+    def languageNames(self) -> list:
+        """The names of the interface languages, each in its own language; the choice is saved and applies on the next start."""
+        return [name for _code, name in AVAILABLE_LANGUAGES]
+
+    @Property(int, constant=True)
+    def languageIndex(self) -> int:
+        codes = [code for code, _name in AVAILABLE_LANGUAGES]
+        return codes.index(_current_language) if _current_language in codes else 0
+
+    @Slot(int, result=str)
+    def selectLanguage(self, index: int) -> str:
+        """Saves the chosen language in the configuration file and returns the (already translated) notice to show."""
+        if not 0 <= index < len(AVAILABLE_LANGUAGES):
+            return ""
+        code = AVAILABLE_LANGUAGES[index][0]
+        if code == _current_language:
+            return ""
+        if save_config({"language": code}):
+            self._log(f"LANGUAGE_SAVED {code}")
+            return _("MSG_RESTART_NEEDED")
+        self._log(f"LANGUAGE_SAVE_FAILED {code}")
+        return ""
 
     @Property(str, constant=True)
     def iconSource(self) -> str:
@@ -502,6 +532,10 @@ class TesterQtBridge(QObject):
     @Property(str, notify=changed)
     def peripheralInfoText(self) -> str:
         return self._query_texts["peripheral_info"]
+
+    @Property(str, notify=changed)
+    def feederPositionText(self) -> str:
+        return self._query_texts["feeder_position"]
 
     @Property(str, notify=changed)
     def diag0Text(self) -> str:
@@ -1043,6 +1077,9 @@ class TesterQtBridge(QObject):
                 type_desc = _("LBL_PERIPHERAL_TYPE_URTC") if result["is_urtc"] else _("LBL_PERIPHERAL_TYPE_UNKNOWN", value=result["peripheral_type"])
                 text = f"{type_desc}\n{_('LBL_DEVICE_SERIAL', serial=result['serial'])}"
             self._log(f"PERIPHERAL_INFO {result}")
+        elif key == "feeder_position":
+            text = _("VAL_FEEDER_STEPS", n=result) if result is not None else no_response
+            self._log(f"FEEDER_POSITION {result}")
         elif key == "diag0":
             text = (_("LBL_DIAG0_HIGH") if result else _("LBL_DIAG0_LOW")) if result is not None else _("LBL_NO_RESPONSE_SHORT")
             self._log(f"DIAG0 {result}")
@@ -1129,6 +1166,22 @@ class TesterQtBridge(QObject):
         if not self.canUseUtilityPanels:
             return
         self._run_query("free_tool_config", (CAN_ID_FREE_TOOL_CONFIG_RESP, b""), CAN_ID_FREE_TOOL_CONFIG_RESP, protocol.decode_free_tool_config)
+
+    @Slot()
+    def queryFeederPosition(self) -> None:
+        if not self.canUseUtilityPanels:
+            return
+        self._run_query("feeder_position", (CAN_ID_SOLDER_FEEDER_POS, b""), CAN_ID_SOLDER_FEEDER_POS, protocol.decode_feeder_position)
+
+    @Slot()
+    def resetFeederPosition(self) -> None:
+        """QML asks for an explicit confirmation immediately before calling this: the tracked position goes back to 0
+        (done after loading a fresh spool). The board answers with the new position."""
+        if not self.canUseUtilityPanels:
+            self._log("FEEDER_RESET_BLOCKED not connected or not in active-check mode")
+            return
+        self._run_query("feeder_position", (CAN_ID_SOLDER_FEEDER_RESET, SOLDER_FEEDER_RESET_MAGIC), CAN_ID_SOLDER_FEEDER_POS, protocol.decode_feeder_position)
+        self._log("FEEDER_POSITION_RESET")
 
     @Slot()
     def queryPeripheralInfo(self) -> None:

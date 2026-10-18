@@ -234,6 +234,15 @@ ApplicationWindow {
                         onTriggered: busStatsText.text = testerBackend.refreshBusStats()
                     }
                 }
+                ComboBox {
+                    id: languageBox
+                    model: testerBackend.languageNames
+                    currentIndex: testerBackend.languageIndex
+                    Layout.preferredWidth: 130
+                    font.pixelSize: 11
+                    onActivated: function(index) { languageNotice.text = testerBackend.selectLanguage(index) }
+                }
+                Text { id: languageNotice; visible: text !== ""; color: "#e0b04a"; font.pixelSize: 10; Layout.maximumWidth: 220; wrapMode: Text.WordWrap }
                 Text { text: "v" + testerBackend.version; color: muted; font.family: "Bahnschrift"; font.pixelSize: 10 }
             }
         }
@@ -826,6 +835,20 @@ ApplicationWindow {
                     GameButton { text: testerBackend.uiText("BTN_QUERY") + " " + testerBackend.uiText("LBL_PERIPHERAL_INFO"); accent: "#24465e"; Layout.preferredWidth: 220; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.queryPeripheralInfo() }
                     Text { text: testerBackend.peripheralInfoText; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
                 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton { text: testerBackend.uiText("BTN_QUERY") + " " + testerBackend.uiText("LBL_FEEDER_POSITION"); accent: "#24465e"; Layout.preferredWidth: 220; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.queryFeederPosition() }
+                    GameButton {
+                        text: testerBackend.uiText("BTN_RESET_FEEDER_POSITION")
+                        accent: "#b86a35"
+                        Layout.preferredWidth: 200
+                        enabled: testerBackend.canUseUtilityPanels
+                        onClicked: window.requestUtilityAction(function() { testerBackend.resetFeederPosition() })
+                    }
+                    Text { text: testerBackend.feederPositionText; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                }
+                Text { text: testerBackend.uiText("HELP_FEEDER_POSITION_OPEN_LOOP"); color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
 
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
                 // -- Custom CAN Frame - the one real tool-independent

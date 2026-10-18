@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.3.0 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 0.3.1 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 License: **GPL-3.0** for the source code, **CC BY-SA 4.0** for this
 documentation - see `LICENSE` in this repository, or the "License and
@@ -124,6 +124,8 @@ identity match, an explicitly armed active mode, and a user confirmation in
 QML before anything transmits. `python urtc_tester.py --legacy` still
 launches the original 25-panel Tkinter GUI. Neither UI has been checked
 against a real board yet - see "Known limitations" below.
+
+The header of the Qt Quick window has a language selector; the choice is saved and applies on the next start. It also queries and resets the position of the soldering iron's wire feeder (open-loop estimate; the reset asks for confirmation).
 
 The existing live-CAN diagnostic workflow now uses a dark navy/cyan command-deck surface: product header, high-contrast connection card, clear tool tabs, dark session log and visible progress channel. This visual and accessibility change does not alter passive monitoring or command routing, and none of it has been tried on a real board.
 

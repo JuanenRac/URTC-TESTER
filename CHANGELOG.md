@@ -8,6 +8,13 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 automatically by `build_exe.bat`/`build_exe.sh` on every real build, base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.3.1] - Shared protocol constants, language selector and wire feeder position
+
+- The CAN identifiers, the hardware id and the erase-memory magic bytes are now aliases of the generated protocol module (urtc_can/protocol.py, a copy of URTC-COMMON kept honest by a lock file); a new test fails when the copy is edited by hand or falls behind, and the shared conformance vectors are refreshed.
+- The header of the Qt Quick deck has a language selector (the eight languages); the choice is saved and applies on the next start.
+- The Qt Quick deck queries and resets the position of the soldering iron's wire feeder (open-loop estimate; the reset asks for confirmation); until now only the Tkinter window could.
+- The build and run scripts read URTC_CI as their non-interactive switch.
+
 ## [0.3.0] - Claims aligned with what has been tested
 
 - Maturity is functional: nothing here has been verified on real hardware yet.

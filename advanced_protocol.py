@@ -321,6 +321,14 @@ def decode_peripheral_info(data: bytes) -> dict[str, object] | None:
     return {"peripheral_type": data[0], "serial": data[1], "is_urtc": data[0] == 0x03}
 
 
+def decode_feeder_position(data: bytes) -> int | None:
+    """Decodes CAN_ID_SOLDER_FEEDER_POS (0x132): the wire feeder's open-loop position in signed steps (big-endian
+    32 bits). Open loop: the motor has no encoder, so this is the board's own estimate from commanded steps."""
+    if len(data) < 4:
+        return None
+    return int.from_bytes(data[0:4], "big", signed=True)
+
+
 def decode_vacuum_frame(data: bytes) -> dict[str, int | bool] | None:
     """Real decoder for CAN_ID_VACUUM_TELEMETRY (0x145) - the one real
     shape both qt_tester.py's live watch and this module's own test

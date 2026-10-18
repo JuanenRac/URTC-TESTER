@@ -9,6 +9,8 @@ import os
 import json
 import re
 
+from urtc_can import protocol
+
 try:
     import serial  # noqa: F401  (availability check only)
     HAVE_SERIAL = True
@@ -16,13 +18,13 @@ except ImportError:
     HAVE_SERIAL = False
 
 
-TESTER_VERSION = "0.3.0"
+TESTER_VERSION = "0.3.1"
 TESTER_AUTHOR = "JuanenRac"
 
 # THIS_HARDWARE_ID matches bootloader_common.h/firmware_common.h's own constant - used
 # here only to flag a mismatch after connecting (a different board/rig
 # answering than the one this was set up for), never to gate anything.
-THIS_HARDWARE_ID = 0x0303CC01
+THIS_HARDWARE_ID = protocol.HARDWARE_ID_MAIN
 
 BITRATE_500K_SLCAN_CODE = "6"  # SLCAN's "Sx" bitrate codes: 6 = 500 kbit/s
 SLCAN_BITRATES = [
@@ -221,61 +223,61 @@ def list_serial_ports():
 # tool, since several - like 0x100 and 0x110/0x111 - are global and used
 # regardless of which tool profile is active).
 # =============================================================================
-CAN_ID_IMPACT_EVENT      = 0x095  # Scan probe - max priority, event-driven
-CAN_ID_GLOBAL_STATUS     = 0x100  # Status LED + ring LED + OLED night mode - any tool
-CAN_ID_QUERY_ACTIVE_TOOL = 0x110  # Query which tool profile is active + quick state
-CAN_ID_ACTIVE_TOOL_RESP  = 0x111  # Answers CAN_ID_QUERY_ACTIVE_TOOL
-CAN_ID_MOTION_CMD        = 0x120  # Stepper dir+steps - dispensers/screwdriver/grippers, and (doc #16) the soldering iron's own wire feeder
-CAN_ID_SOLDER_SETPOINT   = 0x130  # T12 setpoint temperature
+CAN_ID_IMPACT_EVENT      = protocol.CAN_ID_IMPACT_EVENT  # Scan probe - max priority, event-driven
+CAN_ID_GLOBAL_STATUS     = protocol.CAN_ID_GLOBAL_STATUS  # Status LED + ring LED + OLED night mode - any tool
+CAN_ID_QUERY_ACTIVE_TOOL = protocol.CAN_ID_QUERY_ACTIVE_TOOL  # Query which tool profile is active + quick state
+CAN_ID_ACTIVE_TOOL_RESP  = protocol.CAN_ID_ACTIVE_TOOL_RESP  # Answers CAN_ID_QUERY_ACTIVE_TOOL
+CAN_ID_MOTION_CMD        = protocol.CAN_ID_MOTION_CMD  # Stepper dir+steps - dispensers/screwdriver/grippers, and (doc #16) the soldering iron's own wire feeder
+CAN_ID_SOLDER_SETPOINT   = protocol.CAN_ID_SOLDER_SETPOINT  # T12 setpoint temperature
 # The firmware refuses a setpoint above this (soldering iron, hot air) and declares a latched CRITICAL ERROR (firmware_control_thermal.c): no screen offers more.
 SETPOINT_MAX_C = 445
-CAN_ID_SOLDER_FEEDER_RESET = 0x131  # Reset wire feeder's own open-loop position to 0 - magic payload, see CANBUS.TXT
-CAN_ID_SOLDER_FEEDER_POS   = 0x132  # Query/response: wire feeder's own current position (signed steps)
-CAN_ID_SOLDER_TELEMETRY  = 0x135  # T12 actual temperature only (DLC 2, no endstop byte), see CANBUS.TXT's own 0x135 note
-CAN_ID_DRILL_CMD         = 0x140  # BL4260 speed + direction
-CAN_ID_VACUUM_TELEMETRY  = 0x145  # ADC reading + digital detect
-CAN_ID_DRILL_TELEMETRY   = 0x147  # Actual RPM + endstop
-CAN_ID_AOI_CMD           = 0x150  # Ring mode + strobe period
-CAN_ID_AOI_TELEMETRY     = 0x155  # Endstop only
-CAN_ID_LASER_CMD         = 0x160  # Power + interlock
-CAN_ID_LASER_TELEMETRY   = 0x165  # Endstop only
-CAN_ID_3DP_THERMAL_MOTION = 0x170  # Nozzle setpoint + extruder direction/steps
-CAN_ID_3DP_LAYER_FAN_CMD  = 0x173  # Layer fan PWM
-CAN_ID_3DP_HOTEND_TELEM   = 0x175  # Hotend actual temperature
-CAN_ID_3DP_LAYER_FAN_RPM  = 0x177  # Layer fan actual RPM
-CAN_ID_3DP_HOTEND_FAN_CMD = 0x178  # Hotend fan PWM
-CAN_ID_3DP_HOTEND_FAN_RPM = 0x179  # Hotend fan actual RPM
-CAN_ID_ELECTROMAGNET_CMD  = 0x1B0  # Coil energize/release (nonzero=on)
-CAN_ID_SPOT_WELD_CMD      = 0x1C0  # Timed pulse, gated on the contact sensor
-CAN_ID_UV_CURING_CMD      = 0x1D0  # LED driver duty cycle, 0-255
-CAN_ID_HOTAIR_CMD         = 0x1E0  # Setpoint temp + blower duty (shares 0x135 telemetry with the soldering iron)
-CAN_ID_CRIMPING_CMD       = 0x1F0  # Same byte layout as 0x120, drives the expansion board's own driver instead
-CAN_ID_ULTRASONIC_WELD_CMD = 0x200  # Timed pulse, same as Spot Welder but no contact-sensor gate
-CAN_ID_ADS1115_CONFIG     = 0x240  # Functional Testing Head - ADS1115 16-bit config register [BIG-ENDIAN]
-CAN_ID_ADS1115_TRIGGER    = 0x241  # Functional Testing Head - trigger a single-shot conversion
-CAN_ID_ADS1115_RESULT     = 0x242  # Functional Testing Head - query (empty payload), or the 2-byte raw result
-CAN_ID_FLYING_PROBE_BASIC = 0x243  # Functional Testing Head - basic onboard-ADC reading, automatic telemetry
-CAN_ID_PASTE_JETTING_CONFIG = 0x230  # Local PWM channel + frequency config
-CAN_ID_PASTE_JETTING_PULSE  = 0x231  # Local PWM channel + duty + duration pulse
-CAN_ID_THERMAL_TRIGGER    = 0x250  # PCB Advanced Inspection - trigger a new capture
-CAN_ID_THERMAL_STATUS     = 0x251  # PCB Advanced Inspection - query (empty payload), or the 1-byte status
-CAN_ID_THERMAL_RAW_CHUNK_REQ = 0x252  # PCB Advanced Inspection - request a raw pixel chunk (1 byte, chunk index)
-CAN_ID_THERMAL_RAW_CHUNK  = 0x253  # PCB Advanced Inspection - raw pixel chunk data, 4 frames of 8 bytes
-CAN_ID_THERMAL_CALIB_CHUNK_REQ = 0x254  # PCB Advanced Inspection - request a calibrated temperature chunk
-CAN_ID_THERMAL_CALIB_CHUNK = 0x255  # PCB Advanced Inspection - calibrated temperature chunk data, 4 frames of 8 bytes
-CAN_ID_EXP_SPI_CMD        = 0x180  # Generic SPI passthrough request, for CONN_EXPANSION
-CAN_ID_EXP_SPI_RESP       = 0x181  # Answers CAN_ID_EXP_SPI_CMD
-CAN_ID_QUERY_DIAG0        = 0x182  # Query TMC_DIAG0's current level
-CAN_ID_DIAG0_RESP         = 0x183  # Answers CAN_ID_QUERY_DIAG0
-CAN_ID_QUERY_FRAM_STATE = 0x190  # Query the FM24CL64B's recovered state
-CAN_ID_FRAM_STATE_RESP  = 0x191  # Answers CAN_ID_QUERY_FRAM_STATE, also sent after an erase
-CAN_ID_QUERY_THERMAL_STATS = 0x1AA  # Query lifetime thermal counters (URTC firmware 0.3.3+)
-CAN_ID_THERMAL_STATS_RESP  = 0x1AB  # Answers CAN_ID_QUERY_THERMAL_STATS
-CAN_ID_ERASE_FRAM       = 0x192  # Magic-payload erase - see ERASE_FRAM_MAGIC below
-CAN_ID_EXPANSION_TYPE_RESP = 0x1A1  # Query (empty payload), or the response - see EXPANSION.TXT
-CAN_ID_FREE_TOOL_CONFIG_RESP = 0x1A3  # Query (empty payload), or the response - see EEPROM.TXT section 5
-CAN_ID_PERIPHERAL_INFO_RESP = 0x1A5  # Query (empty payload), or the response - see EEPROM.TXT section 6
-CAN_ID_MLX_VARIANT_RESP = 0x1A7  # Query (empty payload), or the response - see CANBUS.TXT
+CAN_ID_SOLDER_FEEDER_RESET = protocol.CAN_ID_SOLDER_FEEDER_RESET  # Reset wire feeder's own open-loop position to 0 - magic payload, see CANBUS.TXT
+CAN_ID_SOLDER_FEEDER_POS   = protocol.CAN_ID_SOLDER_FEEDER_POS  # Query/response: wire feeder's own current position (signed steps)
+CAN_ID_SOLDER_TELEMETRY  = protocol.CAN_ID_SOLDER_TELEMETRY  # T12 actual temperature only (DLC 2, no endstop byte), see CANBUS.TXT's own 0x135 note
+CAN_ID_DRILL_CMD         = protocol.CAN_ID_DRILL_CMD  # BL4260 speed + direction
+CAN_ID_VACUUM_TELEMETRY  = protocol.CAN_ID_VACUUM_TELEMETRY  # ADC reading + digital detect
+CAN_ID_DRILL_TELEMETRY   = protocol.CAN_ID_DRILL_TELEMETRY  # Actual RPM + endstop
+CAN_ID_AOI_CMD           = protocol.CAN_ID_AOI_CMD  # Ring mode + strobe period
+CAN_ID_AOI_TELEMETRY     = protocol.CAN_ID_AOI_TELEMETRY  # Endstop only
+CAN_ID_LASER_CMD         = protocol.CAN_ID_LASER_CMD  # Power + interlock
+CAN_ID_LASER_TELEMETRY   = protocol.CAN_ID_LASER_TELEMETRY  # Endstop only
+CAN_ID_3DP_THERMAL_MOTION = protocol.CAN_ID_PRINTER_THERMAL_MOTION  # Nozzle setpoint + extruder direction/steps
+CAN_ID_3DP_LAYER_FAN_CMD  = protocol.CAN_ID_PRINTER_LAYERFAN_CMD  # Layer fan PWM
+CAN_ID_3DP_HOTEND_TELEM   = protocol.CAN_ID_PRINTER_HOTEND_TELEMETRY  # Hotend actual temperature
+CAN_ID_3DP_LAYER_FAN_RPM  = protocol.CAN_ID_PRINTER_LAYERFAN_RPM  # Layer fan actual RPM
+CAN_ID_3DP_HOTEND_FAN_CMD = protocol.CAN_ID_PRINTER_HOTENDFAN_CMD  # Hotend fan PWM
+CAN_ID_3DP_HOTEND_FAN_RPM = protocol.CAN_ID_PRINTER_HOTENDFAN_RPM  # Hotend fan actual RPM
+CAN_ID_ELECTROMAGNET_CMD  = protocol.CAN_ID_ELECTROMAGNET_CMD  # Coil energize/release (nonzero=on)
+CAN_ID_SPOT_WELD_CMD      = protocol.CAN_ID_SPOT_WELD_CMD  # Timed pulse, gated on the contact sensor
+CAN_ID_UV_CURING_CMD      = protocol.CAN_ID_UV_CURING_CMD  # LED driver duty cycle, 0-255
+CAN_ID_HOTAIR_CMD         = protocol.CAN_ID_HOTAIR_CMD  # Setpoint temp + blower duty (shares 0x135 telemetry with the soldering iron)
+CAN_ID_CRIMPING_CMD       = protocol.CAN_ID_CRIMPING_CMD  # Same byte layout as 0x120, drives the expansion board's own driver instead
+CAN_ID_ULTRASONIC_WELD_CMD = protocol.CAN_ID_ULTRASONIC_WELD_CMD  # Timed pulse, same as Spot Welder but no contact-sensor gate
+CAN_ID_ADS1115_CONFIG     = protocol.CAN_ID_ADS1115_CONFIG  # Functional Testing Head - ADS1115 16-bit config register [BIG-ENDIAN]
+CAN_ID_ADS1115_TRIGGER    = protocol.CAN_ID_ADS1115_TRIGGER  # Functional Testing Head - trigger a single-shot conversion
+CAN_ID_ADS1115_RESULT     = protocol.CAN_ID_ADS1115_RESULT  # Functional Testing Head - query (empty payload), or the 2-byte raw result
+CAN_ID_FLYING_PROBE_BASIC = protocol.CAN_ID_FLYING_PROBE_BASIC  # Functional Testing Head - basic onboard-ADC reading, automatic telemetry
+CAN_ID_PASTE_JETTING_CONFIG = protocol.CAN_ID_PASTE_JETTING_CONFIG  # Local PWM channel + frequency config
+CAN_ID_PASTE_JETTING_PULSE  = protocol.CAN_ID_PASTE_JETTING_PULSE  # Local PWM channel + duty + duration pulse
+CAN_ID_THERMAL_TRIGGER    = protocol.CAN_ID_THERMAL_TRIGGER  # PCB Advanced Inspection - trigger a new capture
+CAN_ID_THERMAL_STATUS     = protocol.CAN_ID_THERMAL_STATUS  # PCB Advanced Inspection - query (empty payload), or the 1-byte status
+CAN_ID_THERMAL_RAW_CHUNK_REQ = protocol.CAN_ID_THERMAL_RAW_CHUNK_REQ  # PCB Advanced Inspection - request a raw pixel chunk (1 byte, chunk index)
+CAN_ID_THERMAL_RAW_CHUNK  = protocol.CAN_ID_THERMAL_RAW_CHUNK  # PCB Advanced Inspection - raw pixel chunk data, 4 frames of 8 bytes
+CAN_ID_THERMAL_CALIB_CHUNK_REQ = protocol.CAN_ID_THERMAL_CAL_CHUNK_REQ  # PCB Advanced Inspection - request a calibrated temperature chunk
+CAN_ID_THERMAL_CALIB_CHUNK = protocol.CAN_ID_THERMAL_CAL_CHUNK  # PCB Advanced Inspection - calibrated temperature chunk data, 4 frames of 8 bytes
+CAN_ID_EXP_SPI_CMD        = protocol.CAN_ID_EXPANSION_SPI_REQ  # Generic SPI passthrough request, for CONN_EXPANSION
+CAN_ID_EXP_SPI_RESP       = protocol.CAN_ID_EXPANSION_SPI_RESP  # Answers CAN_ID_EXP_SPI_CMD
+CAN_ID_QUERY_DIAG0        = protocol.CAN_ID_EXPANSION_DIAG0_REQ  # Query TMC_DIAG0's current level
+CAN_ID_DIAG0_RESP         = protocol.CAN_ID_EXPANSION_DIAG0_RESP  # Answers CAN_ID_QUERY_DIAG0
+CAN_ID_QUERY_FRAM_STATE = protocol.CAN_ID_FRAM_QUERY  # Query the FM24CL64B's recovered state
+CAN_ID_FRAM_STATE_RESP  = protocol.CAN_ID_FRAM_STATE_RESP  # Answers CAN_ID_QUERY_FRAM_STATE, also sent after an erase
+CAN_ID_QUERY_THERMAL_STATS = protocol.CAN_ID_THERMAL_STATS_QUERY  # Query lifetime thermal counters (URTC firmware 0.3.3+)
+CAN_ID_THERMAL_STATS_RESP  = protocol.CAN_ID_THERMAL_STATS_RESP  # Answers CAN_ID_QUERY_THERMAL_STATS
+CAN_ID_ERASE_FRAM       = protocol.CAN_ID_ERASE_FRAM  # Magic-payload erase - see ERASE_FRAM_MAGIC below
+CAN_ID_EXPANSION_TYPE_RESP = protocol.CAN_ID_EXPANSION_TYPE_RESP  # Query (empty payload), or the response - see EXPANSION.TXT
+CAN_ID_FREE_TOOL_CONFIG_RESP = protocol.CAN_ID_FREE_TOOL_CONFIG_RESP  # Query (empty payload), or the response - see EEPROM.TXT section 5
+CAN_ID_PERIPHERAL_INFO_RESP = protocol.CAN_ID_PERIPHERAL_INFO_RESP  # Query (empty payload), or the response - see EEPROM.TXT section 6
+CAN_ID_MLX_VARIANT_RESP = protocol.CAN_ID_MLX_VARIANT_RESP  # Query (empty payload), or the response - see CANBUS.TXT
 
 # Same 7 configurations as the flasher's own list (flasher_config.py) - kept in sync manually
 # since these two tools don't share a module.
@@ -301,9 +303,10 @@ MLX_SENSOR_VARIANTS = [
 # The ring light's strobe period is in MILLISECONDS and the firmware limits it to 1..500.
 AOI_STROBE_MAX_MS = 500
 AOI_STROBE_DEFAULT_MS = 5
-ERASE_FRAM_MAGIC = bytes([0xE3, 0xA5, 0xE0, 0xFF])
-CAN_ID_QUERY_VERSION     = 0x7F8  # Answered by app or bootloader, whichever's running
-CAN_ID_VERSION_RESPONSE  = 0x7F9
+ERASE_FRAM_MAGIC = protocol.MAGIC_ERASE_FRAM
+SOLDER_FEEDER_RESET_MAGIC = protocol.MAGIC_SOLDER_FEEDER_RESET  # ASCII "RSP0": reset the wire feeder position to 0
+CAN_ID_QUERY_VERSION     = protocol.CAN_ID_QUERY_VERSION  # Answered by app or bootloader, whichever's running
+CAN_ID_VERSION_RESPONSE  = protocol.CAN_ID_VERSION_RESPONSE
 
 # Layers built-in names (derived from every CAN_ID_* constant just above,
 # via globals() - not a separately hand-maintained list that could drift)

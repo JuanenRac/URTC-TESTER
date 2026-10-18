@@ -171,6 +171,11 @@ class AdvancedProtocolTests(unittest.TestCase):
         )
         self.assertIsNone(protocol.decode_free_tool_config(bytes([31])))
 
+    def test_decode_feeder_position_is_a_signed_big_endian_step_count(self):
+        self.assertEqual(protocol.decode_feeder_position(bytes([0, 0, 1, 0])), 256)
+        self.assertEqual(protocol.decode_feeder_position(bytes([0xFF, 0xFF, 0xFF, 0xFE, 9])), -2)
+        self.assertIsNone(protocol.decode_feeder_position(bytes([0, 0, 1])))
+
     def test_decode_peripheral_info_matches_the_real_documented_shape(self):
         self.assertEqual(
             protocol.decode_peripheral_info(bytes([0x03, 42])),
