@@ -278,6 +278,7 @@ ApplicationWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     GameButton { text: testerBackend.uiText("BTN_REFRESH"); accent: "#24465e"; Layout.fillWidth: true; enabled: !testerBackend.connected && !testerBackend.busy; onClicked: testerBackend.scanPorts() }
+                    GameButton { text: testerBackend.uiText("BTN_AUTO_DETECT"); accent: "#24465e"; Layout.fillWidth: true; enabled: !testerBackend.connected && !testerBackend.busy; onClicked: testerBackend.autoDetectBitrate() }
                     GameButton { text: testerBackend.connected ? testerBackend.uiText("BTN_DISCONNECT") : testerBackend.uiText("BTN_CONNECT"); Layout.fillWidth: true; enabled: !testerBackend.busy; onClicked: testerBackend.toggleConnection() }
                 }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }

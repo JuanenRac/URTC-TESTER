@@ -8,6 +8,11 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 only by the explicit `python bump.py` step (building never changes it), base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.3.3] - The Qt Quick deck can search for the bus speed
+
+- The Qt Quick deck has an auto-detect button for serial CAN adapters: it listens at each speed first (nothing is transmitted), asks for the active tool only when the whole bus is silent, adopts and remembers the speed found, and leaves the selection untouched when nothing answers.
+- Tests cover a found speed, a silent bus, an adapter that fails, and the remembered selection.
+
 ## [0.3.2] - An explicit bump command: building never changes the version
 
 - Building no longer changes the version: build_exe.bat and build_exe.sh only read TESTER_VERSION, and raising it is the explicit `python bump.py` step.

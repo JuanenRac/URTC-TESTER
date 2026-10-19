@@ -107,6 +107,7 @@ class TesterQtBridge(QObject):
     changed = Signal()
     logChanged = Signal()
     _connectionResult = Signal(object, str)
+    _bitrateDetected = Signal(str)
     _probeResult = Signal(object, object, str)
     _passiveResult = Signal(object, str, float)
     _flyingProbeResult = Signal(str, str)
@@ -197,6 +198,7 @@ class TesterQtBridge(QObject):
         self._custom_periodic_active = False
         self._custom_periodic_last_ok = True
         self._connectionResult.connect(self._on_connection_result)
+        self._bitrateDetected.connect(self._on_bitrate_detected)
         self._probeResult.connect(self._on_probe_result)
         self._passiveResult.connect(self._on_passive_result)
         self._flyingProbeResult.connect(self._on_flying_probe_result)
@@ -352,6 +354,43 @@ class TesterQtBridge(QObject):
             save_config({"bitrate": label})
             self._log(f"BITRATE_SELECTED {label}")
             self.changed.emit()
+
+    @Slot()
+    def autoDetectBitrate(self) -> None:
+        """Find the bus speed: listen-only first, and transmit a query only when the bus is completely silent."""
+        if self._transport is not None or self._busy:
+            return
+        if not self._selected_port or self._selected_port in self._socketcan_ports:
+            self._log("AUTODETECT_NEEDS_A_SERIAL_PORT")
+            return
+        self._set_state(status="DETECTING BITRATE", busy=True)
+        threading.Thread(target=self._autodetect_worker, args=(self._selected_port,), daemon=True, name="urtc-qt-autobaud").start()
+
+    def _autodetect_worker(self, port: str) -> None:
+        found = ""
+        try:
+            from tester_gui_core import scan_bitrates
+
+            found = scan_bitrates(
+                port, SLCAN, SLCAN_BITRATES, log=self._log,
+                on_try=lambda label: self._log(f"AUTODETECT_TRYING {label}"),
+                on_traffic=lambda label, count: self._log(f"AUTODETECT_TRAFFIC {label} {count} frames"),
+                on_active_phase=lambda: self._log("AUTODETECT_ACTIVE_PHASE the bus is silent, querying at each speed"),
+            ) or ""
+        except Exception as exc:  # a missing adapter or a busy port must not crash the deck
+            self._log(f"AUTODETECT_FAILED {exc}")
+        finally:
+            self._bitrateDetected.emit(found)
+
+    def _on_bitrate_detected(self, label: str) -> None:
+        if label:
+            self._bitrate_label = label
+            save_config({"bitrate": label})
+            self._set_state(status=f"BITRATE {label}", busy=False)
+            self._log(f"AUTODETECT_FOUND {label}")
+        else:
+            self._set_state(status="NO RESPONSE AT ANY BITRATE", busy=False)
+            self._log("AUTODETECT_NO_RESPONSE")
 
     @Property(str, notify=changed)
     def status(self) -> str:
