@@ -47,7 +47,7 @@ URTC ボード向けのライブ CAN バステスターです。フラッシャ�
 
 | | |
 |---|---|
-| バージョン | `0.3.5` |
+| バージョン | `0.3.6` |
 | 成熟度 | 機能する |
 | 技術 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 対象 | 利用者の PC |

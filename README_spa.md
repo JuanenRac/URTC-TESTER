@@ -48,7 +48,7 @@ de lo que estaba al empezar.
 
 | | |
 |---|---|
-| Versión | `0.3.5` |
+| Versión | `0.3.6` |
 | Madurez | Funcional |
 | Tecnología | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destino | El PC de quien lo usa |
