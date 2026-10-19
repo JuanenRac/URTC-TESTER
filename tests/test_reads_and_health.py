@@ -3,8 +3,7 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
-"""Mock CAN transports: no board is needed. They cover the strobe period unit, the thermal image geometry and chunk assembly, the multi-frame waiter, the queries that
-run off the Tkinter thread, the board-health verdicts, and the Qt deck's single reader and stop-everything behaviour."""
+"""Mock CAN transports: no board is needed. They cover the strobe period unit, the thermal image geometry and chunk assembly, the multi-frame waiter, the board-health verdicts, and the Qt deck's single reader and stop-everything behaviour."""
 import queue
 import threading
 import time
@@ -16,7 +15,6 @@ from tester_config import (
     AOI_STROBE_MAX_MS, CAN_ID_AOI_CMD, CAN_ID_MLX_VARIANT_RESP, CAN_ID_THERMAL_CALIB_CHUNK, CAN_ID_THERMAL_CALIB_CHUNK_REQ,
     CAN_ID_THERMAL_STATUS, bitrate_bps_for_label,
 )
-from tester_panel_helpers import PanelHelpersMixin
 
 try:
     from PySide6.QtCore import QCoreApplication
@@ -120,68 +118,6 @@ class MultiFrameWaiterTests(unittest.TestCase):
             bus.stop()
         self.assertEqual(len(frames), 2)
         self.assertEqual(bus._waiters, {})
-
-
-class QueriesOffTheTkThreadTests(unittest.TestCase):
-    class _Panel(PanelHelpersMixin):
-        def __init__(self, bus):
-            self.bus = bus
-            self.logged = []
-            self.main_thread = threading.get_ident()
-            self.after_calls = []
-
-            class _Root:
-                def after(root_self, delay, fn):
-                    self.after_calls.append(fn)
-            self.root = _Root()
-
-        def log(self, text):
-            self.logged.append(text)
-
-    class _SlowBus:
-        def __init__(self, response, delay=0.2):
-            self.response, self.delay = response, delay
-            self.waiting_thread = None
-
-        def wait_for_one(self, can_id, timeout=1.0, send_after_register=None):
-            self.waiting_thread = threading.get_ident()
-            time.sleep(self.delay)
-            return self.response
-
-    def _run(self, panel):
-        results = []
-        started = time.monotonic()
-        panel._query_async(0x182, None, results.append)
-        returned_after = time.monotonic() - started
-        for _ in range(100):
-            if panel.after_calls:
-                break
-            time.sleep(0.02)
-        for fn in panel.after_calls:
-            fn()
-        return results, returned_after
-
-    def test_the_wait_happens_on_a_worker_and_the_answer_comes_back_through_after(self):
-        bus = self._SlowBus(b"\x01")
-        panel = self._Panel(bus)
-        results, returned_after = self._run(panel)
-        self.assertLess(returned_after, 0.1, "the calling (Tk) thread must not wait for the board")
-        self.assertNotEqual(bus.waiting_thread, panel.main_thread)
-        self.assertEqual(results, [b"\x01"])
-
-    def test_the_answer_is_dropped_when_the_connection_was_replaced(self):
-        bus = self._SlowBus(b"\x01", delay=0.05)
-        panel = self._Panel(bus)
-        results = []
-        panel._query_async(0x182, None, results.append)
-        panel.bus = None
-        for _ in range(100):
-            if panel.after_calls:
-                break
-            time.sleep(0.02)
-        for fn in panel.after_calls:
-            fn()
-        self.assertEqual(results, [])
 
 
 class BoardHealthTests(unittest.TestCase):

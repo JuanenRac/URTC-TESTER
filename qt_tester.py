@@ -14,10 +14,9 @@ ultrasonic weld pulse, paste jetting, flying probe, thermal inspection, the
 5 watchdog-keepalive actuators (solder iron, laser, the printer's own heater
 and layer fan, UV curing, hot-air rework - see `setWatchdogOutput()`) and
 vacuum/scan-probe telemetry.  Conformal Coating and Press-Fit Inserter have
-no panel here, same as the Tkinter GUI's own `_build_no_handler_panel` -
-neither has a real CAN command of its own to expose.  `urtc_tester.py --legacy`
-still launches the original 25-panel Tkinter GUI, kept (not removed).
-Neither UI has been checked against a real board yet - this whole project
+no command panel here (the deck says so in words, `noHandlerText`) -
+neither has a real CAN command of its own to expose.
+The deck has not been checked against a real board yet - this whole project
 was built with no USB access (see README.md's own "Known limitations") -
 so being the default here is not a hardware-proven claim.
 """
@@ -26,6 +25,7 @@ from __future__ import annotations
 import collections
 import json
 import os
+import platform
 import struct
 import sys
 import threading
@@ -35,14 +35,16 @@ from pathlib import Path
 
 import advanced_protocol as protocol
 from tester_bus_monitor import FrameFilter
+import tester_telemetry as tele
+from tester_selftest import run_self_test
 from tester_trace_export import render as render_trace
 from PySide6.QtCore import QObject, Property, QUrl, Signal, Slot
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 
+import tester_config
 from tester_config import (
-    AVAILABLE_LANGUAGES,
     _current_language,
     AOI_STROBE_MAX_MS,
     SETPOINT_MAX_C,
@@ -101,6 +103,7 @@ from tester_config import (
 )
 from tester_result_record import session_manifest
 from tester_transports import SLCAN, SocketCAN, list_socketcan_interfaces
+from urtc_ui import LanguageModel, connection_badge, format_can_id, format_hex
 
 
 
@@ -126,13 +129,16 @@ class TesterQtBridge(QObject):
     # long as a watch is running, marshalled the same way _log() already
     # is (worker thread -> Signal.emit -> Qt's own cross-thread queued
     # delivery -> a @Slot back on the GUI thread). Vacuum/Scan Probe have
-    # no commands at all (see tester_tool_panels.py's own
-    # _build_vacuum_panel/_build_scan_probe_panel) - nothing here can ever
+    # no commands at all (see watchTelemetry) - nothing here can ever
     # write to a real actuator.
     _vacuumTelemetry = Signal(int, bool)
     _scanProbeImpact = Signal(str)
+    _selfTestLine = Signal(str, str)
+    _readoutUpdated = Signal(str, str, float)
+    _busHealth = Signal(bool, str)
+    _selfTestDone = Signal(int, str)
     # Real, tool-independent utility queries (Global Controls/Expansion
-    # Board/F-RAM in the legacy Tkinter tabs) - one shared signal rather
+    # Board/F-RAM) - one shared signal rather
     # than one per action, since they're all the same real shape (a
     # bounded request/response round trip, or None on timeout); `key`
     # routes each real result to its own real Property below.
@@ -211,6 +217,12 @@ class TesterQtBridge(QObject):
         # flag is the single source of truth the Timer's running binding
         # and the CheckBox's checked binding both read.
         self._custom_periodic_active = False
+        self._self_test_lines: list[dict[str, str]] = []
+        self._readout_values: dict[str, str] = {}
+        self._readout_series = tele.Series()
+        self._bus_health_text = ""
+        self._bus_health_stop: threading.Event | None = None
+        self._self_test_running = False
         self._custom_periodic_last_ok = True
         self._connectionResult.connect(self._on_connection_result)
         self._bitrateDetected.connect(self._on_bitrate_detected)
@@ -223,6 +235,10 @@ class TesterQtBridge(QObject):
         self._vacuumTelemetry.connect(self._on_vacuum_telemetry)
         self._scanProbeImpact.connect(self._on_scan_probe_impact)
         self._queryResult.connect(self._on_query_result)
+        self._selfTestLine.connect(self._on_self_test_line)
+        self._readoutUpdated.connect(self._on_readout)
+        self._busHealth.connect(self._on_bus_health)
+        self._selfTestDone.connect(self._on_self_test_done)
         self.scanPorts()
 
     @Property(str, constant=True)
@@ -236,20 +252,17 @@ class TesterQtBridge(QObject):
     @Property("QStringList", constant=True)
     def languageNames(self) -> list:
         """The names of the interface languages, each in its own language; the choice is saved and applies on the next start."""
-        return [name for _code, name in AVAILABLE_LANGUAGES]
+        return LanguageModel(_current_language).names()
 
     @Property(int, constant=True)
     def languageIndex(self) -> int:
-        codes = [code for code, _name in AVAILABLE_LANGUAGES]
-        return codes.index(_current_language) if _current_language in codes else 0
+        return LanguageModel(_current_language).index()
 
     @Slot(int, result=str)
     def selectLanguage(self, index: int) -> str:
         """Saves the chosen language in the configuration file and returns the (already translated) notice to show."""
-        if not 0 <= index < len(AVAILABLE_LANGUAGES):
-            return ""
-        code = AVAILABLE_LANGUAGES[index][0]
-        if code == _current_language:
+        code = LanguageModel().code_at(index)
+        if code is None or code == _current_language:
             return ""
         if save_config({"language": code}):
             self._log(f"LANGUAGE_SAVED {code}")
@@ -275,7 +288,7 @@ class TesterQtBridge(QObject):
             "QT_ACTIVE_CHECKS_ARMED": "ACTIVE CHECKS ARMED",
             "QT_PASSIVE_HELP": "Passive transport mode. Probe commands are blocked.",
             "QT_ACTIVE_HELP": "Identity probe transmits only documented queries 0x110 and 0x7F8.",
-            "QT_STAGED_LIMIT": "This deck has real, confirmed coverage for every one of the 25 tool profiles' own commands. The legacy Tkinter GUI (--legacy) remains available. Neither UI has been checked against a real board yet - see README.md's own Known limitations.",
+            "QT_STAGED_LIMIT": "This deck has real, confirmed coverage for every one of the 25 tool profiles' own commands. The deck has not been checked against a real board yet - see README.md's own Known limitations.",
             "QT_IDENTITY_CHECKPOINTS": "IDENTITY & HEALTH CHECKPOINTS",
             "QT_CHECKPOINTS": "1  Connect to the selected production transport\n2  Explicitly arm active checks, if required\n3  Query active tool and board version\n4  Preserve a transparent session log",
             "QT_PROBE": "PROBE ACTIVE TOOL + VERSION",
@@ -300,7 +313,6 @@ class TesterQtBridge(QObject):
             "QT_CONFIRM": "CONFIRM",
             "QT_CANCEL": "CANCEL",
             "QT_ADVANCED_CONTROL": "ADVANCED PROFILE CONTROL",
-            "QT_ADVANCED_UNAVAILABLE": "This verified profile has telemetry-only, external-machine or watchdog-controlled functions. Its full established panel remains available in the desktop application.",
             "QT_DRILL_SPEED": "DRILL SPEED (0-255)",
             "QT_DRILL_DIRECTION": "DRILL DIRECTION",
             "QT_AOI_MODE": "AOI RING MODE",
@@ -387,7 +399,7 @@ class TesterQtBridge(QObject):
     def _autodetect_worker(self, port: str) -> None:
         found = ""
         try:
-            from tester_gui_core import scan_bitrates
+            from tester_autodetect import scan_bitrates
 
             found = scan_bitrates(
                 port, SLCAN, SLCAN_BITRATES, log=self._log,
@@ -409,6 +421,12 @@ class TesterQtBridge(QObject):
         else:
             self._set_state(status="NO RESPONSE AT ANY BITRATE", busy=False)
             self._log("AUTODETECT_NO_RESPONSE")
+
+
+    @Property(str, notify=changed)
+    def statusColor(self) -> str:
+        """Colour of the status line: the shared badge of the connection state (connected, listen-only or disconnected)."""
+        return connection_badge(True if self.connected else None, self._listen_only).colour
 
     @Property(str, notify=changed)
     def status(self) -> str:
@@ -509,7 +527,7 @@ class TesterQtBridge(QObject):
         return (
             self.connected
             and not self._listen_only
-            and not self._busy
+            and (not self._busy or self.isWatchingReadouts)
             and self._active_tool_id == self._selected_tool_id
         )
 
@@ -533,6 +551,12 @@ class TesterQtBridge(QObject):
             4: "vacuum",
             11: "scan_probe",
         }.get(self._selected_tool_id, "unavailable")
+
+    @Property(str, notify=changed)
+    def noHandlerText(self) -> str:
+        """What to say for a profile with no command or readout of its own: its actuator lives on the robot's mainboard."""
+        key = {15: "HELP_NO_HANDLER_CONFORMAL_COATING", 20: "HELP_NO_HANDLER_PRESSFIT_INSERTER"}.get(self._selected_tool_id)
+        return _(key) if key else _("MSG_NO_TOOL_FOR_JUMPERS", tool_id=self._selected_tool_id)
 
     @Property(bool, notify=changed)
     def isWatchingTelemetry(self) -> bool:
@@ -603,7 +627,7 @@ class TesterQtBridge(QObject):
         delta_ms = (now - previous) * 1000.0 if previous is not None else 0.0
         self._monitor_last_seen[can_id] = now
         with self._monitor_lock:
-            self._monitor_rows.append((stamp, f"0x{can_id:03X}", len(data), data.hex().upper(), round(delta_ms, 1)))
+            self._monitor_rows.append((stamp, format_can_id(can_id, extended=can_id > 0x7FF), len(data), format_hex(data, ""), round(delta_ms, 1)))
 
     @Slot()
     def stopBusMonitor(self) -> None:
@@ -656,7 +680,7 @@ class TesterQtBridge(QObject):
         to keep a real command from transmitting while passive. Watching
         telemetry never transmits, so it stays available in listen-only
         mode too - see _require_telemetry_profile's own docstring."""
-        return self._require_telemetry_profile({4, 11})
+        return self._require_telemetry_profile({4, 11} | set(tele.READOUTS))
 
     @Property(int, notify=changed)
     def vacuumAdc(self) -> int:
@@ -755,6 +779,16 @@ class TesterQtBridge(QObject):
             path = os.path.join(LOGS_FOLDER, f"urtc_tester_session_{time.strftime('%Y%m%d_%H%M%S')}.zip")
             with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as bundle:
                 bundle.writestr("session_log.txt", log_text)
+                bundle.writestr("system_diagnostics.txt", "\n".join([
+                    f"URTC Tester version: {TESTER_VERSION}",
+                    f"Python: {sys.version}",
+                    f"Platform: {platform.platform()}",
+                    f"Current port/interface: {self._selected_port}",
+                    f"Current bitrate (Serial/SLCAN): {self._bitrate_label}",
+                    f"Connected: {self._transport is not None}",
+                    f"Listen-only: {self._listen_only}",
+                    f"Active tool ID: {self._active_tool_id}",
+                ]))
                 bundle.writestr("session_manifest.json", json.dumps(session_manifest(
                     log_text,
                     tester_version=TESTER_VERSION,
@@ -766,6 +800,56 @@ class TesterQtBridge(QObject):
             return ""
         self._log(f"SESSION_EXPORTED {path}")
         return path
+
+    # -- help texts: README (in the interface language when a translation exists), licence, project page, plain log ---
+    README_SUFFIXES = {
+        "spanish": "_spa", "italian": "_ita", "french": "_fra", "german": "_deu",
+        "chinese": "_zho", "japanese": "_jpn", "portuguese": "_por",
+    }
+
+    @Slot(result=str)
+    def readmeText(self) -> str:
+        folder = tester_config.base_dir
+        candidate = os.path.join(folder, f"README{self.README_SUFFIXES.get(_current_language, '')}.md")
+        path = candidate if os.path.isfile(candidate) else os.path.join(folder, "README.md")
+        try:
+            with open(path, encoding="utf-8") as stream:
+                return stream.read()
+        except OSError as exc:
+            return f"{_('TITLE_EXPORT_FAILED')}: {exc}"
+
+    @Slot(result=str)
+    def licenseText(self) -> str:
+        try:
+            with open(os.path.join(tester_config.base_dir, "LICENSE"), encoding="utf-8") as stream:
+                return stream.read()
+        except OSError:
+            return _("MSG_LICENSE_FALLBACK")
+
+    @Property(str, constant=True)
+    def githubUrl(self) -> str:
+        return "https://github.com/JuanenRac/URTC-TESTER"
+
+    @Slot(str, result=bool)
+    def saveLogText(self, save_path: str) -> bool:
+        """Save the on-screen log as plain text (the lighter counterpart of the debug bundle)."""
+        path = QUrl(save_path).toLocalFile() if save_path.startswith("file:") else save_path
+        try:
+            with open(path, "w", encoding="utf-8") as stream:
+                stream.write("\n".join(self._logs) + "\n")
+        except OSError as exc:
+            self._log(f"LOG_SAVE_FAILED {exc}")
+            return False
+        self._log(f"LOG_SAVED {path}")
+        return True
+
+    @Property(str, constant=True)
+    def aboutText(self) -> str:
+        return (
+            f"URTC Tester v{TESTER_VERSION}\n"
+            "JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>\n"
+            "GNU General Public License v3.0 or later (GPL-3.0-or-later)"
+        )
 
     @Slot(str)
     def _append_log(self, message: str) -> None:
@@ -825,6 +909,7 @@ class TesterQtBridge(QObject):
         if self._busy:
             return
         if self._transport is not None:
+            self._stop_bus_health()
             self._stop_all_watchdogs()
             self._custom_periodic_active = False
             self.stopMotion()   # a move that was left running does not go on turning after the connection is closed
@@ -868,6 +953,7 @@ class TesterQtBridge(QObject):
             mode = "LISTEN-ONLY" if self._listen_only else "ACTIVE CHECKS"
             self._set_state(status=f"CONNECTED {mode}", busy=False)
             self._log(f"TRANSPORT_CONNECTED port={self._selected_port} mode={mode}")
+            self._start_bus_health(transport)
 
     @Slot()
     def probeIdentity(self) -> None:
@@ -878,6 +964,140 @@ class TesterQtBridge(QObject):
         self._set_state(status="PROBING IDENTITY", busy=True)
         self._log("PROBE_STARTED ids=0x110,0x7F8")
         threading.Thread(target=self._probe_worker, daemon=True, name="urtc-tester-qt-probe").start()
+
+    # -- bus health: the board is asked who it is every few seconds while idle ---
+    BUS_HEALTH_INTERVAL_S = 3.0
+
+    @Property(str, notify=changed)
+    def busHealthText(self) -> str:
+        """Empty while the bus looks healthy; otherwise the translated reason (already shown in the log)."""
+        return self._bus_health_text
+
+    def _start_bus_health(self, transport) -> None:
+        self._stop_bus_health()
+        stop = threading.Event()
+        self._bus_health_stop = stop
+        threading.Thread(target=self._bus_health_worker, args=(transport, stop), daemon=True, name="urtc-tester-qt-bus-health").start()
+
+    def _stop_bus_health(self) -> None:
+        stop = self._bus_health_stop
+        self._bus_health_stop = None
+        if stop is not None:
+            stop.set()
+        self._bus_health_text = ""
+
+    def _bus_health_worker(self, transport, stop: threading.Event) -> None:
+        """Notices a bus that goes bad after the first probe (a loose termination, a node misbehaving, an unplugged adapter).
+
+        It only runs while nothing else holds the bus and never in listen-only mode (it would get no answer by design).
+        One silent poll is not a verdict yet: see protocol.BusHealthTracker."""
+        tracker = protocol.BusHealthTracker()
+        was_bad = False
+        while not stop.wait(self.BUS_HEALTH_INTERVAL_S):
+            if transport is not self._transport:
+                break
+            if self._listen_only or self._busy:
+                continue
+            if not self._io_lock.acquire(blocking=False):
+                continue
+            try:
+                if self._busy:
+                    continue
+                transport.send_frame(CAN_ID_QUERY_ACTIVE_TOOL, b"")
+                tool_data = self._wait_for(CAN_ID_ACTIVE_TOOL_RESP, 1.0)
+            except Exception as exc:
+                self._log(f"BUS_HEALTH_POLL_FAILED {exc}")
+                continue
+            finally:
+                self._io_lock.release()
+            if stop.is_set() or transport is not self._transport:
+                break
+            problems = tracker.evaluate(tool_data)
+            if problems is None:
+                continue
+            bad = bool(problems)
+            reason = ", ".join(_(key, **args) for key, args in problems) if bad else ""
+            if isinstance(transport, SocketCAN) and SocketCAN.check_carrier(transport.interface) is False:
+                bad = True
+                reason = _("MSG_NO_CARRIER_SESSION", interface=transport.interface)
+            if bad != was_bad:
+                was_bad = bad
+                self._busHealth.emit(bad, reason)
+
+    @Slot(bool, str)
+    def _on_bus_health(self, bad: bool, reason: str) -> None:
+        if self._transport is None:
+            return
+        self._bus_health_text = reason if bad else ""
+        self._log(f"BUS_HEALTH_WARNING {reason}" if bad else "BUS_HEALTH_RECOVERED")
+        self.changed.emit()
+
+    # -- self-test --------------------------------------------------------
+    @Property(bool, notify=changed)
+    def canSelfTest(self) -> bool:
+        """Same gate as every command: connected, active checks armed, idle, and the detected tool is the selected profile."""
+        return self.canActuateSelectedProfile and self._active_tool_id >= 0 and not self._telemetry_stops
+
+    @Property("QVariantList", notify=changed)
+    def selfTestLines(self) -> list[dict[str, str]]:
+        return list(self._self_test_lines)
+
+    @Property(bool, notify=changed)
+    def selfTestRunning(self) -> bool:
+        return self._self_test_running
+
+    @Slot()
+    def runSelfTest(self) -> None:
+        """Run the at-rest communication checks of the detected tool (QML asks for a confirmation first).
+
+        The commands are the safe values listed in tester_selftest.py (setpoint, speed and power 0).  Any armed
+        output is switched off first so a keep-alive thread cannot send its own value in between."""
+        if not self.canSelfTest or self._self_test_running:
+            self._log("SELFTEST_BLOCKED profile identity/active-check gate not satisfied")
+            return
+        transport = self._transport
+        if transport is None:
+            return
+        self._stop_all_watchdogs()
+        self._self_test_lines = []
+        self._self_test_running = True
+        self._set_state(status="SELF-TEST RUNNING", busy=True)
+        self._log(f"SELFTEST_STARTED tool={self._active_tool_id}")
+        threading.Thread(
+            target=self._self_test_worker, args=(transport, self._active_tool_id), daemon=True, name="urtc-tester-qt-selftest",
+        ).start()
+
+    def _self_test_worker(self, transport, tool_id: int) -> None:
+        def exchange(send, expect_id, timeout):
+            if send is not None:
+                transport.send_frame(*send)
+            return self._wait_for(expect_id, timeout)
+
+        with self._io_lock:
+            try:
+                result = run_self_test(
+                    tool_id, exchange,
+                    emit=lambda line: self._selfTestLine.emit(line.status, line.text),
+                    stop=lambda: self._transport is None,
+                )
+                self._selfTestDone.emit(result.failed, "")
+            except Exception as exc:
+                self._selfTestDone.emit(-1, str(exc))
+
+    @Slot(str, str)
+    def _on_self_test_line(self, status: str, text: str) -> None:
+        self._self_test_lines.append({"status": status, "text": text})
+        self.changed.emit()
+
+    @Slot(int, str)
+    def _on_self_test_done(self, failed: int, error: str) -> None:
+        self._self_test_running = False
+        if error:
+            self._set_state(status="SELF-TEST FAILED", busy=False)
+            self._log(f"SELFTEST_FAILED {error}")
+        else:
+            self._set_state(status="ACTIVE CHECKS ARMED", busy=False)
+            self._log(f"SELFTEST_COMPLETE failed={failed}")
 
     @Slot(int)
     def selectToolProfile(self, tool_id: int) -> None:
@@ -972,7 +1192,11 @@ class TesterQtBridge(QObject):
         except Exception as exc:
             self._log(f"MOTION_FAILED {exc}")
 
-    def _require_profile(self, allowed: set[int], action: str) -> bool:
+    def _require_profile(self, allowed: set[int], action: str, reads: bool = False) -> bool:
+        """Gate of a command. A command that also reads the bus (reads=True) cannot run next to a live readout."""
+        if reads and self._telemetry_stops:
+            self._log(f"{action}_BLOCKED a live readout holds the bus")
+            return False
         if not self.canActuateSelectedProfile or self._selected_tool_id not in allowed:
             self._log(f"{action}_BLOCKED profile identity/active-check gate not satisfied")
             return False
@@ -1101,6 +1325,12 @@ class TesterQtBridge(QObject):
         stopTelemetryWatch() (not busy-gated, exactly like
         _stop_watchdog isn't) is what releases it.
         """
+        if tele.readouts_for(self._selected_tool_id):
+            if not self._require_telemetry_profile(set(tele.READOUTS)) or self._telemetry_stops:
+                self._log("TELEMETRY_WATCH_BLOCKED profile identity/connection gate not satisfied")
+                return
+            self._watch_readouts()
+            return
         can_id, key, decode = {
             4: (CAN_ID_VACUUM_TELEMETRY, "vacuum", self._decode_vacuum_frame),
             11: (CAN_ID_IMPACT_EVENT, "scan_probe", self._decode_scan_probe_frame),
@@ -1142,6 +1372,98 @@ class TesterQtBridge(QObject):
         worker = getattr(self, "_telemetry_thread", None)
         if worker is not None and worker is not threading.current_thread():
             worker.join(timeout=wait_s)
+
+    # -- live readouts (temperature, RPM, endstops) of the selected tool ---
+    @Property(bool, notify=changed)
+    def readoutsAvailable(self) -> bool:
+        return bool(tele.readouts_for(self._selected_tool_id))
+
+    @Property("QVariantList", notify=changed)
+    def readoutItems(self) -> list[dict[str, str]]:
+        return [
+            {"key": item.key, "label": _(item.label_key), "text": self._readout_values.get(item.key, "--")}
+            for item in tele.readouts_for(self._selected_tool_id)
+        ]
+
+    @Property(bool, notify=changed)
+    def readoutHasGraph(self) -> bool:
+        return tele.graphed(self._selected_tool_id) is not None
+
+    @Property(int, notify=changed)
+    def readoutGraphMax(self) -> int:
+        item = tele.graphed(self._selected_tool_id)
+        return item.graph_max if item is not None else 0
+
+    @Property("QVariantList", notify=changed)
+    def readoutGraphPoints(self) -> list[float]:
+        return list(self._readout_series.window)
+
+    @Property(bool, notify=changed)
+    def isWatchingReadouts(self) -> bool:
+        return "readout" in self._telemetry_stops
+
+    def _watch_readouts(self) -> None:
+        """Read-only watch of the frames the selected tool broadcasts; nothing is transmitted.
+
+        It holds the transport for reading like every other watch, but an output may be switched on while it runs
+        (that is what a temperature readout is for): see canActuateSelectedProfile."""
+        tool_id = self._selected_tool_id
+        by_id: dict[int, list] = {}
+        for item in tele.readouts_for(tool_id):
+            by_id.setdefault(item.can_id, []).append(item)
+        transport = self._transport
+        if transport is None:
+            return
+        stop = threading.Event()
+        self._telemetry_stops["readout"] = stop
+        self._readout_values.clear()
+        self._readout_series.clear()
+        self._set_state(status="WATCHING LIVE READOUTS", busy=True)
+        self._log(f"TELEMETRY_WATCH_STARTED key=readout tool={tool_id}")
+
+        def _worker() -> None:
+            try:
+                while not stop.is_set():
+                    frame = transport.read_frame(timeout=0.1)
+                    if frame is None or frame[0] not in by_id:
+                        continue
+                    for item in by_id[frame[0]]:
+                        decoded = tele.decode_readout(item, bytes(frame[1]))
+                        if decoded is not None:
+                            self._readoutUpdated.emit(item.key, decoded[0], decoded[1])
+            except Exception as exc:
+                self._log(f"TELEMETRY_WATCH_FAILED key=readout error={exc}")
+            finally:
+                self._telemetry_stops.pop("readout", None)
+                self._set_state(status="ACTIVE CHECKS ARMED" if not self._listen_only else "READ-ONLY READY", busy=False)
+                self._log("TELEMETRY_WATCH_STOPPED key=readout")
+
+        self._telemetry_thread = threading.Thread(target=_worker, daemon=True, name="urtc-tester-readout-watch")
+        self._telemetry_thread.start()
+
+    @Slot(str, str, float)
+    def _on_readout(self, key: str, text: str, value: float) -> None:
+        self._readout_values[key] = text
+        graphed = tele.graphed(self._selected_tool_id)
+        if graphed is not None and graphed.key == key:
+            self._readout_series.add(value, time.monotonic())
+        self.changed.emit()
+
+    @Slot(str, result=str)
+    def exportReadoutCsv(self, path_text: str) -> str:
+        """Save the recorded temperature series (every point since the watch started) as seconds,value; returns the path."""
+        graphed = tele.graphed(self._selected_tool_id)
+        path = QUrl(path_text).toLocalFile() if path_text.startswith("file:") else path_text
+        if graphed is None or not self._readout_series.history:
+            self._log("READOUT_EXPORT_EMPTY")
+            return ""
+        try:
+            count = tele.write_csv(path, graphed.key, self._readout_series.history)
+        except OSError as exc:
+            self._log(f"READOUT_EXPORT_FAILED {exc}")
+            return ""
+        self._log(f"READOUT_EXPORTED {count} points {path}")
+        return path
 
     @Slot()
     def stopTelemetryWatch(self) -> None:
@@ -1214,9 +1536,7 @@ class TesterQtBridge(QObject):
 
     @Slot(str, object)
     def _on_query_result(self, key: str, result: object) -> None:
-        # LBL_NO_RESPONSE_OLDER_FW is a real, pre-existing key (same one
-        # tester_common_panels.py's own Tkinter panels already show for
-        # this exact real condition) - no fallback needed here.
+        # LBL_NO_RESPONSE_OLDER_FW is a real, pre-existing key - no fallback needed here.
         no_response = _("LBL_NO_RESPONSE_OLDER_FW")
         if key == "fram_state":
             if result is None:
@@ -1373,8 +1693,7 @@ class TesterQtBridge(QObject):
     # above. ----------------------------------------------------------
     @staticmethod
     def _parse_custom_frame(can_id_text: str, data_text: str) -> tuple[int, bytes]:
-        """Same real validation as the legacy Tkinter panel's own
-        _parse_custom_frame (tester_common_panels.py) - 11-bit ID range,
+        """Validation of the custom frame - 11-bit ID range,
         DLC<=8, space-separated hex bytes. Raises ValueError with a
         message suitable for the activity log directly."""
         try:
@@ -1446,8 +1765,7 @@ class TesterQtBridge(QObject):
     def sendCustomFramePeriodicTick(self, can_id_hex: str, data_hex: str) -> None:
         """Called every interval by the QML Timer (customFrameTimer in
         TesterDeck.qml) while 'Repeat every' is checked - re-parses the
-        fields on every tick exactly like the legacy Tkinter panel's own
-        _send closure did, so a live-edited value takes effect without
+        fields on every tick, so a live-edited value takes effect without
         needing to stop/restart. Deliberately silent on an ordinary
         successful send (unlike sendCustomFrame's manual button) - only
         logs once on the transition into/out of a parse failure, or the
@@ -1638,7 +1956,7 @@ class TesterQtBridge(QObject):
 
     @Slot()
     def readFlyingProbe(self) -> None:
-        if not self._require_profile({17}, "FLYING_PROBE_READ"):
+        if not self._require_profile({17}, "FLYING_PROBE_READ", reads=True):
             return
         self._set_state(status="READING FLYING PROBE", busy=True)
         threading.Thread(target=self._read_flying_probe_worker, args=(self._transport,), daemon=True, name="urtc-flying-probe-read").start()
@@ -1674,7 +1992,7 @@ class TesterQtBridge(QObject):
 
     @Slot()
     def captureThermalFrame(self) -> None:
-        if not self._require_profile({22}, "THERMAL_CAPTURE"):
+        if not self._require_profile({22}, "THERMAL_CAPTURE", reads=True):
             return
         self._set_state(status="CAPTURING THERMAL FRAME", busy=True)
         threading.Thread(target=self._capture_thermal_worker, args=(self._transport,), daemon=True, name="urtc-thermal-capture").start()

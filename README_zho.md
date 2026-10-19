@@ -19,12 +19,12 @@
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
-  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
+  <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
 
-**版本：** 0.3.4 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**版本：** 0.3.5 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 许可证：源代码为 **GPL-3.0-or-later**，本文档为 **CC BY-SA 4.0**——见本仓库中的
 `LICENSE`，或本文档末尾的“许可证与版权声明”一节。
@@ -35,7 +35,7 @@
 一切都是针对当前正在运行的应用程序的运行时指令或遥测读取；它从不触碰
 闪存，因此这里没有任何东西会让板卡的可用性比开始时更差。
 
-**诚实核查 - 今天真正能运行的部分：** 为迁移到 Qt Quick 的控制系列所提供的 CAN 负载编码器（`advanced_protocol.py`）是真实的，并由 `tests/` 中的测试覆盖（`python -m pytest -q`）。这个仓库自己的 CI（`.github/workflows/ci.yml`）也会运行它们，同时运行 `ruff check`、`tools/ci_validate.py`、对每个 `.py` 文件的语法编译以及三个 `verify_qt_*.py` 脚本，所以那里的回归会导致构建失败。仓库根目录下的三个 `verify_qt_*.py` 脚本（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`）是真实的、刻意放在 `tests/` 之外的端到端检查，针对一个带有真实跨线程信号传递的模拟传输层——运行 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 时三者都能通过，CI 也会运行它们。这就是自动验证所能达到的诚实上限：传输层、CAN ID/字节布局处理，以及 Qt Quick 桥接逻辑都是真实的，并且针对模拟帧进行了验证，而不是真实硬件——正如下文"Known limitations"已经指出的，这套工具是在没有 USB 访问权限的环境下构建的，所以这里的任何东西都还没有针对真实板卡验证过。`tester_gui_core.py`、`tester_common_panels.py` 和 `tester_tool_panels.py` 都是真实且相当可观的实现（合计数千行代码），它们是通过这些验证脚本和人工使用来验证的，而不是通过等量的自动化测试。
+**诚实核查 - 今天真正能运行的部分：** 为迁移到 Qt Quick 的控制系列所提供的 CAN 负载编码器（`advanced_protocol.py`）是真实的，并由 `tests/` 中的测试覆盖（`python -m pytest -q`）。这个仓库自己的 CI（`.github/workflows/ci.yml`）也会运行它们，同时运行 `ruff check`、`tools/ci_validate.py`、对每个 `.py` 文件的语法编译以及四个 `verify_qt_*.py` 脚本，所以那里的回归会导致构建失败。仓库根目录下的四个 `verify_qt_*.py` 脚本（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`, `verify_qt_selftest.py`）是真实的、刻意放在 `tests/` 之外的端到端检查，针对一个带有真实跨线程信号传递的模拟传输层——运行 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 时四者都能通过，CI 也会运行它们。这就是自动验证所能达到的诚实上限：传输层、CAN ID/字节布局处理，以及 Qt Quick 桥接逻辑都是真实的，并且针对模拟帧进行了验证，而不是真实硬件——正如下文"Known limitations"已经指出的，这套工具是在没有 USB 访问权限的环境下构建的，所以这里的任何东西都还没有针对真实板卡验证过。`qt_tester.py` 和 `assets/qml/TesterDeck.qml` 是真实而庞大的实现（合计数千行代码），由使用模拟板卡的测试和验证脚本检验，从未在真实板卡上运行过。
 
 > **安全与安防现状:**本生态系统不是经认证的安全系统,目前也不存在已组装的 URTC 电路板。引导程序使用 CRC32 和共享密钥的 HMAC-SHA256 校验固件映像,而非非对称签名(计划中);已发布的应用映像使用公开的开发密钥签名(`signing_key_kind: dev`),因此任何人都可以生成引导程序接受的映像;尚未向任何真实电路板发送过任何内容。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
@@ -43,9 +43,9 @@
 
 | | |
 |---|---|
-| 版本 | `0.3.4` |
+| 版本 | `0.3.5` |
 | 成熟度 | 可用 |
-| 技术栈 | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
+| 技术栈 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
 
@@ -89,15 +89,6 @@ python3 urtc_tester.py         # Linux
 只有一次真正的 `build_exe.bat`/`build_exe.sh` 运行才会。MAJOR 从不自动
 递增，只能手动更改。版本历史见 `CHANGELOG.md`。
 
-**启动时**，横幅会在屏幕中央显示 5 秒，然后主窗口才出现，而不是存在于
-窗口内部——与刷写工具相同，原因也相同（保持窗口本身紧凑）。窗口/任务栏
-图标同样是一个独立的小型设计，而非缩小的横幅。
-
-连接面板也会显示官方的 HYDRA-UMC 动画标志。其维护的 SVG 源文件为
-`assets/HYDRA_UMC_ICON.svg`；随附的十二个 PNG 帧让动画能够在 Tkinter 和
-独立可执行文件中运行，而无需增加运行时图形依赖。原生 URTC 窗口/任务栏图标
-按设计保持静态。
-
 ### 可视化控制台
 
 **Qt Quick** 命令控制台现在是真正的默认界面：
@@ -109,22 +100,19 @@ python urtc_tester.py
 （运动、钻头、AOI、电磁铁、点焊/超声波焊接脉冲、锡膏喷射、飞针、热成像检测、
 5 个带看门狗保活的执行器、真空/扫描探头遥测），每一项都经过同样的关卡：
 身份匹配、明确启用的主动模式，以及发送前在 QML 中的用户确认。
-`python urtc_tester.py --legacy` 仍会启动原有的 25 面板 Tkinter 界面。
-两个界面都尚未在真实板卡上检查过 —— 见下方“已知限制”。
+这些都尚未在真实板卡上检查过 —— 见下方“已知限制”。
+
+该控制台还会显示检测到的工具的**实时读数**（带滚动曲线和 CSV 导出的温度、转速、限位开关；它们只监听，因此在仅监听模式下以及输出正在运行时也能使用），可运行**自检**，当**总线健康检查**（在没有其他操作占用总线时，每 3 秒查询一次当前工具）发现问题时会在标题栏警告，并提供带有 Readme、许可证和 GitHub 页面的 **关于 URTC Tester** 对话框，旁边是 **保存日志...**。
 
 Qt Quick 窗口的标题栏有语言选择器；所选语言会被保存，并在下次启动时生效。它还可以查询并重置烙铁送丝器的位置（开环估计值；重置需要确认）。 身份探测在电路板发送补丁号时（URTC 固件 0.3.5 及更新版本）也会显示固件补丁号；更旧的固件只显示主版本.次版本。
 
 现有的实时 CAN 诊断流程现在使用深海军蓝/青色控制界面：产品标题、高对比度连接卡、清晰的工具标签页、深色会话日志以及可见的进度通道。这只是视觉与可访问性改动，不会改变被动监控或命令路由，其中任何内容也从未在真实板卡上试过。
 
-### 菜单栏
+### 标题栏与工具
 
-- **文件** —— 保存日志（将屏幕上的日志保存为纯文本；如需一个包含系统
-  诊断信息的更完整的打包，请改用下方的“日志与调试包”），以及退出。
-- **语言** —— 在 7 种可用语言之间切换（翻译的工作方式见上方”语言”）。
-- **帮助** —— Readme（在一个只读查看器窗口中打开本文件；一旦当前语言
-  存在已翻译的版本，会自动使用该版本）、URTC GitHub（在浏览器中打开
-  项目的仓库）、许可证（本工具的 GPL-3.0-or-later 许可证，读取自仓库自身的
-  `LICENSE` 文件），以及关于（版本和作者）。
+- **标题栏** - 连接状态、总线健康警告、语言选择器（选择会被保存，并在下次启动时生效）和版本号。
+- **保存日志...** 和 **导出会话（带哈希的日志）** - 以纯文本保存屏幕日志，或保存包含日志、以 SHA-256 标识该日志的清单和系统诊断的 zip（见下文“日志与调试包”）。
+- **关于 URTC Tester** - 版本和作者，带有 **自述文件**（有翻译时使用界面语言）、**许可证** 和项目 **URTC GitHub** 页面的按钮。
 
 ### 文件结构
 
@@ -132,12 +120,10 @@ Qt Quick 窗口的标题栏有语言选择器；所选语言会被保存，并�
 作为一个大文件，在功能上没有任何区别。完整的逐文件分解见本文档末尾附近
 的“📂 仓库结构”一节。
 
-**语言**：默认为英语。通过窗口顶部菜单栏中的**语言**菜单切换，而非主
-窗口中的下拉框——将界面（标签、按钮、对话框和日志消息）切换为 7 种可用
-语言中的任意一种，立即保存到本工具旁边的 `config.json`，在下次启动时
+**语言**：默认为英语。通过窗口顶部的语言选择器切换——将界面（标签、按钮、对话框和日志消息）切换为 8 种可用语言中的任意一种，立即保存到本工具旁边的 `config.json`，在下次启动时
 应用。翻译文件以纯文本形式存放在 `language/` 下（`english.lng`、
 `spanish.lng`、`italian.lng`、`french.lng`、`german.lng`、`chinese.lng`、
-`japanese.lng`），采用简单的
+`japanese.lng`、`portuguese.lng`），采用简单的
 `KEY=Value` 键值对，一行一个——以 `#` 开头的行和空行会被忽略，值内部的
 字面 `\n` 会变成真正的换行符（用于少数几个多行对话框消息）。如果某个
 翻译需要修正，可以直接编辑，也可以将其作为新增另一种语言的起点（添加
@@ -241,7 +227,7 @@ FM24CL64B 共享 OLED 自身的硬件 I2C2 总线——这是一个核心板卡�
 扫描探针）——按下此按钮时，其他 18 种工具不会运行任何检查。
 
 **实时温度图表**：电烙铁和 3D 打印机喷嘴面板都在其实时温度读数旁边
-显示一个小型的滚动折线图——一个普通的 Tkinter Canvas 控件，而非新的
+显示一个小型的滚动折线图——一个普通的 Qt Quick Canvas，而非新的
 依赖（matplotlib/pyqtgraph 会打破本工具除 pyserial 之外的零依赖策略）。
 固定的 Y 轴范围（0 到该工具自身的设定值上限），而非自动缩放，因此趋势
 一眼就能看清，而不是坐标轴在其下方不断变化。
@@ -341,45 +327,30 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 
 ## 📂 仓库结构
 
-`assets/` 目录还包含 `HYDRA_UMC_ICON.svg`（维护中的动画矢量源文件）
-和 `hydra_umc_icon_frames/`（其随附的十二帧 Tkinter PNG 帧）。
-`tools/render_hydra_umc_icon_frames.py` 在开发期间从 SVG 重新生成
-这些帧；运行应用程序并不需要它。
-
 ```
 /
-├── urtc_tester.py             入口点——无 CLI 的启动流程和启动画面
+├── urtc_tester.py             入口点——启动 Qt Quick 控制台
 ├── qt_tester.py                Qt Quick 前端——默认的正式指令面板，默认只读
-│                                （Tkinter 界面用 `--legacy`）
+│
 ├── tester_config.py            配置/语言/协议常量（CAN ID、工具名称、
 │                                MOTION_TOOL_IDS、AVAILABLE_LANGUAGES、
 │                                EXPANSION_BOARD_TYPES）
 ├── tester_transports.py        SLCAN 和 SocketCAN 传输类
 ├── tester_bus_monitor.py       后台 CAN 读取线程（CANBusMonitor）
-├── tester_gui_core.py          TesterGUI 核心——连接、检测、窗口生命
-│                                周期，以及菜单栏；下方 3 个混入类
-│                                组合而成的类
-├── tester_common_panels.py     CommonPanelsMixin——全局/F-RAM/扩展/
-│                                自检/总线监视器/自定义帧面板
-│                                （始终可见的部分）
-├── tester_panel_helpers.py     PanelHelpersMixin——每个工具面板构建
-│                                器都使用的共享工具函数
-├── tester_tool_panels.py       ToolPanelsMixin——19 个特定工具面板
-│                                构建器，覆盖全部 25 种工具配置文件
-│                                （多个工具共享一个构建器，例如
-│                                `_build_motion_panel` 单独覆盖了
-│                                其中 7 个）
+├── tester_autodetect.py        SLCAN 适配器的比特率搜索
+├── tester_selftest.py          自检的步骤与执行（不含窗口代码）
+├── tester_telemetry.py         各工具的实时读数与记录的数据序列
+├── tester_trace_export.py      .trc / .asc 帧导出的写入代码
+├── urtc_ui/                    共享界面辅助代码（URTC-COMMON 的副本）
 ├── advanced_protocol.py        为迁移到 Qt Quick 的控制系列提供的纯 CAN
 │                                负载编码器——无需硬件的测试
-├── hydra_umc_animation.py      用于 Tkinter 的动画 HYDRA-UMC 身份标识控件
-├── hydra_umc_deck_widgets.py   实时诊断界面共享的圆角 HYDRA-UMC
-│                                指令面板控件
 ├── verify_qt_custom_frame.py        真实的、放在 tests/ 之外的端到端检查，验证 Qt Quick Custom CAN Frame 面板（需要真实的 Qt 事件循环）
 ├── verify_qt_telemetry_watch.py     真实的、放在 tests/ 之外的端到端检查，验证 Qt Quick 遥测（Vacuum Pickup / Scan Probe）
 ├── verify_qt_utility_panels.py      真实的、放在 tests/ 之外的端到端检查，验证 Qt Quick 实用面板（Global Controls / Expansion Board / F-RAM）
+├── verify_qt_selftest.py            位于 tests/ 之外的 Qt Quick 自检端到端检查
 ├── tests/
 │   └── test_advanced_protocol.py   针对 advanced_protocol.py 编码器的无硬件测试——CI 会运行它，见上文诚实核查
-├── requirements.txt            pyserial>=3.5（两个界面）+ PySide6>=6.8,<7（默认的 Qt Quick 面板）
+├── requirements.txt            pyserial>=3.5 + PySide6>=6.8,<7
 ├── build_exe.bat               独立 Windows 二进制文件构建脚本（PyInstaller）
 ├── build_exe.sh                同上，适用于 Linux
 ├── build-test.bat              不递增版本号的构建/编译检查
@@ -390,14 +361,12 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 ├── URTC_Tester.spec            两个构建脚本共用的 PyInstaller 规范文件
 ├── assets/
 │   ├── URTC_APP_ICON.svg       窗口/任务栏图标源文件（独立小型设计）
-│   ├── URTC_LOGO_TESTER.svg    启动横幅源文件
+│   ├── URTC_LOGO_TESTER.svg    横幅源文件（矢量图）
 │   ├── HYDRA_UMC_ICON.svg      维护中的动画 HYDRA-UMC 矢量源文件
-│   ├── hydra_umc_icon_frames/  由上方 SVG 渲染出的十二帧 Tkinter PNG 帧
 │   ├── qml/
 │   │   └── TesterDeck.qml      默认指令面板的 Qt Quick UI
 │   ├── urtc_icon.ico           Windows 图标，由 URTC_APP_ICON.svg 构建
-│   ├── urtc_icon.png           同上，PNG 形式（Linux）
-│   └── urtc_tester_banner.png  启动横幅 PNG，由上方的 SVG 渲染而成
+│   └── urtc_icon.png           同上，PNG 形式（Linux）
 ├── images/
 │   ├── URTC_LOGO_TESTER.svg    显示在本 README 顶部的 Logo 横幅
 │   └── URTC_TESTER_V1_1.png    本工具主窗口的截图（见下方照片）
@@ -408,7 +377,8 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 │   ├── french.lng
 │   ├── german.lng
 │   ├── japanese.lng
-│   └── chinese.lng
+│   ├── chinese.lng
+│   └── portuguese.lng
 ├── logs/                       运行时会话日志写入此处（删除是安全的）
 ├── LICENSE                     完整许可证文本——见下方许可证与版权声明
 ├── NOTICE                      版权声明和文档许可证
@@ -426,8 +396,7 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 │   └── THERMAL_RUNAWAY_BENCH_TEST.md
 ├── tools/
 │   ├── build_test.py                     不递增版本号的编译检查 + Qt Quick 面板源码校验
-│   ├── ci_validate.py                    CI 使用的 manifest/CHANGELOG/docs 校验
-│   └── render_hydra_umc_icon_frames.py   从 SVG 重新生成 assets/hydra_umc_icon_frames/（仅限开发）
+│   └── ci_validate.py                    CI 使用的 manifest/CHANGELOG/docs 校验
 └── README_zho.md               本文件
 ```
 

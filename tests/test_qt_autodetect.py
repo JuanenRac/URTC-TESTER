@@ -24,17 +24,17 @@ class QtAutodetectTests(unittest.TestCase):
         self.bridge._bitrateDetected.connect(self.results.append)
 
     def test_the_speed_the_scan_finds_is_reported(self):
-        with mock.patch("tester_gui_core.scan_bitrates", return_value="250 kbit/s"):
+        with mock.patch("tester_autodetect.scan_bitrates", return_value="250 kbit/s"):
             self.bridge._autodetect_worker("COM9")
         self.assertEqual(self.results, ["250 kbit/s"])
 
     def test_a_silent_bus_reports_nothing_found(self):
-        with mock.patch("tester_gui_core.scan_bitrates", return_value=None):
+        with mock.patch("tester_autodetect.scan_bitrates", return_value=None):
             self.bridge._autodetect_worker("COM9")
         self.assertEqual(self.results, [""])
 
     def test_a_failing_adapter_never_raises_into_the_deck(self):
-        with mock.patch("tester_gui_core.scan_bitrates", side_effect=OSError("port busy")):
+        with mock.patch("tester_autodetect.scan_bitrates", side_effect=OSError("port busy")):
             self.bridge._autodetect_worker("COM9")
         self.assertEqual(self.results, [""])
 

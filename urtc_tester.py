@@ -17,133 +17,35 @@ both tools ultimately just need to get CAN frames on and off the same
 kind of adapter - but this tool never touches flash: everything it does
 is runtime commands and telemetry against the currently-running
 application, nothing that can leave the board any less working than it
-started. Zero non-stdlib dependencies beyond pyserial, matching the flasher.
+started.
 
-This is the entry point only - the splash screen and main window setup.
-Everything else lives in its own module: tester_config.py (config/
-language/protocol constants), tester_transports.py (SLCAN/SocketCAN),
-tester_bus_monitor.py (the background CAN read thread), and TesterGUI
-itself, split by responsibility across tester_gui_core.py (connection/
-detection/window lifecycle) and 3 mixins it combines - tester_common_
-panels.py, tester_panel_helpers.py, and tester_tool_panels.py.
+This is the entry point only: it starts the Qt Quick deck (qt_tester.py with
+assets/qml/TesterDeck.qml).  The rest lives in its own module:
+tester_config.py (config/language/protocol constants), tester_transports.py
+(SLCAN/SocketCAN), tester_bus_monitor.py (frame filter and bus statistics),
+tester_selftest.py, tester_telemetry.py and tester_autodetect.py.
 """
 
 import sys
 
-# Real parity check, not a guess: every one of the 25 real tool profiles'
-# own commands (motion x8, drill, AOI, electromagnet, spot/ultrasonic weld
-# pulse, paste jetting, flying probe, thermal inspection, the 5 watchdog-
-# keepalive actuators - solder/laser/printer heater+fan/UV/hot-air - and
-# vacuum/scan-probe telemetry) is already wired into the Qt Quick deck's
-# own QML with real buttons and safety gating (qt_tester.py/TesterDeck.qml)
-# - confirmed by reading both files directly, not assumed from an older
-# comment. Qt Quick is now the real default; `--legacy` opts into the
-# original 25-panel Tkinter GUI instead (kept, not removed). Neither UI
-# has been checked against a real board yet - this whole project was
-# built with no USB access (see README.md's own "Known limitations") -
-# so this default choice is not a hardware-proven one either way; treat
-# a first real session with either UI with the same caution the README
-# already asks for.
-if "--legacy" in sys.argv:
-    import tkinter as tk
-    from tester_config import BANNER_IMAGE_PATH, _center_geometry, fit_to_screen
-    from tester_gui_core import TesterGUI
-
-
-def _show_splash_then(root, on_done):
-    """Shows the banner centered on screen for up to 5s, then calls
-    on_done() and closes the splash. Built as a borderless Toplevel rather
-    than the banner being part of the main window itself, so the main
-    window can stay smaller - the banner only needs screen space for those
-    first 5 seconds, not for the entire session. Skipped straight to
-    on_done() if the banner image can't be loaded for any reason (missing
-    file, etc.) - a missing splash was never worth blocking startup over.
-
-    Click or any keypress dismisses it immediately instead of waiting out
-    the full 5s - a technician restarting the tool repeatedly between
-    quick diagnostic runs (its actual, frequent use case) shouldn't have
-    to sit through the same fixed delay every single time.
-    """
-    try:
-        banner_img = tk.PhotoImage(file=BANNER_IMAGE_PATH)
-    except (tk.TclError, OSError):
-        on_done()
-        return
-
-    splash = tk.Toplevel(root)
-    splash.withdraw()  # stays hidden until correctly positioned below - see the flasher's identical fix for the full reasoning
-    splash.overrideredirect(True)
-    splash.configure(bg="#14171C")
-    label = tk.Label(splash, image=banner_img, bg="#14171C", borderwidth=0)
-    label.image = banner_img
-    label.pack()
-
-    splash.geometry(_center_geometry(splash, banner_img.width(), banner_img.height()))
-    splash.attributes("-topmost", True)
-    splash.deiconify()  # only shown now that it's already correctly positioned
-
-    _done = {"fired": False}
-
-    def _finish(event=None):
-        # Guards against both the timer and a click/keypress firing this
-        # in the same tick (e.g. a click landing right as the 5s timer
-        # expires) - destroy()/on_done() must only ever run once.
-        if _done["fired"]:
-            return
-        _done["fired"] = True
-        splash.destroy()
-        on_done()
-
-    timer_id = splash.after(5000, _finish)
-
-    def _skip(event=None):
-        splash.after_cancel(timer_id)
-        _finish()
-
-    # overrideredirect windows don't get keyboard focus automatically -
-    # without this, <Key> below would never fire.
-    splash.focus_set()
-    splash.bind("<Button-1>", _skip)
-    splash.bind("<Key>", _skip)
-    label.bind("<Button-1>", _skip)
-
 
 def main():
-    if "--legacy" not in sys.argv:
-        # Qt Quick now has real, wired coverage for every one of the 25
-        # tool profiles (see this file's own top-of-file comment for the
-        # exact verification) - it is the real default. `--legacy` opts
-        # into the original Tkinter GUI instead.
-        try:
-            from qt_tester import run_qtquick
-        except ImportError as exc:
-            print(
-                "ERROR: Qt Quick mode requires PySide6. "
-                "Install this repository's requirements.txt first, or "
-                "pass --legacy to use the original Tkinter GUI instead. "
-                f"Details: {exc}",
-                file=sys.stderr,
-            )
-            return 2
-        return run_qtquick()
-    root = tk.Tk()
-    root.withdraw()
-    # Sized from actual measured content across all 5 supported languages
-    # and all 25 tool panels (root.winfo_reqwidth/reqheight after
-    # building the real GUI, not a guess) - re-measured after
-    # redesigning the 3D printer panel (the tallest of the 25) into 2
-    # columns instead of one long stack. Worst case: Spanish for width
-    # (1342px measured), German for height (1054px measured). A small
-    # margin above those worst-case measurements.
-    width, height = fit_to_screen(1360, 1075, root.winfo_screenwidth(), root.winfo_screenheight())
-    root.geometry(_center_geometry(root, width, height))
-    TesterGUI(root)  # the window object lives on through root
-
-    def _reveal_main():
-        root.deiconify()
-
-    _show_splash_then(root, _reveal_main)
-    root.mainloop()
+    if "--legacy" in sys.argv:
+        print(
+            "Note: the classic Tkinter window has been retired; the Qt Quick deck starts instead.",
+            file=sys.stderr,
+        )
+    try:
+        from qt_tester import run_qtquick
+    except ImportError as exc:
+        print(
+            "ERROR: URTC Tester needs PySide6 (Qt Quick). "
+            "Install this repository's requirements.txt first. "
+            f"Details: {exc}",
+            file=sys.stderr,
+        )
+        return 2
+    return run_qtquick()
 
 
 if __name__ == "__main__":

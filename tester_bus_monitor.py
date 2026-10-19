@@ -18,8 +18,7 @@ class CANBusMonitor:
     to watch several different telemetry IDs at once (temperature, RPM,
     endstops...) without them stepping on each other, and a serial port or
     raw socket can't safely be read from two places at once. Callbacks run
-    on this background thread - they must only touch Tkinter state via
-    root.after(), never touch widgets directly.
+    on this background thread - they must not touch window state directly.
     """
     def __init__(self, transport, log, listen_only=False):
         self.transport = transport

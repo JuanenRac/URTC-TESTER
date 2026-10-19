@@ -12,7 +12,6 @@ file only reads its own copy."""
 from __future__ import annotations
 
 import json
-import re
 import sys
 import threading
 from pathlib import Path
@@ -82,12 +81,10 @@ def test_erase_fram_magic_matches():
     assert tester_config.CAN_ID_ERASE_FRAM == _id(magic["id"])
 
 
-def test_the_feeder_reset_panel_sends_the_shared_magic():
+def test_the_feeder_reset_sends_the_shared_magic():
     magic = next(m for m in VECTORS["magic_payloads"] if m["name"] == "solder_feeder_reset")
-    source = (ROOT / "tester_tool_panels.py").read_text(encoding="utf-8")
-    sent = re.search(r"CAN_ID_SOLDER_FEEDER_RESET, bytes\(\[([^\]]*)\]\)", source)
-    assert sent is not None
-    assert bytes(int(token, 16) for token in sent.group(1).split(",")) == _hex(magic["data"])
+    source = (ROOT / "qt_tester.py").read_text(encoding="utf-8")
+    assert "CAN_ID_SOLDER_FEEDER_RESET, SOLDER_FEEDER_RESET_MAGIC" in source
     assert tester_config.CAN_ID_SOLDER_FEEDER_RESET == _id(magic["id"])
     assert tester_config.SOLDER_FEEDER_RESET_MAGIC == _hex(magic["data"])
 

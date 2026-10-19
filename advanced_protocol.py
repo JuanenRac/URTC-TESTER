@@ -209,8 +209,8 @@ def global_status_frame(
     ring_on: bool,
 ) -> tuple[int, bytes]:
     """CAN_ID_GLOBAL_STATUS (0x100) - any tool, not gated by a selected
-    profile at all (see tester_common_panels.py's own real
-    _send_global_status). A 10s hold before the board falls back to its
+    profile at all (see qt_tester.py's own real
+    sendGlobalStatus). A 10s hold before the board falls back to its
     own automatic color scheme - real, but low-stakes if it lapses."""
     night_code = {"standard": 0x00, "night": 0x01, "standby": 0x0F}.get(night_mode)
     if night_code is None:
@@ -230,8 +230,8 @@ def global_status_frame(
 
 def spi_passthrough_frame(hex_bytes: str) -> tuple[int, bytes]:
     """CAN_ID_EXP_SPI_CMD (0x180) - CONN_EXPANSION's generic, non-TMC5160-
-    aware bit-banged SPI passthrough (see tester_common_panels.py's own
-    real _send_expansion_spi). 1-7 real raw bytes, never guessed from a
+    aware bit-banged SPI passthrough (see qt_tester.py's own
+    real sendExpansionSpi). 1-7 real raw bytes, never guessed from a
     malformed hex string."""
     try:
         tx = bytes(int(b, 16) for b in hex_bytes.split())

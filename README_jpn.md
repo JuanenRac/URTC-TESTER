@@ -19,12 +19,12 @@
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
-  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
+  <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
 
-**バージョン：** 0.3.4 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**バージョン：** 0.3.5 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 ライセンス：ソースコードは **GPL-3.0-or-later**、本ドキュメントは **CC BY-SA 4.0**——
 本リポジトリの `LICENSE`、または本ドキュメント末尾の「ライセンスと著作権
@@ -39,7 +39,7 @@ URTC ボード向けのライブ CAN バステスターです。フラッシャ�
 ラッシュには一切触れないため、これによってボードが開始時より動作しなく
 なることはありません。
 
-**正直な現状確認 - 実際に今動くもの:** Qt Quick に移行した制御系統向けの CAN ペイロードエンコーダー（`advanced_protocol.py`）は本物であり、`tests/` のテスト（`python -m pytest -q`）でカバーされている。このリポジトリ自身の CI（`.github/workflows/ci.yml`）もこれらを、`ruff check`、`tools/ci_validate.py`、各 `.py` ファイルの構文コンパイル、3つの `verify_qt_*.py` スクリプトとともに実行するため、そこでのリグレッションはビルドを失敗させる。リポジトリ直下にある3つの `verify_qt_*.py` スクリプト（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`）は、意図的に `tests/` の外に置かれた本物のエンドツーエンドチェックであり、本物のクロススレッドシグナル配信を伴う偽のトランスポートに対して検証を行う——`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で3つとも通過し、CI でも実行される。これが自動的に検証されている範囲の正直な上限だ。トランスポート層、CAN ID/バイトレイアウトの処理、そして Qt Quick ブリッジのロジックは本物であり、模擬フレームに対して検証されているが、実機のハードウェアに対してではない——下記の「Known limitations」がすでに述べている通り、これは USB アクセスのない環境で構築されたため、ここにあるものはまだ何も実機ボードに対して検証されていない。`tester_gui_core.py`、`tester_common_panels.py`、`tester_tool_panels.py` は本物で相当な規模の実装であり（合計で数千行）、これらの検証スクリプトと手動での使用によって検証されているのであって、それに見合う量の自動化されたテストによってではない。
+**正直な現状確認 - 実際に今動くもの:** Qt Quick に移行した制御系統向けの CAN ペイロードエンコーダー（`advanced_protocol.py`）は本物であり、`tests/` のテスト（`python -m pytest -q`）でカバーされている。このリポジトリ自身の CI（`.github/workflows/ci.yml`）もこれらを、`ruff check`、`tools/ci_validate.py`、各 `.py` ファイルの構文コンパイル、4つの `verify_qt_*.py` スクリプトとともに実行するため、そこでのリグレッションはビルドを失敗させる。リポジトリ直下にある4つの `verify_qt_*.py` スクリプト（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`, `verify_qt_selftest.py`）は、意図的に `tests/` の外に置かれた本物のエンドツーエンドチェックであり、本物のクロススレッドシグナル配信を伴う偽のトランスポートに対して検証を行う——`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で4つとも通過し、CI でも実行される。これが自動的に検証されている範囲の正直な上限だ。トランスポート層、CAN ID/バイトレイアウトの処理、そして Qt Quick ブリッジのロジックは本物であり、模擬フレームに対して検証されているが、実機のハードウェアに対してではない——下記の「Known limitations」がすでに述べている通り、これは USB アクセスのない環境で構築されたため、ここにあるものはまだ何も実機ボードに対して検証されていない。`qt_tester.py` と `assets/qml/TesterDeck.qml` が実質的な実装本体（合計で数千行）であり、模擬ボードを使ったテストと検証スクリプトで動作確認されているが、実機では一度も試されていない。
 
 > **安全性とセキュリティの現状:** このエコシステムは認証された安全システムではなく、実装済みの URTC 基板もまだ存在しません。ブートローダーはファームウェアイメージを CRC32 と共有鍵の HMAC-SHA256 で検査しており、非対称署名ではありません(予定)。公開されているアプリケーションイメージは公開の開発用鍵(`signing_key_kind: dev`)で署名されているため、誰でもブートローダーが受け入れるイメージを作れます。実際の基板には何も送信されていません。ここに書かれた内容を人の安全のために頼る前に、[セキュリティベースライン](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)と[脅威モデル](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)をお読みください。
 
@@ -47,9 +47,9 @@ URTC ボード向けのライブ CAN バステスターです。フラッシャ�
 
 | | |
 |---|---|
-| バージョン | `0.3.4` |
+| バージョン | `0.3.5` |
 | 成熟度 | 機能する |
-| 技術 | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
+| 技術 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 対象 | 利用者の PC |
 | 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
 
@@ -100,18 +100,6 @@ Linux では `./build_exe.sh`。どちらも最初に `build/`/`dist/` をクリ
 には決して加算されず、手動でのみ変更されます。バージョン履歴は
 `CHANGELOG.md` を参照してください。
 
-**起動時**、バナーはメインウィンドウが表示される前に 5 秒間画面中央に
-表示され、ウィンドウ自体の内部には存在しません——フラッシャーと同じで、
-理由も同じです（ウィンドウ自体をコンパクトに保つため）。ウィンドウ/
-タスクバーのアイコンも同様に、縮小されたバナーではなく、小さな独立した
-デザインです。
-
-接続パネルにも、公式 HYDRA-UMC マークのアニメーションが表示されます。
-管理対象の SVG ソースは `assets/HYDRA_UMC_ICON.svg` です。付属する 12 枚の
-PNG フレームにより、追加の GUI 実行時依存関係なしで Tkinter と単体実行形式の
-両方でアニメーションを維持します。ネイティブ URTC のウィンドウ/タスクバー
-アイコンは設計上、静的なままです。
-
 ### ビジュアル・コマンドデッキ
 
 **Qt Quick** コマンドデッキが現在の本来の既定です：
@@ -124,27 +112,20 @@ SLCAN/SocketCAN トランスポートを使用し、リッスンオンリーで�
 スポット/超音波溶接パルス、ペースト噴射、フライングプローブ、熱検査、
 ウォッチドッグ・キープアライブの 5 つのアクチュエーター、真空/スキャンプローブのテレメトリ）。
 どれも同じ関門を通ります：識別の一致、明示的に有効化したアクティブモード、
-送信前の QML でのユーザー確認。`python urtc_tester.py --legacy` で、従来の 25 パネルの
-Tkinter GUI を引き続き起動できます。どちらの UI もまだ実機のボードでは確認されていません ——
+送信前の QML でのユーザー確認。これらはまだ実機のボードでは確認されていません ——
 下記の「既知の制限事項」を参照してください。
+
+このデッキは、検出したツールの**ライブ値**（ローリンググラフと CSV 出力付きの温度、回転数、エンドストップ。聞くだけなのでリッスン専用モードでも、出力が動作中でも使えます）も表示し、**セルフテスト**を実行し、**バス健全性チェック**（バスを他に使っていない間、3 秒ごとにアクティブなツールへ問い合わせます）が問題を見つけるとヘッダーで警告し、**ログを保存...** の隣に Readme・ライセンス・GitHub ページを開く **URTC Tester について** ダイアログがあります。
 
 Qt Quick ウィンドウのヘッダーに言語セレクターがあります。選択は保存され、次回の起動から有効になります。また、はんだごてのワイヤーフィーダーの位置を問い合わせ、リセットできます（開ループの推定値で、リセットには確認が必要です）。 アイデンティティプローブは、ボードが送信した場合（URTC ファームウェア 0.3.5 以降）、ファームウェアのパッチ番号も表示します。それより古いファームウェアでは major.minor のみ表示されます。
 
 既存のライブ CAN 診断ワークフローは、ダークネイビー/シアンの操作面を使用します。製品ヘッダー、高コントラストの接続カード、明確なツールタブ、暗色のセッションログ、見やすい進捗表示を備えます。これは視覚性とアクセシビリティの変更であり、受動監視とコマンドルーティングは変更しません。実機のボードで試したことはありません。
 
-### メニューバー
+### ヘッダーとツール
 
-- **ファイル** —— ログを保存（画面上のログをプレーンテキストとして；
-  システム診断情報を含む、より完全なバンドルについては、代わりに下記の
-  「ログとデバッグバンドル」を参照）、そして終了。
-- **言語** —— 7 つの利用可能な言語を切り替えます（翻訳の仕組みについて
-  は上の「言語」を参照）。
-- **ヘルプ** —— Readme（本ファイルを読み取り専用のビューアーウィンドウ
-  で開きます；現在の言語向けの翻訳版が存在すれば自動的にそれを使用しま
-  す）、URTC GitHub（プロジェクトのリポジトリをブラウザで開きます）、
-  ライセンス（本ツールの GPL-3.0-or-later ライセンス、リポジトリ自身の
-  `LICENSE` ファイルから読み込まれます）、そしてこのアプリについて
-  （バージョンと作者）。
+- **ヘッダー** - 接続状態、バス健全性の警告、言語セレクター（選択は保存され、次回起動時に適用されます）、バージョン。
+- **ログを保存...** と **セッションを書き出す（ハッシュ付きログ）** - 画面のログをプレーンテキストで、またはログ、そのログを SHA-256 で特定するマニフェスト、システム診断を含む zip を保存します（下の「ログとデバッグバンドル」を参照）。
+- **URTC Tester について** - バージョンと作者。**README**（翻訳があればインターフェースの言語で）、**ライセンス**、プロジェクトの **URTC GitHub** ページのボタンがあります。
 
 ### ファイル構成
 
@@ -154,14 +135,11 @@ Qt Quick ウィンドウのヘッダーに言語セレクターがあります�
 は、本ドキュメント末尾近くの「📂 リポジトリ構成」セクションを参照して
 ください。
 
-**言語**：デフォルトは英語です。メインウィンドウ内のドロップダウンでは
-なく、（ウィンドウ上部のメニューバー内の）**言語**メニューから切り替え
-ます——インターフェース（ラベル、ボタン、ダイアログ、ログメッセージ）
-を 7 つの利用可能な言語のいずれかへ切り替え、即座に本ツールの隣にある
+**言語**：デフォルトは英語です。ウィンドウ上部の言語セレクターから切り替えます——インターフェース（ラベル、ボタン、ダイアログ、ログメッセージ）を 8 つの利用可能な言語のいずれかへ切り替え、即座に本ツールの隣にある
 `config.json` に保存され、次回起動時に適用されます。翻訳は `language/`
 下のプレーンテキストファイル（`english.lng`、`spanish.lng`、
 `italian.lng`、`french.lng`、`german.lng`、`chinese.lng`、
-`japanese.lng`）として、シンプルな
+`japanese.lng`、`portuguese.lng`）として、シンプルな
 `KEY=Value` ペア、1 行に 1 つの形式で存在します——`#` で始まる行と空行
 は無視され、値の中のリテラルな `\n` は実際の改行になります（数個の
 複数行ダイアログメッセージで使用されています）。翻訳の修正が必要な場合
@@ -300,7 +278,7 @@ ID の範囲と DLC≤8 以外の検証はありません。ここで送信す�
 
 **リアルタイム温度グラフ**：はんだごてと 3D プリンターノズルのパネルは
 どちらも、そのリアルタイム温度読み取り値の隣に小さなスクロール折れ線
-グラフを表示します——単純な Tkinter Canvas ウィジェットであり、新しい
+グラフを表示します——単純な Qt Quick Canvas であり、新しい
 依存関係ではありません（matplotlib/pyqtgraph は、本ツールの pyserial
 を超えたゼロ依存ポリシーを破ってしまいます）。自動スケーリングではなく
 固定の Y 軸スケール（0 からそのツール自身の設定値の上限まで）なので、
@@ -425,48 +403,29 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 
 ## 📂 リポジトリ構成
 
-`assets/` ディレクトリには `HYDRA_UMC_ICON.svg`（維持されているアニメーション
-ベクターソース）と `hydra_umc_icon_frames/`（同梱の 12 枚の Tkinter 用 PNG
-フレーム）も含まれます。`tools/render_hydra_umc_icon_frames.py` は開発中に
-これらを SVG から再生成します。アプリケーションの実行には不要です。
-
 ```
 /
-├── urtc_tester.py             エントリポイント——CLI なしの起動とスプラッシュ画面
-├── qt_tester.py                Qt Quick フロントエンド——既定の本番コマンドデッキ（既定では読み取り専用、
-│                                Tkinter GUI は `--legacy`）
+├── urtc_tester.py             エントリポイント——Qt Quick デッキを起動
+├── qt_tester.py                Qt Quick フロントエンド——既定の本番コマンドデッキ
 ├── tester_config.py            設定/言語/プロトコル定数（CAN ID、ツール名、
 │                                MOTION_TOOL_IDS、AVAILABLE_LANGUAGES、
 │                                EXPANSION_BOARD_TYPES）
 ├── tester_transports.py        SLCAN と SocketCAN のトランスポートクラス
 ├── tester_bus_monitor.py       バックグラウンド CAN 読み取りスレッド（CANBusMonitor）
-├── tester_gui_core.py          TesterGUI コア——接続、検出、ウィンドウの
-│                                ライフサイクル、そしてメニューバー；
-│                                下記 3 つのミックスインが組み合わさる
-│                                クラス
-├── tester_common_panels.py     CommonPanelsMixin——グローバル/F-RAM/拡張/
-│                                自己診断/バスモニター/カスタムフレーム
-│                                パネル（常に表示されるセクション）
-├── tester_panel_helpers.py     PanelHelpersMixin——すべてのツールパネル
-│                                ビルダーが使用する共有ユーティリティ
-├── tester_tool_panels.py       ToolPanelsMixin——25 種類のツールプロファ
-│                                イルすべてをカバーする 19 個のツール固有
-│                                パネルビルダー（複数のツールが 1 つの
-│                                ビルダーを共有します。例えば
-│                                `_build_motion_panel` はそれだけで
-│                                そのうちの 7 つをカバーします）
+├── tester_autodetect.py        SLCAN アダプターのビットレート検索
+├── tester_selftest.py          セルフテストの手順と実行（ウィンドウのコードなし）
+├── tester_telemetry.py         各ツールのライブ値と記録された系列
+├── tester_trace_export.py      .trc / .asc フレームエクスポートの書き出し
+├── urtc_ui/                    共有 UI ヘルパー（URTC-COMMON のコピー）
 ├── advanced_protocol.py        Qt Quick に移行した制御ファミリー向けの純粋な
 │                                CAN ペイロードエンコーダー——ハードウェア不要のテスト
-├── hydra_umc_animation.py      Tkinter 用のアニメーション HYDRA-UMC アイデンティティ
-│                                ウィジェット
-├── hydra_umc_deck_widgets.py   ライブ診断画面が共有する丸みを帯びた
-│                                HYDRA-UMC コマンドデッキウィジェット
 ├── verify_qt_custom_frame.py        tests/ の外に置かれた、Qt Quick の Custom CAN Frame パネルの本物のエンドツーエンド検証（本物の Qt イベントループが必要）
 ├── verify_qt_telemetry_watch.py     tests/ の外に置かれた、Qt Quick のテレメトリ（Vacuum Pickup / Scan Probe）の本物のエンドツーエンド検証
 ├── verify_qt_utility_panels.py      tests/ の外に置かれた、Qt Quick のユーティリティパネル（Global Controls / Expansion Board / F-RAM）の本物のエンドツーエンド検証
+├── verify_qt_selftest.py            tests/ の外に置かれた、Qt Quick セルフテストのエンドツーエンドチェック
 ├── tests/
 │   └── test_advanced_protocol.py   advanced_protocol.py のエンコーダー用ハードウェア不要テスト——CI で実行される、上記の正直な現状確認を参照
-├── requirements.txt            pyserial>=3.5（両方の UI）+ PySide6>=6.8,<7（既定の Qt Quick デッキ）
+├── requirements.txt            pyserial>=3.5 + PySide6>=6.8,<7
 ├── build_exe.bat               独立 Windows バイナリビルドスクリプト（PyInstaller）
 ├── build_exe.sh                同上、Linux 向け
 ├── build-test.bat              バージョンを更新しないビルド/コンパイル確認
@@ -477,14 +436,12 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 ├── URTC_Tester.spec            両方のビルドスクリプトが使用する PyInstaller の spec
 ├── assets/
 │   ├── URTC_APP_ICON.svg       ウィンドウ/タスクバーアイコンのソース（独立した小型デザイン）
-│   ├── URTC_LOGO_TESTER.svg    起動バナーのソース
+│   ├── URTC_LOGO_TESTER.svg    バナーのソース（ベクター）
 │   ├── HYDRA_UMC_ICON.svg      維持されているアニメーション HYDRA-UMC ベクターソース
-│   ├── hydra_umc_icon_frames/  上記の SVG からレンダリングされた 12 枚の Tkinter 用 PNG フレーム
 │   ├── qml/
 │   │   └── TesterDeck.qml      既定のコマンドデッキの Qt Quick UI
 │   ├── urtc_icon.ico           Windows アイコン、URTC_APP_ICON.svg から構築
-│   ├── urtc_icon.png           同上、PNG 形式（Linux）
-│   └── urtc_tester_banner.png  起動バナー PNG、上記の SVG からレンダリング
+│   └── urtc_icon.png           同上、PNG 形式（Linux）
 ├── images/
 │   ├── URTC_LOGO_TESTER.svg    本 README の先頭に表示される Logo バナー
 │   └── URTC_TESTER_V1_1.png    本ツールのメインウィンドウのスクリーンショット（下記の写真を参照）
@@ -495,7 +452,8 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 │   ├── french.lng
 │   ├── german.lng
 │   ├── japanese.lng
-│   └── chinese.lng
+│   ├── chinese.lng
+│   └── portuguese.lng
 ├── logs/                       実行時のセッションログがここに書き込まれる（削除しても安全）
 ├── LICENSE                     完全なライセンステキスト——下記のライセンスと著作権表示を参照
 ├── NOTICE                      著作権表示とドキュメントのライセンス
@@ -513,8 +471,7 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 │   └── THERMAL_RUNAWAY_BENCH_TEST.md
 ├── tools/
 │   ├── build_test.py                     バージョンを更新しないコンパイル確認 + Qt Quick デッキのソース検証
-│   ├── ci_validate.py                    CI が使用する manifest/CHANGELOG/docs の検証
-│   └── render_hydra_umc_icon_frames.py   assets/hydra_umc_icon_frames/ を SVG から再生成（開発専用）
+│   └── ci_validate.py                    CI が使用する manifest/CHANGELOG/docs の検証
 └── README_jpn.md               本ファイル
 ```
 

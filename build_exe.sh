@@ -63,15 +63,6 @@ restore_after_failed_build() {
 }
 trap restore_after_failed_build EXIT
 
-# Tkinter is only needed by the classic window (--legacy); the default Qt
-# Quick deck does not use it, so a missing Tk is a warning, not an error.
-if ! python3 -c "import tkinter" 2>/dev/null; then
-    echo "      Note: tkinter is not available for this Python install, so the"
-    echo "      classic window (--legacy) will not work in the built binary."
-    echo "      On Debian/Ubuntu:  sudo apt install python3-tk"
-    echo "      On Fedora:         sudo dnf install python3-tkinter"
-    echo "      On Arch:           sudo pacman -S tk"
-fi
 echo "      Found."
 echo
 
@@ -125,14 +116,13 @@ python3 -m PyInstaller --onefile --noconfirm --name "URTC_Tester" \
     --hidden-import tester_config \
     --hidden-import tester_transports \
     --hidden-import tester_bus_monitor \
-    --hidden-import tester_gui_core \
-    --hidden-import tester_common_panels \
-    --hidden-import tester_panel_helpers \
-    --hidden-import tester_tool_panels \
     --hidden-import advanced_protocol \
     --hidden-import tester_result_record \
-    --hidden-import hydra_umc_animation \
-    --hidden-import hydra_umc_deck_widgets \
+    --hidden-import tester_selftest \
+    --hidden-import tester_telemetry \
+    --hidden-import tester_autodetect \
+    --hidden-import tester_trace_export \
+    --hidden-import urtc_ui \
     --hidden-import qt_tester \
     --hidden-import PySide6.QtQml \
     --hidden-import PySide6.QtQuick \

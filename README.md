@@ -19,12 +19,12 @@
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
-  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
+  <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
 
-**Version:** 0.3.4 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
+**Version:** 0.3.5 · **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
 License: **GPL-3.0-or-later** for the source code, **CC BY-SA 4.0** for this
 documentation - see `LICENSE` in this repository, or the "License and
@@ -38,7 +38,7 @@ once. Everything it does is a runtime command or a telemetry read against
 the currently-running application; it never touches flash, so there's
 nothing here that can leave the board any less working than it started.
 
-**Honesty check - what actually runs today:** the CAN payload encoders for the migrated Qt Quick control families (`advanced_protocol.py`) are real and covered by the tests in `tests/` (`python -m pytest -q`). This repo's own CI (`.github/workflows/ci.yml`) runs them too, together with `ruff check`, `tools/ci_validate.py`, a syntax compile of every `.py` file and the three `verify_qt_*.py` scripts, so a regression there fails the build. The three `verify_qt_*.py` scripts at the repo root (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`) are real, deliberately-outside-`tests/` end-to-end checks against a fake transport with real cross-thread Signal delivery - all three pass with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, which CI runs too. That's the honest ceiling of what's automatically verified: the transport layer, CAN ID/byte-layout handling, and the Qt Quick bridge logic are real and exercised against mocked frames, not real hardware - as "Known limitations" below already says, this was built with no USB access, so nothing here has been checked against a real board yet. `tester_gui_core.py`, `tester_common_panels.py` and `tester_tool_panels.py` are real, substantial implementations (thousands of lines combined) exercised by the verify scripts and manual use, not by a matching volume of automated tests.
+**Honesty check - what actually runs today:** the CAN payload encoders for the migrated Qt Quick control families (`advanced_protocol.py`) are real and covered by the tests in `tests/` (`python -m pytest -q`). This repo's own CI (`.github/workflows/ci.yml`) runs them too, together with `ruff check`, `tools/ci_validate.py`, a syntax compile of every `.py` file and the four `verify_qt_*.py` scripts, so a regression there fails the build. The four `verify_qt_*.py` scripts at the repo root (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) are real, deliberately-outside-`tests/` end-to-end checks against a fake transport with real cross-thread Signal delivery - all four pass with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, which CI runs too. That's the honest ceiling of what's automatically verified: the transport layer, CAN ID/byte-layout handling, and the Qt Quick bridge logic are real and exercised against mocked frames, not real hardware - as "Known limitations" below already says, this was built with no USB access, so nothing here has been checked against a real board yet. `qt_tester.py` and `assets/qml/TesterDeck.qml` are the real, substantial implementation (thousands of lines combined), exercised by the tests with fake boards and by the verify scripts, never by a real board.
 
 > **Safety and security status:** this ecosystem is not a certified safety system, and no populated URTC board exists yet. The bootloaders check firmware images with CRC32 and a shared-key HMAC-SHA256, not with an asymmetric signature (planned); the published application images are signed with the public development key (`signing_key_kind: dev`), so anyone can produce an image the bootloader accepts; nothing has been transmitted to a real board. Read the [security baseline](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) and the [threat model](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) before relying on any statement here for the safety of a person.
 
@@ -46,9 +46,9 @@ nothing here that can leave the board any less working than it started.
 
 | | |
 |---|---|
-| Version | `0.3.4` |
+| Version | `0.3.5` |
 | Maturity | Functional |
-| Stack | Python / Tkinter (legacy 25-tool workflow) / PySide6 / Qt Quick / live CAN bus diagnostics |
+| Stack | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |
 
@@ -96,18 +96,6 @@ Running from source (`python urtc_tester.py`) and building
 (`build_exe.bat`/`build_exe.sh`) never touch it. MAJOR is never bumped
 automatically, only by hand. See `CHANGELOG.md` for the version history.
 
-**On startup**, the banner shows centered on screen for 5 seconds before
-the main window appears, rather than living inside the window itself -
-same as the flasher, and for the same reason (keeps the window itself
-compact). The window/taskbar icon is likewise a small standalone design,
-not the banner shrunk down.
-
-The connection panel also shows the official animated HYDRA-UMC mark. Its
-maintained SVG source is `assets/HYDRA_UMC_ICON.svg`; twelve bundled PNG
-frames preserve the animation in Tkinter and in the standalone executable
-without adding a runtime GUI dependency. The native URTC window/taskbar icon
-remains static by design.
-
 ### Visual command deck
 
 The **Qt Quick** command deck is now the real default:
@@ -121,26 +109,19 @@ one of the 25 tool profiles' own commands has real, confirmed coverage here
 jetting, flying probe, thermal inspection, the 5 watchdog-keepalive
 actuators, vacuum/scan-probe telemetry), each gated the same way: an
 identity match, an explicitly armed active mode, and a user confirmation in
-QML before anything transmits. `python urtc_tester.py --legacy` still
-launches the original 25-panel Tkinter GUI. Neither UI has been checked
-against a real board yet - see "Known limitations" below.
+QML before anything transmits. Nothing here has been checked against a real board yet - see "Known limitations" below.
+
+The deck also shows the **live readouts** of the detected tool (temperature with a rolling graph and CSV export, RPM, endstops; they only listen, so they work in listen-only mode and next to a running output), runs the **self-test**, warns in the header when the **bus health check** (a query of the active tool every 3 seconds while nothing else uses the bus) sees a problem, and has an **About URTC Tester** dialog with the Readme, the License and the GitHub page, next to **Save Logs...**.
 
 The header of the Qt Quick window has a language selector; the choice is saved and applies on the next start. It also queries and resets the position of the soldering iron's wire feeder (open-loop estimate; the reset asks for confirmation). The identity probe also shows the firmware patch number when the board sends it (URTC firmware 0.3.5 and newer); older firmware shows major.minor only.
 
 The existing live-CAN diagnostic workflow now uses a dark navy/cyan command-deck surface: product header, high-contrast connection card, clear tool tabs, dark session log and visible progress channel. This visual and accessibility change does not alter passive monitoring or command routing, and none of it has been tried on a real board.
 
-### Menu bar
+### Header and tools
 
-- **File** - Save Logs (the on-screen log as plain text; for a fuller
-  bundle including system diagnostics, see "Logs and debug bundles"
-  below instead), and Exit.
-- **Language** - switch between the 7 available languages (see
-  "Language" above for how translations work).
-- **Help** - Readme (opens this file in a read-only viewer window;
-  picks up a translated version automatically once one exists for the
-  current language), URTC GitHub (opens the project's repository in
-  your browser), License (this tool's GPL-3.0-or-later license, read from the
-  repository's own `LICENSE` file), and About (version and author).
+- **Header** - the connection state, the bus-health warning, the language selector (the choice is saved and applies on the next start) and the version.
+- **Save Logs...** and **EXPORT SESSION (SIGNED LOG)** - the on-screen log as plain text, or a zip with the log, a manifest that names it by its SHA-256 and system diagnostics (see "Logs and debug bundles" below).
+- **About URTC Tester** - version and author, with buttons for the **Readme** (in the language of the interface when a translation exists), the **License** and the project's **URTC GitHub** page.
 
 ### File structure
 
@@ -150,14 +131,11 @@ separate files versus one large one. See the
 "📂 Repository Structure" section near the end of this document for
 the full file-by-file breakdown.
 
-**Language**: English by default. Switched via the **Language** menu
-(in the menu bar at the top of the window) rather than a dropdown in
-the main window - switches the interface (labels, buttons, dialogs,
-and log messages) to any of the 7 available languages, saved
+**Language**: English by default. Chosen with the selector in the header of the window - switches the interface (labels, buttons, dialogs, and log messages) to any of the 8 available languages, saved
 immediately to `config.json` next to this tool, applied on the next
 launch. Translations live in plain text files under `language/`
 (`english.lng`, `spanish.lng`, `italian.lng`, `french.lng`,
-`german.lng`, `chinese.lng`, `japanese.lng`) as simple `KEY=Value`
+`german.lng`, `chinese.lng`, `japanese.lng`, `portuguese.lng`) as simple `KEY=Value`
 pairs, one per line - lines starting
 with `#` and blank lines are ignored, and a literal `\n` inside a value
 becomes a real line break (used by the handful of multi-line dialog
@@ -289,7 +267,7 @@ run any check when this button is pressed.
 
 **Live temperature graphs**: the soldering iron and 3D-printer nozzle
 panels both show a small rolling line graph alongside their live
-temperature reading - a plain Tkinter Canvas widget, not a new
+temperature reading - a plain Qt Quick Canvas, not a new
 dependency (matplotlib/pyqtgraph would break this tool's zero-dependency
 policy beyond pyserial). Fixed Y-axis scale (0 to that tool's own
 setpoint ceiling) rather than auto-scaling, so the trend is easy to read
@@ -406,43 +384,29 @@ firmware-flash authority of its own - is documented in
 
 ## 📂 Repository Structure
 
-The `assets/` directory also contains `HYDRA_UMC_ICON.svg`, the maintained
-animated vector source, and `hydra_umc_icon_frames/`, its twelve bundled
-Tkinter PNG frames. `tools/render_hydra_umc_icon_frames.py` regenerates them
-from the SVG during development; it is not required to run the application.
-
 ```
 /
-├── urtc_tester.py             Entry point - CLI-free startup and the splash screen
-├── qt_tester.py                Qt Quick front end - real default, read-only-by-default command deck (`--legacy` for the Tkinter GUI)
+├── urtc_tester.py             Entry point - starts the Qt Quick deck
+├── qt_tester.py                Qt Quick front end - real default, read-only-by-default command deck
 ├── tester_config.py            Config/language/protocol constants (CAN IDs, tool
 │                                names, MOTION_TOOL_IDS, AVAILABLE_LANGUAGES,
 │                                EXPANSION_BOARD_TYPES)
 ├── tester_transports.py        SLCAN and SocketCAN transport classes
 ├── tester_bus_monitor.py       Background CAN read thread (CANBusMonitor)
-├── tester_gui_core.py          TesterGUI core - connection, detection, window
-│                                lifecycle, and the menu bar; the class the 3
-│                                mixins below combine into
-├── tester_common_panels.py     CommonPanelsMixin - global/F-RAM/expansion/
-│                                self-test/bus-monitor/custom-frame panels
-│                                (the always-visible sections)
-├── tester_panel_helpers.py     PanelHelpersMixin - shared utilities every tool
-│                                panel builder uses
-├── tester_tool_panels.py       ToolPanelsMixin - 19 tool-specific panel builders
-│                                covering all 25 tool profiles (several tools
-│                                share one builder, e.g. `_build_motion_panel`
-│                                alone covers 7 of them)
+├── tester_autodetect.py        Bit-rate search for an SLCAN adapter
+├── tester_selftest.py          Self-test steps and runner (no window code)
+├── tester_telemetry.py         Live readouts of each tool and the recorded series
+├── tester_trace_export.py      Writers of the .trc / .asc frame exports
+├── urtc_ui/                    Shared interface helpers (copy from URTC-COMMON)
 ├── advanced_protocol.py        Pure CAN payload encoders for the migrated Qt
 │                                Quick control families - hardware-free tests
-├── hydra_umc_animation.py      Animated HYDRA-UMC identity widget for Tkinter
-├── hydra_umc_deck_widgets.py   Rounded HYDRA-UMC command-deck widgets shared
-│                                by the live diagnostic surfaces
 ├── verify_qt_custom_frame.py        Real, outside-tests/ end-to-end check of the Qt Quick Custom CAN Frame panel (needs a real Qt event loop)
 ├── verify_qt_telemetry_watch.py     Real, outside-tests/ end-to-end check of the Qt Quick telemetry watch (Vacuum Pickup / Scan Probe)
 ├── verify_qt_utility_panels.py      Real, outside-tests/ end-to-end check of the Qt Quick utility panels (Global Controls / Expansion Board / F-RAM)
+├── verify_qt_selftest.py            Real, outside-tests/ end-to-end check of the Qt Quick self-test
 ├── tests/
 │   └── test_advanced_protocol.py   Hardware-free tests for advanced_protocol.py's encoders - run by CI, see Honesty check above
-├── requirements.txt            pyserial>=3.5 (both UIs) + PySide6>=6.8,<7 (the default Qt Quick deck)
+├── requirements.txt            pyserial>=3.5 + PySide6>=6.8,<7
 ├── build_exe.bat               Standalone Windows binary build script (PyInstaller)
 ├── build_exe.sh                Same, for Linux
 ├── build-test.bat              Non-versioning build/compile check
@@ -453,14 +417,12 @@ from the SVG during development; it is not required to run the application.
 ├── URTC_Tester.spec            PyInstaller spec used by both build scripts
 ├── assets/
 │   ├── URTC_APP_ICON.svg       Window/taskbar icon source (small standalone design)
-│   ├── URTC_LOGO_TESTER.svg    Startup banner source
+│   ├── URTC_LOGO_TESTER.svg    Banner source (vector)
 │   ├── HYDRA_UMC_ICON.svg      Maintained animated HYDRA-UMC vector source
-│   ├── hydra_umc_icon_frames/  Twelve bundled Tkinter PNG frames rendered from the SVG above
 │   ├── qml/
 │   │   └── TesterDeck.qml      Qt Quick UI for the default command deck
 │   ├── urtc_icon.ico           Windows icon, built from URTC_APP_ICON.svg
-│   ├── urtc_icon.png           Same, PNG form (Linux)
-│   └── urtc_tester_banner.png  Startup banner PNG, rendered from the SVG above
+│   └── urtc_icon.png           Same, PNG form (Linux)
 ├── images/
 │   ├── URTC_LOGO_TESTER.svg    Logo banner shown at the top of this README
 │   └── URTC_TESTER_V1_1.png    Screenshot of the tool's main window (see Photos below)
@@ -471,7 +433,8 @@ from the SVG during development; it is not required to run the application.
 │   ├── french.lng
 │   ├── german.lng
 │   ├── japanese.lng
-│   └── chinese.lng
+│   ├── chinese.lng
+│   └── portuguese.lng
 ├── logs/                       Session logs written here at runtime (safe to delete)
 ├── LICENSE                     Full license text - see License and Copyright
 │                                Notices below
@@ -490,8 +453,7 @@ from the SVG during development; it is not required to run the application.
 │   └── THERMAL_RUNAWAY_BENCH_TEST.md
 ├── tools/
 │   ├── build_test.py                     Non-versioning build/compile check + Qt Quick deck source validation
-│   ├── ci_validate.py                    Manifest/CHANGELOG/docs validation used by CI
-│   └── render_hydra_umc_icon_frames.py   Regenerates assets/hydra_umc_icon_frames/ from the SVG (dev-only)
+│   └── ci_validate.py                    Manifest/CHANGELOG/docs validation used by CI
 └── README_jpn.md               Japanese translation
 ```
 

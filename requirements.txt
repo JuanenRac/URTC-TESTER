@@ -1,4 +1,3 @@
 pyserial>=3.5
-# Qt Quick command deck (the default UI). The classic Tkinter window stays
-# available with --legacy.
+# Qt Quick command deck (the only window).
 PySide6>=6.8,<7

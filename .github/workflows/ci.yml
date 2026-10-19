@@ -55,3 +55,4 @@ jobs:
           python verify_qt_custom_frame.py
           python verify_qt_telemetry_watch.py
           python verify_qt_utility_panels.py
+          python verify_qt_selftest.py

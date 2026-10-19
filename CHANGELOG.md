@@ -8,6 +8,17 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 only by the explicit `python bump.py` step (building never changes it), base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.3.5] - Self-test, live readouts and bus health in the Qt Quick deck; the Tkinter window is retired
+
+- New self-test in the deck: the same safe, at-rest checks as before (the two generic queries and a zero setpoint, speed or power for the tools that have telemetry), now in `tester_selftest.py`, shared by the tests and the deck. It needs an armed connection, the detected tool to be the selected profile and a confirmation, and it switches every armed output off first. The step texts exist in the eight languages.
+- New live readouts for the soldering iron, drill, AOI, laser, 3D printer, hot-air station and flying probe: temperature with a rolling graph and CSV export, RPM and endstops. The watch only listens, so it works in listen-only mode, and an output can be switched on while it runs; a command that also reads the bus is refused while it is running.
+- New bus health check: while the deck is idle the active tool is queried every three seconds, one silent answer is not a verdict and two are, and the header shows the reason until the bus recovers.
+- New About dialog with the Readme, the License and the GitHub page, Save Logs, and the session export now carries system diagnostics. Profiles with no command of their own say why.
+- The Tkinter window is retired: `urtc_tester.py` always starts the Qt Quick deck (`--legacy` prints a note and does the same). `tester_gui_core.py`, `tester_common_panels.py`, `tester_tool_panels.py`, `tester_panel_helpers.py`, the animated-mark widgets, their frames and the startup banner are removed. The bit-rate search moved to `tester_autodetect.py`, and the tests that exercised the Tk window are replaced by tests of the deck and of the shared logic.
+- The PyInstaller spec now collects the Qt Quick plugins and lists the modules like the build scripts do.
+- The language list and selector, the colour of the connection state, the bit-rate parsing and the monitor's identifier and byte formatting come from the `urtc_ui` copy of URTC-COMMON; the protocol copies follow URTC-COMMON 0.0.4.
+- New tests for the self-test runner and the deck's gate, the readouts and their CSV, the bus health verdicts, and the confirmation of every physical action in the QML.
+
 ## [0.3.4] - The Qt Quick deck gets the raw bus monitor
 
 - The Qt Quick deck has a raw bus monitor: it reads every frame without transmitting, shows the newest ones, filters by CAN ID and by changed payload, keeps the last 2000 frames, and exports them as a PEAK `.trc` or a Vector `.asc` trace in the logs folder.

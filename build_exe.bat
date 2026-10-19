@@ -96,14 +96,13 @@ python -m PyInstaller --onefile --windowed --noconfirm --name "URTC_Tester" ^
     --hidden-import tester_config ^
     --hidden-import tester_transports ^
     --hidden-import tester_bus_monitor ^
-    --hidden-import tester_gui_core ^
-    --hidden-import tester_common_panels ^
-    --hidden-import tester_panel_helpers ^
-    --hidden-import tester_tool_panels ^
     --hidden-import advanced_protocol ^
     --hidden-import tester_result_record ^
-    --hidden-import hydra_umc_animation ^
-    --hidden-import hydra_umc_deck_widgets ^
+    --hidden-import tester_selftest ^
+    --hidden-import tester_telemetry ^
+    --hidden-import tester_autodetect ^
+    --hidden-import tester_trace_export ^
+    --hidden-import urtc_ui ^
     --hidden-import qt_tester ^
     --hidden-import PySide6.QtQml ^
     --hidden-import PySide6.QtQuick ^

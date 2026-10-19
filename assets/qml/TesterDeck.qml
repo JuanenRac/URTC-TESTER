@@ -5,6 +5,7 @@
 // =============================================================================
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Dialogs
 import QtQuick.Layouts
 import QtQuick.VectorImage
 
@@ -110,6 +111,107 @@ ApplicationWindow {
                         motionConfirm.close()
                         testerBackend.sendMotion(motionDirection.currentValue, motionSteps.text)
                     }
+                }
+            }
+        }
+    }
+
+    FileDialog {
+        id: saveLogDialog
+        title: testerBackend.uiText("MENU_SAVE_LOGS")
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["Text (*.txt)"]
+        onAccepted: testerBackend.saveLogText(selectedFile.toString())
+    }
+    FileDialog {
+        id: readoutCsvDialog
+        title: testerBackend.uiText("BTN_EXPORT_CSV")
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["CSV (*.csv)"]
+        onAccepted: testerBackend.exportReadoutCsv(selectedFile.toString())
+    }
+
+    Dialog {
+        id: aboutDialog
+        anchors.centerIn: parent
+        modal: true
+        width: Math.min(parent.width - 48, 640)
+        height: Math.min(parent.height - 48, 560)
+        title: testerBackend.uiText("TITLE_ABOUT")
+        standardButtons: Dialog.Close
+        property string shownText: ""
+        onOpened: shownText = ""
+        background: Rectangle { color: window.panel; radius: 16; border.width: 1; border.color: window.panelBorder }
+        contentItem: ColumnLayout {
+            spacing: 10
+            Text { text: testerBackend.aboutText; color: window.textPrimary; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            RowLayout {
+                Layout.fillWidth: true
+                GameButton { text: testerBackend.uiText("MENU_README"); accent: "#24465e"; Layout.fillWidth: true; onClicked: aboutDialog.shownText = testerBackend.readmeText() }
+                GameButton { text: testerBackend.uiText("MENU_LICENSE"); accent: "#24465e"; Layout.fillWidth: true; onClicked: aboutDialog.shownText = testerBackend.licenseText() }
+                GameButton { text: testerBackend.uiText("MENU_GITHUB"); accent: "#24465e"; Layout.fillWidth: true; onClicked: Qt.openUrlExternally(testerBackend.githubUrl) }
+            }
+            ScrollView {
+                visible: aboutDialog.shownText.length > 0
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                TextArea {
+                    text: aboutDialog.shownText
+                    readOnly: true
+                    wrapMode: Text.WordWrap
+                    color: window.textPrimary
+                    font.family: "Cascadia Mono"
+                    font.pixelSize: 10
+                    background: Rectangle { color: window.panelAlt; radius: 8 }
+                }
+            }
+        }
+    }
+
+    Dialog {
+        id: selfTestConfirm
+        modal: true
+        anchors.centerIn: parent
+        width: Math.min(parent.width - 48, 510)
+        title: testerBackend.uiText("TITLE_RUN_SELF_TEST_Q")
+        standardButtons: Dialog.NoButton
+        background: Rectangle {
+            color: window.panel
+            radius: 16
+            border.width: 1
+            border.color: "#f7b955"
+        }
+        contentItem: ColumnLayout {
+            spacing: 12
+            Text {
+                Layout.fillWidth: true
+                text: testerBackend.uiText("MSG_SELF_TEST_CONFIRM")
+                color: window.textPrimary
+                wrapMode: Text.WordWrap
+            }
+            Text {
+                Layout.fillWidth: true
+                text: "PROFILE #" + testerBackend.selectedToolId + "  •  " + testerBackend.activeTool
+                color: "#f7b955"
+                font.family: "Cascadia Mono"
+                font.bold: true
+                wrapMode: Text.WrapAnywhere
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Item { Layout.fillWidth: true }
+                GameButton {
+                    text: testerBackend.uiText("QT_CANCEL")
+                    accent: "#24465e"
+                    Layout.preferredWidth: 126
+                    onClicked: selfTestConfirm.close()
+                }
+                GameButton {
+                    text: testerBackend.uiText("QT_CONFIRM")
+                    accent: "#b86a35"
+                    Layout.preferredWidth: 126
+                    onClicked: { selfTestConfirm.close(); testerBackend.runSelfTest() }
                 }
             }
         }
@@ -224,7 +326,8 @@ ApplicationWindow {
                     Text { text: "LIVE CAN DIAGNOSTICS - SAFE TEST CONTROL"; color: muted; font.family: "Bahnschrift"; font.pixelSize: 8 }
                 }
                 Item { Layout.fillWidth: true }
-                Text { text: testerBackend.status; color: testerBackend.connected ? "#43db9b" : muted; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 11 }
+                Text { text: testerBackend.status; color: testerBackend.statusColor; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 11 }
+                Text { visible: testerBackend.busHealthText.length > 0; text: testerBackend.busHealthText; color: "#ee6b80"; font.bold: true; font.pixelSize: 11; Layout.maximumWidth: 260; elide: Text.ElideRight }
                 Text {
                     id: busStatsText
                     visible: testerBackend.connected
@@ -450,7 +553,7 @@ ApplicationWindow {
                 }
                 Text {
                     visible: testerBackend.advancedControlKind === "unavailable"
-                    text: testerBackend.uiText("QT_ADVANCED_UNAVAILABLE")
+                    text: testerBackend.noHandlerText
                     color: muted
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
@@ -553,10 +656,80 @@ ApplicationWindow {
                     Text { visible: testerBackend.thermalCells.length === 0; text: testerBackend.uiText("QT_NO_THERMAL_FRAME"); color: muted; font.pixelSize: 10 }
                 }
                 ColumnLayout {
+                    // Live readouts of the tool's own broadcasts (temperature, RPM, endstop). Nothing here transmits,
+                    // so it works in listen-only mode and next to a running output.
+                    visible: testerBackend.readoutsAvailable
+                    Layout.fillWidth: true
+                    spacing: 7
+                    Repeater {
+                        model: testerBackend.readoutItems
+                        delegate: RowLayout {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            spacing: 12
+                            Text { text: modelData.label; color: muted; font.pixelSize: 11; Layout.preferredWidth: 200 }
+                            Text { text: testerBackend.isWatchingReadouts ? modelData.text : "--"; color: textPrimary; font.bold: true; font.pixelSize: 14 }
+                        }
+                    }
+                    Canvas {
+                        id: readoutGraph
+                        visible: testerBackend.readoutHasGraph
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 100
+                        property var points: testerBackend.readoutGraphPoints
+                        onPointsChanged: requestPaint()
+                        onPaint: {
+                            var ctx = getContext("2d")
+                            ctx.fillStyle = "#07111e"
+                            ctx.fillRect(0, 0, width, height)
+                            ctx.strokeStyle = "#294965"
+                            ctx.lineWidth = 1
+                            for (var g = 0; g <= 2; g++) {
+                                var gy = height - g * height / 2
+                                ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(width, gy); ctx.stroke()
+                            }
+                            if (points.length < 2 || testerBackend.readoutGraphMax <= 0)
+                                return
+                            ctx.strokeStyle = "#38d4e6"
+                            ctx.lineWidth = 2
+                            ctx.beginPath()
+                            for (var i = 0; i < points.length; i++) {
+                                var x = i * width / 59
+                                var y = height - Math.max(0, Math.min(testerBackend.readoutGraphMax, points[i])) / testerBackend.readoutGraphMax * height
+                                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+                            }
+                            ctx.stroke()
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        GameButton {
+                            text: testerBackend.uiText("QT_WATCH_TELEMETRY")
+                            accent: "#24465e"
+                            Layout.preferredWidth: 220
+                            visible: !testerBackend.isWatchingTelemetry
+                            enabled: testerBackend.canWatchTelemetry
+                            onClicked: testerBackend.watchTelemetry()
+                        }
+                        GameButton {
+                            text: testerBackend.uiText("QT_STOP_WATCHING_TELEMETRY")
+                            accent: "#b86a35"
+                            Layout.preferredWidth: 220
+                            visible: testerBackend.isWatchingTelemetry
+                            onClicked: testerBackend.stopTelemetryWatch()
+                        }
+                        GameButton {
+                            text: testerBackend.uiText("BTN_EXPORT_CSV")
+                            accent: "#24465e"
+                            Layout.preferredWidth: 160
+                            visible: testerBackend.readoutHasGraph
+                            onClicked: readoutCsvDialog.open()
+                        }
+                    }
+                }
+                ColumnLayout {
                     // Real, continuous telemetry - Vacuum Pickup and Scan
-                    // Probe have no commands at all (see
-                    // tester_tool_panels.py's own _build_vacuum_panel/
-                    // _build_scan_probe_panel), so this is the one
+                    // Probe have no commands at all, so this is the one
                     // advanced-control panel with no requestAdvanced()
                     // confirmation anywhere in it - nothing here can ever
                     // transmit a real CAN frame.
@@ -702,6 +875,25 @@ ApplicationWindow {
                         Text { text: testerBackend.boardVersion; color: muted; width: parent.width; elide: Text.ElideRight; font.pixelSize: 11 }
                     }
                 }
+                GameButton {
+                    text: testerBackend.uiText("BTN_RUN_SELF_TEST")
+                    Layout.fillWidth: true
+                    accent: "#b86a35"
+                    enabled: testerBackend.canSelfTest
+                    onClicked: selfTestConfirm.open()
+                }
+                Repeater {
+                    model: testerBackend.selfTestLines
+                    delegate: Text {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        text: "[" + modelData.status + "] " + modelData.text
+                        color: modelData.status === "PASS" ? "#43db9b" : (modelData.status === "FAIL" ? "#ee6b80" : muted)
+                        font.family: "Cascadia Mono"
+                        font.pixelSize: 10
+                        wrapMode: Text.WordWrap
+                    }
+                }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
                 Text { text: testerBackend.uiText("QT_MOTION_CONTROL"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
                 Text {
@@ -745,10 +937,8 @@ ApplicationWindow {
                 // tool-independent utility panels (Status LED/ring/OLED,
                 // CONN_EXPANSION's raw SPI passthrough + TMC_DIAG0, and
                 // the FM24CL64B's recovered state + read-only EEPROM
-                // fields), matching the 3 real Tkinter tabs of the same
-                // names. Always shown - unlike everything above, none of
-                // this depends on which tool profile is selected at all
-                // (see tester_common_panels.py's own CommonPanelsMixin).
+                // fields). Always shown - unlike everything above, none of
+                // this depends on which tool profile is selected at all.
                 Text { text: testerBackend.uiText("QT_GLOBAL_CONTROLS"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
                 RowLayout {
                     Layout.fillWidth: true
@@ -990,6 +1180,8 @@ ApplicationWindow {
                     }
                 }
                 GameButton { text: testerBackend.uiText("QT_EXPORT_SESSION"); accent: "#24465e"; Layout.preferredWidth: 260; onClicked: testerBackend.exportSession() }
+                GameButton { text: testerBackend.uiText("MENU_SAVE_LOGS"); accent: "#24465e"; Layout.preferredWidth: 260; onClicked: saveLogDialog.open() }
+                GameButton { text: testerBackend.uiText("TITLE_ABOUT"); accent: "#24465e"; Layout.preferredWidth: 260; onClicked: aboutDialog.open() }
                 ListView {
                     Layout.fillWidth: true
                     // Was Layout.fillHeight: true - meaningless now that

@@ -14,7 +14,7 @@ script - bumping the major version is a deliberate human decision, not
 something a build script should ever do on its own.
 
 Only this one assignment line is touched via an anchored regex - it does
-NOT touch the unrelated ";$FILEVERSION=1.1" line in tester_common_panels.py,
+NOT touch the unrelated ";$FILEVERSION=1.1" line in tester_trace_export.py,
 which is a fixed literal inside the PEAK PCAN-View .trc export format (an
 external trace-file convention), not this tool's own version number.
 """

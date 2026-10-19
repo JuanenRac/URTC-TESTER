@@ -1,9 +1,9 @@
 # =============================================================================
-# URTC Tester - bit rate scan, saved settings, the stop for everything, confirmations and the monitor filter
+# URTC Tester - bit rate scan, saved settings, the stop for everything, the confirmations in the deck and the monitor filter
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
-"""No board is needed: the SLCAN adapter, the bus and the Tk host are stand-ins."""
+"""No board is needed: the SLCAN adapter and the bus are stand-ins."""
 import re
 import struct
 import time
@@ -14,11 +14,8 @@ from unittest import mock
 import advanced_protocol as protocol
 import tester_config
 from tester_bus_monitor import FrameFilter
-from tester_config import (
-    CAN_ID_ACTIVE_TOOL_RESP, CAN_ID_CRIMPING_CMD, CAN_ID_PASTE_JETTING_PULSE, CAN_ID_QUERY_ACTIVE_TOOL, CAN_ID_SPOT_WELD_CMD, SLCAN_BITRATES,
-)
-import tester_gui_core
-from tester_gui_core import README_SUFFIXES, scan_bitrates
+from tester_autodetect import scan_bitrates
+from tester_config import CAN_ID_ACTIVE_TOOL_RESP, CAN_ID_QUERY_ACTIVE_TOOL, SLCAN_BITRATES
 
 try:
     from PySide6.QtCore import QCoreApplication
@@ -109,23 +106,19 @@ class BitrateScanTests(unittest.TestCase):
         self.assertIsNone(_scan())
 
 
+@unittest.skipIf(qt_tester is None, "PySide6 is not available")
 class SmallFixesTests(unittest.TestCase):
     def test_the_readme_menu_knows_chinese_japanese_and_portuguese(self):
         for language, suffix in (("chinese", "_zho"), ("japanese", "_jpn"), ("portuguese", "_por"), ("spanish", "_spa")):
-            self.assertEqual(README_SUFFIXES[language], suffix)
+            self.assertEqual(qt_tester.TesterQtBridge.README_SUFFIXES[language], suffix)
             self.assertTrue((ROOT / f"README{suffix}.md").is_file())
-
-    def test_the_window_never_asks_for_more_than_the_screen_has(self):
-        self.assertEqual(tester_config.fit_to_screen(1360, 1075, 1366, 768), (1346, 688))
-        self.assertEqual(tester_config.fit_to_screen(1360, 1075, 2560, 1440), (1360, 1075))
-        self.assertEqual(tester_config.fit_to_screen(1360, 1075, 100, 100), (320, 240))
 
     def test_transport_deadlines_do_not_use_the_wall_clock(self):
         source = (ROOT / "tester_transports.py").read_text(encoding="utf-8")
         self.assertNotIn("time.time()", source)
 
     def test_the_frame_export_is_written_as_ascii(self):
-        source = (ROOT / "tester_common_panels.py").read_text(encoding="utf-8")
+        source = (ROOT / "qt_tester.py").read_text(encoding="utf-8")
         self.assertIn('open(path, "w", encoding="ascii")', source)
 
 
@@ -166,40 +159,6 @@ class StopEverythingTests(unittest.TestCase):
 
     def test_the_hotend_fan_is_left_running(self):
         self.assertNotIn(tester_config.CAN_ID_3DP_HOTEND_FAN_CMD, {can_id for can_id, _d in protocol.all_off_frames()})
-
-    def test_the_classic_window_stops_everything_and_keeps_going_when_a_send_fails(self):
-        sent, stopped, logs = [], [], []
-
-        class Bus:
-            def send(self, can_id, data):
-                if can_id == 0x130:
-                    raise OSError("adapter gone")
-                sent.append(can_id)
-
-        class Var:
-            value = True
-
-            def set(self, value):
-                self.value = value
-
-        fake = mock.Mock()
-        fake.bus, fake.transport = Bus(), object()
-        fake._keepalive_jobs = {"solder": 1, "custom_frame": 2}
-        fake._stop_keepalive = stopped.append
-        fake.custom_periodic_var = Var()
-        fake._current_tool_id = None
-        fake.log = logs.append
-        tester_gui_core.TesterGUI.stop_all_outputs(fake)
-        self.assertEqual(len(sent), len(protocol.all_off_frames()) - 1)
-        self.assertEqual(sorted(stopped), ["custom_frame", "solder"])
-        self.assertFalse(fake.custom_periodic_var.value)
-        self.assertTrue(logs)
-
-    def test_it_does_nothing_without_a_connection(self):
-        fake = mock.Mock()
-        fake.bus, fake.transport = None, None
-        tester_gui_core.TesterGUI.stop_all_outputs(fake)
-        fake.log.assert_not_called()
 
 
 class LanguageFilesTests(unittest.TestCase):
@@ -249,102 +208,42 @@ class LanguageFilesTests(unittest.TestCase):
         self.assertEqual(missing, [])
 
 
-class FakeBus:
-    def __init__(self):
-        self.sent = []
+class QmlConfirmationTests(unittest.TestCase):
+    """Every physical action of the deck is wrapped in the confirmation dialog; only the stops are not."""
 
-    def send(self, can_id, data):
-        self.sent.append((can_id, bytes(data)))
+    QML = (ROOT / "assets" / "qml" / "TesterDeck.qml").read_text(encoding="utf-8")
+    ACTIONS = (
+        "sendDrill", "sendAoi", "setElectromagnet", "fireWeldPulse", "firePastePulse", "configurePasteJetting",
+        "sendPrinterOneShot", "configureFlyingProbe", "triggerFlyingProbe",
+    )
 
+    def _calls(self, slot):
+        return [line for line in self.QML.splitlines() if f"testerBackend.{slot}(" in line]
 
-def _tk_root():
-    import tkinter as tk
-    try:
-        root = tk.Tk()
-    except tk.TclError:
-        return None
-    root.withdraw()
-    return root
+    def test_every_action_that_moves_heats_fires_or_spins_asks_first(self):
+        for slot in self.ACTIONS:
+            calls = self._calls(slot)
+            self.assertTrue(calls, slot)
+            for line in calls:
+                self.assertIn("requestAdvanced", line, slot)
 
+    def test_a_watchdog_output_asks_before_it_is_switched_on_and_not_before_it_is_switched_off(self):
+        for line in self._calls("setWatchdogOutput"):
+            if '", true,' in line:
+                self.assertIn("requestAdvanced", line)
+            else:
+                self.assertNotIn("requestAdvanced", line)
 
-class ConfirmationTests(unittest.TestCase):
-    """Weld pulses, paste pulses and the crimp ask before they transmit, as the Qt Quick deck does for every physical action."""
+    def test_a_motion_command_is_sent_only_from_its_own_confirmation_dialog(self):
+        calls = self._calls("sendMotion")
+        self.assertEqual(len(calls), 1)
+        start = self.QML.index("id: motionConfirm")
+        self.assertLess(start, self.QML.index(calls[0]))
 
-    @classmethod
-    def setUpClass(cls):
-        cls.root = _tk_root()  # one root for the whole class: creating several in a row is unreliable
-
-    @classmethod
-    def tearDownClass(cls):
-        if cls.root is not None:
-            cls.root.destroy()
-
-    def setUp(self):
-        if self.root is None:
-            self.skipTest("no display for Tk")
-        from tkinter import ttk
-        from tester_panel_helpers import PanelHelpersMixin
-        from tester_tool_panels import ToolPanelsMixin
-
-        class Host(ToolPanelsMixin, PanelHelpersMixin):
-            def __init__(inner, root):
-                inner.root = root
-                inner.bus = FakeBus()
-                inner.logs = []
-
-            def log(inner, text):
-                inner.logs.append(text)
-
-            def _new_deck_button(inner, parent, text, command, **_kw):
-                return ttk.Button(parent, text=text, command=command)
-
-        self.host = Host(self.root)
-        self.frame = ttk.Frame(self.root)
-
-    def tearDown(self):
-        if self.root is not None:
-            self.frame.destroy()
-
-    def _press(self, label_key):
-        wanted = tester_config._(label_key)
-        stack = [self.frame]
-        while stack:
-            widget = stack.pop()
-            stack.extend(widget.winfo_children())
-            try:
-                if widget.cget("text") == wanted and widget.winfo_class() == "TButton":
-                    widget.invoke()
-                    return
-            except Exception:
-                continue
-        self.fail(f"no button {label_key}")
-
-    def _check(self, build, button, expected_id):
-        build()
-        for answer, sends in ((False, 0), (True, 1)):
-            self.host.bus.sent.clear()
-            with mock.patch("tester_panel_helpers.messagebox.askyesno", return_value=answer) as ask:
-                self._press(button)
-            self.assertEqual(ask.call_count, 1)
-            self.assertEqual(len(self.host.bus.sent), sends, f"answer={answer}")
-            if sends:
-                self.assertEqual(self.host.bus.sent[0][0], expected_id)
-
-    def test_spot_weld_pulse(self):
-        self._check(lambda: self.host._build_weld_pulse_panel(self.frame, CAN_ID_SPOT_WELD_CMD, True), "BTN_FIRE_PULSE", CAN_ID_SPOT_WELD_CMD)
-
-    def test_paste_pulse(self):
-        self._check(lambda: self.host._build_paste_jetting_panel(self.frame), "BTN_FIRE_PULSE", CAN_ID_PASTE_JETTING_PULSE)
-
-    def test_crimp(self):
-        self._check(lambda: self.host._build_motion_panel(self.frame, 21, "Crimp", cmd_id=CAN_ID_CRIMPING_CMD, start_row=1), "BTN_MOVE", CAN_ID_CRIMPING_CMD)
-
-    def test_a_plain_stepper_move_is_not_asked_about(self):
-        self.host._build_motion_panel(self.frame, 1, "Stepper", start_row=1)
-        with mock.patch("tester_panel_helpers.messagebox.askyesno", return_value=False) as ask:
-            self._press("BTN_MOVE")
-        ask.assert_not_called()
-        self.assertEqual(len(self.host.bus.sent), 1)
+    def test_the_self_test_asks_before_it_transmits(self):
+        calls = self._calls("runSelfTest")
+        self.assertEqual(len(calls), 1)
+        self.assertLess(self.QML.index("id: selfTestConfirm"), self.QML.index(calls[0]))
 
 
 @unittest.skipIf(qt_tester is None, "PySide6 is not available")
@@ -378,7 +277,7 @@ class QtDeckTests(unittest.TestCase):
         self.bridge._log = lambda text: None
         self.bridge._transport = self.transport
         self.bridge._listen_only = False
-        self.bridge._require_profile = lambda allowed, action: True
+        self.bridge._require_profile = lambda allowed, action, reads=False: True
 
     def test_every_sender_produces_the_frame_of_the_one_encoder(self):
         bridge = self.bridge

@@ -4,6 +4,7 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
+from urtc_ui import DEFAULT_LANGUAGE, LANGUAGES, parse_bitrate
 import sys
 import os
 import json
@@ -18,7 +19,7 @@ except ImportError:
     HAVE_SERIAL = False
 
 
-TESTER_VERSION = "0.3.4"
+TESTER_VERSION = "0.3.5"
 TESTER_AUTHOR = "JuanenRac"
 
 # THIS_HARDWARE_ID matches bootloader_common.h/firmware_common.h's own constant - used
@@ -36,17 +37,11 @@ SLCAN_BITRATES = [
 
 def bitrate_bps_for_label(label):
     """Bits per second of a bitrate label such as "500 kbit/s" or "1 Mbit/s" (500000 when it is not recognised)."""
-    parts = str(label).split()
     try:
-        value = float(parts[0])
-    except (IndexError, ValueError):
+        return parse_bitrate(str(label))
+    except ValueError:
         return 500000
-    unit = parts[1].lower() if len(parts) > 1 else ""
-    if unit.startswith("mbit"):
-        return int(value * 1000000)
-    if unit.startswith("kbit"):
-        return int(value * 1000)
-    return 500000
+
 
 if getattr(sys, "frozen", False):
     base_dir = os.path.dirname(sys.executable)
@@ -56,17 +51,7 @@ LOGS_FOLDER = os.path.normpath(os.path.join(base_dir, "logs"))
 CUSTOM_IDS_PATH = os.path.normpath(os.path.join(base_dir, "urtc_custom_ids.json"))
 LANGUAGE_FOLDER = os.path.normpath(os.path.join(base_dir, "language"))
 CONFIG_PATH = os.path.normpath(os.path.join(base_dir, "config.json"))
-DEFAULT_LANGUAGE = "english"
-AVAILABLE_LANGUAGES = [
-    ("english", "English"),
-    ("spanish", "Español"),
-    ("italian", "Italiano"),
-    ("french", "Français"),
-    ("german", "Deutsch"),
-    ("chinese", "简体中文"),
-    ("japanese", "日本語"),
-    ("portuguese", "Português"),
-]
+AVAILABLE_LANGUAGES = list(LANGUAGES)  # the list every URTC program shares (urtc_ui)
 
 
 def load_config():
@@ -198,17 +183,9 @@ def _load_custom_id_names():
 CUSTOM_ID_NAMES = _load_custom_id_names()
 
 if getattr(sys, "frozen", False):
-    BANNER_IMAGE_PATH = os.path.normpath(os.path.join(sys._MEIPASS, "assets", "urtc_tester_banner.png"))
     ICON_IMAGE_PATH = os.path.normpath(os.path.join(sys._MEIPASS, "assets", "urtc_icon.png"))
-    HYDRA_UMC_ICON_FRAMES_DIR = os.path.normpath(
-        os.path.join(sys._MEIPASS, "assets", "hydra_umc_icon_frames")
-    )
 else:
-    BANNER_IMAGE_PATH = os.path.normpath(os.path.join(base_dir, "assets", "urtc_tester_banner.png"))
     ICON_IMAGE_PATH = os.path.normpath(os.path.join(base_dir, "assets", "urtc_icon.png"))
-    HYDRA_UMC_ICON_FRAMES_DIR = os.path.normpath(
-        os.path.join(base_dir, "assets", "hydra_umc_icon_frames")
-    )
 
 
 def list_serial_ports():
@@ -338,34 +315,6 @@ TOOL_NAMES = {
 # attached, not in the protocol.
 MOTION_TOOL_IDS = {1, 2, 3, 6, 7, 12, 16}
 
-
-
-def fit_to_screen(width, height, screen_w, screen_h, taskbar=80):
-    """Largest size not above (width, height) that still fits the screen.
-
-    A fixed window taller than a 768-pixel laptop screen would put its lower
-    part (and the log) out of reach, so the wanted size is clamped to what
-    the screen has left after the taskbar and the title bar.
-    """
-    return min(width, max(screen_w - 20, 320)), min(height, max(screen_h - taskbar, 240))
-
-
-def _center_geometry(win, width, height):
-    """Returns a "WxH+X+Y" geometry string centered on the screen - shared
-    by the splash, main window, and any popup (About/License) that wants
-    to be centered rather than placed wherever the window manager's
-    default happens to be. Uses the caller's own known target width/
-    height rather than winfo_width()/height(), which depend on the
-    window having already been fully realized/mapped by the window
-    manager - a real source of "it isn't actually centered" bugs if
-    queried too early, since those can still report a stale placeholder
-    size at that point."""
-    win.update_idletasks()
-    ws = win.winfo_screenwidth()
-    hs = win.winfo_screenheight()
-    x = max(0, (ws - width) // 2)
-    y = max(0, (hs - height) // 2)
-    return f"{width}x{height}+{x}+{y}"
 
 
 def format_thermal_stats(stats):
