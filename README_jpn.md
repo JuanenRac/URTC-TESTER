@@ -24,7 +24,7 @@
 </p>
 
 
-**バージョン：** 0.3.6 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**バージョン：** 0.3.7 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 ライセンス：ソースコードは **GPL-3.0-or-later**、本ドキュメントは **CC BY-SA 4.0**——
 本リポジトリの `LICENSE`、または本ドキュメント末尾の「ライセンスと著作権
@@ -47,7 +47,7 @@ URTC ボード向けのライブ CAN バステスターです。フラッシャ�
 
 | | |
 |---|---|
-| バージョン | `0.3.6` |
+| バージョン | `0.3.7` |
 | 成熟度 | 機能する |
 | 技術 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 対象 | 利用者の PC |

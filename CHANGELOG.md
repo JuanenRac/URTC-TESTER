@@ -8,6 +8,12 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 only by the explicit `python bump.py` step (building never changes it), base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.3.7] - The activity log speaks the interface language
+
+- The Qt Quick deck now shows its activity log, the thermal and passive-capture summaries in the interface language (English, Spanish, German, French, Italian, Japanese, Chinese, Portuguese); every log token has a label in each language file.
+- The saved log and the exported session bundle keep the English original lines, so support and the manifest hash see exactly what happened.
+- A test regenerates the list of logged tokens from the source, so a new token without labels in all eight languages fails the checks.
+
 ## [0.3.6] - Follow URTC-COMMON 0.0.5 and the 0.3.8 firmware
 
 - The shared protocol and widget copies follow URTC-COMMON 0.0.5, which adds the multinode identifiers and the two frames that read and set its switch.

@@ -54,6 +54,7 @@ from tester_config import (
     bitrate_bps_for_label,
     load_config,
     save_config,
+    translate_log_line,
     CAN_ID_ACTIVE_TOOL_RESP,
     CAN_ID_3DP_LAYER_FAN_CMD,
     CAN_ID_3DP_THERMAL_MOTION,
@@ -485,7 +486,7 @@ class TesterQtBridge(QObject):
 
     @Property(str, notify=changed)
     def passiveSummary(self) -> str:
-        return self._passive_summary
+        return translate_log_line(self._passive_summary)
 
     @Property(bool, notify=changed)
     def hasPassiveSnapshot(self) -> bool:
@@ -501,7 +502,8 @@ class TesterQtBridge(QObject):
 
     @Property("QStringList", notify=logChanged)
     def logs(self) -> list[str]:
-        return self._logs[-14:]
+        """The last lines of the activity log in the interface language (the stored lines stay English)."""
+        return [translate_log_line(line) for line in self._logs[-14:]]
 
     @Property(bool, notify=changed)
     def canProbe(self) -> bool:
@@ -763,7 +765,7 @@ class TesterQtBridge(QObject):
 
     @Property(str, notify=changed)
     def thermalSummary(self) -> str:
-        return self._thermal_summary
+        return translate_log_line(self._thermal_summary)
 
 
     def _log(self, message: str) -> None:
@@ -772,7 +774,8 @@ class TesterQtBridge(QObject):
 
     @Slot(result=str)
     def exportSession(self) -> str:
-        """Save the activity log with a manifest naming it by its SHA-256, so the log can be shown to be unedited."""
+        """Save the activity log with a manifest naming it by its SHA-256, so the log can be shown to be unedited.
+        The stored lines are the English originals (not the translated ones shown on screen), for support and auditing."""
         log_text = "\n".join(self._logs) + "\n"
         try:
             os.makedirs(LOGS_FOLDER, exist_ok=True)
@@ -832,7 +835,7 @@ class TesterQtBridge(QObject):
 
     @Slot(str, result=bool)
     def saveLogText(self, save_path: str) -> bool:
-        """Save the on-screen log as plain text (the lighter counterpart of the debug bundle)."""
+        """Save the activity log as plain text, English originals (the lighter counterpart of the debug bundle)."""
         path = QUrl(save_path).toLocalFile() if save_path.startswith("file:") else save_path
         try:
             with open(path, "w", encoding="utf-8") as stream:

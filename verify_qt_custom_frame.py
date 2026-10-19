@@ -45,12 +45,12 @@ def _run() -> None:
     bridge.sendCustomFrame("100", "01 02 03")
     assert transport.sent[-1] == (0x100, bytes([0x01, 0x02, 0x03]))
     sent_before = len(transport.sent)
-    assert any("CUSTOM_FRAME_SENT" in line for line in bridge.logs), "manual send must log, unlike periodic ticks"
+    assert any("CUSTOM_FRAME_SENT" in line for line in bridge._logs), "manual send must log, unlike periodic ticks"
 
     # --- bad hex must be rejected, never reach the transport ---
     bridge.sendCustomFrame("zzz", "01")
     assert len(transport.sent) == sent_before, "malformed CAN ID must never reach the transport"
-    assert any("CUSTOM_FRAME_BLOCKED" in line for line in bridge.logs)
+    assert any("CUSTOM_FRAME_BLOCKED" in line for line in bridge._logs)
 
     # --- out-of-range ID / oversized payload rejected ---
     bridge.sendCustomFrame("800", "")  # 0x800 is outside the 11-bit range
@@ -62,26 +62,26 @@ def _run() -> None:
     assert bridge.customFramePeriodicActive is False
     bridge.setCustomFramePeriodic(True, "200", "AA", "50")
     assert bridge.customFramePeriodicActive is True
-    assert any("CUSTOM_FRAME_PERIODIC_STARTED" in line for line in bridge.logs)
+    assert any("CUSTOM_FRAME_PERIODIC_STARTED" in line for line in bridge._logs)
 
     # --- each tick sends silently (no new log line) ---
-    logs_before = len(bridge.logs)
+    logs_before = len(bridge._logs)
     for _ in range(5):
         bridge.sendCustomFramePeriodicTick("200", "AA")
     assert transport.sent[-1] == (0x200, bytes([0xAA]))
-    assert len(bridge.logs) == logs_before, "periodic ticks must stay silent on an ordinary successful send"
+    assert len(bridge._logs) == logs_before, "periodic ticks must stay silent on an ordinary successful send"
 
     # --- a tick with now-invalid fields logs once on the transition, then stays silent ---
     bridge.sendCustomFramePeriodicTick("zzz", "AA")
-    after_first_bad_tick = len(bridge.logs)
-    assert any("CUSTOM_FRAME_PERIODIC_SKIPPING" in line for line in bridge.logs)
+    after_first_bad_tick = len(bridge._logs)
+    assert any("CUSTOM_FRAME_PERIODIC_SKIPPING" in line for line in bridge._logs)
     bridge.sendCustomFramePeriodicTick("zzz", "AA")
     bridge.sendCustomFramePeriodicTick("zzz", "AA")
-    assert len(bridge.logs) == after_first_bad_tick, "repeated bad ticks must not spam the log"
+    assert len(bridge._logs) == after_first_bad_tick, "repeated bad ticks must not spam the log"
 
     # --- recovering back to valid fields logs the resume transition once ---
     bridge.sendCustomFramePeriodicTick("200", "BB")
-    assert any("CUSTOM_FRAME_PERIODIC_RESUMING" in line for line in bridge.logs)
+    assert any("CUSTOM_FRAME_PERIODIC_RESUMING" in line for line in bridge._logs)
     assert transport.sent[-1] == (0x200, bytes([0xBB]))
 
     # --- toggle-off flips the flag back, Timer's running binding follows it ---

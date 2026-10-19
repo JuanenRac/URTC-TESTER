@@ -19,7 +19,7 @@ except ImportError:
     HAVE_SERIAL = False
 
 
-TESTER_VERSION = "0.3.6"
+TESTER_VERSION = "0.3.7"
 TESTER_AUTHOR = "JuanenRac"
 
 # THIS_HARDWARE_ID matches bootloader_common.h/firmware_common.h's own constant - used
@@ -154,6 +154,47 @@ def _(key, **kwargs):
         except (KeyError, IndexError):
             return text
     return text
+
+
+# Log lines of the Qt Quick deck start with an upper-case word (PORT_SCAN, SELFTEST_FAILED ...);
+# the word is looked up as QTLOG_<WORD> in the language file and shown in the chosen language.
+# For these words the label is a whole sentence and the English detail that follows is dropped.
+_LOG_LABEL_ONLY = frozenset({
+    "AOI_BLOCKED", "AUTODETECT_ACTIVE_PHASE", "BUS_MONITOR_BLOCKED", "BUS_MONITOR_EXPORT_EMPTY", "ERROR",
+    "FEEDER_RESET_BLOCKED", "FLYING_PROBE_CONFIG_BLOCKED", "PASSIVE_CAPTURE_BLOCKED", "PASTE_CONFIG_BLOCKED",
+    "PASTE_PULSE_BLOCKED", "PORT_SCAN_BLOCKED", "PROBE_BLOCKED", "READOUT_EXPORT_EMPTY", "WATCHDOG_BLOCKED",
+    "WELD_PULSE_BLOCKED",
+})
+
+# The fixed English sentences that follow a token (shared by several tokens) and the language key of their translation.
+_LOG_DETAILS = {
+    "profile identity/active-check gate not satisfied": "QTLOGD_GATE_ACTIVE",
+    "profile identity/connection gate not satisfied": "QTLOGD_GATE_CONNECTION",
+    "a live readout holds the bus": "QTLOGD_HOLDS_BUS",
+    "not connected or not in active-check mode": "QTLOGD_NOT_ACTIVE",
+    "steps must be an integer": "QTLOGD_STEPS_INT",
+    "steps outside 1..4294967295": "QTLOGD_STEPS_RANGE",
+    "a watch is already running": "QTLOGD_WATCH_RUNNING",
+    "speed must be an integer in range": "QTLOGD_DRILL_SPEED",
+    "extruder steps/temperature must be integers in range": "QTLOGD_PRINTER_STEPS",
+    "hotend fan power must be an integer in range": "QTLOGD_PRINTER_FAN",
+    "no response": "QTLOGD_NO_RESPONSE",
+}
+
+
+def translate_log_line(message):
+    """Shows a Qt Quick log line in the interface language. A line that does not start
+    with a known word is returned unchanged. Only the shown line is translated: the exported
+    session log keeps the English original."""
+    token, _sep, rest = str(message).partition(" ")
+    if token and token.replace("_", "").isalnum() and token.upper() == token:
+        label = _translations.get("QTLOG_" + token)
+        if label:
+            if rest and token not in _LOG_LABEL_ONLY:
+                rest = _translations.get(_LOG_DETAILS.get(rest, ""), rest)
+                return f"{label}: {rest}"
+            return label
+    return str(message)
 
 
 def _load_custom_id_names():
