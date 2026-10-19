@@ -8,6 +8,10 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 only by the explicit `python bump.py` step (building never changes it), base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.3.6] - Follow URTC-COMMON 0.0.5 and the 0.3.8 firmware
+
+- The shared protocol and widget copies follow URTC-COMMON 0.0.5, which adds the multinode identifiers and the two frames that read and set its switch.
+
 ## [0.3.5] - Self-test, live readouts and bus health in the Qt Quick deck; the Tkinter window is retired
 
 - New self-test in the deck: the same safe, at-rest checks as before (the two generic queries and a zero setpoint, speed or power for the tools that have telemetry), now in `tester_selftest.py`, shared by the tests and the deck. It needs an armed connection, the detected tool to be the selected profile and a confirmation, and it switches every armed output off first. The step texts exist in the eight languages.

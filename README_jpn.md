@@ -24,7 +24,7 @@
 </p>
 
 
-**バージョン：** 0.3.5 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**バージョン：** 0.3.6 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 ライセンス：ソースコードは **GPL-3.0-or-later**、本ドキュメントは **CC BY-SA 4.0**——
 本リポジトリの `LICENSE`、または本ドキュメント末尾の「ライセンスと著作権
