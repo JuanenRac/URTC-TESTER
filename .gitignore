@@ -10,3 +10,6 @@ logs/*.log
 .env
 .env.*
 !.env.example
+
+# Per-user settings written by the tool at run time
+config.json

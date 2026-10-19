@@ -15,6 +15,9 @@ except ImportError:  # PySide6 is not installed
 @unittest.skipIf(qt_tester is None, "PySide6 is not available")
 class QtAutodetectTests(unittest.TestCase):
     def setUp(self):
+        patcher = mock.patch.object(qt_tester, "save_config", return_value=True)
+        self.saved = patcher.start()
+        self.addCleanup(patcher.stop)
         self.bridge = qt_tester.TesterQtBridge()
         self.bridge._log = lambda message: None
         self.results = []
@@ -36,10 +39,9 @@ class QtAutodetectTests(unittest.TestCase):
         self.assertEqual(self.results, [""])
 
     def test_a_found_speed_replaces_the_selected_one_and_is_remembered(self):
-        with mock.patch.object(qt_tester, "save_config") as saved:
-            self.bridge._on_bitrate_detected("125 kbit/s")
+        self.bridge._on_bitrate_detected("125 kbit/s")
         self.assertEqual(self.bridge.selectedBitrate, "125 kbit/s")
-        saved.assert_called_once_with({"bitrate": "125 kbit/s"})
+        self.saved.assert_called_with({"bitrate": "125 kbit/s"})
 
     def test_no_speed_found_keeps_the_selected_one(self):
         before = self.bridge.selectedBitrate
