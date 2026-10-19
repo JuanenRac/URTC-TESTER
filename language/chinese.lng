@@ -469,3 +469,5 @@ MSG_CONFIRM_PHYSICAL_ACTION=这会发送一条真实命令，使工具上的某�
 LBL_FILTER_IDS=ID 过滤：
 BTN_ONLY_CHANGES=仅显示变化
 LOG_STOP_ALL_OUTPUTS=停止所有输出：已发送所有已知的关闭命令（{failed} 个失败），并停止了所有刷新。
+QT_MONITOR_START=启动监视器
+QT_MONITOR_STOP=停止监视器

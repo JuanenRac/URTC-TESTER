@@ -14,6 +14,7 @@ from tkinter import ttk, messagebox, filedialog
 
 import advanced_protocol as protocol
 from tester_bus_monitor import FrameFilter
+from tester_trace_export import render as render_trace
 from tester_config import (
     _, bitrate_bps_for_label, CAN_ID_3DP_HOTEND_TELEM, CAN_ID_3DP_THERMAL_MOTION, CAN_ID_ACTIVE_TOOL_RESP,
     CAN_ID_AOI_TELEMETRY, CAN_ID_DIAG0_RESP, CAN_ID_DRILL_CMD, CAN_ID_DRILL_TELEMETRY,
@@ -416,19 +417,6 @@ class CommonPanelsMixin:
 
         self._new_deck_button(top_row, text=_("BTN_CLEAR"), command=_clear).pack(side="left", padx=(8, 0))
 
-        def _parse_ts_to_seconds(ts_str):
-            # Recorded as "HH:MM:SS.mmm" (see the bus monitor's own _on_frame
-            # above) - parsed back into seconds-since-midnight so a
-            # relative offset from the first frame can be computed below,
-            # preserving real inter-frame timing instead of a synthetic,
-            # uniform per-row value that would discard it entirely.
-            try:
-                hms, ms = ts_str.split(".")
-                h, m, s = (int(x) for x in hms.split(":"))
-                return h * 3600 + m * 60 + s + int(ms) / 1000.0
-            except (ValueError, AttributeError):
-                return None
-
         def _export(fmt):
             rows = [tree.item(item)["values"] for item in tree.get_children()]
             if not rows:
@@ -438,48 +426,9 @@ class CommonPanelsMixin:
             path = filedialog.asksaveasfilename(defaultextension=ext, filetypes=[(f"{fmt.upper()} files", f"*{ext}")])
             if not path:
                 return
-            # Relative offsets (first frame = 0.0) from the real recorded
-            # timestamps - falls back to the old synthetic i*10/i*0.01
-            # spacing only for a row whose timestamp genuinely can't be
-            # parsed, rather than failing the whole export over one bad row.
-            parsed = [_parse_ts_to_seconds(r[0]) for r in rows]
-            t0 = next((t for t in parsed if t is not None), None)
-            offsets_ms = []
-            for i, t in enumerate(parsed):
-                if t is not None and t0 is not None:
-                    offsets_ms.append((t - t0) * 1000.0)
-                else:
-                    offsets_ms.append(i * 10.0)
             try:
-                with open(path, "w", encoding="ascii") as f:
-                    if fmt == "trc":
-                        # Simplified PEAK PCAN-View trace format - the key
-                        # structural elements (header, one line per frame
-                        # with index/offset/type/ID/DLC/data), not
-                        # guaranteed byte-identical to what PCAN-View's own
-                        # exporter produces for every possible viewer.
-                        f.write(";$FILEVERSION=1.1\n;$STARTTIME=0\n;$COLUMNS=N,O,T,I,d,l,D\n;\n")
-                        f.write(";   Message Number\n;   Time Offset (ms)\n;   Type\n"
-                                ";   ID (hex)\n;   Data Length Code\n;   Data Bytes (hex)\n")
-                        f.write(";" + "-" * 80 + "\n")
-                        for i, (_ts, can_id, dlc, data, _dt) in enumerate(rows, start=1):
-                            id_hex = str(can_id).split(" ")[0].replace("0x", "").zfill(4)
-                            data_hex = str(data)  # already "" for an empty frame (b"".hex() == ""), no special-casing needed
-                            f.write(f"{i:>6}) {offsets_ms[i-1]:>10.1f}  Rx    {id_hex}  {dlc}   {data_hex}\n")
-                    else:
-                        # Simplified Vector ASCII (.asc) trace format -
-                        # same caveat as .trc above: the recognizable shape
-                        # of the format, not a byte-perfect match to every
-                        # CANalyzer/CANoe version's own output.
-                        f.write("date " + time.strftime("%a %b %d %H:%M:%S.000 %Y") + "\n")
-                        f.write("base hex  timestamps absolute\n")
-                        f.write("internal events logged\n")
-                        f.write("Begin Triggerblock " + time.strftime("%a %b %d %H:%M:%S.000 %Y") + "\n")
-                        for i, (_ts, can_id, dlc, data, _dt) in enumerate(rows):
-                            id_hex = str(can_id).split(" ")[0].replace("0x", "")
-                            data_hex = str(data)  # already "" for an empty frame (b"".hex() == ""), no special-casing needed
-                            f.write(f"   {offsets_ms[i] / 1000.0:.6f} 1  {id_hex:<15} Rx   d {dlc} {data_hex}\n")
-                        f.write("End TriggerBlock\n")
+                with open(path, "w", encoding="ascii", newline="\n") as f:
+                    f.write(render_trace(rows, fmt))
                 self.log(_("LOG_EXPORTED_FRAMES", n=len(rows), path=path))
             except OSError as e:
                 messagebox.showerror(_("TITLE_EXPORT_FAILED"), str(e))

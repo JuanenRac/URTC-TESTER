@@ -23,6 +23,7 @@ so being the default here is not a hardware-proven claim.
 """
 from __future__ import annotations
 
+import collections
 import json
 import os
 import struct
@@ -33,6 +34,8 @@ import zipfile
 from pathlib import Path
 
 import advanced_protocol as protocol
+from tester_bus_monitor import FrameFilter
+from tester_trace_export import render as render_trace
 from PySide6.QtCore import QObject, Property, QUrl, Signal, Slot
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
@@ -104,10 +107,15 @@ from tester_transports import SLCAN, SocketCAN, list_socketcan_interfaces
 class TesterQtBridge(QObject):
     """QML state model backed by the real CAN transports, not mock telemetry."""
 
+    MONITOR_MAX_ROWS = 2000  # the table keeps the newest frames; older ones are dropped
+    MONITOR_SHOWN_ROWS = 14  # the deck shows the newest few
+
     changed = Signal()
+    monitorChanged = Signal()
     logChanged = Signal()
     _connectionResult = Signal(object, str)
     _bitrateDetected = Signal(str)
+    _monitorUpdated = Signal()
     _probeResult = Signal(object, object, str)
     _passiveResult = Signal(object, str, float)
     _flyingProbeResult = Signal(str, str)
@@ -168,6 +176,13 @@ class TesterQtBridge(QObject):
         # panel is visible at a time - kept as a dict anyway to reuse the
         # exact same stop/cleanup shape _stop_watchdog already has.
         self._telemetry_stops: dict[str, threading.Event] = {}
+        # Raw bus monitor: its own stop flag (a monitor is not a telemetry watch) and a bounded frame table.
+        self._monitor_stop: threading.Event | None = None
+        self._monitor_thread: threading.Thread | None = None
+        self._monitor_rows: collections.deque = collections.deque(maxlen=self.MONITOR_MAX_ROWS)
+        self._monitor_lock = threading.Lock()
+        self._monitor_filter = FrameFilter()
+        self._monitor_last_seen: dict[int, float] = {}
         self._vacuum_adc = 0
         self._vacuum_detected = False
         self._scan_probe_impact_count = 0
@@ -199,6 +214,7 @@ class TesterQtBridge(QObject):
         self._custom_periodic_last_ok = True
         self._connectionResult.connect(self._on_connection_result)
         self._bitrateDetected.connect(self._on_bitrate_detected)
+        self._monitorUpdated.connect(self.monitorChanged)
         self._probeResult.connect(self._on_probe_result)
         self._passiveResult.connect(self._on_passive_result)
         self._flyingProbeResult.connect(self._on_flying_probe_result)
@@ -251,6 +267,8 @@ class TesterQtBridge(QObject):
         translated = _(key)
         return translated if translated != key else {
             "QT_TRANSPORT_GATE": "TRANSPORT GATE",
+            "QT_MONITOR_START": "START MONITOR",
+            "QT_MONITOR_STOP": "STOP MONITOR",
             "QT_TRANSPORT_HELP": "Select a serial SLCAN port or a Linux SocketCAN interface.",
             "QT_SAFETY_MODE": "SAFETY MODE",
             "QT_LISTEN_ONLY": "LISTEN-ONLY (NO CAN TX)",
@@ -520,6 +538,117 @@ class TesterQtBridge(QObject):
     def isWatchingTelemetry(self) -> bool:
         return bool(self._telemetry_stops)
 
+    @Property(bool, notify=monitorChanged)
+    def isMonitoring(self) -> bool:
+        return self._monitor_stop is not None
+
+    @Property(bool, notify=changed)
+    def canMonitorBus(self) -> bool:
+        """Monitoring never transmits, so it is available in listen-only mode too; it needs a connection and no other reader."""
+        return self._transport is not None and not self._busy and self._monitor_stop is None
+
+    @Property("QVariantList", notify=monitorChanged)
+    def monitorLines(self) -> list[str]:
+        with self._monitor_lock:
+            newest = list(self._monitor_rows)[-self.MONITOR_SHOWN_ROWS:]
+        return [f"{ts}  {can_id:<6} [{dlc}]  {data}  +{dt:.1f} ms" for ts, can_id, dlc, data, dt in reversed(newest)]
+
+    @Property(int, notify=monitorChanged)
+    def monitorCount(self) -> int:
+        with self._monitor_lock:
+            return len(self._monitor_rows)
+
+    @Slot()
+    def startBusMonitor(self) -> None:
+        transport = self._transport
+        if transport is None or self._busy or self._monitor_stop is not None:
+            self._log("BUS_MONITOR_BLOCKED not connected, or another operation holds the bus")
+            return
+        stop = threading.Event()
+        self._monitor_stop = stop
+        self._monitor_filter.reset()
+        self._monitor_last_seen.clear()
+        self._set_state(status="MONITORING THE BUS", busy=True)
+        self._log("BUS_MONITOR_STARTED")
+
+        def _worker() -> None:
+            last_emit = 0.0
+            try:
+                while not stop.is_set():
+                    frame = transport.read_frame(timeout=0.1)
+                    if frame is not None:
+                        self._record_monitor_frame(frame[0], bytes(frame[1]))
+                    now = time.monotonic()
+                    if now - last_emit >= 0.15:
+                        last_emit = now
+                        self._monitorUpdated.emit()
+            except Exception as exc:  # an unplugged adapter must end the monitor, not the deck
+                self._log(f"BUS_MONITOR_FAILED {exc}")
+            finally:
+                self._monitor_stop = None
+                self._monitorUpdated.emit()
+                self._set_state(status="ACTIVE CHECKS ARMED", busy=False)
+                self._log("BUS_MONITOR_STOPPED")
+
+        self._monitor_thread = threading.Thread(target=_worker, daemon=True, name="urtc-tester-bus-monitor")
+        self._monitor_thread.start()
+        self.monitorChanged.emit()
+
+    def _record_monitor_frame(self, can_id: int, data: bytes) -> None:
+        if not self._monitor_filter.accept(can_id, data):
+            return
+        now = time.time()
+        stamp = time.strftime("%H:%M:%S", time.localtime(now)) + f".{int((now % 1) * 1000):03d}"
+        previous = self._monitor_last_seen.get(can_id)
+        delta_ms = (now - previous) * 1000.0 if previous is not None else 0.0
+        self._monitor_last_seen[can_id] = now
+        with self._monitor_lock:
+            self._monitor_rows.append((stamp, f"0x{can_id:03X}", len(data), data.hex().upper(), round(delta_ms, 1)))
+
+    @Slot()
+    def stopBusMonitor(self) -> None:
+        """Deliberately not busy-gated: the worker clears busy itself once its read loop has really ended."""
+        if self._monitor_stop is not None:
+            self._monitor_stop.set()
+
+    @Slot()
+    def clearBusMonitor(self) -> None:
+        with self._monitor_lock:
+            self._monitor_rows.clear()
+        self._monitor_filter.reset()
+        self._monitor_last_seen.clear()
+        self.monitorChanged.emit()
+
+    @Slot(str)
+    def setMonitorIds(self, text: str) -> None:
+        """Hex IDs separated by spaces or commas; empty shows every ID."""
+        self._monitor_filter.set_ids(text)
+        self._monitor_filter.reset()
+
+    @Slot(bool)
+    def setMonitorOnlyChanges(self, enabled: bool) -> None:
+        self._monitor_filter.only_changes = bool(enabled)
+        self._monitor_filter.reset()
+
+    @Slot(str, result=str)
+    def exportMonitor(self, fmt: str) -> str:
+        """Save the recorded frames as a PEAK .trc or Vector .asc trace in the logs folder; returns the path ('' on failure)."""
+        with self._monitor_lock:
+            rows = list(self._monitor_rows)
+        if fmt not in ("trc", "asc") or not rows:
+            self._log("BUS_MONITOR_EXPORT_EMPTY there are no frames to export")
+            return ""
+        try:
+            os.makedirs(LOGS_FOLDER, exist_ok=True)
+            path = os.path.join(LOGS_FOLDER, f"urtc_tester_bus_{time.strftime('%Y%m%d_%H%M%S')}.{fmt}")
+            with open(path, "w", encoding="ascii") as stream:
+                stream.write(render_trace(rows, fmt))
+        except OSError as exc:
+            self._log(f"BUS_MONITOR_EXPORT_FAILED {exc}")
+            return ""
+        self._log(f"BUS_MONITOR_EXPORTED {len(rows)} frames {path}")
+        return path
+
     @Property(bool, notify=changed)
     def canWatchTelemetry(self) -> bool:
         """Deliberately NOT canActuateSelectedProfile - that also requires
@@ -684,6 +813,12 @@ class TesterQtBridge(QObject):
 
     @Slot()
     def toggleConnection(self) -> None:
+        if self._monitor_stop is not None and self._transport is not None:
+            # a bus monitor has no natural end: disconnecting ends it instead of leaving the app stuck
+            self._monitor_stop.set()
+            worker = self._monitor_thread
+            if worker is not None and worker is not threading.current_thread():
+                worker.join(timeout=1.0)
         if self._busy and self._telemetry_stops and self._transport is not None:
             # a telemetry watch has no natural end: disconnecting ends it instead of leaving the app stuck
             self._end_telemetry_watch()

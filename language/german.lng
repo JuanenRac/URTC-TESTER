@@ -470,3 +470,5 @@ MSG_CONFIRM_PHYSICAL_ACTION=Dies sendet einen echten Befehl, der am Werkzeug etw
 LBL_FILTER_IDS=ID-Filter:
 BTN_ONLY_CHANGES=Nur Änderungen
 LOG_STOP_ALL_OUTPUTS=Alle Ausgänge stoppen: Alle bekannten Aus-Befehle wurden gesendet ({failed} fehlgeschlagen) und alle Auffrischungen gestoppt.
+QT_MONITOR_START=MONITOR STARTEN
+QT_MONITOR_STOP=MONITOR STOPPEN

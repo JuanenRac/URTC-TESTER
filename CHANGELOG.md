@@ -8,6 +8,12 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 only by the explicit `python bump.py` step (building never changes it), base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [0.3.4] - The Qt Quick deck gets the raw bus monitor
+
+- The Qt Quick deck has a raw bus monitor: it reads every frame without transmitting, shows the newest ones, filters by CAN ID and by changed payload, keeps the last 2000 frames, and exports them as a PEAK `.trc` or a Vector `.asc` trace in the logs folder.
+- The monitor holds the bus like any other read (one reader at a time), is available in listen-only mode, and ends cleanly when the adapter is disconnected.
+- The trace writers are one shared module used by both the Tk window and the Qt Quick deck, with tests for the offsets, both formats and plain-ASCII output.
+
 ## [0.3.3] - The Qt Quick deck can search for the bus speed
 
 - The Qt Quick deck has an auto-detect button for serial CAN adapters: it listens at each speed first (nothing is transmitted), asks for the active tool only when the whole bus is silent, adopts and remembers the speed found, and leaves the selection untouched when nothing answers.

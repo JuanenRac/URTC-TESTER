@@ -469,3 +469,5 @@ MSG_CONFIRM_PHYSICAL_ACTION=This transmits a real command that fires or moves so
 LBL_FILTER_IDS=ID filter:
 BTN_ONLY_CHANGES=Only changes
 LOG_STOP_ALL_OUTPUTS=Stop all outputs: every known off command was sent ({failed} failed) and every refresh was stopped.
+QT_MONITOR_START=START MONITOR
+QT_MONITOR_STOP=STOP MONITOR

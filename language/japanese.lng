@@ -469,3 +469,5 @@ MSG_CONFIRM_PHYSICAL_ACTION=これはツール上で何かを作動または動�
 LBL_FILTER_IDS=ID フィルター：
 BTN_ONLY_CHANGES=変化のみ
 LOG_STOP_ALL_OUTPUTS=全出力停止：既知のすべてのオフコマンドを送信し（失敗 {failed} 件）、すべての再送を停止しました。
+QT_MONITOR_START=モニターを開始
+QT_MONITOR_STOP=モニターを停止

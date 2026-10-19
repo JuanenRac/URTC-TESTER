@@ -918,6 +918,45 @@ ApplicationWindow {
                 }
 
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+                Text { text: testerBackend.uiText("TITLE_RAW_BUS_MONITOR"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton {
+                        text: testerBackend.isMonitoring ? testerBackend.uiText("QT_MONITOR_STOP") : testerBackend.uiText("QT_MONITOR_START")
+                        accent: testerBackend.isMonitoring ? "#7a2f2f" : "#24465e"
+                        Layout.fillWidth: true
+                        enabled: testerBackend.isMonitoring || testerBackend.canMonitorBus
+                        onClicked: testerBackend.isMonitoring ? testerBackend.stopBusMonitor() : testerBackend.startBusMonitor()
+                    }
+                    GameButton { text: testerBackend.uiText("BTN_CLEAR"); accent: "#24465e"; Layout.fillWidth: true; onClicked: testerBackend.clearBusMonitor() }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    Text { text: testerBackend.uiText("LBL_FILTER_IDS"); color: muted; font.pixelSize: 11 }
+                    TextField { id: monitorIds; Layout.fillWidth: true; placeholderText: "1A0 110 7F8"; font.pixelSize: 11; onTextEdited: testerBackend.setMonitorIds(text) }
+                    CheckBox { text: testerBackend.uiText("BTN_ONLY_CHANGES"); font.pixelSize: 11; onToggled: testerBackend.setMonitorOnlyChanges(checked) }
+                }
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 150
+                    color: "#07131c"; radius: 8; border.width: 1; border.color: panelBorder
+                    ListView {
+                        anchors.fill: parent; anchors.margins: 6; clip: true
+                        model: testerBackend.monitorLines
+                        delegate: Text { width: ListView.view.width; text: modelData; color: textPrimary; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideRight }
+                    }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    Text { text: String(testerBackend.monitorCount); color: muted; font.pixelSize: 10 }
+                    GameButton { text: testerBackend.uiText("BTN_EXPORT_TRC"); accent: "#24465e"; Layout.fillWidth: true; enabled: testerBackend.monitorCount > 0; onClicked: testerBackend.exportMonitor("trc") }
+                    GameButton { text: testerBackend.uiText("BTN_EXPORT_ASC"); accent: "#24465e"; Layout.fillWidth: true; enabled: testerBackend.monitorCount > 0; onClicked: testerBackend.exportMonitor("asc") }
+                }
+
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
                 RowLayout {
                     Layout.fillWidth: true
                     Text { text: testerBackend.uiText("QT_ACTIVITY_LOG"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13; Layout.fillWidth: true }

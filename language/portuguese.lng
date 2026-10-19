@@ -470,3 +470,5 @@ MSG_CONFIRM_PHYSICAL_ACTION=Isto transmite um comando real que aciona ou move al
 LBL_FILTER_IDS=Filtro de ID:
 BTN_ONLY_CHANGES=Só alterações
 LOG_STOP_ALL_OUTPUTS=Parar todas as saídas: foram enviados todos os comandos de desligar conhecidos ({failed} falhados) e todos os refrescamentos foram parados.
+QT_MONITOR_START=INICIAR MONITOR
+QT_MONITOR_STOP=PARAR MONITOR
