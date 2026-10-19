@@ -427,7 +427,7 @@ class CommonPanelsMixin:
             if not path:
                 return
             try:
-                with open(path, "w", encoding="ascii", newline="\n") as f:
+                with open(path, "w", encoding="ascii") as f:
                     f.write(render_trace(rows, fmt))
                 self.log(_("LOG_EXPORTED_FRAMES", n=len(rows), path=path))
             except OSError as e:
