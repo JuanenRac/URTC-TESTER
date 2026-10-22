@@ -511,6 +511,8 @@ firmware - è documentato in
   <img src="images/URTC_TESTER_V1_1.png" alt="Finestra di URTC Tester" width="700">
 </p>
 
+**Registratore di guasti, funzioni opzionali, banco del rack e vista termica (nuovo, verificato solo con simulazioni):** il pannello legge la scatola nera della scheda (`0x1A8` / `0x1A9`) e la salva in CSV e JSON, automaticamente una volta per ogni errore segnalato dalla scheda quando l'opzione è attiva; attiva le funzioni opzionali del firmware (`0x1AE` / `0x1AF`, spente per impostazione predefinita, efficaci al prossimo avvio); ha un rack di utensili simulato con il protocollo seriale di URTC-SMART-RACK, l'identità di ogni testa (tipo e numero di serie) e l'esportazione di una pagina di stato; e mostra l'immagine di ispezione termica in falsi colori (un'immagine simulata lo dichiara). I nomi e i tipi degli utensili ora derivano dai profili utensile condivisi di URTC-COMMON. Nulla di tutto ciò è stato usato con una scheda reale.
+
 ## 🔗 Progetti Correlati
 
 Questo progetto fa parte dell'ecosistema robotico HYDRA-UMC dello stesso autore (JuanenRac / Electro Hobby 3D). Vale la pena conoscerlo, poiché una richiesta potrebbe in realtà riguardare uno di questi invece di questo repository.
@@ -520,6 +522,7 @@ Questo progetto fa parte dell'ecosistema robotico HYDRA-UMC dello stesso autore 
 
 **Progetti Fratelli** — gli altri strumenti della propria famiglia di strumenti CAN-bus di URTC
 - **[URTC-FLASHER](https://github.com/JuanenRac/URTC-FLASHER)** — strumento desktop con GUI per il flashing delle schede URTC, CAN-OTA più SWD/JTAG a chip intero.
+- **[URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY)** — un gateway davanti al bus CAN che lascia passare solo gli identificatori di un elenco, ne limita la frequenza e chiede una chiave di sessione.
 - **[URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — alternativa basata su browser a URTC-TESTER tramite la Web Serial API, senza installazione locale.
 
 **Direttamente Correlati**

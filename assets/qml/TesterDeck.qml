@@ -1042,6 +1042,71 @@ ApplicationWindow {
                 Text { text: testerBackend.uiText("HELP_FEEDER_POSITION_OPEN_LOOP"); color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
 
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+                Text { text: testerBackend.uiText("QT_EXTRAS_PANEL"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton { text: testerBackend.uiText("BTN_READ_BLACK_BOX"); accent: "#24465e"; Layout.preferredWidth: 190; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.readBlackBox() }
+                    CheckBox { text: testerBackend.uiText("LBL_AUTO_BLACK_BOX"); checked: testerBackend.autoBlackBox; font.pixelSize: 11; onToggled: testerBackend.setAutoBlackBox(checked) }
+                }
+                Text { text: testerBackend.blackBoxText; visible: testerBackend.blackBoxText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    CheckBox { id: featRamps; text: testerBackend.uiText("LBL_FEATURE_MOTION_RAMPS"); font.pixelSize: 10 }
+                    CheckBox { id: featHealth; text: testerBackend.uiText("LBL_FEATURE_HEALTH_PROFILE"); font.pixelSize: 10 }
+                    CheckBox { id: featHsi; text: testerBackend.uiText("LBL_FEATURE_HSI_AUTOTRIM"); font.pixelSize: 10 }
+                    CheckBox { id: featPid; text: testerBackend.uiText("LBL_FEATURE_THERMAL_PID"); font.pixelSize: 10 }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton { text: testerBackend.uiText("BTN_QUERY_FEATURES"); accent: "#24465e"; Layout.preferredWidth: 190; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.queryFeatures() }
+                    GameButton {
+                        text: testerBackend.uiText("BTN_WRITE_FEATURES")
+                        accent: "#b86a35"
+                        Layout.preferredWidth: 260
+                        enabled: testerBackend.canUseUtilityPanels
+                        onClicked: window.requestUtilityAction(function() { testerBackend.writeFeatures((featRamps.checked ? 1 : 0) + (featHealth.checked ? 2 : 0) + (featHsi.checked ? 4 : 0) + (featPid.checked ? 8 : 0)) })
+                    }
+                }
+                Text { text: testerBackend.featuresText; visible: testerBackend.featuresText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+
+                Text { text: testerBackend.uiText("QT_RACK_BENCH"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 12 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    Text { text: testerBackend.uiText("LBL_SLOT"); color: muted; font.pixelSize: 10 }
+                    TextField { id: benchSlot; text: "0"; color: textPrimary; Layout.preferredWidth: 46; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    Text { text: testerBackend.uiText("LBL_TOOL_ID"); color: muted; font.pixelSize: 10 }
+                    TextField { id: benchTool; text: "0"; color: textPrimary; Layout.preferredWidth: 46; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    Text { text: testerBackend.uiText("LBL_SERIAL"); color: muted; font.pixelSize: 10 }
+                    TextField { id: benchSerial; text: "0"; color: textPrimary; Layout.preferredWidth: 46; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    GameButton { text: testerBackend.uiText("BTN_RACK_IT"); accent: "#24465e"; Layout.fillWidth: true; onClicked: testerBackend.rackBenchRack(parseInt(benchSlot.text) || 0, parseInt(benchTool.text) || 0, parseInt(benchSerial.text) || 0) }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    Text { text: testerBackend.uiText("LBL_TARGET_C"); color: muted; font.pixelSize: 10 }
+                    TextField { id: benchTarget; text: "200"; color: textPrimary; Layout.preferredWidth: 60; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    GameButton { text: testerBackend.uiText("BTN_SEND_PREHEAT"); accent: "#24465e"; Layout.preferredWidth: 190; onClicked: testerBackend.rackBenchPreheat(parseInt(benchTool.text) || 0, parseInt(benchTarget.text) || 0) }
+                    TextField { id: benchAdvance; text: "1000"; color: textPrimary; Layout.preferredWidth: 70; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    GameButton { text: testerBackend.uiText("BTN_ADVANCE_TIME"); accent: "#24465e"; Layout.fillWidth: true; onClicked: testerBackend.rackBenchAdvance(parseInt(benchAdvance.text) || 0) }
+                }
+                GameButton { text: testerBackend.uiText("BTN_EXPORT_RACK_STATUS"); accent: "#24465e"; Layout.preferredWidth: 220; onClicked: testerBackend.rackBenchExport() }
+                Text { text: testerBackend.rackBenchText; visible: testerBackend.rackBenchText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.family: "Cascadia Mono"; font.pixelSize: 10 }
+
+                Text { text: testerBackend.uiText("QT_THERMAL_VIEW"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 12 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton { text: testerBackend.uiText("BTN_THERMAL_SIMULATED"); accent: "#24465e"; Layout.preferredWidth: 220; onClicked: testerBackend.showSimulatedThermal() }
+                    GameButton { text: testerBackend.uiText("BTN_THERMAL_READ"); accent: "#24465e"; Layout.preferredWidth: 200; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.readThermalImage() }
+                }
+                Image { source: testerBackend.thermalViewSource; visible: testerBackend.thermalViewSource !== ""; fillMode: Image.PreserveAspectFit; smooth: false; Layout.preferredWidth: 384; Layout.preferredHeight: 288 }
+                Text { text: testerBackend.thermalViewText; visible: testerBackend.thermalViewText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
                 // -- Custom CAN Frame - the one real tool-independent
                 // action with no validation beyond frame shape (see
                 // HELP_SENDS_RAW_FRAME's own real text below): whatever

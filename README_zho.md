@@ -406,6 +406,8 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
   <img src="images/URTC_TESTER_V1_1.png" alt="URTC Tester window" width="700">
 </p>
 
+**故障记录器、可选功能、机架试验台和热像(新增,仅用模拟对象检查):** 面板读取板卡的黑匣子(`0x1A8` / `0x1A9`)并保存为 CSV 和 JSON,该选项开启时,板卡每报告一次错误就自动读取一次;可切换固件的可选功能(`0x1AE` / `0x1AF`,默认关闭,下次上电后生效);提供一个模拟的工具机架,使用 URTC-SMART-RACK 的串行协议、每个工具头的身份(类型和序列号)以及状态页导出;并以伪彩色显示热检测图像(模拟图像会明确标注)。工具名称和类别现在来自 URTC-COMMON 的共享工具配置。这些都没有在真实板卡上使用过。
+
 ## 🔗 相关项目
 
 本项目是同一作者(JuanenRac / Electro Hobby 3D)打造的 HYDRA-UMC 机器人生态系统的一部分。值得了解,因为某个请求实际上可能是关于这些项目之一,而非本仓库本身。
@@ -415,6 +417,7 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 
 **兄弟项目** —— URTC 自身 CAN 总线工具家族中的其他工具
 - **[URTC-FLASHER](https://github.com/JuanenRac/URTC-FLASHER)** — 面向 URTC 板卡的桌面图形烧录工具，支持 CAN-OTA 以及全芯片 SWD/JTAG。
+- **[URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY)** — 位于 CAN 总线前的网关，只放行列表中的标识符，限制其速率，并要求会话密钥。
 - **[URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — 通过 Web Serial API 实现的浏览器版 URTC-TESTER 替代方案，无需本地安装。
 
 **直接相关**

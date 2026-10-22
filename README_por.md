@@ -463,6 +463,8 @@ qualquer autoridade própria de gravação de firmware - está documentado em
   <img src="images/URTC_TESTER_V1_1.png" alt="Janela do URTC Tester" width="700">
 </p>
 
+**Registador de falhas, funções opcionais, bancada do rack e vista térmica (novo, verificado apenas com simulações):** o painel lê a caixa negra da placa (`0x1A8` / `0x1A9`) e guarda-a em CSV e JSON, automaticamente uma vez por cada erro indicado pela placa quando essa opção está ativa; liga as funções opcionais do firmware (`0x1AE` / `0x1AF`, desligadas por predefinição, com efeito após o próximo arranque); tem um rack de ferramentas simulado com o protocolo série do URTC-SMART-RACK, a identidade de cada cabeça (tipo e número de série) e a exportação de uma página de estado; e mostra a imagem de inspeção térmica em falsa cor (uma imagem simulada di-lo). Os nomes e tipos das ferramentas vêm agora dos perfis de ferramenta partilhados do URTC-COMMON. Nada disto foi usado com uma placa real.
+
 ## 🔗 Projetos relacionados
 
 Este projeto faz parte do ecossistema de robótica HYDRA-UMC do mesmo autor (JuanenRac / Electro Hobby 3D). Vale a pena conhecê-los, uma vez que um pedido pode, na verdade, dizer respeito a um destes e não a este repositório.
@@ -472,6 +474,7 @@ Este projeto faz parte do ecossistema de robótica HYDRA-UMC do mesmo autor (Jua
 
 **Projetos irmãos** — as outras ferramentas da própria família de ferramentas de barramento CAN do URTC
 - **[URTC-FLASHER](https://github.com/JuanenRac/URTC-FLASHER)** — ferramenta de gravação com GUI de desktop para placas URTC, CAN-OTA mais SWD/JTAG de chip completo.
+- **[URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY)** — uma gateway à frente do barramento CAN que só deixa passar identificadores de uma lista, limita a sua taxa e pede uma chave de sessão.
 - **[URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — alternativa no navegador ao URTC-TESTER através da Web Serial API, sem necessidade de instalação local.
 
 **Diretamente relacionados**

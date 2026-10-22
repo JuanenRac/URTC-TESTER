@@ -526,6 +526,8 @@ dokumentiert.
   <img src="images/URTC_TESTER_V1_1.png" alt="URTC Tester Fenster" width="700">
 </p>
 
+**Fehlerrekorder, optionale Funktionen, Rack-Prüfstand und Wärmebild (neu, nur mit Attrappen geprüft):** Das Deck liest die Blackbox der Platine (`0x1A8` / `0x1A9`) und speichert sie als CSV und JSON, bei eingeschalteter Option automatisch einmal für jeden gemeldeten Fehler; es schaltet die optionalen Firmware-Funktionen (`0x1AE` / `0x1AF`, standardmäßig aus, wirksam nach dem nächsten Einschalten); es hat ein simuliertes Werkzeug-Rack mit dem seriellen Protokoll von URTC-SMART-RACK, der Identität jedes Kopfes (Typ und Seriennummer) und dem Export einer Statusseite; und es zeigt das Wärmebild der thermischen Inspektion in Falschfarben (ein simuliertes Bild sagt das). Die Werkzeugnamen und -arten stammen jetzt aus den gemeinsamen Werkzeugprofilen von URTC-COMMON. Nichts davon wurde mit einer echten Platine benutzt.
+
 ## 🔗 Verwandte Projekte
 
 Dieses Projekt ist Teil des HYDRA-UMC-Robotik-Ökosystems desselben Autors (JuanenRac / Electro Hobby 3D). Gut zu wissen, da eine Anfrage eigentlich eines dieser Projekte betreffen könnte statt dieses Repositorys.
@@ -535,6 +537,7 @@ Dieses Projekt ist Teil des HYDRA-UMC-Robotik-Ökosystems desselben Autors (Juan
 
 **Geschwisterprojekte** — die übrigen Werkzeuge der eigenen CAN-Bus-Tooling-Familie von URTC
 - **[URTC-FLASHER](https://github.com/JuanenRac/URTC-FLASHER)** — Desktop-GUI-Flash-Tool für URTC-Platinen, CAN-OTA plus Full-Chip-SWD/JTAG.
+- **[URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY)** — ein Gateway vor dem CAN-Bus, das nur Kennungen einer Liste durchlässt, ihre Rate begrenzt und einen Sitzungsschlüssel verlangt.
 - **[URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — browserbasierte Alternative zu URTC-TESTER über die Web-Serial-API, ohne lokale Installation.
 
 **Direkt verwandt**

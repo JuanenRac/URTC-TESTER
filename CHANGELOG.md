@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **Fault recorder**: reads the black box (`0x1A8` / `0x1A9`), checks it and saves it as CSV and JSON in the logs folder, and reads it by itself once for each error the board reports when the option is on (it is on by default and can be switched off in the deck; it needs the active mode).
+- **Optional functions**: queries and writes the optional firmware functions (`0x1AE` / `0x1AF`) after the usual confirmation.
+- **Rack bench**: a simulated tool rack with the serial protocol of URTC-SMART-RACK, the identity of each head (type and serial number), the limit on pre-heat and the export of a status page as JSON and HTML.
+- **Thermal view**: the image of the thermal inspection tool in false colour, read from the board or, marked as simulated, from a synthetic image.
+- The tool names and kinds come from the shared tool profiles of URTC-COMMON; the copies of the shared modules follow it (`blackbox`, `rack_sim`, `rack_status`, `thermal_view`, `tools_catalog`).
+- The README lists URTC-GATEWAY, the new gateway in front of the CAN bus, among the related projects.
+
 ## [0.3.9] - Shared CAN transports and a CI that names its notices like the rest
 
 - `tools/ci_validate.py` fails when a versioned file has the name of a Windows path (a colon, the character a file system uses to store one, or a first folder named like a drive or a user profile): a path handed to WSL without translation once put build output inside a repository. The same check (`tools/_tracked_names.py`) is in every URTC repository.

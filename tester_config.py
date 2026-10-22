@@ -10,7 +10,7 @@ import os
 import json
 import re
 
-from urtc_can import protocol
+from urtc_can import protocol, tools_catalog
 
 try:
     import serial  # noqa: F401  (availability check only)
@@ -291,6 +291,10 @@ CAN_ID_QUERY_FRAM_STATE = protocol.CAN_ID_FRAM_QUERY  # Query the FM24CL64B's re
 CAN_ID_FRAM_STATE_RESP  = protocol.CAN_ID_FRAM_STATE_RESP  # Answers CAN_ID_QUERY_FRAM_STATE, also sent after an erase
 CAN_ID_QUERY_THERMAL_STATS = protocol.CAN_ID_THERMAL_STATS_QUERY  # Query lifetime thermal counters (URTC firmware 0.3.3+)
 CAN_ID_THERMAL_STATS_RESP  = protocol.CAN_ID_THERMAL_STATS_RESP  # Answers CAN_ID_QUERY_THERMAL_STATS
+CAN_ID_BLACKBOX_QUERY  = protocol.CAN_ID_BLACKBOX_QUERY      # Asks for one chunk of the fault recorder (tester_extras.py)
+CAN_ID_BLACKBOX_CHUNK  = protocol.CAN_ID_BLACKBOX_CHUNK      # Four frames of eight bytes make one chunk
+CAN_ID_SET_FEATURES  = protocol.CAN_ID_SET_FEATURES          # Switches the optional firmware functions (persistent)
+CAN_ID_FEATURES_RESP  = protocol.CAN_ID_FEATURES_RESP        # Answers CAN_ID_SET_FEATURES, or an empty query
 CAN_ID_ERASE_FRAM       = protocol.CAN_ID_ERASE_FRAM  # Magic-payload erase - see ERASE_FRAM_MAGIC below
 CAN_ID_EXPANSION_TYPE_RESP = protocol.CAN_ID_EXPANSION_TYPE_RESP  # Query (empty payload), or the response - see EXPANSION.TXT
 CAN_ID_FREE_TOOL_CONFIG_RESP = protocol.CAN_ID_FREE_TOOL_CONFIG_RESP  # Query (empty payload), or the response - see EEPROM.TXT section 5
@@ -340,17 +344,9 @@ for _name, _value in list(globals().items()):
         CUSTOM_ID_NAMES.setdefault(_value, _name[len("CAN_ID_"):].replace("_", " ").title())
 del _name, _value
 
-TOOL_NAMES = {
-    0: "Soldering Iron", 1: "Paste Dispenser", 2: "Liquid Dispenser",
-    3: "Screwdriver", 4: "Vacuum Pickup", 5: "Drill",
-    6: "Gripper (Gimbal)", 7: "Gripper (NEMA)", 8: "AOI Inspection",
-    9: "Laser Engraver", 10: "3D Printer", 11: "Scan Probe",
-    12: "SMT Pick & Place", 13: "Electromagnet", 14: "Spot Welder",
-    15: "Conformal Coating", 16: "Vacuum Gripper (LG)", 17: "Flying Probe",
-    18: "UV Curing", 19: "Hot Air Rework", 20: "Press-Fit Inserter",
-    21: "Crimping Actuator", 22: "Thermal Inspection", 23: "Paste Jetting",
-    24: "Ultrasonic Welder",
-}
+# The names (and the kind of each tool) come from the tool profiles of URTC-COMMON (urtc_can/tools_catalog.py).
+TOOL_NAMES = dict(tools_catalog.TOOL_NAMES)
+TOOL_KINDS = dict(tools_catalog.TOOL_KINDS)
 # 7 tool IDs all share the exact same motion command (0x120) - a plain
 # stepper with direction + step count, differing only in what's physically
 # attached, not in the protocol.

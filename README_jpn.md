@@ -481,6 +481,8 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
   <img src="images/URTC_TESTER_V1_1.png" alt="URTC Tester window" width="700">
 </p>
 
+**障害レコーダー、オプション機能、ラック試験台、熱画像(新規、模擬部品での確認のみ):** デッキはボードのブラックボックス(`0x1A8` / `0x1A9`)を読んで CSV と JSON で保存し、オプションがオンならボードがエラーを報告するたびに一度だけ自動で読みます。ファームウェアのオプション機能(`0x1AE` / `0x1AF`、既定でオフ、次の電源投入後に有効)を切り替えられます。URTC-SMART-RACK のシリアルプロトコルとヘッドごとの識別(種類とシリアル番号)を備えた模擬ツールラックと状態ページの書き出しがあり、熱検査画像を疑似カラーで表示します(模擬画像はその旨を表示)。ツール名と種類は URTC-COMMON 共通のツールプロファイルから取得するようになりました。実機ではどれも使っていません。
+
 ## 🔗 関連プロジェクト
 
 本プロジェクトは、同じ作者(JuanenRac / Electro Hobby 3D)による HYDRA-UMC ロボティクスエコシステムの一部です。リクエストが実はこの中のどれかについてのものである可能性があるため、知っておく価値があります。
@@ -490,6 +492,7 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 
 **兄弟プロジェクト** —— URTC 自身の CAN バスツール群における他のツール
 - **[URTC-FLASHER](https://github.com/JuanenRac/URTC-FLASHER)** — URTC 基板用のデスクトップ GUI 書き込みツール、CAN-OTA およびフルチップ SWD/JTAG。
+- **[URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY)** — CAN バスの手前に置き、一覧にある識別子だけを通し、レートを制限し、セッション鍵を求めるゲートウェイ。
 - **[URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — Web Serial API を使ったブラウザベースの URTC-TESTER の代替、ローカルインストール不要。
 
 **直接関連**

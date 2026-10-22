@@ -6,6 +6,10 @@
       "from": "src/urtc_common/__init__.py",
       "sha256": "5aded17a863a2f1d1de693ab44a427511cf75493f39b467e346b6d59aea84aeb"
     },
+    "blackbox.py": {
+      "from": "src/urtc_common/blackbox.py",
+      "sha256": "f4e9c37150ed53b4d3c8d616698249a401826b139ccaf7859815b35ac1a0639b"
+    },
     "conformance.py": {
       "from": "src/urtc_common/conformance.py",
       "sha256": "f38ad697e4a29177a35047f44c2efcf749b42b6b00caaf04ef0efa2c55bdd07e"
@@ -16,15 +20,31 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "86279b29de4de1bc709357fcb7c6c953254dbf89ada9832adb0af3d77fcbc268"
+      "sha256": "eb3a32db6996db180464b9ca19d64d1bf8274c10aab1d7b3668e6cc75ff3de93"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",
       "sha256": "0cc476a92ae2285c728a3499976b9c65610f754961d722e7a5fff9fa3faaab18"
     },
+    "rack_sim.py": {
+      "from": "src/urtc_common/rack_sim.py",
+      "sha256": "8a214d89822134f2785ea588ffde81995302974ff5404f7098744365ce31e910"
+    },
+    "rack_status.py": {
+      "from": "src/urtc_common/rack_status.py",
+      "sha256": "97839ac9a4862c5f80a46ff84cf9b1fa4ded5af158593b1a5592f8614585247e"
+    },
     "slcan.py": {
       "from": "src/urtc_common/slcan.py",
       "sha256": "a3a0d3d9037a5cbf227351f382cdca6de22c6915ebbba15400f872f94310f9ef"
+    },
+    "thermal_view.py": {
+      "from": "src/urtc_common/thermal_view.py",
+      "sha256": "2750f780433507a6bf560e8ddb6f2289093d54cf32402b4ce41e5711848a7bdc"
+    },
+    "tools_catalog.py": {
+      "from": "src/urtc_common/tools_catalog.py",
+      "sha256": "315c717a8fb1f0f4b1432bc775f71db56b56d3fe1be9c3f5fa43a663faf7c0ea"
     },
     "transports.py": {
       "from": "src/urtc_common/transports.py",

@@ -34,6 +34,7 @@ import zipfile
 from pathlib import Path
 
 import advanced_protocol as protocol
+import tester_extras as extras
 from tester_bus_monitor import FrameFilter
 import tester_telemetry as tele
 from tester_selftest import run_self_test
@@ -98,6 +99,7 @@ from tester_config import (
     ICON_IMAGE_PATH,
     TESTER_VERSION,
     THIS_HARDWARE_ID,
+    TOOL_KINDS,
     TOOL_NAMES,
     _,
     list_serial_ports,
@@ -208,7 +210,15 @@ class TesterQtBridge(QObject):
             "feeder_position": "",
             "diag0": "",
             "spi_response": "",
+            "black_box": "",
+            "features": "",
+            "thermal_view": "",
+            "rack_bench": "",
         }
+        # Fault recorder, optional functions, rack bench and thermal view (tester_extras.py).
+        self._auto_black_box = extras.AutoDownload(True)
+        self._bench = extras.RackBench()
+        self._thermal_view_source = ""
         # Custom CAN Frame - the one real tool-independent action with no
         # per-field validation beyond frame shape (see HELP_SENDS_RAW_FRAME's
         # own real text): whatever is typed goes on the bus exactly as
@@ -463,20 +473,8 @@ class TesterQtBridge(QObject):
     @Property("QVariantList", constant=True)
     def toolProfiles(self) -> list[dict[str, object]]:
         """Catalog mirrors every real legacy profile; it is not a fake tool."""
-        motion = {0, 1, 2, 3, 6, 7, 12, 16, 21}
-        telemetry = {4, 8, 11, 17, 22}
-        external = {15, 20}
         return [
-            {
-                "id": tool_id,
-                "name": name,
-                "kind": (
-                    "motion" if tool_id in motion
-                    else "telemetry" if tool_id in telemetry
-                    else "external" if tool_id in external
-                    else "actuator"
-                ),
-            }
+            {"id": tool_id, "name": name, "kind": TOOL_KINDS.get(tool_id, "actuator")}
             for tool_id, name in TOOL_NAMES.items()
         ]
 
@@ -1132,6 +1130,123 @@ class TesterQtBridge(QObject):
                 self._log(f"ALL_OFF_FAILED can_id=0x{can_id:03X} {exc}")
         self._log(f"ALL_OFF_SENT failed={failed}")
 
+    # -- fault recorder, optional functions, rack bench and thermal view (the logic is in tester_extras.py) -------------------
+    @Property(str, notify=changed)
+    def blackBoxText(self) -> str:
+        return self._query_texts["black_box"]
+
+    @Property(bool, notify=changed)
+    def autoBlackBox(self) -> bool:
+        return self._auto_black_box.enabled
+
+    @Slot(bool)
+    def setAutoBlackBox(self, enabled: bool) -> None:
+        self._auto_black_box.enabled = bool(enabled)
+        self._log(f"AUTO_BLACK_BOX {'on' if enabled else 'off'}")
+        self.changed.emit()
+
+    @Slot()
+    def readBlackBox(self) -> None:
+        """Ask the board for its fault recorder (22 chunks of 0x1A8 / 0x1A9) and save it as CSV and JSON in the logs folder."""
+        transport = self._transport
+        if transport is None or not self.canUseUtilityPanels:
+            self._log("BLACK_BOX_BLOCKED not connected or not in active-check mode")
+            return
+
+        def _worker() -> None:
+            with self._io_lock:
+                try:
+                    record = extras.download_black_box(transport.send_frame, transport.read_frame)
+                    csv_path, json_path = extras.save_black_box(record, tester_config.LOGS_FOLDER)
+                    self._queryResult.emit("black_box", ("ok", extras.summarize_black_box(record), csv_path, json_path))
+                except Exception as exc:
+                    self._queryResult.emit("black_box", ("fail", str(exc)))
+
+        threading.Thread(target=_worker, daemon=True, name="urtc-tester-black-box").start()
+
+    @Property(str, notify=changed)
+    def featuresText(self) -> str:
+        return self._query_texts["features"]
+
+    @Slot()
+    def queryFeatures(self) -> None:
+        if not self.canUseUtilityPanels:
+            return
+        self._run_query("features", (extras.CAN_ID_FEATURES_RESP, b""), extras.CAN_ID_FEATURES_RESP, extras.decode_features)
+
+    @Slot(int)
+    def writeFeatures(self, mask: int) -> None:
+        """QML asks for the usual confirmation first: this is a persistent setting of the board (it acts after the next power-up)."""
+        if not self.canUseUtilityPanels:
+            self._log("FEATURES_BLOCKED not connected or not in active-check mode")
+            return
+        try:
+            frame = extras.features_frame(int(mask))
+        except ValueError as exc:
+            self._log(f"FEATURES_BLOCKED {exc}")
+            return
+        self._run_query("features", frame, extras.CAN_ID_FEATURES_RESP, extras.decode_features)
+
+    @Property(str, notify=changed)
+    def rackBenchText(self) -> str:
+        return self._query_texts["rack_bench"]
+
+    def _bench_report(self, headline: str) -> None:
+        self._query_texts["rack_bench"] = headline + "\n" + self._bench.state_text()
+        self.changed.emit()
+
+    @Slot(int, int, int)
+    def rackBenchRack(self, slot: int, tool_id: int, serial: int) -> None:
+        try:
+            self._bench_report(self._bench.rack_head(int(slot), int(tool_id), int(serial)))
+        except ValueError as exc:
+            self._bench_report(str(exc))
+
+    @Slot(int, int)
+    def rackBenchPreheat(self, tool_id: int, target_c: int) -> None:
+        self._bench_report(self._bench.send_preheat(int(tool_id), int(target_c)))
+
+    @Slot(int)
+    def rackBenchAdvance(self, ms: int) -> None:
+        self._bench_report(self._bench.advance(int(ms)))
+
+    @Slot()
+    def rackBenchExport(self) -> None:
+        json_path, html_path = self._bench.status_page(tester_config.LOGS_FOLDER)
+        self._query_texts["rack_bench"] = _("LBL_RACK_EXPORTED", json=json_path, html=html_path) + "\n" + self._bench.state_text()
+        self.changed.emit()
+
+    @Property(str, notify=changed)
+    def thermalViewSource(self) -> str:
+        return self._thermal_view_source
+
+    @Property(str, notify=changed)
+    def thermalViewText(self) -> str:
+        return self._query_texts["thermal_view"]
+
+    @Slot()
+    def showSimulatedThermal(self) -> None:
+        frame = extras.thermal_view.synthetic_frame()
+        self._thermal_view_source = extras.thermal_data_url(frame)
+        self._query_texts["thermal_view"] = _("LBL_THERMAL_VIEW_TEXT", text=extras.thermal_summary(frame, True))
+        self.changed.emit()
+
+    @Slot()
+    def readThermalImage(self) -> None:
+        transport = self._transport
+        if transport is None or not self.canUseUtilityPanels:
+            self._log("THERMAL_VIEW_BLOCKED not connected or not in active-check mode")
+            return
+
+        def _worker() -> None:
+            with self._io_lock:
+                try:
+                    self._queryResult.emit("thermal_view", ("ok", extras.read_thermal_image(transport.send_frame, transport.read_frame)))
+                except Exception as exc:
+                    self._queryResult.emit("thermal_view", ("fail", str(exc)))
+
+        threading.Thread(target=_worker, daemon=True, name="urtc-tester-thermal-view").start()
+
     def shutdownOutputs(self) -> None:
         try:
             self._stop_all_watchdogs()
@@ -1557,6 +1672,27 @@ class TesterQtBridge(QObject):
         elif key == "thermal_stats":
             text = format_thermal_stats(result)
             self._log(f"THERMAL_STATS {result}")
+        elif key == "black_box":
+            if result is not None and result[0] == "ok":
+                text = _("LBL_BLACKBOX_SAVED", summary=result[1], csv=result[2], json=result[3])
+                self._log(f"BLACK_BOX_SAVED {result[2]} {result[3]}")
+            else:
+                text = _("LBL_BLACKBOX_FAILED", reason=result[1] if result else "?")
+                self._log(f"BLACK_BOX_FAILED {text}")
+        elif key == "features":
+            if result is None:
+                text = _("LBL_FEATURES_NO_RESPONSE")
+            else:
+                text = _("LBL_FEATURES_TEXT", stored=extras.features_text(result["stored"]), running=extras.features_text(result["running"]),
+                         supported=extras.features_text(result["supported"]))
+            self._log(f"FIRMWARE_FEATURES {result}")
+        elif key == "thermal_view":
+            if result is not None and result[0] == "ok":
+                self._thermal_view_source = extras.thermal_data_url(result[1])
+                text = _("LBL_THERMAL_VIEW_TEXT", text=extras.thermal_summary(result[1], False))
+            else:
+                text = _("LBL_THERMAL_READ_FAILED", reason=result[1] if result else "?")
+            self._log(f"THERMAL_VIEW {text}")
         elif key == "expansion_type":
             text = result if result is not None else no_response
             self._log(f"EXPANSION_BOARD_TYPE {result}")
@@ -2201,6 +2337,13 @@ class TesterQtBridge(QObject):
             self._log("BOARD_VERSION no response")
         outcome = "PROBE COMPLETE" if tool_data is not None or version_data is not None else "NO RESPONSE"
         self._set_state(status=outcome, busy=False)
+        # The board says it is in error: read its black box once for that fault, if the option is on.
+        if tool_data is not None and self._auto_black_box.feed(bytes(tool_data)):
+            if self.canUseUtilityPanels:
+                self.readBlackBox()
+            else:
+                self._query_texts["black_box"] = _("LBL_BLACKBOX_AUTO_SKIPPED")
+                self.changed.emit()
 
 
 def run_qtquick() -> int:

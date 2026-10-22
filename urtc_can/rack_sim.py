@@ -1,0 +1,272 @@
+"""Simulator of the tool rack (URTC-SMART-RACK) for the programs that talk to it: no board needed.
+
+It follows the rack firmware: the serial frame (start byte 0xA5, version, sequence, command, length, payload, CRC-8),
+the SET_PREHEAT command with the per-tool limits, the anti-replay sequence per tool, the link watchdog that sends every
+target to the safe state, the slot inventory with the identity of each tool (type and serial number) and the longest
+pre-heat without a tool swap. The vectors in ``conformance/rack_vectors.json`` are checked against the C code of the
+rack and against this module, so the two cannot drift apart unnoticed.
+
+Standard library only. Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+GPL-3.0-or-later - see LICENSE
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+SOF = 0xA5
+VERSION = 1
+MAX_PAYLOAD = 16
+CMD_SET_PREHEAT = 0x01
+CAN_ID_SET_PREHEAT = 0x260
+TOOL_ID_NONE = 31
+TOOL_ID_LAST = 24
+RACK_CEILING_C = 400
+LINK_TIMEOUT_MS = 250
+PREHEAT_MAX_MS = 600_000
+SLOTS = 8
+# The highest pre-heat target of each tool; a tool that is not listed has no heater and takes only 0.
+MAX_PREHEAT_C = {0: RACK_CEILING_C, 10: 310, 19: RACK_CEILING_C}
+
+# status names (same meaning as rack_command_status_t and protocol_status_t of the firmware)
+OK = "ok"
+FRAME_STATUSES = ("incomplete", "bad_sof", "unsupported_version", "length_out_of_range", "crc_mismatch")
+COMMAND_STATUSES = ("wrong_payload_len", "tool_id_absent", "temp_out_of_range", "tool_id_invalid", "tool_not_heatable")
+
+
+def crc8(data: bytes) -> int:
+    crc = 0
+    for byte in data:
+        crc ^= byte
+        for _ in range(8):
+            crc = ((crc << 1) ^ 0x07) & 0xFF if crc & 0x80 else (crc << 1) & 0xFF
+    return crc
+
+
+def encode_frame(seq: int, cmd: int, payload: bytes = b"") -> bytes:
+    if len(payload) > MAX_PAYLOAD:
+        raise ValueError("payload too long")
+    body = bytes([SOF, VERSION, seq & 0xFF, cmd & 0xFF, len(payload)]) + bytes(payload)
+    return body + bytes([crc8(body)])
+
+
+def parse_frame(buf: bytes) -> tuple[str, dict | None]:
+    """(status, frame): the frame is a dict with seq, cmd and payload when the status is ``ok``."""
+    if len(buf) < 6:
+        return "incomplete", None
+    if buf[0] != SOF:
+        return "bad_sof", None
+    if buf[1] != VERSION:
+        return "unsupported_version", None
+    length = buf[4]
+    if length > MAX_PAYLOAD:
+        return "length_out_of_range", None
+    total = 5 + length + 1
+    if len(buf) < total:
+        return "incomplete", None
+    if crc8(buf[: 5 + length]) != buf[5 + length]:
+        return "crc_mismatch", None
+    return OK, {"seq": buf[2], "cmd": buf[3], "payload": bytes(buf[5:5 + length])}
+
+
+def encode_set_preheat(seq: int, tool_id: int, target_c: int) -> bytes:
+    return encode_frame(seq, CMD_SET_PREHEAT, bytes([tool_id, target_c & 0xFF, (target_c >> 8) & 0xFF]))
+
+
+def encode_set_preheat_can(seq: int, tool_id: int, target_c: int) -> bytes:
+    """The eight data bytes of the CAN form (identifier 0x260): tool, temperature big-endian, sequence, padding."""
+    return bytes([tool_id, (target_c >> 8) & 0xFF, target_c & 0xFF, seq & 0xFF, 0, 0, 0, 0])
+
+
+def validate_set_preheat(payload: bytes) -> tuple[str, int, int]:
+    """(status, tool_id, target_c) of a SET_PREHEAT payload."""
+    if len(payload) != 3:
+        return "wrong_payload_len", 0, 0
+    tool = payload[0]
+    if tool > 31:
+        return "tool_id_invalid", tool, 0
+    if tool == TOOL_ID_NONE:
+        return "tool_id_absent", tool, 0
+    if tool > TOOL_ID_LAST:
+        return "tool_id_invalid", tool, 0
+    target = payload[1] | (payload[2] << 8)
+    if target > RACK_CEILING_C:
+        return "temp_out_of_range", tool, target
+    ceiling = MAX_PREHEAT_C.get(tool, 0)
+    if target > 0 and ceiling == 0:
+        return "tool_not_heatable", tool, target
+    if target > ceiling:
+        return "temp_out_of_range", tool, target
+    return OK, tool, target
+
+
+@dataclass
+class Slot:
+    occupied: bool = False
+    tool_id: int = TOOL_ID_NONE
+    serial: int = 0           # 0: the unit did not say which one it is
+    target_c: int = 0
+
+    @property
+    def unit_key(self) -> str | None:
+        """The identity of the physical unit: tool type plus serial number (None when the serial is unknown)."""
+        return f"{self.tool_id}:{self.serial}" if self.occupied and self.serial else None
+
+
+@dataclass
+class Reply:
+    kind: str                 # "ack", "nack" or "none"
+    action: str = "none"      # "set_target", "safe_state", "none"
+    tool_id: int | None = None
+    target_c: int | None = None
+    detail: str = ""
+
+
+@dataclass
+class SimulatedRack:
+    """What a rack does with the frames it receives. Time is passed in; nothing here reads a clock."""
+
+    preheat_max_ms: int | None = PREHEAT_MAX_MS
+    slots: list[Slot] = field(default_factory=lambda: [Slot() for _ in range(SLOTS)])
+    last_rx_ms: int | None = None
+    last_seq: dict[int, int] = field(default_factory=dict)
+    started_ms: dict[int, int] = field(default_factory=dict)
+    expired: set[int] = field(default_factory=set)
+    log: list[str] = field(default_factory=list)
+
+    # -- inventory ----------------------------------------------------------------------------------------------
+    def set_slot(self, slot: int, tool_id: int, serial: int = 0) -> None:
+        """Put a tool (type and, when it said so, serial number) in a slot; a tool can be in one slot only."""
+        if not 0 <= slot < SLOTS:
+            raise ValueError("slot out of range")
+        if tool_id == TOOL_ID_NONE:
+            self.slots[slot] = Slot()
+            self.started_ms.pop(slot, None)
+            self.expired.discard(slot)
+            return
+        if tool_id > TOOL_ID_LAST:
+            raise ValueError("not a tool profile")
+        for other, s in enumerate(self.slots):
+            if other != slot and s.occupied and s.tool_id == tool_id and (not serial or s.serial == serial or not s.serial):
+                self.slots[other] = Slot()
+        self.slots[slot] = Slot(True, tool_id, serial & 0xFF, 0)
+        self.started_ms.pop(slot, None)
+        self.expired.discard(slot)
+
+    def _find(self, tool_id: int) -> int | None:
+        for i, s in enumerate(self.slots):
+            if s.occupied and s.tool_id == tool_id:
+                return i
+        return None
+
+    # -- link ---------------------------------------------------------------------------------------------------
+    def link_lost(self, now_ms: int) -> bool:
+        return self.last_rx_ms is None or (now_ms - self.last_rx_ms) >= LINK_TIMEOUT_MS
+
+    def tick(self, now_ms: int) -> int:
+        """Run the watchdog and the pre-heat limit; returns how many slots were sent to the safe state."""
+        cut = 0
+        if self.last_rx_ms is not None and self.link_lost(now_ms):
+            self.last_rx_ms = None
+            self.last_seq.clear()
+        lost = self.link_lost(now_ms)
+        for i, s in enumerate(self.slots):
+            if not s.occupied or s.target_c == 0:
+                continue
+            ran_out = self.preheat_max_ms is not None and now_ms - self.started_ms.get(i, now_ms) >= self.preheat_max_ms
+            if lost or ran_out:
+                s.target_c = 0
+                cut += 1
+                if ran_out and not lost:
+                    self.expired.add(i)
+                self.log.append(f"slot {i}: safe state ({'link lost' if lost else 'pre-heat limit'})")
+        return cut
+
+    def receive(self, buf: bytes, now_ms: int) -> Reply:
+        status, frame = parse_frame(buf)
+        if frame is None:
+            return Reply("none", detail=f"frame refused: {status}")
+        self.tick(now_ms)
+        self.last_rx_ms = now_ms
+        if frame["cmd"] != CMD_SET_PREHEAT:
+            return Reply("none", detail="command not acted on")
+        return self._set_preheat(frame["seq"], frame["payload"], now_ms)
+
+    def receive_can(self, can_id: int, data: bytes, now_ms: int) -> Reply:
+        if can_id != CAN_ID_SET_PREHEAT or len(data) != 8:
+            return Reply("none", detail="not a rack frame")
+        self.tick(now_ms)
+        self.last_rx_ms = now_ms
+        payload = bytes([data[0], data[2], data[1]])  # big-endian temperature on the bus, little-endian in the checker
+        return self._set_preheat(data[3], payload, now_ms)
+
+    def _set_preheat(self, seq: int, payload: bytes, now_ms: int) -> Reply:
+        status, tool, target = validate_set_preheat(payload)
+        if status != OK:
+            readable = len(payload) >= 1 and payload[0] <= TOOL_ID_LAST
+            if readable:
+                slot = self._find(payload[0])
+                if slot is not None:
+                    self.slots[slot].target_c = 0
+                return Reply("nack", "safe_state", payload[0], 0, status)
+            return Reply("nack", "none", None, None, status)
+        prev = self.last_seq.get(tool)
+        if prev is not None and (((seq - prev) & 0xFF) == 0 or ((seq - prev) & 0xFF) >= 128):
+            return Reply("ack", "none", tool, None, "retransmission already applied")
+        self.last_seq[tool] = seq
+        slot = self._find(tool)
+        if slot is None:
+            return Reply("ack", "none", tool, target, "tool not racked: target not applied")
+        if slot in self.expired:
+            if target == 0:
+                self.expired.discard(slot)
+            else:
+                return Reply("ack", "none", tool, target, "pre-heat limit reached: send 0 or swap the tool")
+        if target > 0 and self.slots[slot].target_c == 0:
+            self.started_ms[slot] = now_ms
+        self.slots[slot].target_c = target
+        return Reply("ack", "set_target", tool, target)
+
+    def status(self) -> dict:
+        """The state a panel shows: one entry per slot."""
+        return {
+            "slots": [
+                {"slot": i, "occupied": s.occupied, "tool_id": s.tool_id if s.occupied else None, "serial": s.serial or None,
+                 "unit": s.unit_key, "target_c": s.target_c, "expired": i in self.expired}
+                for i, s in enumerate(self.slots)
+            ],
+            "occupied": sum(1 for s in self.slots if s.occupied),
+        }
+
+
+# ---- thermal check of a slot (a thermal camera looks at the tips in the rack) ------------------------------------------------------
+VERIFY_TOLERANCE_C = 15       # a tip this close to its target has reached it
+VERIFY_OVERSHOOT_C = 25       # a tip this far above its target is too hot
+VERIFY_EMPTY_HOT_C = 40       # above the ambient by this much, an empty slot has a heater on
+VERIFY_IDLE_HOT_C = 60        # above the ambient by this much, a slot told to stay cold is still hot
+VERIFY_REACH_TIMEOUT_MS = 60_000
+
+SLOT_UNKNOWN = "unknown"            # no reading
+SLOT_EMPTY_OK = "empty_ok"
+SLOT_EMPTY_HOT = "heater_in_empty_slot"
+SLOT_IDLE_OK = "idle_ok"
+SLOT_IDLE_HOT = "still_hot"
+SLOT_HEATING = "heating"
+SLOT_REACHED = "reached"
+SLOT_NOT_REACHED = "not_reached"
+SLOT_OVERSHOOT = "overshoot"
+SLOT_VERDICTS = (SLOT_UNKNOWN, SLOT_EMPTY_OK, SLOT_EMPTY_HOT, SLOT_IDLE_OK, SLOT_IDLE_HOT, SLOT_HEATING, SLOT_REACHED, SLOT_NOT_REACHED, SLOT_OVERSHOOT)
+
+
+def verify_slot(occupied: bool, commanded_c: int, measured_c: float | None, ambient_c: float, elapsed_ms: int) -> str:
+    """What the thermal reading of a slot says about the pre-heat the rack ordered. ``elapsed_ms`` is the time since the target was set."""
+    if measured_c is None or measured_c != measured_c:
+        return SLOT_UNKNOWN
+    if not occupied:
+        return SLOT_EMPTY_HOT if measured_c > ambient_c + VERIFY_EMPTY_HOT_C else SLOT_EMPTY_OK
+    if commanded_c == 0:
+        return SLOT_IDLE_HOT if measured_c > ambient_c + VERIFY_IDLE_HOT_C else SLOT_IDLE_OK
+    if measured_c > commanded_c + VERIFY_OVERSHOOT_C:
+        return SLOT_OVERSHOOT
+    if measured_c >= commanded_c - VERIFY_TOLERANCE_C:
+        return SLOT_REACHED
+    return SLOT_NOT_REACHED if elapsed_ms >= VERIFY_REACH_TIMEOUT_MS else SLOT_HEATING

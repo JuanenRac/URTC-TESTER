@@ -2,9 +2,21 @@
   "format": 1,
   "urtc_common_version": "0.0.5",
   "files": {
+    "blackbox_vectors.json": {
+      "from": "conformance/blackbox_vectors.json",
+      "sha256": "45593844e0671bb37e65904c8fbba10ffb8863d6f98bb838b1568a42645d0bb8"
+    },
     "can_conformance_vectors.json": {
       "from": "conformance/can_vectors.json",
-      "sha256": "24a7fb121e03475defd0de3ca48b54193f0481ef7e6c3c6f674d1660f6d07d8f"
+      "sha256": "16e4c140e0840d8b8295564305915624a06b800c99a05eb96f3c402ecc64ff62"
+    },
+    "rack_vectors.json": {
+      "from": "conformance/rack_vectors.json",
+      "sha256": "9bca19379bab5095cb2086c6ed67ee9e2c88b391eae5475cdcaec2583cb7d0e3"
+    },
+    "thermal_vectors.json": {
+      "from": "conformance/thermal_vectors.json",
+      "sha256": "9e34ab2ed1996a5cd62fb6cb473533afc5cd76a2c106fc3ca2f4bd9e61de9dc9"
     }
   }
 }
