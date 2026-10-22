@@ -43,7 +43,7 @@
 
 | | |
 |---|---|
-| 版本 | `0.3.8` |
+| 版本 | `0.3.9` |
 | 成熟度 | 可用 |
 | 技术栈 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 目标 | 使用者的电脑 |

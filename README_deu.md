@@ -49,7 +49,7 @@ begonnen hat.
 
 | | |
 |---|---|
-| Version | `0.3.8` |
+| Version | `0.3.9` |
 | Reifegrad | Funktionsfähig |
 | Technik | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Ziel | Der PC der Person, die es benutzt |

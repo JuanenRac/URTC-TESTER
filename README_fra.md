@@ -48,7 +48,7 @@ puisse laisser la carte moins fonctionnelle qu'au départ.
 
 | | |
 |---|---|
-| Version | `0.3.8` |
+| Version | `0.3.9` |
 | Maturité | Fonctionnel |
 | Technologie | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Cible | Le PC de la personne qui l'utilise |
