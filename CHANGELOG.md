@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.4.0] - Fault recorder, optional functions, rack bench and thermal view
 
 - **Fault recorder**: reads the black box (`0x1A8` / `0x1A9`), checks it and saves it as CSV and JSON in the logs folder, and reads it by itself once for each error the board reports when the option is on (it is on by default and can be switched off in the deck; it needs the active mode).
 - **Optional functions**: queries and writes the optional firmware functions (`0x1AE` / `0x1AF`) after the usual confirmation.
