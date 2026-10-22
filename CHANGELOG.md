@@ -191,7 +191,6 @@ is hardware-proven.
 
 ## [0.1.8] - Real-time bus load indicator on the Passive Bus Window
 
-### Added
 - The **Passive Bus Window** capture (Qt Quick deck) now also reports a real
   CAN bus load percentage alongside its existing frame/ID counts, plus a
   colour-coded bar (green/yellow/red at 40%/80% thresholds). The percentage
@@ -206,7 +205,6 @@ is hardware-proven.
 
 ## [0.1.7] - Custom CAN Frame panel completes the Qt Quick migration, real About window, Chinese and Japanese added
 
-### Added
 - **Custom CAN Frame** is now available in the Qt Quick deck, completing
   its migration from the legacy Tkinter panel - the last of the
   tool-independent utility panels. Same real validation as the legacy
@@ -232,7 +230,6 @@ is hardware-proven.
   `ABOUT_LICENSE`/`BTN_CLOSE` keys across all 7 languages, replacing the
   old `LBL_ABOUT_AUTHOR` - full key parity verified.
 
-### Fixed
 - The Qt Quick deck's own header `ToolBar` relied on the Basic style's
   implicit sizing, which collapsed to 0 height for this specific window -
   the branding/status text all overlapped at the top-left corner instead
@@ -337,7 +334,6 @@ is hardware-proven.
   `TESTER_VERSION` on its own - this project's own versioning convention
   only advances it on a real `build_exe.bat`/`build_exe.sh` packaged build.
 
-### Fixed
 - SLCAN reception now discards impossible CAN 2.0 DLC values (`9`-`F`) rather
   than passing oversized frames to GUI handlers. Valid standard frames are
   unaffected.
@@ -541,7 +537,9 @@ the new `LOG_TOOL_MOVE_BLOCKED_DIRECTION` key.
   success and failure, so a window opened by double-clicking the script
   never disappears before its output can be read.
 
-## [0.1]
+## Earlier history
+
+### [0.1]
 
 Work done across several passes while `TESTER_VERSION` was `"0.1"`,
 newest first.
@@ -582,7 +580,7 @@ newest first.
   a duplicated `/images/` copy, real screenshots, and a bare "0.0" without
   a leading "v").
 
-## [0.0]
+### [0.0]
 
 Work done across several passes while `TESTER_VERSION` was `"0.0"`,
 newest first.
