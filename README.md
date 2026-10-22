@@ -120,7 +120,7 @@ The existing live-CAN diagnostic workflow now uses a dark navy/cyan command-deck
 ### Header and tools
 
 - **Header** - the connection state, the bus-health warning, the language selector (the choice is saved and applies on the next start) and the version.
-- **Save Logs...** and **EXPORT SESSION (SIGNED LOG)** - the on-screen log as plain text, or a zip with the log, a manifest that names it by its SHA-256 and system diagnostics (see "Logs and debug bundles" below).
+- **Save Logs...** and **EXPORT SESSION (LOG WITH HASH)** - the on-screen log as plain text, or a zip with the log, a manifest that names it by its SHA-256 and system diagnostics (see "Logs and debug bundles" below).
 - **About URTC Tester** - version and author, with buttons for the **Readme** (in the language of the interface when a translation exists), the **License** and the project's **URTC GitHub** page.
 
 ### File structure

@@ -8,6 +8,10 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 only by the explicit `python bump.py` step (building never changes it), base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
+## [Unreleased]
+
+- The English name of the session export no longer says "signed": the export writes a manifest with the SHA-256 of the log, not a signature, as the other seven languages already said.
+
 ## [0.3.7] - The activity log speaks the interface language
 
 - The Qt Quick deck now shows its activity log, the thermal and passive-capture summaries in the interface language (English, Spanish, German, French, Italian, Japanese, Chinese, Portuguese); every log token has a label in each language file.
