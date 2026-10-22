@@ -10,6 +10,7 @@ only by the explicit `python bump.py` step (building never changes it), base-10
 
 ## [Unreleased]
 
+- The copies of the CAN protocol module and of the conformance vectors follow URTC-COMMON 0.0.5, so the tool carries the multinode extension of the protocol that the firmware already speaks.
 - The English name of the session export no longer says "signed": the export writes a manifest with the SHA-256 of the log, not a signature, as the other seven languages already said.
 
 ## [0.3.7] - The activity log speaks the interface language
