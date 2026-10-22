@@ -10,6 +10,7 @@ only by the explicit `python bump.py` step (building never changes it), base-10
 
 ## [Unreleased]
 
+- `tools/ci_validate.py` fails when a versioned file has the name of a Windows path (a colon, the character a file system uses to store one, or a first folder named like a drive or a user profile): a path handed to WSL without translation once put build output inside a repository. The same check (`tools/_tracked_names.py`) is in every URTC repository.
 - The CI workflow is named `URTC CI baseline`, like the other repositories, so that one dashboard notice can follow it.
 - The `build-test` scripts use the interpreter named by `URTC_PYTHON` (which URTC-UPDATER sets to its own) and, without it, the first `python3` or `py -3` found, so a build check runs with a Python whose packages are known.
 - The dashboard notice is sent only after the CI of the push finished green (`workflow_run`).
