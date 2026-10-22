@@ -1,12 +1,6 @@
 # Changelog
 
-All notable changes to URTC Tester are summarized here, newest first. This
-is a condensed summary aimed at users of the tool.
-
-Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
-`README.md`). Starting with this entry, `TESTER_VERSION` is raised
-only by the explicit `python bump.py` step (building never changes it), base-10
-"odometer" style (PATCH +1, carrying into MINOR past 9).
+All notable changes to this project are documented here.
 
 ## [0.3.9] - Shared CAN transports and a CI that names its notices like the rest
 
