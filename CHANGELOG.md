@@ -12,6 +12,8 @@ only by the explicit `python bump.py` step (building never changes it), base-10
 
 - The copies of the CAN protocol module and of the conformance vectors follow URTC-COMMON 0.0.5, so the tool carries the multinode extension of the protocol that the firmware already speaks.
 - The English name of the session export no longer says "signed": the export writes a manifest with the SHA-256 of the log, not a signature, as the other seven languages already said.
+- The language files no longer carry the entries that only the retired window used (247 per language); the log labels and the entries built from a prefix are kept.
+- The manifest declares how far the project has been shown to work (`evidence`: simulator) and `tools/ci_validate.py` checks the value.
 
 ## [0.3.7] - The activity log speaks the interface language
 

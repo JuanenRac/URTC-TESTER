@@ -13,6 +13,7 @@
   ],
   "deployment_target": "user-pc",
   "maturity": "functional",
+  "evidence": "simulator",
   "family": "URTC Tool Platform",
   "parent": "URTC",
   "build": "Standalone Python desktop tool. pip install -r requirements.txt; it starts the Qt Quick diagnostics deck.",
