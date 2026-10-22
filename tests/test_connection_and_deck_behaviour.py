@@ -114,8 +114,9 @@ class SmallFixesTests(unittest.TestCase):
             self.assertTrue((ROOT / f"README{suffix}.md").is_file())
 
     def test_transport_deadlines_do_not_use_the_wall_clock(self):
-        source = (ROOT / "tester_transports.py").read_text(encoding="utf-8")
-        self.assertNotIn("time.time()", source)
+        for name in ("tester_transports.py", "urtc_can/transports.py"):
+            source = (ROOT / name).read_text(encoding="utf-8")
+            self.assertNotIn("time.time()", source, name)
 
     def test_the_frame_export_is_written_as_ascii(self):
         source = (ROOT / "qt_tester.py").read_text(encoding="utf-8")

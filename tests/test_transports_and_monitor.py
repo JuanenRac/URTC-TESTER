@@ -64,15 +64,9 @@ class _FakeSerial:
 @pytest.fixture
 def slcan(monkeypatch):
     monkeypatch.setattr(tester_transports.time, "sleep", lambda seconds: None)
-    # pyserial may not be installed; the transport only needs its exception type here.
-    monkeypatch.setattr(tester_transports, "serial", types.SimpleNamespace(SerialException=_SerialException), raising=False)
-    transport = SLCAN.__new__(SLCAN)
-    transport.log = lambda message: None
-    transport.ser = _FakeSerial()
-    transport._rx_buf = b""
-    transport._write_lock = threading.Lock()
-    transport.listen_only = False
-    return transport
+    port = _FakeSerial()
+    serial_module = types.SimpleNamespace(SerialException=_SerialException, Serial=lambda *args, **kwargs: port)
+    return SLCAN("COMX", serial_module=serial_module, settle_seconds=0.0)
 
 
 # ---- SLCAN ---------------------------------------------------------------------------------
@@ -128,7 +122,6 @@ def test_non_ascii_noise_is_skipped_and_the_next_frame_still_arrives(slcan):
 def test_a_runaway_line_without_a_terminator_is_discarded_not_buffered_forever(slcan):
     slcan.ser.incoming.extend(b"A" * 5000)
     assert slcan.read_frame(timeout=0.05) is None
-    assert slcan._rx_buf == b""
     slcan.ser.incoming.extend(b"t1000\r")
     assert slcan.read_frame(timeout=0.2) == (0x100, b"")
 
@@ -173,16 +166,28 @@ class _FakeSocket:
         pass
 
 
+class _FakeSocketModule:
+    """Stands in for the socket module: ``socket(...)`` hands out one fake kernel socket."""
+
+    AF_CAN = SOCK_RAW = CAN_RAW = 0
+
+    def __init__(self):
+        self.created = _FakeSocket()
+
+    def socket(self, *args):
+        return self.created
+
+    def __getattr__(self, name):
+        return getattr(socket, name)
+
+
 @pytest.fixture
 def can_socket(monkeypatch):
     monkeypatch.setattr(tester_transports.time, "sleep", lambda seconds: None)
-    transport = SocketCAN.__new__(SocketCAN)
-    transport.log = lambda message: None
-    transport.interface = "can0"
-    transport._write_lock = threading.Lock()
-    transport.listen_only = False
-    transport.sock = _FakeSocket()
-    transport._last_timeout = 0.05
+    module = _FakeSocketModule()
+    module.created.bind = lambda address: None
+    transport = SocketCAN("can0", socket_module=module)
+    module.created.timeouts.clear()  # the constructor's own first setting is not what these tests look at
     return transport
 
 

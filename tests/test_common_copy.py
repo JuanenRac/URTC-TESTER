@@ -38,7 +38,9 @@ def test_a_copied_file_is_not_edited_by_hand(lock_path):
 def test_the_copies_have_not_fallen_behind_the_shared_repository():
     if not COMMON.is_dir():
         pytest.skip("URTC-COMMON is not next to this repository")
-    assert _digest(ROOT / "urtc_can" / "protocol.py") == _digest(COMMON / "src" / "urtc_common" / "protocol.py")
+    lock = json.loads((ROOT / "urtc_can" / "urtc_common.lock.json").read_text(encoding="utf-8"))
+    for name, entry in lock["files"].items():
+        assert _digest(ROOT / "urtc_can" / name) == _digest(COMMON / entry["from"]), f"urtc_can/{name} fell behind URTC-COMMON: run vendor_copy.py sync again"
     assert _digest(ROOT / "tests" / "fixtures" / "can_conformance_vectors.json") == _digest(COMMON / "conformance" / "can_vectors.json")
     lock = json.loads((ROOT / "urtc_ui" / "urtc_common.lock.json").read_text(encoding="utf-8"))
     for name, entry in lock["files"].items():
@@ -56,3 +58,14 @@ def test_every_identifier_this_program_defines_is_the_generated_one():
 def test_the_magic_payload_and_the_hardware_ids_are_the_generated_ones():
     assert config.ERASE_FRAM_MAGIC == protocol.MAGIC_ERASE_FRAM
     assert config.THIS_HARDWARE_ID == protocol.HARDWARE_ID_MAIN
+
+
+def test_the_transports_come_from_the_shared_copy():
+    import tester_transports
+    from urtc_can import transports
+
+    assert tester_transports.SLCAN.__mro__[1] is transports.SLCAN
+    assert tester_transports.SocketCAN.__mro__[1] is transports.SocketCAN
+    assert tester_transports.MockCAN is transports.MockCAN
+    assert tester_transports.PythonCAN is transports.PythonCAN
+    assert tester_transports.detect_bitrate_listen_only is transports.detect_bitrate_listen_only

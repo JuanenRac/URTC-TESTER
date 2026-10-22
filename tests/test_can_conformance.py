@@ -52,14 +52,20 @@ class _FakeSerial:
         pass
 
 
+class _FakeSerialModule:
+    """Stands in for pyserial: ``Serial(...)`` hands out one shared fake port."""
+
+    SerialException = OSError
+
+    def __init__(self):
+        self.port = _FakeSerial()
+
+    def Serial(self, *args, **kwargs):  # noqa: N802 - the name pyserial uses
+        return self.port
+
+
 def _slcan():
-    transport = SLCAN.__new__(SLCAN)
-    transport.log = lambda message: None
-    transport.ser = _FakeSerial()
-    transport._rx_buf = b""
-    transport._write_lock = threading.Lock()
-    transport.listen_only = False
-    return transport
+    return SLCAN("COMX", serial_module=_FakeSerialModule(), settle_seconds=0.0)
 
 
 def _hex(text):
