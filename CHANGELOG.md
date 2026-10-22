@@ -8,7 +8,7 @@ Versioning follows `MAJOR.MINOR.PATCH` (see the "Versioning" note in
 only by the explicit `python bump.py` step (building never changes it), base-10
 "odometer" style (PATCH +1, carrying into MINOR past 9).
 
-## [Unreleased]
+## [0.3.9] - Shared CAN transports and a CI that names its notices like the rest
 
 - `tools/ci_validate.py` fails when a versioned file has the name of a Windows path (a colon, the character a file system uses to store one, or a first folder named like a drive or a user profile): a path handed to WSL without translation once put build output inside a repository. The same check (`tools/_tracked_names.py`) is in every URTC repository.
 - The CI workflow is named `URTC CI baseline`, like the other repositories, so that one dashboard notice can follow it.
