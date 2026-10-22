@@ -18,7 +18,7 @@ path never opens a real CAN interface, sends a CAN frame, changes the
 manifest, or changes CHANGELOG.
 
 It also extracts every `uiText("KEY")` reference from the QML deck and
-requires that key in each of the seven shipped language files. This catches a
+requires that key in each of the eight shipped language files. This catches a
 missing visual translation without starting Qt or opening a CAN transport.
 
 The Qt Quick deck's **Passive bus window** is a separate, bounded runtime
