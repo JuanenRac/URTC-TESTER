@@ -32,8 +32,8 @@ set "KEEP_OPEN=pause"
 if defined CI set "KEEP_OPEN=ver >nul"
 if "%URTC_CI%"=="1" set "KEEP_OPEN=ver >nul"
 python -m pip install --upgrade pip >nul
-python -m pip install -r requirements.txt
-python -m pip install pyinstaller
+python -m pip install --require-hashes -r requirements.lock
+python -m pip install --require-hashes -r requirements-build.lock
 echo       Done.
 echo.
 

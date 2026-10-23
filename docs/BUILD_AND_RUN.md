@@ -85,3 +85,11 @@ a live sensor reading.
 
 Keep diagnostic logs and exported bundles separate from source control; they
 can contain device identifiers and operational data.
+
+## Closed dependencies for the executable
+
+`requirements.txt` gives the ranges for running from the sources. The executable is built from the closed lists instead: `requirements.lock` (the libraries) and
+`requirements-build.lock` (PyInstaller) pin every package with the hashes of its files, and `build_exe.bat` / `build_exe.sh` install them with
+`pip install --require-hashes`. `requirements-dev.lock` does the same for the tests and the checks (the CI uses it). Regenerate them on purpose when a dependency
+is raised: `pip-compile --generate-hashes --allow-unsafe --strip-extras --output-file=requirements.lock requirements.txt` (and the same for the other two, from
+`requirements-build.txt` and from `requirements.txt` plus `requirements-dev.txt`), keeping PySide6 at the version the tests run with.
