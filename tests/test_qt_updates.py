@@ -78,3 +78,12 @@ def test_the_texts_follow_the_language_of_the_program(qt_app, monkeypatch):
 def _offer():
     asset = self_update.Asset("x", "https://github.com/x", 1)
     return self_update.Offer("urtc-tester", "9.9.9", "windows-x64", "v9.9.9", "", "", asset, asset, asset, "")
+
+
+def test_the_help_guide_is_the_shared_one_in_the_language_of_the_program(qt_app, monkeypatch):
+    bridge = qt_tester.TesterQtBridge()
+    assert bridge.help is bridge.help
+    monkeypatch.setattr(tester_config, "_current_language", "spanish")
+    assert bridge.help.title == "Ayuda" and len(bridge.help.sections) == 5 and bridge.help.sections[0]["title"] == "Conectar"
+    monkeypatch.setattr(tester_config, "_current_language", "portuguese")
+    assert bridge.help.closeText == "Fechar"

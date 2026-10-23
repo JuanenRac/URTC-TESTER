@@ -109,6 +109,7 @@ from tester_config import (
 from tester_result_record import session_manifest
 from tester_transports import SLCAN, SocketCAN, list_socketcan_interfaces, virtual_ports
 from urtc_can import update_service
+from urtc_can.help_qt import HelpModel
 from urtc_can.update_qt import UpdateModel
 from urtc_ui import LanguageModel, connection_badge, format_can_id, format_hex
 
@@ -166,6 +167,7 @@ class TesterQtBridge(QObject):
         self._listen_only = True
         self._busy = False
         self._update_model: UpdateModel | None = None
+        self._help_model: HelpModel | None = None
         # Replay of a recorded trace: its own rows, apart from the monitor of the bus, and a timer that only moves the player.
         self._replay_player: tester_replay.TracePlayer | None = None
         self._replay_rows: collections.deque = collections.deque(maxlen=self.MONITOR_MAX_ROWS)
@@ -289,6 +291,13 @@ class TesterQtBridge(QObject):
             )
             self._update_model = UpdateModel(service, language=lambda: tester_config._current_language, save_options=save, parent=self)
         return self._update_model
+
+    @Property(QObject, constant=True)
+    def help(self) -> QObject:
+        """The quick guide of the Help dialog (shared with the other programs, in the eight languages)."""
+        if self._help_model is None:
+            self._help_model = HelpModel("tester", lambda: tester_config._current_language, parent=self)
+        return self._help_model
 
     @Property(str, constant=True)
     def title(self) -> str:

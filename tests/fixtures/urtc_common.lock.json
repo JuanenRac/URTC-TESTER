@@ -4,7 +4,7 @@
   "files": {
     "blackbox_vectors.json": {
       "from": "conformance/blackbox_vectors.json",
-      "sha256": "45593844e0671bb37e65904c8fbba10ffb8863d6f98bb838b1568a42645d0bb8"
+      "sha256": "f34f95b1edd9ecf61f08181df095f2f0df32086241ee155a78115596c3c0e265"
     },
     "can_conformance_vectors.json": {
       "from": "conformance/can_vectors.json",

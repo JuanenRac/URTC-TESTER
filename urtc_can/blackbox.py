@@ -135,6 +135,44 @@ def build(samples: list[Sample], write_index: int | None = None, version: int = 
     return body + bytes([crc8(body)])
 
 
+class Recorder:
+    """What the firmware does once every ~150 ms (``BlackBox_Sample``), written down independently of the C code.
+
+    Each tick appends one sample to a ring of ``SAMPLES``; on the rising edge of the error flag (and only once for each fault: the latch is
+    re-armed when the flag falls) the whole ring is flushed as one record. ``flags`` of a sample are bit 0 the end-stop, bit 1 the error flag
+    and bits 2-3 the code of the thermal guard. The vectors of the recorder (``conformance/blackbox_vectors.json``) are produced by this
+    class and replayed against ``firmware_blackbox.c`` by the host tests of the firmware.
+    """
+
+    def __init__(self) -> None:
+        self.ring = [Sample(0, 0, 0, 0, 0)] * SAMPLES
+        self.write_index = 0
+        self.sample_count = 0
+        self._previous_error = False
+        self._flushed_for_this_fault = False
+
+    def tick(self, tick_ms: int, tool_id: int, current: int, target: int, endstop: bool, error: bool, thermal_code: int) -> bytes | None:
+        """Takes one sample; returns the record flushed by this tick, or None."""
+        flags = (1 if endstop else 0) | (2 if error else 0) | ((thermal_code & 3) << 2)
+        self.ring[self.write_index] = Sample(tick_ms & 0xFFFFFFFF, tool_id & 0xFF, current & 0xFFFF, target & 0xFFFF, flags)
+        self.write_index = (self.write_index + 1) % SAMPLES
+        if self.sample_count < SAMPLES:
+            self.sample_count += 1
+        record = None
+        if error and not self._previous_error and not self._flushed_for_this_fault:
+            record = self.record()
+            self._flushed_for_this_fault = True
+        if not error:
+            self._flushed_for_this_fault = False
+        self._previous_error = error
+        return record
+
+    def record(self) -> bytes:
+        body = struct.pack("<IBBB", MAGIC, VERSION, self.sample_count, self.write_index)
+        body += b"".join(struct.pack("<IBHHB", x.tick_ms, x.tool_id, x.current_temperature, x.target_temperature, x.flags) for x in self.ring)
+        return body + bytes([crc8(body)])
+
+
 def download(request: Callable[[int], bytes | None]) -> Record:
     """Read the whole record. ``request(index)`` sends 0x1A8 and returns the 32 bytes of the answer, or None when none came."""
     raw = bytearray()

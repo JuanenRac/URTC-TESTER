@@ -8,7 +8,7 @@
     },
     "blackbox.py": {
       "from": "src/urtc_common/blackbox.py",
-      "sha256": "f4e9c37150ed53b4d3c8d616698249a401826b139ccaf7859815b35ac1a0639b"
+      "sha256": "a2deaf4ccc731fc9acc633c04b0ccc5d93356e40b07c3ef35ad620e56dc74bbf"
     },
     "conformance.py": {
       "from": "src/urtc_common/conformance.py",
@@ -17,6 +17,14 @@
     "framing.py": {
       "from": "src/urtc_common/framing.py",
       "sha256": "7317394a709a4e2683b5534bae161ea5298b0c45829df05eb30a4046b884344d"
+    },
+    "help_qt.py": {
+      "from": "src/urtc_common/help_qt.py",
+      "sha256": "282578321477630ddd67ad29f9f8c619f6248dcac9a6d2793b1ac6221c88a91b"
+    },
+    "help_text.py": {
+      "from": "src/urtc_common/help_text.py",
+      "sha256": "2775a171e09e7696f35ca42a54553c99cefa5b8c406dd43df3913d66731e33bb"
     },
     "launcher.py": {
       "from": "src/urtc_common/launcher.py",

@@ -1808,5 +1808,2778 @@
       "hex": "424B4C4202050564000000002C01400100FA000000002F014001009001000000320140010026020000003501400100BC02000000380140010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "error": "record is"
     }
+  ],
+  "recorder": [
+    {
+      "name": "no fault, no flush",
+      "steps": [
+        {
+          "tick_ms": 1000,
+          "tool_id": 0,
+          "current": 300,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1150,
+          "tool_id": 0,
+          "current": 307,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1300,
+          "tool_id": 0,
+          "current": 314,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1450,
+          "tool_id": 0,
+          "current": 321,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1600,
+          "tool_id": 0,
+          "current": 328,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1750,
+          "tool_id": 0,
+          "current": 335,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1900,
+          "tool_id": 0,
+          "current": 342,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2050,
+          "tool_id": 0,
+          "current": 349,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2200,
+          "tool_id": 0,
+          "current": 356,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2350,
+          "tool_id": 0,
+          "current": 303,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        }
+      ],
+      "flush_steps": [],
+      "record": null
+    },
+    {
+      "name": "the first fault flushes the ring that was filled so far",
+      "steps": [
+        {
+          "tick_ms": 1000,
+          "tool_id": 0,
+          "current": 300,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1150,
+          "tool_id": 0,
+          "current": 307,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1300,
+          "tool_id": 0,
+          "current": 314,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1450,
+          "tool_id": 0,
+          "current": 321,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1600,
+          "tool_id": 0,
+          "current": 328,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1750,
+          "tool_id": 0,
+          "current": 335,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1900,
+          "tool_id": 0,
+          "current": 342,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2050,
+          "tool_id": 0,
+          "current": 349,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2200,
+          "tool_id": 0,
+          "current": 356,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2350,
+          "tool_id": 0,
+          "current": 303,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2500,
+          "tool_id": 0,
+          "current": 310,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2650,
+          "tool_id": 0,
+          "current": 317,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2800,
+          "tool_id": 0,
+          "current": 324,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2950,
+          "tool_id": 0,
+          "current": 331,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3100,
+          "tool_id": 0,
+          "current": 338,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3250,
+          "tool_id": 0,
+          "current": 345,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3400,
+          "tool_id": 0,
+          "current": 352,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3550,
+          "tool_id": 0,
+          "current": 359,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3700,
+          "tool_id": 0,
+          "current": 306,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3850,
+          "tool_id": 0,
+          "current": 313,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4000,
+          "tool_id": 0,
+          "current": 320,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4150,
+          "tool_id": 0,
+          "current": 327,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4300,
+          "tool_id": 0,
+          "current": 334,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4450,
+          "tool_id": 0,
+          "current": 341,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4600,
+          "tool_id": 0,
+          "current": 348,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4750,
+          "tool_id": 0,
+          "current": 355,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4900,
+          "tool_id": 0,
+          "current": 302,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5050,
+          "tool_id": 0,
+          "current": 309,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5200,
+          "tool_id": 0,
+          "current": 316,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5350,
+          "tool_id": 0,
+          "current": 323,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        }
+      ],
+      "flush_steps": [
+        20
+      ],
+      "record": "424B4C42021515E8030000002C014001007E04000000330140010014050000003A01400100AA05000000410140010040060000004801400100D6060000004F014001006C07000000560140010002080000005D01400100980800000064014001002E090000002F01400100C40900000036014001005A0A0000003D01400100F00A0000004401400100860B0000004B014001001C0C0000005201400100B20C0000005901400100480D0000006001400100DE0D0000006701400100740E00000032014001000A0F0000003901400100A00F000000400140010200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000BC"
+    },
+    {
+      "name": "a fault after the ring wrapped flushes a full ring",
+      "steps": [
+        {
+          "tick_ms": 1000,
+          "tool_id": 0,
+          "current": 300,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1150,
+          "tool_id": 0,
+          "current": 307,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1300,
+          "tool_id": 0,
+          "current": 314,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1450,
+          "tool_id": 0,
+          "current": 321,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1600,
+          "tool_id": 0,
+          "current": 328,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1750,
+          "tool_id": 0,
+          "current": 335,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1900,
+          "tool_id": 0,
+          "current": 342,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2050,
+          "tool_id": 0,
+          "current": 349,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2200,
+          "tool_id": 0,
+          "current": 356,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2350,
+          "tool_id": 0,
+          "current": 303,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2500,
+          "tool_id": 0,
+          "current": 310,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2650,
+          "tool_id": 0,
+          "current": 317,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2800,
+          "tool_id": 0,
+          "current": 324,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2950,
+          "tool_id": 0,
+          "current": 331,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3100,
+          "tool_id": 0,
+          "current": 338,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3250,
+          "tool_id": 0,
+          "current": 345,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3400,
+          "tool_id": 0,
+          "current": 352,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3550,
+          "tool_id": 0,
+          "current": 359,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3700,
+          "tool_id": 0,
+          "current": 306,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3850,
+          "tool_id": 0,
+          "current": 313,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4000,
+          "tool_id": 0,
+          "current": 320,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4150,
+          "tool_id": 0,
+          "current": 327,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4300,
+          "tool_id": 0,
+          "current": 334,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4450,
+          "tool_id": 0,
+          "current": 341,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4600,
+          "tool_id": 0,
+          "current": 348,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4750,
+          "tool_id": 0,
+          "current": 355,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4900,
+          "tool_id": 0,
+          "current": 302,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5050,
+          "tool_id": 0,
+          "current": 309,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5200,
+          "tool_id": 0,
+          "current": 316,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5350,
+          "tool_id": 0,
+          "current": 323,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5500,
+          "tool_id": 0,
+          "current": 330,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5650,
+          "tool_id": 0,
+          "current": 337,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5800,
+          "tool_id": 0,
+          "current": 344,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5950,
+          "tool_id": 0,
+          "current": 351,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6100,
+          "tool_id": 0,
+          "current": 358,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6250,
+          "tool_id": 0,
+          "current": 305,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6400,
+          "tool_id": 0,
+          "current": 312,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6550,
+          "tool_id": 0,
+          "current": 319,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6700,
+          "tool_id": 0,
+          "current": 326,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6850,
+          "tool_id": 0,
+          "current": 333,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 7000,
+          "tool_id": 0,
+          "current": 340,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 7150,
+          "tool_id": 0,
+          "current": 347,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 7300,
+          "tool_id": 0,
+          "current": 354,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 7450,
+          "tool_id": 0,
+          "current": 301,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 7600,
+          "tool_id": 0,
+          "current": 308,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 7750,
+          "tool_id": 0,
+          "current": 315,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 7900,
+          "tool_id": 0,
+          "current": 322,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 8050,
+          "tool_id": 0,
+          "current": 329,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 8200,
+          "tool_id": 0,
+          "current": 336,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 8350,
+          "tool_id": 0,
+          "current": 343,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 8500,
+          "tool_id": 0,
+          "current": 350,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 8650,
+          "tool_id": 0,
+          "current": 357,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 8800,
+          "tool_id": 0,
+          "current": 304,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 8950,
+          "tool_id": 0,
+          "current": 311,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 9100,
+          "tool_id": 0,
+          "current": 318,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 9250,
+          "tool_id": 0,
+          "current": 325,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 9400,
+          "tool_id": 0,
+          "current": 332,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 9550,
+          "tool_id": 0,
+          "current": 339,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 9700,
+          "tool_id": 0,
+          "current": 346,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 9850,
+          "tool_id": 0,
+          "current": 353,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 10000,
+          "tool_id": 0,
+          "current": 300,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 10150,
+          "tool_id": 0,
+          "current": 307,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 10300,
+          "tool_id": 0,
+          "current": 314,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 10450,
+          "tool_id": 0,
+          "current": 321,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 10600,
+          "tool_id": 0,
+          "current": 328,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 10750,
+          "tool_id": 0,
+          "current": 335,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 10900,
+          "tool_id": 0,
+          "current": 342,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 11050,
+          "tool_id": 0,
+          "current": 349,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 11200,
+          "tool_id": 0,
+          "current": 356,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 11350,
+          "tool_id": 0,
+          "current": 303,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 11500,
+          "tool_id": 0,
+          "current": 310,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 11650,
+          "tool_id": 0,
+          "current": 317,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 11800,
+          "tool_id": 0,
+          "current": 324,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 11950,
+          "tool_id": 0,
+          "current": 331,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 12100,
+          "tool_id": 0,
+          "current": 338,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 12250,
+          "tool_id": 0,
+          "current": 345,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 12400,
+          "tool_id": 0,
+          "current": 352,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 12550,
+          "tool_id": 0,
+          "current": 359,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 12700,
+          "tool_id": 0,
+          "current": 306,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 12850,
+          "tool_id": 0,
+          "current": 313,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 13000,
+          "tool_id": 0,
+          "current": 320,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 13150,
+          "tool_id": 0,
+          "current": 327,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 13300,
+          "tool_id": 0,
+          "current": 334,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 13450,
+          "tool_id": 0,
+          "current": 341,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 13600,
+          "tool_id": 0,
+          "current": 348,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 13750,
+          "tool_id": 0,
+          "current": 355,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 13900,
+          "tool_id": 0,
+          "current": 302,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 14050,
+          "tool_id": 0,
+          "current": 309,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 14200,
+          "tool_id": 0,
+          "current": 316,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 14350,
+          "tool_id": 0,
+          "current": 323,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 14500,
+          "tool_id": 0,
+          "current": 330,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 14650,
+          "tool_id": 0,
+          "current": 337,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 14800,
+          "tool_id": 0,
+          "current": 344,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 14950,
+          "tool_id": 0,
+          "current": 351,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 15100,
+          "tool_id": 0,
+          "current": 358,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 15250,
+          "tool_id": 0,
+          "current": 305,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 15400,
+          "tool_id": 0,
+          "current": 312,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 15550,
+          "tool_id": 0,
+          "current": 319,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 15700,
+          "tool_id": 0,
+          "current": 326,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 15850,
+          "tool_id": 0,
+          "current": 333,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 16000,
+          "tool_id": 0,
+          "current": 340,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        }
+      ],
+      "flush_steps": [
+        100
+      ],
+      "record": "424B4C420243222A2B0000005D01400100C02B0000006401400100562C0000002F01400100EC2C0000003601400100822D0000003D01400100182E0000004401400100AE2E0000004B01400100442F0000005201400100DA2F000000590140010070300000006001400100063100000067014001009C31000000320140010032320000003901400100C83200000040014001005E330000004701400100F4330000004E014001008A34000000550140010020350000005C01400100B63500000063014001004C360000002E01400100E236000000350140010078370000003C014001000E380000004301400100A4380000004A014001003A390000005101400100D0390000005801400100663A0000005F01400100FC3A0000006601400100923B0000003101400100283C0000003801400100BE3C0000003F01400100543D0000004601400100EA3D0000004D01400100803E0000005401400102D41700000066014001006A1800000031014001000019000000380140010096190000003F014001002C1A0000004601400100C21A0000004D01400100581B0000005401400100EE1B0000005B01400100841C00000062014001001A1D0000002D01400100B01D0000003401400100461E0000003B01400100DC1E0000004201400100721F0000004901400100082000000050014001009E20000000570140010034210000005E01400100CA21000000650140010060220000003001400100F62200000037014001008C230000003E0140010022240000004501400100B8240000004C014001004E250000005301400100E4250000005A014001007A26000000610140010010270000002C01400100A62700000033014001003C280000003A01400100D228000000410140010068290000004801400100FE290000004F01400100942A0000005601400100D8"
+    },
+    {
+      "name": "a fault that stays raised flushes once",
+      "steps": [
+        {
+          "tick_ms": 1000,
+          "tool_id": 0,
+          "current": 300,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1150,
+          "tool_id": 0,
+          "current": 307,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1300,
+          "tool_id": 0,
+          "current": 314,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1450,
+          "tool_id": 0,
+          "current": 321,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1600,
+          "tool_id": 0,
+          "current": 328,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1750,
+          "tool_id": 0,
+          "current": 335,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1900,
+          "tool_id": 0,
+          "current": 342,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2050,
+          "tool_id": 0,
+          "current": 349,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2200,
+          "tool_id": 0,
+          "current": 356,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2350,
+          "tool_id": 0,
+          "current": 303,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2500,
+          "tool_id": 0,
+          "current": 310,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2650,
+          "tool_id": 0,
+          "current": 317,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2800,
+          "tool_id": 0,
+          "current": 324,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2950,
+          "tool_id": 0,
+          "current": 331,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3100,
+          "tool_id": 0,
+          "current": 338,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3250,
+          "tool_id": 0,
+          "current": 345,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3400,
+          "tool_id": 0,
+          "current": 352,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3550,
+          "tool_id": 0,
+          "current": 359,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3700,
+          "tool_id": 0,
+          "current": 306,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3850,
+          "tool_id": 0,
+          "current": 313,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4000,
+          "tool_id": 0,
+          "current": 320,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4150,
+          "tool_id": 0,
+          "current": 327,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4300,
+          "tool_id": 0,
+          "current": 334,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4450,
+          "tool_id": 0,
+          "current": 341,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4600,
+          "tool_id": 0,
+          "current": 348,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4750,
+          "tool_id": 0,
+          "current": 355,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4900,
+          "tool_id": 0,
+          "current": 302,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5050,
+          "tool_id": 0,
+          "current": 309,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5200,
+          "tool_id": 0,
+          "current": 316,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5350,
+          "tool_id": 0,
+          "current": 323,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5500,
+          "tool_id": 0,
+          "current": 330,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5650,
+          "tool_id": 0,
+          "current": 337,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5800,
+          "tool_id": 0,
+          "current": 344,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5950,
+          "tool_id": 0,
+          "current": 351,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6100,
+          "tool_id": 0,
+          "current": 358,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6250,
+          "tool_id": 0,
+          "current": 305,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6400,
+          "tool_id": 0,
+          "current": 312,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6550,
+          "tool_id": 0,
+          "current": 319,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6700,
+          "tool_id": 0,
+          "current": 326,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6850,
+          "tool_id": 0,
+          "current": 333,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        }
+      ],
+      "flush_steps": [
+        12
+      ],
+      "record": "424B4C42020D0DE8030000002C014001007E04000000330140010014050000003A01400100AA05000000410140010040060000004801400100D6060000004F014001006C07000000560140010002080000005D01400100980800000064014001002E090000002F01400100C40900000036014001005A0A0000003D01400100F00A000000440140010200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000052"
+    },
+    {
+      "name": "the latch is re-armed when the flag falls and a second fault flushes again",
+      "steps": [
+        {
+          "tick_ms": 1000,
+          "tool_id": 0,
+          "current": 300,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1150,
+          "tool_id": 0,
+          "current": 307,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1300,
+          "tool_id": 0,
+          "current": 314,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1450,
+          "tool_id": 0,
+          "current": 321,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1600,
+          "tool_id": 0,
+          "current": 328,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1750,
+          "tool_id": 0,
+          "current": 335,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1900,
+          "tool_id": 0,
+          "current": 342,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2050,
+          "tool_id": 0,
+          "current": 349,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2200,
+          "tool_id": 0,
+          "current": 356,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2350,
+          "tool_id": 0,
+          "current": 303,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2500,
+          "tool_id": 0,
+          "current": 310,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2650,
+          "tool_id": 0,
+          "current": 317,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2800,
+          "tool_id": 0,
+          "current": 324,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2950,
+          "tool_id": 0,
+          "current": 331,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3100,
+          "tool_id": 0,
+          "current": 338,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3250,
+          "tool_id": 0,
+          "current": 345,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3400,
+          "tool_id": 0,
+          "current": 352,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3550,
+          "tool_id": 0,
+          "current": 359,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3700,
+          "tool_id": 0,
+          "current": 306,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3850,
+          "tool_id": 0,
+          "current": 313,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4000,
+          "tool_id": 0,
+          "current": 320,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4150,
+          "tool_id": 0,
+          "current": 327,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4300,
+          "tool_id": 0,
+          "current": 334,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4450,
+          "tool_id": 0,
+          "current": 341,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4600,
+          "tool_id": 0,
+          "current": 348,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4750,
+          "tool_id": 0,
+          "current": 355,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4900,
+          "tool_id": 0,
+          "current": 302,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5050,
+          "tool_id": 0,
+          "current": 309,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5200,
+          "tool_id": 0,
+          "current": 316,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5350,
+          "tool_id": 0,
+          "current": 323,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5500,
+          "tool_id": 0,
+          "current": 330,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5650,
+          "tool_id": 0,
+          "current": 337,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5800,
+          "tool_id": 0,
+          "current": 344,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5950,
+          "tool_id": 0,
+          "current": 351,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6100,
+          "tool_id": 0,
+          "current": 358,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6250,
+          "tool_id": 0,
+          "current": 305,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6400,
+          "tool_id": 0,
+          "current": 312,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6550,
+          "tool_id": 0,
+          "current": 319,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6700,
+          "tool_id": 0,
+          "current": 326,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 6850,
+          "tool_id": 0,
+          "current": 333,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 7000,
+          "tool_id": 0,
+          "current": 340,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 7150,
+          "tool_id": 0,
+          "current": 347,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 7300,
+          "tool_id": 0,
+          "current": 354,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 7450,
+          "tool_id": 0,
+          "current": 301,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 7600,
+          "tool_id": 0,
+          "current": 308,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 7750,
+          "tool_id": 0,
+          "current": 315,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 7900,
+          "tool_id": 0,
+          "current": 322,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 8050,
+          "tool_id": 0,
+          "current": 329,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 8200,
+          "tool_id": 0,
+          "current": 336,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 8350,
+          "tool_id": 0,
+          "current": 343,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 8500,
+          "tool_id": 0,
+          "current": 350,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 8650,
+          "tool_id": 0,
+          "current": 357,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 8800,
+          "tool_id": 0,
+          "current": 304,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 8950,
+          "tool_id": 0,
+          "current": 311,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 9100,
+          "tool_id": 0,
+          "current": 318,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 9250,
+          "tool_id": 0,
+          "current": 325,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 9400,
+          "tool_id": 0,
+          "current": 332,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 9550,
+          "tool_id": 0,
+          "current": 339,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 9700,
+          "tool_id": 0,
+          "current": 346,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 9850,
+          "tool_id": 0,
+          "current": 353,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 10000,
+          "tool_id": 0,
+          "current": 305,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 10150,
+          "tool_id": 0,
+          "current": 305,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 10300,
+          "tool_id": 0,
+          "current": 305,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 10450,
+          "tool_id": 0,
+          "current": 305,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 10600,
+          "tool_id": 0,
+          "current": 305,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 10750,
+          "tool_id": 0,
+          "current": 305,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 10900,
+          "tool_id": 0,
+          "current": 305,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 11050,
+          "tool_id": 0,
+          "current": 305,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        }
+      ],
+      "flush_steps": [
+        5,
+        63
+      ],
+      "record": "424B4C42024040E8030000002C014001007E04000000330140010014050000003A01400100AA05000000410140010040060000004801400100D6060000004F014001026C07000000560140010202080000005D01400102980800000064014001022E090000002F01400100C40900000036014001005A0A0000003D01400100F00A0000004401400100860B0000004B014001001C0C0000005201400100B20C0000005901400100480D0000006001400100DE0D0000006701400100740E00000032014001000A0F0000003901400100A00F000000400140010036100000004701400100CC100000004E0140010062110000005501400100F8110000005C014001008E12000000630140010024130000002E01400100BA13000000350140010050140000003C01400100E61400000043014001007C150000004A0140010012160000005101400100A81600000058014001003E170000005F01400100D41700000066014001006A1800000031014001000019000000380140010096190000003F014001002C1A0000004601400100C21A0000004D01400100581B0000005401400100EE1B0000005B01400100841C00000062014001001A1D0000002D01400100B01D0000003401400100461E0000003B01400100DC1E0000004201400100721F0000004901400100082000000050014001009E20000000570140010034210000005E01400100CA21000000650140010060220000003001400100F62200000037014001008C230000003E0140010022240000004501400100B8240000004C014001004E250000005301400100E4250000005A014001007A26000000610140010010270000003101400100A62700000031014001003C280000003101400100D22800000031014001020000000000000000000000000000000000000000000000000000000000000D"
+    },
+    {
+      "name": "the end-stop and the thermal guard code travel in the flags",
+      "steps": [
+        {
+          "tick_ms": 1000,
+          "tool_id": 0,
+          "current": 300,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1150,
+          "tool_id": 0,
+          "current": 307,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1300,
+          "tool_id": 0,
+          "current": 314,
+          "target": 320,
+          "endstop": 1,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1450,
+          "tool_id": 0,
+          "current": 321,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1600,
+          "tool_id": 0,
+          "current": 328,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1750,
+          "tool_id": 0,
+          "current": 335,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1900,
+          "tool_id": 0,
+          "current": 342,
+          "target": 320,
+          "endstop": 1,
+          "error": 1,
+          "thermal_code": 2
+        },
+        {
+          "tick_ms": 2050,
+          "tool_id": 0,
+          "current": 349,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 2
+        },
+        {
+          "tick_ms": 2200,
+          "tool_id": 0,
+          "current": 356,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 2
+        },
+        {
+          "tick_ms": 2350,
+          "tool_id": 0,
+          "current": 303,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 2
+        },
+        {
+          "tick_ms": 2500,
+          "tool_id": 0,
+          "current": 310,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 2
+        },
+        {
+          "tick_ms": 2650,
+          "tool_id": 0,
+          "current": 317,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 2
+        }
+      ],
+      "flush_steps": [
+        6
+      ],
+      "record": "424B4C42020707E8030000002C014001007E04000000330140010014050000003A01400101AA05000000410140010040060000004801400100D6060000004F014001006C07000000560140010B00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040"
+    },
+    {
+      "name": "the tick counter wraps inside the window",
+      "steps": [
+        {
+          "tick_ms": 4294967000,
+          "tool_id": 0,
+          "current": 300,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4294967150,
+          "tool_id": 0,
+          "current": 307,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4,
+          "tool_id": 0,
+          "current": 314,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 154,
+          "tool_id": 0,
+          "current": 321,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 304,
+          "tool_id": 0,
+          "current": 328,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 454,
+          "tool_id": 0,
+          "current": 335,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 604,
+          "tool_id": 0,
+          "current": 342,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 754,
+          "tool_id": 0,
+          "current": 349,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 904,
+          "tool_id": 0,
+          "current": 356,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1054,
+          "tool_id": 0,
+          "current": 303,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1204,
+          "tool_id": 0,
+          "current": 310,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1354,
+          "tool_id": 0,
+          "current": 317,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1504,
+          "tool_id": 0,
+          "current": 324,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1654,
+          "tool_id": 0,
+          "current": 331,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1804,
+          "tool_id": 0,
+          "current": 338,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 1954,
+          "tool_id": 0,
+          "current": 345,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2104,
+          "tool_id": 0,
+          "current": 352,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2254,
+          "tool_id": 0,
+          "current": 359,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2404,
+          "tool_id": 0,
+          "current": 306,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2554,
+          "tool_id": 0,
+          "current": 313,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2704,
+          "tool_id": 0,
+          "current": 320,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 2854,
+          "tool_id": 0,
+          "current": 327,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3004,
+          "tool_id": 0,
+          "current": 334,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3154,
+          "tool_id": 0,
+          "current": 341,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3304,
+          "tool_id": 0,
+          "current": 348,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3454,
+          "tool_id": 0,
+          "current": 355,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3604,
+          "tool_id": 0,
+          "current": 302,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3754,
+          "tool_id": 0,
+          "current": 309,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 3904,
+          "tool_id": 0,
+          "current": 316,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4054,
+          "tool_id": 0,
+          "current": 323,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4204,
+          "tool_id": 0,
+          "current": 330,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4354,
+          "tool_id": 0,
+          "current": 337,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4504,
+          "tool_id": 0,
+          "current": 344,
+          "target": 320,
+          "endstop": 0,
+          "error": 0,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4654,
+          "tool_id": 0,
+          "current": 351,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4804,
+          "tool_id": 0,
+          "current": 358,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 4954,
+          "tool_id": 0,
+          "current": 305,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5104,
+          "tool_id": 0,
+          "current": 312,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5254,
+          "tool_id": 0,
+          "current": 319,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5404,
+          "tool_id": 0,
+          "current": 326,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        },
+        {
+          "tick_ms": 5554,
+          "tool_id": 0,
+          "current": 333,
+          "target": 320,
+          "endstop": 0,
+          "error": 1,
+          "thermal_code": 0
+        }
+      ],
+      "flush_steps": [
+        33
+      ],
+      "record": "424B4C42022222D8FEFFFF002C014001006EFFFFFF00330140010004000000003A014001009A00000000410140010030010000004801400100C6010000004F014001005C020000005601400100F2020000005D01400100880300000064014001001E040000002F01400100B40400000036014001004A050000003D01400100E005000000440140010076060000004B014001000C070000005201400100A207000000590140010038080000006001400100CE08000000670140010064090000003201400100FA090000003901400100900A0000004001400100260B0000004701400100BC0B0000004E01400100520C0000005501400100E80C0000005C014001007E0D0000006301400100140E0000002E01400100AA0E0000003501400100400F0000003C01400100D60F00000043014001006C100000004A0140010002110000005101400100981100000058014001002E120000005F01400102000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000D9"
+    }
   ]
 }
