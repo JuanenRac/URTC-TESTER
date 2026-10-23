@@ -11,6 +11,11 @@ project version or CHANGELOG. `build_exe.bat` and `build_exe.sh` package the
 desktop application after validation. Follow `requirements.txt` before running
 `urtc_tester.py`.
 
+The tests and the checks of the CI need two more packages, which `requirements-dev.txt` lists:
+`python -m pip install -r requirements.txt -r requirements-dev.txt`, then `python -m pytest` and
+`python -m ruff check .`. Without a window, `python urtc_tester.py --headless ...` runs the test plans
+(see `HEADLESS.md`).
+
 The validation scripts syntax-check Python plus the Qt Quick diagnostics deck.
 Confirm its visual layout from the desktop app; headless/offscreen graphics
 drivers are not a reliable substitute for that visual check. The validation

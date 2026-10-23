@@ -15,7 +15,8 @@ query_version  0x7F8: the application answers; optional ``min_version`` (``"0.3.
 selftest       the at-rest communication check of the tool that answers (the one of the deck)
 send           ``id`` and ``data`` (hex, up to 8 bytes); a read-only query is always allowed, any other frame needs the
                plan's ``"actuation": true`` and the operator's ``--allow-actuation``; the boot-loader, configuration and
-               erase frames are never allowed
+               erase frames are never allowed. ``keepalive_ms`` (20 to 200) repeats a command while the plan waits: the
+               firmware drops a heater, drill or laser order that is not refreshed within 250 ms
 expect_frame   ``id``, ``within_ms`` (default 500); optional ``length`` and ``value`` (``offset``, ``width``, ``min``,
                ``max``: an unsigned big-endian field) of a frame that arrives after the last ``send``
 wait           ``ms``: the frames keep being collected
@@ -29,6 +30,7 @@ from __future__ import annotations
 
 import json
 import re
+import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -44,6 +46,7 @@ from urtc_can.versioning import parse_version_answer
 PLAN_FORMAT = 1
 MAX_STEPS = 200
 MAX_WAIT_MS = 60000
+MIN_KEEPALIVE_MS, MAX_KEEPALIVE_MS = 20, 200  # the watchdog of a heater, a drill or a laser is 250 ms
 DEFAULT_WITHIN_MS = 500
 NAME_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}")
 VERSION_PATTERN = re.compile(r"\d{1,5}\.\d{1,3}(\.\d{1,3})?")
@@ -67,7 +70,7 @@ STEP_FIELDS = {
     "check_faults": (set(), set()),
     "query_version": (set(), {"min_version", "hardware_id"}),
     "selftest": (set(), set()),
-    "send": ({"id", "data"}, set()),
+    "send": ({"id", "data"}, {"keepalive_ms"}),
     "expect_frame": ({"id"}, {"within_ms", "length", "value"}),
     "wait": ({"ms"}, set()),
     "confirm": ({"text"}, set()),
@@ -214,6 +217,12 @@ def _validate_step(where: str, kind: str, step: dict, plan_actuates: bool) -> li
             problems.append(f"{where}: 0x{can_id:03X} is not a query; a plan that sends it must say \"actuation\": true")
         if data is None:
             problems.append(f"{where}: data must be hex text of at most 8 bytes")
+        if "keepalive_ms" in step:
+            keep = step["keepalive_ms"]
+            if isinstance(keep, bool) or not isinstance(keep, int) or not MIN_KEEPALIVE_MS <= keep <= MAX_KEEPALIVE_MS:
+                problems.append(f"{where}: keepalive_ms must be {MIN_KEEPALIVE_MS} to {MAX_KEEPALIVE_MS}")
+            elif can_id in READ_ONLY_IDS:
+                problems.append(f"{where}: keepalive_ms is for commands, not for a query")
     if kind == "expect_frame":
         if _parse_id(step.get("id")) is None:
             problems.append(f"{where}: id must be a CAN identifier (0 to 0x7FF)")
@@ -253,6 +262,8 @@ class Bus:
         self.start = clock()
         self.buffer: list[tuple[int, bytes]] = []
         self.sent_beyond_queries = False
+        # commands the firmware drops again if they are not repeated (the watchdog of a heater, a drill or a laser): id -> [data, period, next due]
+        self.keepalive: dict[int, list] = {}
 
     def _stamp(self) -> str:
         return f"[{(self.clock() - self.start) * 1000.0:9.1f}]"
@@ -260,12 +271,27 @@ class Bus:
     def send(self, can_id: int, data: bytes = b"", clear: bool = True) -> None:
         if clear:
             self.buffer.clear()
+        self.keepalive.pop(can_id, None)  # a new order for this identifier replaces the one that was being repeated
         self.trace.append(f"{self._stamp()} TX 0x{can_id:03X} {data.hex().upper()}")
         self.transport.send_frame(can_id, data)
         if can_id not in READ_ONLY_IDS:
             self.sent_beyond_queries = True
 
+    def set_keepalive(self, can_id: int, data: bytes, period: float) -> None:
+        """Repeat this command every ``period`` seconds while the plan waits. An order of all zeros is not repeated: off needs no refresh."""
+        if any(data):
+            self.keepalive[can_id] = [bytes(data), period, self.clock() + period]
+
+    def _refresh(self) -> None:
+        now = self.clock()
+        for can_id, item in self.keepalive.items():
+            if now >= item[2]:
+                self.trace.append(f"{self._stamp()} TX 0x{can_id:03X} {item[0].hex().upper()} (repeated)")
+                self.transport.send_frame(can_id, item[0])
+                item[2] = now + item[1]
+
     def _pump(self, deadline: float) -> bool:
+        self._refresh()
         remaining = deadline - self.clock()
         if remaining <= 0:
             return False
@@ -360,6 +386,7 @@ def _all_off(bus: Bus, listen_only: bool) -> str:
     if listen_only:
         return "all-off not sent: the bus was opened listen-only"
     failed = 0
+    bus.keepalive.clear()
     for can_id, data in protocol.all_off_frames():
         try:
             bus.send(can_id, data, clear=False)
@@ -450,7 +477,9 @@ def _run_send(step, bus, state, plan, allow_actuation, confirm, listen_only):
         if listen_only:
             raise _StepError("the bus was opened listen-only: nothing can be sent")
     bus.send(can_id, data)
-    return PASS, f"sent 0x{can_id:03X} {data.hex().upper()}"
+    if "keepalive_ms" in step:
+        bus.set_keepalive(can_id, data, step["keepalive_ms"] / 1000.0)
+    return PASS, f"sent 0x{can_id:03X} {data.hex().upper()}" + (f", repeated every {step['keepalive_ms']} ms" if "keepalive_ms" in step and any(data) else "")
 
 
 def _run_expect_frame(step, bus, state, plan, allow_actuation, confirm, listen_only):
@@ -498,7 +527,22 @@ def _run_wait(step, bus, state, plan, allow_actuation, confirm, listen_only):
 def _run_confirm(step, bus, state, plan, allow_actuation, confirm, listen_only):
     if confirm is None:
         raise _StepError("a person has to confirm this step and none is there (use --assume-yes only when someone has looked)")
-    answer = confirm(step["text"])
+    box: dict = {}
+
+    def ask() -> None:
+        try:
+            box["answer"] = confirm(step["text"])
+        except BaseException as exc:  # handed to the plan thread below
+            box["error"] = exc
+
+    worker = threading.Thread(target=ask, name="urtc-tester-plan-confirm", daemon=True)
+    worker.start()
+    while worker.is_alive():  # the commands that need a refresh keep being refreshed while a person looks
+        bus.drain(0.05)
+    worker.join()
+    if "error" in box:
+        raise box["error"]
+    answer = box["answer"]
     bus.trace.append(f"           operator asked: {step['text']} -> {'yes' if answer else 'no'}")
     return (PASS, "the operator confirmed") if answer else (FAIL, "the operator did not confirm")
 

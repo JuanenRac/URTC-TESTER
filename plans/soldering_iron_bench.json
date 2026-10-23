@@ -1,12 +1,12 @@
 {
   "format": 1,
   "name": "soldering-iron-bench",
-  "description": "Soldering iron head: heats the tip to 160 C, checks that the telemetry follows, asks a person to look at the tip and switches the heater off. It sends a command that heats, so it needs the actuation switch of the plan and of the operator.",
+  "description": "Soldering iron head: heats the tip to 160 C, checks that the telemetry follows, asks a person to look at the tip and switches the heater off. It sends a command that heats and refreshes it every 100 ms (the firmware drops the order after 250 ms), so it needs the actuation switch of the plan and of the operator.",
   "actuation": true,
   "steps": [
     {"do": "expect_tool", "tool": 0, "label": "the head is the soldering iron"},
     {"do": "check_faults", "label": "no fault before heating"},
-    {"do": "send", "id": "0x130", "data": "00A0", "label": "set-point 160 C"},
+    {"do": "send", "id": "0x130", "data": "00A0", "keepalive_ms": 100, "label": "set-point 160 C, refreshed every 100 ms"},
     {"do": "wait", "ms": 500},
     {"do": "expect_frame", "id": "0x135", "within_ms": 3000, "length": 2, "value": {"offset": 0, "width": 2, "min": 140, "max": 200}, "label": "the tip reaches 140 to 200 C"},
     {"do": "confirm", "text": "Is the tip warm and is nothing smoking?", "label": "a person looks at the tip"},

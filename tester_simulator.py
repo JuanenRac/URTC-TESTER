@@ -22,6 +22,7 @@ from __future__ import annotations
 import re
 import struct
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 from tester_config import TOOL_NAMES
@@ -31,6 +32,11 @@ Frame = tuple[int, bytes]
 
 CAN_ID_PID_STATE = wire.CAN_ID_PID_STATE_RESP
 FAULTS = (None, "system", "can", "thermal")
+WATCHDOG_S = 0.25  # an order for a heater, a drill or a laser is dropped again when it is not refreshed within this time
+WATCHED = {  # command identifier -> the output it sets
+    wire.CAN_ID_SOLDER_SETPOINT: "solder_setpoint_c", wire.CAN_ID_PRINTER_THERMAL_MOTION: "nozzle_setpoint_c",
+    wire.CAN_ID_DRILL_CMD: "drill_speed", wire.CAN_ID_LASER_CMD: "laser_power",
+}
 AMBIENT_C = 25.0
 HEAT_STEP_C = 40.0  # degrees the simulated tip or nozzle gains per telemetry frame
 SIMULATED_FIRMWARE = (0, 4, 0)  # major, minor, patch of the application it pretends to run
@@ -40,7 +46,7 @@ class SimulatedBoard:
     """A tool head that answers like a running application."""
 
     def __init__(self, tool_id: int = 0, firmware: tuple[int, int, int | None] = SIMULATED_FIRMWARE, fault: str | None = None,
-                 delay: float = 0.0, silent: bool = False) -> None:
+                 delay: float = 0.0, silent: bool = False, clock: Callable[[], float] = time.monotonic, watchdog_s: float | None = WATCHDOG_S) -> None:
         if fault not in FAULTS:
             raise ValueError(f"fault must be one of {FAULTS}")
         self.tool_id = tool_id
@@ -48,6 +54,9 @@ class SimulatedBoard:
         self.fault = fault
         self.delay = delay
         self.silent = silent  # a board that answers nothing (to see a plan fail the way a missing board does)
+        self.clock = clock
+        self.watchdog_s = watchdog_s  # None: the orders are kept for ever
+        self._ordered_at: dict[int, float] = {}
         self.sent: list[Frame] = []
         self.outputs: dict[str, int] = {}
         self.temperature = AMBIENT_C
@@ -70,6 +79,9 @@ class SimulatedBoard:
     def send_frame(self, can_id: int, data: bytes = b"") -> None:
         data = bytes(data)
         self.sent.append((can_id, data))
+        self._apply_watchdog()
+        if can_id in WATCHED:
+            self._ordered_at[can_id] = self.clock()
         if self.silent:
             return
         if can_id == wire.CAN_ID_QUERY_ACTIVE_TOOL:
@@ -97,7 +109,18 @@ class SimulatedBoard:
             self.outputs["laser_power"] = data[0] if data[1] == 1 else 0  # locked: no power
             self._queue.append(self._telemetry())
 
+    def _apply_watchdog(self) -> None:
+        """Drop the orders that were not refreshed in time, like the firmware: the output falls back to off."""
+        if self.watchdog_s is None:
+            return
+        now = self.clock()
+        for can_id, when in list(self._ordered_at.items()):
+            if now - when > self.watchdog_s:
+                self.outputs[WATCHED[can_id]] = 0
+                del self._ordered_at[can_id]
+
     def read_frame(self, timeout: float = 0.05) -> Frame | None:
+        self._apply_watchdog()
         if self.delay:
             time.sleep(self.delay)
         if self._queue:
@@ -160,7 +183,7 @@ class SimulatedBoard:
 # =============================================================================
 # trace player
 # =============================================================================
-_TRC_ROW = re.compile(r"^\s*\d+\)\s+([0-9.]+)\s+\S+\s+([0-9A-Fa-f]+)\s+(\d+)\s*([0-9A-Fa-f ]*)$")
+_TRC_ROW = re.compile(r"^\s*\d+\)\s+([0-9.]+)\s+(Rx|Tx)\s+([0-9A-Fa-f]+)\s+(\d+)\s*([0-9A-Fa-f ]*)$")
 _ASC_ROW = re.compile(r"^\s*([0-9.]+)\s+\d+\s+([0-9A-Fa-f]+)\s+(Rx|Tx)\s+d\s+(\d+)\s*([0-9A-Fa-f ]*)$")
 
 
@@ -172,7 +195,9 @@ def parse_trace(text: str) -> list[tuple[float, int, bytes]]:
             continue
         m = _TRC_ROW.match(line)
         if m:
-            offset, ident, dlc, data = float(m.group(1)) / 1000.0, m.group(2), int(m.group(3)), m.group(4)
+            if m.group(2) != "Rx":
+                continue  # what the monitor itself transmitted did not arrive from the bus
+            offset, ident, dlc, data = float(m.group(1)) / 1000.0, m.group(3), int(m.group(4)), m.group(5)
         else:
             m = _ASC_ROW.match(line)
             if not m or m.group(3) != "Rx":

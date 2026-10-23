@@ -252,3 +252,10 @@ def test_a_plan_can_read_the_pid_state():
     plan = {"format": 1, "name": "pid", "steps": [{"do": "send", "id": "0x1BA", "data": ""},
                                                    {"do": "expect_frame", "id": "0x1BA", "within_ms": 200, "length": 8}]}
     assert tp.run_plan(plan, SimulatedBoard(0)).outcome == tp.PASS
+
+
+def test_a_trace_replays_only_what_arrived_not_what_the_monitor_transmitted():
+    text = ";$FILEVERSION=1.1\n     1)        0.0  Tx    0110  0   \n     2)        5.0  Rx    0111  2   0001\n     3)        9.0  Tx    0130  2   00A0\n"
+    asc = "   0.000000 1  110             Tx   d 0 \n   0.005000 1  111             Rx   d 2 0001\n"
+    assert [(f[1], f[2]) for f in parse_trace(text)] == [(0x111, b"\x00\x01")]
+    assert [(f[1], f[2]) for f in parse_trace(asc)] == [(0x111, b"\x00\x01")]

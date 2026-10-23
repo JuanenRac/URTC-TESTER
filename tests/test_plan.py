@@ -35,8 +35,8 @@ class TickClock:
 
 
 def run(plan, board=None, **options):
-    board = board or SimulatedBoard(0)
     clock = TickClock()
+    board = board or SimulatedBoard(0, clock=clock)
     return tp.run_plan(plan, board, clock=clock, sleep=clock.sleep, **options), board
 
 
@@ -281,3 +281,66 @@ def test_the_plan_given_is_not_changed_by_running_it():
     before = copy.deepcopy(plan)
     run(plan)
     assert plan == before
+
+
+# ---- commands the firmware drops again unless they are refreshed ---------------------------------------------------------------------
+HEAT = {"do": "send", "id": "0x130", "data": "00A0"}
+
+
+def test_without_a_keepalive_the_firmware_drops_a_heater_order_and_the_plan_sees_it():
+    plan = plan_of(HEAT, {"do": "wait", "ms": 600}, {"do": "send", "id": "0x1BA", "data": ""},
+                   {"do": "expect_frame", "id": "0x135", "within_ms": 300, "value": {"offset": 0, "width": 2, "min": 140}}, actuation=True)
+    report, board = run(plan, allow_actuation=True)
+    assert report.steps[3].outcome == tp.FAIL and board.outputs["solder_setpoint_c"] == 0
+
+
+def test_with_a_keepalive_the_order_is_repeated_and_the_tip_stays_hot():
+    plan = plan_of(dict(HEAT, keepalive_ms=100), {"do": "wait", "ms": 600},
+                   {"do": "expect_frame", "id": "0x135", "within_ms": 300, "value": {"offset": 0, "width": 2, "min": 140}}, actuation=True)
+    report, board = run(plan, allow_actuation=True)
+    assert report.outcome == tp.PASS, report.log_text()
+    repeats = [line for line in report.trace if "TX 0x130 00A0 (repeated)" in line]
+    assert 4 <= len(repeats) <= 8  # about every 100 ms over about 600 ms
+    assert board.sent.count((0x130, bytes.fromhex("00A0"))) == len(repeats) + 1
+
+
+def test_a_new_order_for_the_same_identifier_stops_the_repetition_and_off_is_never_repeated():
+    plan = plan_of(dict(HEAT, keepalive_ms=50), {"do": "wait", "ms": 120}, {"do": "send", "id": "0x130", "data": "0000", "keepalive_ms": 50},
+                   {"do": "wait", "ms": 300}, actuation=True)
+    report, board = run(plan, allow_actuation=True)
+    after_off = board.sent[board.sent.index((0x130, b"\x00\x00")):]
+    assert after_off.count((0x130, b"\x00\x00")) == 2  # the order itself and the all-off at the end, nothing repeated in between
+    assert not any(frame == (0x130, bytes.fromhex("00A0")) for frame in after_off)
+
+
+def test_the_repetition_goes_on_while_a_person_is_asked():
+    seen = []
+
+    def slow_confirm(text):
+        import time as real_time
+        real_time.sleep(0.05)  # a person takes a moment: the loop keeps the order alive meanwhile
+        seen.append(text)
+        return True
+
+    plan = plan_of(dict(HEAT, keepalive_ms=20), {"do": "confirm", "text": "Is it warm?"},
+                   {"do": "expect_frame", "id": "0x135", "within_ms": 300, "value": {"offset": 0, "width": 2, "min": 140}}, actuation=True)
+    report, board = run(plan, allow_actuation=True, confirm=slow_confirm)
+    assert report.outcome == tp.PASS and seen == ["Is it warm?"]
+    assert any("(repeated)" in line for line in report.trace)
+
+
+def test_a_confirm_callback_that_raises_is_an_error_of_the_step():
+    def broken(text):
+        raise RuntimeError("no terminal")
+
+    report, _ = run(plan_of({"do": "confirm", "text": "Is it warm?"}), confirm=broken)
+    assert report.outcome == tp.ERROR and "no terminal" in report.steps[0].message
+
+
+@pytest.mark.parametrize("keep", [0, 19, 201, 1.5, "100", True])
+def test_a_keepalive_outside_the_watchdog_window_or_not_a_number_is_refused(keep):
+    assert any("keepalive_ms" in p for p in tp.validate_plan(plan_of(dict(HEAT, keepalive_ms=keep), actuation=True)))
+
+
+def test_a_keepalive_on_a_query_is_refused():
+    assert any("not for a query" in p for p in tp.validate_plan(plan_of({"do": "send", "id": "0x110", "data": "", "keepalive_ms": 100})))

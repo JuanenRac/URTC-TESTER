@@ -54,7 +54,7 @@ A plan is a JSON file (see `plans/`):
 | `check_faults` | | the quick state reports no system error, no CAN error, no thermal fault and no watchdog reset |
 | `query_version` | `min_version`, `hardware_id` (both optional) | the application (not the boot-loader) answers 0x7F8, with at least that version and that hardware id |
 | `selftest` | | the self-test of the tool that answers has no failed check |
-| `send` | `id`, `data` | the frame was sent (see the rules below) |
+| `send` | `id`, `data`, `keepalive_ms` (optional, 20 to 200) | the frame was sent (see the rules below); with `keepalive_ms` a command is repeated while the plan waits |
 | `expect_frame` | `id`, `within_ms` (default 500), `length`, `value` | a frame with that identifier arrives after the last `send`, with that length and, for `value`, an unsigned big-endian field of `width` 1 to 4 bytes at `offset` between `min` and `max` |
 | `wait` | `ms` (up to 60000) | always; the frames that arrive meanwhile are kept for the next `expect_frame` |
 | `confirm` | `text` | a person answers yes at the terminal (or `--assume-yes`) |
@@ -66,12 +66,13 @@ A failed step does not stop the plan. An error does (a transport that breaks, a 
 * Queries (active tool, version, error counters, F-RAM, counters, the read-back requests of the configuration registers and the fault recorder) are always allowed.
 * Any other frame is a command. The plan must say `"actuation": true` and the operator must pass `--allow-actuation`; otherwise the step is an error and nothing is sent.
 * Never allowed, whatever the switches: the boot-loader and update protocol (`0x7F0` to `0x7FF`), the slave link (`0x210` to `0x22F`), the writes that change what the board is or stores (`0x1A0`, `0x1A2`, `0x1A4`, `0x1A6`, `0x1AC`, `0x1AE`), the F-RAM erase (`0x192`) and the feeder reset (`0x131`). A plan that contains one is refused before the bus is opened.
+* The firmware drops an order for a heater, a drill or a laser that is not refreshed within 250 ms. A plan that wants the tip to stay hot sets `keepalive_ms` (for example 100) on that `send`: the command is repeated during the later `wait`, `expect_frame` and `confirm` steps, also while a person is being asked, until a new `send` with the same identifier replaces it (an order of all zeros is not repeated). The simulated head drops the order like the firmware does, so a plan that forgot it fails there.
 * After a plan that sent anything beyond a query, every known "off" is sent (the same frames as the stop-all button of the deck), also when the plan ended early or with Ctrl+C.
 
 ## The simulated head and the trace player
 
-`--transport simulate` plays the head of the tool chosen with `--tool`: it answers the active-tool and version queries, reports the telemetry of that tool by itself the way the firmware does, and follows the soldering iron and printer set-points (the tip gains 40 degrees per telemetry frame), the drill speed and the laser power (none while the interlock is locked). `--fault` makes it report a system error, a CAN error or a thermal fault. It shows that a plan and the tester agree with each other; it is the same author's second reading of the protocol, not a board.
+`--transport simulate` plays the head of the tool chosen with `--tool`: it answers the active-tool and version queries, reports the telemetry of that tool by itself the way the firmware does, and follows the soldering iron and printer set-points (the tip gains 40 degrees per telemetry frame), the drill speed and the laser power (none while the interlock is locked), and it drops each of those orders again when it is not refreshed within 250 ms. `--fault` makes it report a system error, a CAN error or a thermal fault. It shows that a plan and the tester agree with each other; it is the same author's second reading of the protocol, not a board.
 
-`--transport replay --port trace.trc` plays the frames of a trace saved by the bus monitor (`.trc` or `.asc`) in order and ignores what is sent. A plan made of `expect_frame` steps can be checked against a recorded session this way.
+`--transport replay --port trace.trc` plays the frames received in a trace saved by the bus monitor (`.trc` or `.asc`) in order (the lines marked as transmitted are not played) and ignores what is sent. A plan made of `expect_frame` steps can be checked against a recorded session this way.
 
 Nothing in this mode has run against a real board.

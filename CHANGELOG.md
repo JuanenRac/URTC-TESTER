@@ -4,6 +4,12 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A plan can keep a command alive:** `keepalive_ms` (20 to 200) on a `send` repeats the command while the plan waits, also while a person is asked, because the firmware drops an order for a heater, a drill or a laser that is not refreshed within 250 ms; a new `send` with the same identifier replaces it, an order of all zeros is not repeated, and the repetition is part of the log. The simulated head now drops those orders like the firmware, so a plan that forgot the keepalive fails there instead of passing on a bench that does not exist. The example plan that heats the tip uses it.
+
+- **A recorded trace is replayed only for what arrived:** the lines of a `.trc` marked as transmitted were played back as if they had come from the bus; only the received lines are played now.
+
+- **The tests and the checks have a requirements file:** `requirements-dev.txt` lists pytest and ruff, and the CI installs from it.
+
 - **Heater PID panel:** reads the state of the heater PID of the firmware (`0x1B9` / `0x1BA`: the gains in force, the state and the output of the last cycle), stores gains from 0 to 600 and starts or aborts the relay autotune, in the language of the interface (19 new keys in the eight language files). Storing gains and starting the autotune ask for the usual confirmation, aborting does not; a gain that is not a number from 0 to 600 is refused before anything is sent. The simulated head of the command line answers these frames, including an autotune that ends with new gains. 16 new tests.
 
 - **The tester without a window:** `python urtc_tester.py --headless COMMAND` runs `info`, `selftest`, `run-plan FILE` and `validate-plan FILE` with no display and no PySide6, over the same transports as the deck (`--transport serial`, `socketcan`, `python-can`) and over two new ones: `simulate`, a simulated tool head that answers the queries, reports the telemetry of its tool and can play a fault, and `replay`, which plays the frames of a recorded `.trc` or `.asc` trace. Every run writes a log of the frames and a result record that names it by its SHA-256 (the record of the deck); the exit status says passed, failed, wrong plan or could not be carried out. See `docs/HEADLESS.md`.

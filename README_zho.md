@@ -304,7 +304,7 @@ MAXTEMP、HEATING_NO_RISE 或 DROPPED_AT_TARGET）显示在板卡状态中，由
 
 ### 🤖 无窗口模式: 测试计划
 
-`python urtc_tester.py --headless 命令` 以无窗口方式运行测试器，适用于生产线、台架脚本或 CI 任务: `info`（谁在应答: 工具、固件、快速状态）、`selftest`、`run-plan 文件` 和 `validate-plan 文件`。计划是放在 `plans/` 里的简短 JSON 步骤文件（确认工具、无故障、最低固件版本、自检、数值落在范围内的帧、等待、向台架旁的人提问）。命令会写出每一帧的日志，以及一份用 SHA-256 指明该日志的结果记录，与控制台使用的记录相同。计划只发送查询，除非它写明 `"actuation": true` 且操作员加上 `--allow-actuation`；引导程序、更新、配置和擦除帧永远不会发送，凡是下达过指令的计划结束后会再次关闭所有输出。`--transport simulate` 播放模拟的工具头，`--transport replay --port 文件` 播放录制的 `.trc` 或 `.asc` 轨迹，因此无需电路板即可试跑计划。退出状态: 0 通过，1 有检查失败，2 计划或参数有误，3 测试无法进行。输出的文字为英文，与烧录器的命令行一致。详见 [`docs/HEADLESS.md`](docs/HEADLESS.md)。这些内容尚未在真实电路板上运行过。
+`python urtc_tester.py --headless 命令` 以无窗口方式运行测试器，适用于生产线、台架脚本或 CI 任务: `info`（谁在应答: 工具、固件、快速状态）、`selftest`、`run-plan 文件` 和 `validate-plan 文件`。计划是放在 `plans/` 里的简短 JSON 步骤文件（确认工具、无故障、最低固件版本、自检、数值落在范围内的帧、等待、向台架旁的人提问）。命令会写出每一帧的日志，以及一份用 SHA-256 指明该日志的结果记录，与控制台使用的记录相同。计划只发送查询，除非它写明 `"actuation": true` 且操作员加上 `--allow-actuation`；引导程序、更新、配置和擦除帧永远不会发送，固件在不刷新时会丢弃的指令（加热器、钻头、激光）可在计划等待期间重复发送（`keepalive_ms`），凡是下达过指令的计划结束后会再次关闭所有输出。`--transport simulate` 播放模拟的工具头，`--transport replay --port 文件` 播放录制的 `.trc` 或 `.asc` 轨迹，因此无需电路板即可试跑计划。退出状态: 0 通过，1 有检查失败，2 计划或参数有误，3 测试无法进行。输出的文字为英文，与烧录器的命令行一致。详见 [`docs/HEADLESS.md`](docs/HEADLESS.md)。这些内容尚未在真实电路板上运行过。
 
 ## 6. ⚠️ 已知限制
 
