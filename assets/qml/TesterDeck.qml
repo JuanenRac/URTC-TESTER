@@ -148,6 +148,7 @@ ApplicationWindow {
 
     HelpDialog {
         id: helpDialog
+        objectName: "helpDialog"
         model: testerBackend.help
         panelColor: window.panel
         borderColor: window.panelBorder
@@ -158,6 +159,7 @@ ApplicationWindow {
 
     UpdateDialog {
         id: updateDialog
+        objectName: "updateDialog"
         model: testerBackend.updates
         panelColor: window.panel
         borderColor: window.panelBorder

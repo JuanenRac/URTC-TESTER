@@ -574,6 +574,14 @@ Este projeto faz parte do ecossistema de robótica HYDRA-UMC do mesmo autor (Jua
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — coordenador de incidentes de manutenção: um papel de edge de baixos privilégios recolhe um instantâneo sanitizado de inventário/saúde, um papel de control-plane apresenta-o em modo só de leitura e pede a um fornecedor de IA que sugira um diagnóstico - nunca aplica um patch nem implementa nada.
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — anfitrião de desenvolvimento reproduzível (Raspberry Pi 5 / CM5) que armazena o código-fonte do ecossistema e executa tarefas de compilação/teste limitadas sob uma fila durável; um papel de desenvolvimento dedicado, explicitamente não um CM5 operacional.
 
+## 🖼️ A janela, passo a passo
+
+Estas imagens são a janela real, desenhada sem ecrã tal como abre (nada ligado, nada enviado). O guia percorre o painel, a janela de Ajuda e a de atualização.
+
+![A janela, passo a passo](docs/screenshots/tester-deck.png)
+
+[Guia com imagens](docs/WINDOW_GUIDE.md)
+
 <!-- urtc-section:updates -->
 ## 🔄 Como se atualiza
 
