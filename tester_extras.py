@@ -3,7 +3,7 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
-"""The logic behind four panels of the deck that needs no Qt, so it can be tested without a window.
+"""The logic behind five panels of the deck that needs no Qt, so it can be tested without a window.
 
 * the fault recorder (the "black box" of the board): ask for the 22 chunks of the record, check it and save it as CSV and JSON, and
   decide when to do it automatically (once for each rising edge of the error flag the board reports);
@@ -11,7 +11,8 @@
   (type and serial number) of each head in the slots;
 * the thermal view: a thermal image in false colour as a PNG that the deck can show, made from the chunks of a board or, clearly
   marked as simulated, from a synthetic image;
-* the optional firmware features (0x1AE / 0x1AF): the mask, its names and the frames.
+* the optional firmware features (0x1AE / 0x1AF): the mask, its names and the frames;
+* the heater PID (0x1B9 / 0x1BA): the gains, the autotune orders and the state the board reports.
 
 The shared pieces (urtc_can.blackbox, rack_sim, rack_status, thermal_view, tools_catalog) are copies of URTC-COMMON.
 """
@@ -114,6 +115,45 @@ def decode_features(data: bytes) -> dict | None:
 def features_text(mask: int) -> str:
     names = [name for bit, name in FEATURE_NAMES if mask & bit]
     return ", ".join(names) if names else "none"
+
+
+# ---- heater PID ---------------------------------------------------------------------------------------------------------------------
+CAN_ID_PID_CONFIG = tester_config.CAN_ID_PID_CONFIG
+CAN_ID_PID_STATE = tester_config.CAN_ID_PID_STATE
+PID_SET_GAINS, PID_AUTOTUNE_START, PID_AUTOTUNE_ABORT, PID_QUERY = 0, 1, 2, 3
+PID_STATE_NAMES = {0: "OFF", 1: "RUNNING", 2: "AUTOTUNING", 3: "AUTOTUNE_DONE", 4: "AUTOTUNE_FAILED"}
+# the language key of each state name
+PID_STATE_KEYS = {name: "VAL_PID_STATE_" + name for name in PID_STATE_NAMES.values()}
+PID_GAIN_MAX = 600.0  # the firmware refuses a gain above 600.00 (it keeps them times 100 in 16 bits and limits them to 60000)
+
+
+def pid_gain_x100(value: object, name: str = "gain") -> int:
+    """A gain as the board keeps it: times 100, from 0 to 600.00. Text, a number, a NaN or a negative value is not guessed at."""
+    if isinstance(value, bool):
+        raise ValueError(f"{name} must be a number")
+    try:
+        number = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        raise ValueError(f"{name} must be a number") from None
+    if number != number or not 0.0 <= number <= PID_GAIN_MAX:
+        raise ValueError(f"{name} must be a number from 0 to {PID_GAIN_MAX:g}")
+    return int(round(number * 100.0))
+
+
+def pid_frame(action: int, kp: object = 0.0, ki: object = 0.0, kd: object = 0.0) -> tuple[int, bytes]:
+    """The 0x1B9 frame: store the gains, start or abort the autotune, or ask for the state. The gains are read only for the first."""
+    if action not in (PID_SET_GAINS, PID_AUTOTUNE_START, PID_AUTOTUNE_ABORT, PID_QUERY):
+        raise ValueError("unknown PID action")
+    gains = (pid_gain_x100(kp, "Kp"), pid_gain_x100(ki, "Ki"), pid_gain_x100(kd, "Kd")) if action == PID_SET_GAINS else (0, 0, 0)
+    return CAN_ID_PID_CONFIG, struct.pack(">HHHB", *gains, action)
+
+
+def decode_pid_state(data: bytes) -> dict | None:
+    """The 0x1BA answer: the gains in force, the state and the heater output of the last control cycle; None when it is not 8 bytes."""
+    if len(data) != 8:
+        return None
+    kp, ki, kd, state, duty = struct.unpack(">HHHBB", bytes(data))
+    return {"kp": kp / 100.0, "ki": ki / 100.0, "kd": kd / 100.0, "state": state, "state_name": PID_STATE_NAMES.get(state, f"CODE_{state}"), "duty_percent": duty}
 
 
 # ---- rack bench ---------------------------------------------------------------------------------------------------------------------

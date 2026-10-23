@@ -213,3 +213,59 @@ def test_the_bridge_exposes_the_new_panels(monkeypatch):
     assert bridge.toolProfiles[22]["kind"] == "telemetry" and len(bridge.toolProfiles) == 25
     bridge.readBlackBox()          # not connected: nothing is sent and nothing breaks
     bridge.writeFeatures(99)
+
+
+# ---- heater PID ---------------------------------------------------------------------------------------------------------------------
+def test_the_pid_frames_carry_the_gains_times_100_and_the_action():
+    assert extras.pid_frame(extras.PID_SET_GAINS, 8, "0.2", 1.5) == (0x1B9, bytes.fromhex("03200014009600"))
+    assert extras.pid_frame(extras.PID_AUTOTUNE_START) == (0x1B9, bytes.fromhex("00000000000001"))
+    assert extras.pid_frame(extras.PID_AUTOTUNE_ABORT, 9, 9, 9) == (0x1B9, bytes.fromhex("00000000000002"))  # gains are read only for a store
+    assert extras.pid_frame(extras.PID_QUERY)[1][-1] == 3
+    assert extras.pid_frame(extras.PID_SET_GAINS, 600, 600, 600)[1].hex().upper().startswith("EA60EA60EA60")
+
+
+@pytest.mark.parametrize("bad", ["x", "", None, float("nan"), float("inf"), -0.01, 600.01, True, [1]])
+def test_a_gain_that_is_not_a_number_from_0_to_600_is_refused(bad):
+    with pytest.raises(ValueError):
+        extras.pid_frame(extras.PID_SET_GAINS, bad, 0, 0)
+
+
+def test_an_unknown_pid_action_is_refused():
+    with pytest.raises(ValueError):
+        extras.pid_frame(7)
+
+
+def test_the_pid_answer_is_decoded_and_a_wrong_length_is_not_guessed():
+    state = extras.decode_pid_state(bytes.fromhex("0320001400960125"))
+    assert state == {"kp": 8.0, "ki": 0.2, "kd": 1.5, "state": 1, "state_name": "RUNNING", "duty_percent": 37}
+    assert extras.decode_pid_state(bytes.fromhex("03200014009601"))is None
+    assert extras.decode_pid_state(bytes.fromhex("0320001400960925"))["state_name"] == "CODE_9"
+
+
+def test_the_pid_panel_of_the_bridge_blocks_when_not_active_and_shows_the_state(monkeypatch):
+    pytest.importorskip("PySide6")
+    import qt_tester  # noqa: PLC0415
+    monkeypatch.setattr(qt_tester, "save_config", lambda updates: True)
+    bridge = qt_tester.TesterQtBridge()
+    logged = []
+    bridge._log = logged.append
+    bridge.writePidGains("8", "0.2", "1.5")      # not connected: nothing is sent
+    bridge.startPidAutotune()
+    bridge.queryPid()
+    assert logged == ["HEATER_PID_BLOCKED not connected or not in active-check mode"] * 2
+    bridge._on_query_result("pid", extras.decode_pid_state(bytes.fromhex("0320001400960225")))
+    assert "Kp 8" in bridge.pidText and "autotuning" in bridge.pidText and "37 %" in bridge.pidText
+    bridge._on_query_result("pid", None)
+    assert "No answer" in bridge.pidText
+
+
+def test_every_pid_key_exists_in_the_eight_languages():
+    from tester_config import load_language
+    keys = ["QT_PID_PANEL", "BTN_QUERY_PID", "BTN_SET_PID_GAINS", "BTN_PID_AUTOTUNE", "BTN_PID_ABORT", "LBL_PID_TEXT", "LBL_PID_NO_RESPONSE", "HELP_PID_AUTOTUNE",
+            "QTLOG_HEATER_PID", "QTLOG_HEATER_PID_BLOCKED", "QTLOGD_PID_GAINS", *extras.PID_STATE_KEYS.values()]
+    english = load_language("english")
+    for language in ("english", "spanish", "german", "french", "italian", "japanese", "chinese", "portuguese"):
+        table = load_language(language)
+        assert [k for k in keys if not table.get(k)] == [], language
+        assert set(table["LBL_PID_TEXT"].split("{")[1:]) and all(f"{{{name}}}" in table["LBL_PID_TEXT"] for name in ("kp", "ki", "kd", "state", "duty")), language
+    assert english["QT_PID_PANEL"] == "Heater PID"

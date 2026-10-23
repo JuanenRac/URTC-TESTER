@@ -29,6 +29,7 @@ from urtc_can import protocol as wire
 
 Frame = tuple[int, bytes]
 
+CAN_ID_PID_STATE = wire.CAN_ID_PID_STATE_RESP
 FAULTS = (None, "system", "can", "thermal")
 AMBIENT_C = 25.0
 HEAT_STEP_C = 40.0  # degrees the simulated tip or nozzle gains per telemetry frame
@@ -50,6 +51,8 @@ class SimulatedBoard:
         self.sent: list[Frame] = []
         self.outputs: dict[str, int] = {}
         self.temperature = AMBIENT_C
+        self.pid = {"kp": 800, "ki": 20, "kd": 150, "state": 1}  # the gains times 100 and the 0x1BA state, as the heater PID reports them
+        self._tune_frames = 0
         self._queue: list[Frame] = []
         self.opened = False
 
@@ -77,6 +80,10 @@ class SimulatedBoard:
                                 + struct.pack(">H", major) + bytes([minor])))
             if patch is not None:
                 self._queue.append((wire.CAN_ID_VERSION_PATCH_RESPONSE, bytes([wire.RESPONDER_APPLICATION, patch, 0])))
+        elif can_id == wire.CAN_ID_PID_CONFIG and len(data) == 7:
+            self._pid_order(data)
+        elif can_id == CAN_ID_PID_STATE:
+            self._queue.append(self._pid_answer())
         elif can_id == wire.CAN_ID_SOLDER_SETPOINT and self.tool_id == 0 and len(data) == 2:
             self.outputs["solder_setpoint_c"] = int.from_bytes(data, "big")
             self._queue.append(self._telemetry())
@@ -97,7 +104,25 @@ class SimulatedBoard:
             return self._queue.pop(0)
         if self.silent:
             return None
+        if self.pid["state"] == 2:  # an autotune takes a few control cycles
+            self._tune_frames += 1
+            if self._tune_frames >= 5:
+                self.pid.update(kp=1250, ki=45, kd=310, state=3)
         return self._telemetry()  # like the firmware, the tool reports by itself
+
+    def _pid_order(self, data: bytes) -> None:
+        kp, ki, kd, action = struct.unpack(">HHHB", data)
+        if action == 0 and max(kp, ki, kd) <= 60000:
+            self.pid.update(kp=kp, ki=ki, kd=kd, state=1)
+        elif action == 1 and self.tool_id == 0 and self.outputs.get("solder_setpoint_c", 0) >= 100:
+            self.pid["state"], self._tune_frames = 2, 0
+        elif action == 2 and self.pid["state"] == 2:
+            self.pid["state"] = 1
+        self._queue.append(self._pid_answer())
+
+    def _pid_answer(self) -> Frame:
+        duty = 37 if self.pid["state"] in (1, 2) and self._target_c() else 0
+        return CAN_ID_PID_STATE, struct.pack(">HHHBB", self.pid["kp"], self.pid["ki"], self.pid["kd"], self.pid["state"], duty)
 
     # -- what the board says --------------------------------------------------------------------------------------------
     def _active_tool_answer(self) -> Frame:

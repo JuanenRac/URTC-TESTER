@@ -179,6 +179,7 @@ _LOG_DETAILS = {
     "extruder steps/temperature must be integers in range": "QTLOGD_PRINTER_STEPS",
     "hotend fan power must be an integer in range": "QTLOGD_PRINTER_FAN",
     "no response": "QTLOGD_NO_RESPONSE",
+    "gains must be numbers from 0 to 600": "QTLOGD_PID_GAINS",
 }
 
 
@@ -295,6 +296,8 @@ CAN_ID_BLACKBOX_QUERY  = protocol.CAN_ID_BLACKBOX_QUERY      # Asks for one chun
 CAN_ID_BLACKBOX_CHUNK  = protocol.CAN_ID_BLACKBOX_CHUNK      # Four frames of eight bytes make one chunk
 CAN_ID_SET_FEATURES  = protocol.CAN_ID_SET_FEATURES          # Switches the optional firmware functions (persistent)
 CAN_ID_FEATURES_RESP  = protocol.CAN_ID_FEATURES_RESP        # Answers CAN_ID_SET_FEATURES, or an empty query
+CAN_ID_PID_CONFIG     = protocol.CAN_ID_PID_CONFIG           # Heater PID: store the gains, start or abort the autotune, ask for the state
+CAN_ID_PID_STATE      = protocol.CAN_ID_PID_STATE_RESP       # Gains in force, state and heater output; answers CAN_ID_PID_CONFIG or an empty query
 CAN_ID_ERASE_FRAM       = protocol.CAN_ID_ERASE_FRAM  # Magic-payload erase - see ERASE_FRAM_MAGIC below
 CAN_ID_EXPANSION_TYPE_RESP = protocol.CAN_ID_EXPANSION_TYPE_RESP  # Query (empty payload), or the response - see EXPANSION.TXT
 CAN_ID_FREE_TOOL_CONFIG_RESP = protocol.CAN_ID_FREE_TOOL_CONFIG_RESP  # Query (empty payload), or the response - see EEPROM.TXT section 5

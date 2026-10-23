@@ -209,3 +209,46 @@ def test_the_program_entry_point_starts_no_window_with_headless(tmp_path):
     result = subprocess.run([sys.executable, str(ROOT / "urtc_tester.py"), "--headless", "info", "--transport", "simulate", "--out", str(tmp_path)],
                             capture_output=True, text=True, timeout=60, cwd=ROOT)
     assert result.returncode == 0 and "query_version: PASS" in result.stdout, result.stdout + result.stderr
+
+
+# ---- the heater PID of the simulated head -------------------------------------------------------------------------------------------
+def pid_answer(board):
+    can_id, data = board.read_frame()
+    assert can_id == wire.CAN_ID_PID_STATE_RESP
+    return decode_pid(data)
+
+
+def decode_pid(data):
+    import tester_extras as extras
+    return extras.decode_pid_state(data)
+
+
+def test_the_simulated_pid_stores_gains_and_runs_an_autotune_only_with_a_set_point():
+    import tester_extras as extras
+    board = SimulatedBoard(0)
+    board.send_frame(*extras.pid_frame(extras.PID_QUERY))
+    assert pid_answer(board)["state_name"] == "RUNNING"
+    board.send_frame(*extras.pid_frame(extras.PID_SET_GAINS, 12.5, 0.45, 3.1))
+    state = pid_answer(board)
+    assert (state["kp"], state["ki"], state["kd"]) == (12.5, 0.45, 3.1)
+    board.send_frame(*extras.pid_frame(extras.PID_AUTOTUNE_START))        # no set-point yet: the order is refused, as the firmware does
+    assert pid_answer(board)["state_name"] == "RUNNING"
+    board.send_frame(wire.CAN_ID_SOLDER_SETPOINT, (200).to_bytes(2, "big"))
+    board.read_frame()
+    board.send_frame(*extras.pid_frame(extras.PID_AUTOTUNE_START))
+    assert pid_answer(board)["state_name"] == "AUTOTUNING"
+    for _ in range(8):
+        board.read_frame()
+    board.send_frame(*extras.pid_frame(extras.PID_QUERY))
+    done = pid_answer(board)
+    assert done["state_name"] == "AUTOTUNE_DONE" and (done["kp"], done["ki"], done["kd"]) == (12.5, 0.45, 3.1)  # the gains the simulated autotune found
+    board.send_frame(*extras.pid_frame(extras.PID_AUTOTUNE_START))
+    pid_answer(board)
+    board.send_frame(*extras.pid_frame(extras.PID_AUTOTUNE_ABORT))
+    assert pid_answer(board)["state_name"] == "RUNNING"
+
+
+def test_a_plan_can_read_the_pid_state():
+    plan = {"format": 1, "name": "pid", "steps": [{"do": "send", "id": "0x1BA", "data": ""},
+                                                   {"do": "expect_frame", "id": "0x1BA", "within_ms": 200, "length": 8}]}
+    assert tp.run_plan(plan, SimulatedBoard(0)).outcome == tp.PASS

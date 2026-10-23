@@ -212,6 +212,7 @@ class TesterQtBridge(QObject):
             "spi_response": "",
             "black_box": "",
             "features": "",
+            "pid": "",
             "thermal_view": "",
             "rack_bench": "",
         }
@@ -1188,6 +1189,42 @@ class TesterQtBridge(QObject):
         self._run_query("features", frame, extras.CAN_ID_FEATURES_RESP, extras.decode_features)
 
     @Property(str, notify=changed)
+    def pidText(self) -> str:
+        return self._query_texts["pid"]
+
+    @Slot()
+    def queryPid(self) -> None:
+        if not self.canUseUtilityPanels:
+            return
+        self._run_query("pid", (extras.CAN_ID_PID_STATE, b""), extras.CAN_ID_PID_STATE, extras.decode_pid_state)
+
+    @Slot(str, str, str)
+    def writePidGains(self, kp: str, ki: str, kd: str) -> None:
+        """QML asks for the usual confirmation first: the gains are stored by the board and used by the heater from then on."""
+        self._send_pid(extras.PID_SET_GAINS, kp, ki, kd)
+
+    @Slot()
+    def startPidAutotune(self) -> None:
+        """QML asks for the usual confirmation first: the board heats the tip around the current set-point of the soldering iron."""
+        self._send_pid(extras.PID_AUTOTUNE_START)
+
+    @Slot()
+    def abortPidAutotune(self) -> None:
+        """Not behind a confirmation: stopping must always be one press away."""
+        self._send_pid(extras.PID_AUTOTUNE_ABORT)
+
+    def _send_pid(self, action: int, kp: str = "0", ki: str = "0", kd: str = "0") -> None:
+        if not self.canUseUtilityPanels:
+            self._log("HEATER_PID_BLOCKED not connected or not in active-check mode")
+            return
+        try:
+            frame = extras.pid_frame(action, kp, ki, kd)
+        except ValueError:
+            self._log("HEATER_PID_BLOCKED gains must be numbers from 0 to 600")
+            return
+        self._run_query("pid", frame, extras.CAN_ID_PID_STATE, extras.decode_pid_state)
+
+    @Property(str, notify=changed)
     def rackBenchText(self) -> str:
         return self._query_texts["rack_bench"]
 
@@ -1686,6 +1723,14 @@ class TesterQtBridge(QObject):
                 text = _("LBL_FEATURES_TEXT", stored=extras.features_text(result["stored"]), running=extras.features_text(result["running"]),
                          supported=extras.features_text(result["supported"]))
             self._log(f"FIRMWARE_FEATURES {result}")
+        elif key == "pid":
+            if result is None:
+                text = _("LBL_PID_NO_RESPONSE")
+            else:
+                label_key = extras.PID_STATE_KEYS.get(result["state_name"])
+                state = _(label_key) if label_key else result["state_name"]
+                text = _("LBL_PID_TEXT", kp=f"{result['kp']:g}", ki=f"{result['ki']:g}", kd=f"{result['kd']:g}", state=state, duty=result["duty_percent"])
+            self._log(f"HEATER_PID {result}")
         elif key == "thermal_view":
             if result is not None and result[0] == "ok":
                 self._thermal_view_source = extras.thermal_data_url(result[1])

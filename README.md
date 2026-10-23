@@ -473,6 +473,8 @@ firmware-flash authority of its own - is documented in
 
 **Fault recorder, optional functions, rack bench and thermal view (new, checked with fakes only):** the deck reads the black box of the board (`0x1A8` / `0x1A9`) and saves it as CSV and JSON, automatically once for each error the board reports when that option is on; it switches the optional firmware functions (`0x1AE` / `0x1AF`, off by default, acting after the next power-up); it has a simulated tool rack with the serial protocol of URTC-SMART-RACK, the identity of each head (type and serial number) and an export of a status page; and it shows the thermal inspection image in false colour (a simulated image says so). The tool names and kinds now come from the shared tool profiles of URTC-COMMON. None of it has been used with a real board.
 
+**Heater PID (new, checked with fakes only):** the deck reads the state of the heater PID of the firmware (`0x1B9` / `0x1BA`: the gains in force, the state and the output of the last control cycle), stores gains (0 to 600) and starts or aborts the relay autotune, which heats the tip around the current set-point of the soldering iron (100 to 445 C) and stores the gains it finds. Storing gains and starting the autotune ask for the usual confirmation; aborting does not. The simulated head of the command line (`--transport simulate`) answers these frames too. The function must be switched on first among the optional functions; none of it has been used with a real board.
+
 ## 🔗 Related Projects
 
 This project is part of the HYDRA-UMC robotics ecosystem by the same author (JuanenRac / Electro Hobby 3D). Worth knowing about, since a request might actually be about one of these rather than this repository.

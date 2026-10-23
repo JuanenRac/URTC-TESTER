@@ -1072,6 +1072,44 @@ ApplicationWindow {
                 }
                 Text { text: testerBackend.featuresText; visible: testerBackend.featuresText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
 
+                Text { text: testerBackend.uiText("QT_PID_PANEL"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 12 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    Text { text: testerBackend.uiText("LBL_PID_KP"); color: muted; font.pixelSize: 10 }
+                    TextField { id: pidKp; text: "8"; color: textPrimary; Layout.preferredWidth: 58; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    Text { text: testerBackend.uiText("LBL_PID_KI"); color: muted; font.pixelSize: 10 }
+                    TextField { id: pidKi; text: "0.2"; color: textPrimary; Layout.preferredWidth: 58; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    Text { text: testerBackend.uiText("LBL_PID_KD"); color: muted; font.pixelSize: 10 }
+                    TextField { id: pidKd; text: "1.5"; color: textPrimary; Layout.preferredWidth: 58; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton { text: testerBackend.uiText("BTN_QUERY_PID"); accent: "#24465e"; Layout.preferredWidth: 190; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.queryPid() }
+                    GameButton {
+                        text: testerBackend.uiText("BTN_SET_PID_GAINS")
+                        accent: "#b86a35"
+                        Layout.preferredWidth: 190
+                        enabled: testerBackend.canUseUtilityPanels
+                        onClicked: window.requestUtilityAction(function() { testerBackend.writePidGains(pidKp.text, pidKi.text, pidKd.text) })
+                    }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton {
+                        text: testerBackend.uiText("BTN_PID_AUTOTUNE")
+                        accent: "#b86a35"
+                        Layout.preferredWidth: 190
+                        enabled: testerBackend.canUseUtilityPanels
+                        onClicked: window.requestUtilityAction(function() { testerBackend.startPidAutotune() })
+                    }
+                    GameButton { text: testerBackend.uiText("BTN_PID_ABORT"); accent: "#8f2f3a"; Layout.preferredWidth: 190; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.abortPidAutotune() }
+                }
+                Text { text: testerBackend.uiText("HELP_PID_AUTOTUNE"); color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                Text { text: testerBackend.pidText; visible: testerBackend.pidText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+
                 Text { text: testerBackend.uiText("QT_RACK_BENCH"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 12 }
                 RowLayout {
                     Layout.fillWidth: true
