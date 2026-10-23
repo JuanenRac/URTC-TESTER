@@ -428,7 +428,7 @@ qualquer autoridade própria de gravação de firmware - está documentado em
 ├── build-test.bat              Non-versioning build/compile check
 ├── build-test.sh                Same, for Linux
 ├── bump.py                     Comando explícito para subir a versão (compilar nunca a sobe)
-├── bump_version.py             Odometer-style version bump, run by the build scripts
+├── bump_version.py             Odometer-style version bump, called by bump.py
 ├── bump_manifest_version.py    Syncs urtc.project.json's version to the native one (--sync)
 ├── URTC_Tester.spec            PyInstaller spec used by both build scripts
 ├── assets/

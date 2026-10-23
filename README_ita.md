@@ -93,13 +93,7 @@ script di pacchettizzazione stessi, poiché si applica identicamente qui.
 **Versionamento:** `TESTER_VERSION` (in `tester_config.py`, mostrato
 nella barra del titolo, nella finestra Informazioni, nei log di sessione
 e nei pacchetti di debug) segue lo schema `MAGGIORE.MINORE.PATCH`.
-Entrambi gli script di build lo incrementano automaticamente subito prima
-di ogni build reale tramite `bump_version.py`, con regola "odometro" in
-base 10: PATCH +1, e se supera 9 si azzera e MINORE sale di 1 (es.
-`0.1.9` → `0.2.0`). Eseguire dal codice sorgente (`python urtc_tester.py`)
-non lo tocca mai - solo un'esecuzione reale di
-`build_exe.bat`/`build_exe.sh` lo fa. MAGGIORE non sale mai
-automaticamente, solo a mano. Vedi `CHANGELOG.md` per lo storico delle
+Lo aumenta solo il passo esplicito `python bump.py` (tramite `bump_version.py`), in stile «odometro» in base 10: PATCH +1, e se supera 9 si azzera e MINORE sale di 1 (es. `0.1.9` → `0.2.0`). Eseguire dal codice sorgente (`python urtc_tester.py`) e compilare (`build_exe.bat`/`build_exe.sh`) non lo tocca mai. MAGGIORE non sale mai automaticamente, solo a mano. Vedi `CHANGELOG.md` per lo storico delle
 versioni.
 
 ### Console visiva di controllo

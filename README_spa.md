@@ -92,13 +92,7 @@ empaquetado en sí, ya que se aplica idénticamente aquí.
 
 **Versionado:** `TESTER_VERSION` (en `tester_config.py`, mostrado en la
 barra de título, el diálogo Acerca de, los logs de sesión y los paquetes
-de depuración) sigue el esquema `MAYOR.MENOR.PARCHE`. Ambos scripts de
-build lo incrementan automáticamente justo antes de cada build real vía
-`bump_version.py`, con regla de "cuentakilómetros" en base 10: PARCHE +1,
-y si supera 9 se resetea a 0 y MENOR sube 1 (ej. `0.1.9` → `0.2.0`).
-Ejecutar desde el código fuente (`python urtc_tester.py`) nunca lo toca -
-solo lo hace una ejecución real de `build_exe.bat`/`build_exe.sh`. MAYOR
-nunca sube automáticamente, solo a mano. Ver `CHANGELOG.md` para el
+de depuración) sigue el esquema `MAYOR.MENOR.PARCHE`. Solo lo sube el paso explícito `python bump.py` (mediante `bump_version.py`), al estilo «cuentakilómetros» en base 10: PARCHE +1, y si supera 9 se resetea a 0 y MENOR sube 1 (ej. `0.1.9` → `0.2.0`). Ejecutar desde el código fuente (`python urtc_tester.py`) y compilar (`build_exe.bat`/`build_exe.sh`) nunca lo tocan. MAYOR nunca sube automáticamente, solo a mano. Ver `CHANGELOG.md` para el
 historial de versiones.
 
 ### Panel visual de control
