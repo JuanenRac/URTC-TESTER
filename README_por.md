@@ -353,6 +353,10 @@ guarda um `.zip` com o registo atual apresentado no ecrã mais diagnósticos bá
 (SO, versão do Python, transporte/porta/bitrate atuais, ferramenta
 detetada) para entregar a quem estiver a depurar um problema numa cabeça de ferramenta.
 
+### 🤖 Sem janela: planos de teste
+
+`python urtc_tester.py --headless COMANDO` executa o tester sem janela, para uma linha de produção, um script de bancada ou uma tarefa de CI: `info` (quem responde: ferramenta, firmware, estado rápido), `selftest`, `run-plan FICHEIRO` e `validate-plan FICHEIRO`. Um plano é um pequeno ficheiro JSON de passos guardado em `plans/` (esperar uma ferramenta, sem falhas, uma versão mínima de firmware, o autoteste, uma trama cujo valor esteja num intervalo, uma espera, uma pergunta à pessoa na bancada). O comando escreve um registo de cada trama e um registo de resultado que nomeia o registo pelo seu SHA-256, o mesmo do painel. Um plano só envia consultas, a menos que diga `"actuation": true` e o operador acrescente `--allow-actuation`; as tramas do bootloader, de atualização, de configuração e de apagamento nunca são enviadas, e depois de um plano que ordenou algo todas as saídas são desligadas de novo. `--transport simulate` reproduz uma cabeça simulada e `--transport replay --port FICHEIRO` um traço `.trc` ou `.asc` gravado, para que um plano possa ser experimentado sem placa. Código de saída: 0 passou, 1 uma verificação falhou, 2 o plano ou os argumentos estão errados, 3 o teste não pôde ser realizado. O texto que imprime está em inglês, como a linha de comandos do flasher. Pormenores em [`docs/HEADLESS.md`](docs/HEADLESS.md). Nada disto foi executado contra uma placa real.
+
 ## 6. ⚠️ Limitações conhecidas
 
 O contrato de evidência desta ferramenta - o que conta como aprovado/reprovado/desconhecido, porque
@@ -395,6 +399,10 @@ qualquer autoridade própria de gravação de firmware - está documentado em
 ├── tester_bus_monitor.py       Background CAN read thread (CANBusMonitor)
 ├── tester_autodetect.py        Pesquisa da velocidade de um adaptador SLCAN
 ├── tester_selftest.py          Passos e execução do autoteste (sem código de janela)
+├── tester_plan.py              Planos de teste: validação, executor e o «tudo desligado» posterior
+├── tester_cli.py               O tester sem janela (--headless): info, selftest, run-plan
+├── tester_simulator.py         Cabeça de ferramenta simulada e leitor de traços gravados
+├── plans/                      Planos de teste de exemplo (JSON)
 ├── tester_telemetry.py         Valores em direto de cada ferramenta e a série registada
 ├── tester_trace_export.py      Escrita das exportações de tramas .trc / .asc
 ├── urtc_ui/                    Auxiliares de interface partilhados (cópia do URTC-COMMON)

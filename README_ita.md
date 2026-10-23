@@ -387,6 +387,10 @@ versione Python, trasporto/porta/bitrate attuale, strumento rilevato)
 per consegnare a chi sta facendo debug di un problema di testa
 strumento.
 
+### 🤖 Senza finestra: piani di prova
+
+`python urtc_tester.py --headless COMANDO` esegue il tester senza finestra, per una linea di produzione, uno script di banco o un lavoro di CI: `info` (chi risponde: utensile, firmware, stato rapido), `selftest`, `run-plan FILE` e `validate-plan FILE`. Un piano è un breve file JSON di passi nella cartella `plans/` (attendere un utensile, nessun guasto, una versione minima del firmware, l'autotest, un frame il cui valore sta in un intervallo, un'attesa, una domanda alla persona al banco). Il comando scrive un registro di ogni frame e un record di risultato che nomina il registro tramite il suo SHA-256, lo stesso record del pannello. Un piano invia solo interrogazioni a meno che dica `"actuation": true` e l'operatore aggiunga `--allow-actuation`; i frame del bootloader, di aggiornamento, di configurazione e di cancellazione non vengono mai inviati, e dopo un piano che ha comandato qualcosa tutte le uscite vengono spente di nuovo. `--transport simulate` riproduce una testa utensile simulata e `--transport replay --port FILE` una traccia `.trc` o `.asc` registrata, così un piano si può provare senza scheda. Codice di uscita: 0 superato, 1 una verifica è fallita, 2 il piano o gli argomenti sono errati, 3 la prova non ha potuto essere eseguita. Il testo stampato è in inglese, come la riga di comando del flasher. Dettagli in [`docs/HEADLESS.md`](docs/HEADLESS.md). Nulla di tutto ciò è stato eseguito su una scheda reale.
+
 ## 6. ⚠️ Limitazioni note
 
 Il contratto di evidenza di questo strumento - cosa conta come
@@ -437,6 +441,10 @@ firmware - è documentato in
 ├── tester_bus_monitor.py       Thread di lettura CAN in background (CANBusMonitor)
 ├── tester_autodetect.py        Ricerca della velocità di un adattatore SLCAN
 ├── tester_selftest.py          Passi ed esecuzione dell'autotest (senza codice di finestra)
+├── tester_plan.py              Piani di prova: validazione, esecuzione e il «tutto spento» che segue
+├── tester_cli.py               Il tester senza finestra (--headless): info, selftest, run-plan
+├── tester_simulator.py         Testa utensile simulata e lettore di tracce registrate
+├── plans/                      Piani di prova di esempio (JSON)
 ├── tester_telemetry.py         Valori in tempo reale di ogni strumento e serie registrata
 ├── tester_trace_export.py      Scrittura delle esportazioni di trame .trc / .asc
 ├── urtc_ui/                    Utilità di interfaccia condivise (copia di URTC-COMMON)

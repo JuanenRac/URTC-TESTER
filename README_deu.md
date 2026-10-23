@@ -400,6 +400,10 @@ mit dem aktuellen Bildschirmprotokoll plus grundlegender Systemdiagnose
 erkanntes Werkzeug) zur Weitergabe an denjenigen, der ein
 Werkzeugkopfproblem debuggt.
 
+### 🤖 Ohne Fenster: Prüfpläne
+
+`python urtc_tester.py --headless BEFEHL` führt den Tester ohne Fenster aus, für eine Fertigungslinie, ein Prüfstandsskript oder einen CI-Job: `info` (wer antwortet: Werkzeug, Firmware, Schnellstatus), `selftest`, `run-plan DATEI` und `validate-plan DATEI`. Ein Plan ist eine kurze JSON-Datei mit Schritten in `plans/` (ein Werkzeug erwarten, keine Fehler, eine Mindest-Firmwareversion, der Selbsttest, ein Frame, dessen Wert in einem Bereich liegt, eine Wartezeit, eine Frage an die Person am Prüfplatz). Der Befehl schreibt ein Protokoll jedes Frames und einen Ergebnisdatensatz, der das Protokoll über seinen SHA-256 benennt, derselbe Datensatz wie im Deck. Ein Plan sendet nur Abfragen, es sei denn, er sagt `"actuation": true` und die Bedienperson fügt `--allow-actuation` hinzu; Bootloader-, Update-, Konfigurations- und Löschframes werden nie gesendet, und nach einem Plan, der etwas angesteuert hat, werden alle Ausgänge wieder abgeschaltet. `--transport simulate` spielt einen simulierten Werkzeugkopf ab und `--transport replay --port DATEI` einen aufgezeichneten `.trc`- oder `.asc`-Mitschnitt, sodass ein Plan ohne Platine erprobt werden kann. Exit-Status: 0 bestanden, 1 eine Prüfung ist fehlgeschlagen, 2 Plan oder Argumente sind falsch, 3 die Prüfung konnte nicht durchgeführt werden. Die Ausgabe ist englisch, wie die Kommandozeile des Flashers. Einzelheiten in [`docs/HEADLESS.md`](docs/HEADLESS.md). Nichts davon ist gegen eine echte Platine gelaufen.
+
 ## 6. ⚠️ Bekannte Einschränkungen
 
 Der Evidenz-Vertrag dieses Tools - was als pass/fail/unknown zählt,
@@ -452,6 +456,10 @@ dokumentiert.
 │                                (CANBusMonitor)
 ├── tester_autodetect.py        Bitratensuche für einen SLCAN-Adapter
 ├── tester_selftest.py          Selbsttest-Schritte und -Ablauf (ohne Fenstercode)
+├── tester_plan.py              Prüfpläne: Validierung, Ablauf und das anschließende „Alles aus“
+├── tester_cli.py               Der Tester ohne Fenster (--headless): info, selftest, run-plan
+├── tester_simulator.py         Simulierter Werkzeugkopf und Player für aufgezeichnete Mitschnitte
+├── plans/                      Beispiel-Prüfpläne (JSON)
 ├── tester_telemetry.py         Live-Werte jedes Werkzeugs und die aufgezeichnete Reihe
 ├── tester_trace_export.py      Schreiber der .trc-/.asc-Frame-Exporte
 ├── urtc_ui/                    Gemeinsame Oberflächen-Hilfen (Kopie aus URTC-COMMON)

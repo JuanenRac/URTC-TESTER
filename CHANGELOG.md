@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The tester without a window:** `python urtc_tester.py --headless COMMAND` runs `info`, `selftest`, `run-plan FILE` and `validate-plan FILE` with no display and no PySide6, over the same transports as the deck (`--transport serial`, `socketcan`, `python-can`) and over two new ones: `simulate`, a simulated tool head that answers the queries, reports the telemetry of its tool and can play a fault, and `replay`, which plays the frames of a recorded `.trc` or `.asc` trace. Every run writes a log of the frames and a result record that names it by its SHA-256 (the record of the deck); the exit status says passed, failed, wrong plan or could not be carried out. See `docs/HEADLESS.md`.
+
+- **Test plans:** a plan is a JSON file of steps (expect a tool, no faults, a minimum firmware version, the self-test, a frame whose value lies in a range, a wait, a question for the person at the bench); `plans/` has two examples. A plan sends only queries unless it says `"actuation": true` and the operator passes `--allow-actuation`; the boot-loader, update, configuration, slave-link and erase frames are never sent and a plan that has them is refused before the bus is opened; every output is switched off again after a plan that commanded something, also when it ends early. A step that cannot be carried out ends the plan as an error, never as a pass. 86 new tests.
+
 ## [0.4.0] - Fault recorder, optional functions, rack bench and thermal view
 
 - **Fault recorder**: reads the black box (`0x1A8` / `0x1A9`), checks it and saves it as CSV and JSON in the logs folder, and reads it by itself once for each error the board reports when the option is on (it is on by default and can be switched off in the deck; it needs the active mode).

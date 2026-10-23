@@ -24,12 +24,18 @@ assets/qml/TesterDeck.qml).  The rest lives in its own module:
 tester_config.py (config/language/protocol constants), tester_transports.py
 (SLCAN/SocketCAN), tester_bus_monitor.py (frame filter and bus statistics),
 tester_selftest.py, tester_telemetry.py and tester_autodetect.py.
+With --headless it starts no window: tester_cli.py runs test plans (tester_plan.py) against a
+board or the simulated one (tester_simulator.py).
 """
 
 import sys
 
 
 def main():
+    if "--headless" in sys.argv:
+        # no window and no PySide6: identify, self-test and run test plans from a script (tester_cli.py)
+        from tester_cli import main as headless_main
+        return headless_main([arg for arg in sys.argv[1:] if arg != "--headless"])
     if "--legacy" in sys.argv:
         print(
             "Note: the classic Tkinter window has been retired; the Qt Quick deck starts instead.",

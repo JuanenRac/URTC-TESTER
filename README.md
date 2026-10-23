@@ -353,6 +353,10 @@ saves a `.zip` with the current on-screen log plus basic system
 diagnostics (OS, Python version, current transport/port/bitrate, detected
 tool) for handing to whoever's debugging a tool head issue.
 
+### 🤖 Without a window: test plans
+
+`python urtc_tester.py --headless COMMAND` runs the tester without a window, for a production line, a bench script or a CI job: `info` (who answers: tool, firmware, quick state), `selftest`, `run-plan FILE` and `validate-plan FILE`. A plan is a short JSON file of steps kept in `plans/` (expect a tool, no faults, a minimum firmware version, the self-test, a frame whose value lies in a range, a wait, a question for the person at the bench). The command writes a log of every frame and a result record that names the log by its SHA-256, the same record as the deck. A plan sends only queries unless it says `"actuation": true` and the operator adds `--allow-actuation`; the boot-loader, update, configuration and erase frames are never sent, and every output is switched off again after a plan that commanded something. `--transport simulate` plays a simulated tool head and `--transport replay --port FILE` a recorded `.trc` or `.asc` trace, so a plan can be tried without a board. Exit status: 0 passed, 1 a check failed, 2 the plan or the arguments are wrong, 3 the test could not be carried out. The text it prints is English, like the command line of the flasher. Details in [`docs/HEADLESS.md`](docs/HEADLESS.md). Nothing here has run against a real board.
+
 ## 6. ⚠️ Known limitations
 
 This tool's evidence contract - what counts as pass/fail/unknown, why
@@ -395,6 +399,10 @@ firmware-flash authority of its own - is documented in
 ├── tester_bus_monitor.py       Background CAN read thread (CANBusMonitor)
 ├── tester_autodetect.py        Bit-rate search for an SLCAN adapter
 ├── tester_selftest.py          Self-test steps and runner (no window code)
+├── tester_plan.py              Test plans: validation, runner and the "all off" after them
+├── tester_cli.py               The tester without a window (--headless): info, selftest, run-plan
+├── tester_simulator.py         Simulated tool head and recorded-trace player
+├── plans/                      Example test plans (JSON)
 ├── tester_telemetry.py         Live readouts of each tool and the recorded series
 ├── tester_trace_export.py      Writers of the .trc / .asc frame exports
 ├── urtc_ui/                    Shared interface helpers (copy from URTC-COMMON)

@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "name": "identify-and-selftest",
+  "description": "Read only: the tool head answers, runs the application, reports no fault and passes the at-rest communication check of its tool.",
+  "steps": [
+    {"do": "query_version", "label": "the application answers", "min_version": "0.3.5"},
+    {"do": "check_faults", "label": "no fault reported"},
+    {"do": "selftest", "label": "at-rest communication check"}
+  ]
+}
