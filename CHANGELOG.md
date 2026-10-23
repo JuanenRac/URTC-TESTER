@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.4.1] - Headless tester with test plans, heater PID panel, kept-alive commands and a development requirements file
 
 - **A plan can keep a command alive:** `keepalive_ms` (20 to 200) on a `send` repeats the command while the plan waits, also while a person is asked, because the firmware drops an order for a heater, a drill or a laser that is not refreshed within 250 ms; a new `send` with the same identifier replaces it, an order of all zeros is not repeated, and the repetition is part of the log. The simulated head now drops those orders like the firmware, so a plan that forgot the keepalive fails there instead of passing on a bench that does not exist. The example plan that heats the tip uses it.
 

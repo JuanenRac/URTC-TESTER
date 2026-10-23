@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "urtc_common_version": "0.0.6",
+  "urtc_common_version": "0.0.7",
   "files": {
     "blackbox_vectors.json": {
       "from": "conformance/blackbox_vectors.json",

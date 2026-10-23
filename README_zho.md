@@ -24,7 +24,7 @@
 </p>
 
 
-**版本：** 0.4.0 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
+**版本：** 0.4.1 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
 许可证：源代码为 **GPL-3.0-or-later**，本文档为 **CC BY-SA 4.0**——见本仓库中的
 `LICENSE`，或本文档末尾的“许可证与版权声明”一节。
@@ -43,7 +43,7 @@
 
 | | |
 |---|---|
-| 版本 | `0.4.0` |
+| 版本 | `0.4.1` |
 | 成熟度 | 可用 |
 | 技术栈 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 目标 | 使用者的电脑 |
