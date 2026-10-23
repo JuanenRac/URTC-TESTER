@@ -131,6 +131,16 @@ ApplicationWindow {
         onAccepted: testerBackend.exportReadoutCsv(selectedFile.toString())
     }
 
+    UpdateDialog {
+        id: updateDialog
+        model: testerBackend.updates
+        panelColor: window.panel
+        borderColor: window.panelBorder
+        textColor: window.textPrimary
+        mutedColor: window.muted
+        accentColor: window.cyan
+    }
+
     Dialog {
         id: aboutDialog
         anchors.centerIn: parent
@@ -1284,6 +1294,7 @@ ApplicationWindow {
                 }
                 GameButton { text: testerBackend.uiText("QT_EXPORT_SESSION"); accent: "#24465e"; Layout.preferredWidth: 260; onClicked: testerBackend.exportSession() }
                 GameButton { text: testerBackend.uiText("MENU_SAVE_LOGS"); accent: "#24465e"; Layout.preferredWidth: 260; onClicked: saveLogDialog.open() }
+                GameButton { text: testerBackend.updates.t("UPD_BTN_CHECK"); accent: "#24465e"; Layout.preferredWidth: 260; onClicked: updateDialog.open() }
                 GameButton { text: testerBackend.uiText("TITLE_ABOUT"); accent: "#24465e"; Layout.preferredWidth: 260; onClicked: aboutDialog.open() }
                 ListView {
                     Layout.fillWidth: true

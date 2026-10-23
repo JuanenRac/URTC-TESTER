@@ -106,6 +106,8 @@ from tester_config import (
 )
 from tester_result_record import session_manifest
 from tester_transports import SLCAN, SocketCAN, list_socketcan_interfaces, virtual_ports
+from urtc_can import update_service
+from urtc_can.update_qt import UpdateModel
 from urtc_ui import LanguageModel, connection_badge, format_can_id, format_hex
 
 
@@ -159,6 +161,7 @@ class TesterQtBridge(QObject):
         self._transport = None
         self._listen_only = True
         self._busy = False
+        self._update_model: UpdateModel | None = None
         # The transport can only be read from one thread at a time: every worker that reads from it holds this for the whole exchange.
         self._io_lock = threading.RLock()
         self._thermal_columns = 32
@@ -252,6 +255,23 @@ class TesterQtBridge(QObject):
         self._busHealth.connect(self._on_bus_health)
         self._selfTestDone.connect(self._on_self_test_done)
         self.scanPorts()
+
+    @Property(QObject, constant=True)
+    def updates(self) -> QObject:
+        """The "Check for updates" model of the dialog. Nothing is checked, downloaded or installed until the person asks (the automatic
+        check at start is an option, off by default), and an update cannot start while an output is on or an operation runs."""
+        if self._update_model is None:
+            def busy() -> str | None:
+                return "outputs" if (self._busy or self._watchdog_stops) else None
+
+            def save(auto_check: bool, require_confirmation: bool) -> None:
+                save_config({"update_auto_check": auto_check, "update_require_confirmation": require_confirmation})
+
+            service = update_service.UpdateService(
+                "urtc-tester", TESTER_VERSION, policy=update_service.policy_from(load_config()), busy=busy,
+            )
+            self._update_model = UpdateModel(service, language=lambda: tester_config._current_language, save_options=save, parent=self)
+        return self._update_model
 
     @Property(str, constant=True)
     def title(self) -> str:
@@ -2409,4 +2429,7 @@ def run_qtquick() -> int:
     engine.load(QUrl.fromLocalFile(str(qml_path)))
     if not engine.rootObjects():
         return 1
+    # The window is up: a release that was just installed has started, and the automatic check (off unless the person turned it on) may run.
+    update_service.mark_started(bridge.updates.controller.service.root)
+    bridge.updates.startupCheck()
     return app.exec()
