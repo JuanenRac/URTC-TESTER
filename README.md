@@ -139,8 +139,7 @@ launch. Translations live in plain text files under `language/`
 pairs, one per line - lines starting
 with `#` and blank lines are ignored, and a literal `\n` inside a value
 becomes a real line break (used by the handful of multi-line dialog
-messages). Editable directly if a translation needs correcting, or as a
-starting point for another language (add `language/<name>.lng`, add
+messages). Generated from the catalog of URTC-COMMON (a translation is corrected there and the files are written again, never edited by hand), or a starting point for another language (add `language/<name>.lng`, add
 `("<name>", "Native Name")` to `AVAILABLE_LANGUAGES` near the top of
 `tester_config.py`, and set `"language": "<name>"` in `config.json`). A
 key missing from a language file falls back to showing that key's own

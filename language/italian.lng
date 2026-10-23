@@ -234,6 +234,7 @@ SELFTEST_STEP_SCAN_PROBE=La sonda di scansione funziona a eventi (invia solo all
 SELFTEST_MOTION_INFO=Questo strumento non ha telemetria da verificare: i comandi STEP/DIR/EN sono singoli e senza risposta per progetto.
 SELFTEST_NO_STEPS=Per questo strumento non sono ancora definiti passi di autotest.
 SELFTEST_DONE=Fatto.
+
 # Log lines of the Qt Quick deck: QTLOG_<TOKEN> is shown instead of the English token; QTLOGD_ are fixed detail sentences
 QTLOG_ACTIVE_TOOL=Strumento attivo
 QTLOG_ALL_OFF_FAILED=Spegnimento generale non riuscito
@@ -369,9 +370,7 @@ QTLOGD_NO_RESPONSE=nessuna risposta
 QT_EXTRAS_PANEL=Scatola nera, funzioni opzionali, banco del rack, vista termica
 BTN_READ_BLACK_BOX=Leggi la scatola nera
 LBL_AUTO_BLACK_BOX=Leggila automaticamente quando la scheda segnala un errore
-LBL_BLACKBOX_SAVED=Scatola nera: {summary}
-CSV: {csv}
-JSON: {json}
+LBL_BLACKBOX_SAVED=Scatola nera: {summary}\nCSV: {csv}\nJSON: {json}
 LBL_BLACKBOX_FAILED=Impossibile leggere la scatola nera: {reason}
 LBL_BLACKBOX_AUTO_SKIPPED=La scheda segnala un errore, ma la scatola nera non viene letta ora (collegati prima in modalità attiva).
 BTN_QUERY_FEATURES=Funzioni opzionali

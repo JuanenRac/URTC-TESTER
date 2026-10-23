@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "urtc_common_version": "0.0.7",
+  "catalog": "spec/i18n/catalog/tester.json",
+  "catalog_sha256": "107312ae9ceabeb4cec865a7a7ea698e53d0f624d2970bd54ad47512a18e84e8",
+  "files": {
+    "language/chinese.lng": "f5e8aa5cfc2b6d2beb48f84a58d7dcab6735b194966d4f4f6376f518b0c858e5",
+    "language/english.lng": "22af8c2b913bf66b6a6491ef893d9a0f4937fe774a9e0388d744f5864733962c",
+    "language/french.lng": "99490913b5276dbf78b88415988b6874de4027e38a20d5928ebef95f7af391aa",
+    "language/german.lng": "13f1ba68effed06c6df1afe95527516dfb14f16c23109461690259f1d513690b",
+    "language/italian.lng": "9e72cd8f5b58af6f18c9b5fa99011c243c4598bee24e6886d38e11c05d9a1d4f",
+    "language/japanese.lng": "6b5da459bb236f84ac651d2540a7945535e517b382c51f240ed48e71f15ab18c",
+    "language/portuguese.lng": "1a09441eaf14baf32028c712c0ce8cd14501cba3c4f4469ee3c65ada383d03b0",
+    "language/spanish.lng": "70d74fd5662db629b86251f37175df0b8a2a7fe6587f7c386f5cc0f784e7169e",
+    "tests/test_i18n_generated.py": "2dbb1740abb41abb5dca047084ac545d4cb403687e599550a73e4e1174c1ce87"
+  }
+}

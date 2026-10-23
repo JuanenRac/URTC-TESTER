@@ -234,6 +234,7 @@ SELFTEST_STEP_SCAN_PROBE=La sonde de balayage fonctionne par événements (elle 
 SELFTEST_MOTION_INFO=Cet outil n'a pas de télémétrie à vérifier : les commandes STEP/DIR/EN sont des envois uniques, sans réponse par conception.
 SELFTEST_NO_STEPS=Aucune étape d'autotest n'est encore définie pour cet outil.
 SELFTEST_DONE=Terminé.
+
 # Log lines of the Qt Quick deck: QTLOG_<TOKEN> is shown instead of the English token; QTLOGD_ are fixed detail sentences
 QTLOG_ACTIVE_TOOL=Outil actif
 QTLOG_ALL_OFF_FAILED=Échec de l'extinction générale
@@ -369,9 +370,7 @@ QTLOGD_NO_RESPONSE=aucune réponse
 QT_EXTRAS_PANEL=Boîte noire, fonctions optionnelles, banc du rack, vue thermique
 BTN_READ_BLACK_BOX=Lire la boîte noire
 LBL_AUTO_BLACK_BOX=La lire automatiquement quand la carte signale une erreur
-LBL_BLACKBOX_SAVED=Boîte noire : {summary}
-CSV : {csv}
-JSON : {json}
+LBL_BLACKBOX_SAVED=Boîte noire : {summary}\nCSV : {csv}\nJSON : {json}
 LBL_BLACKBOX_FAILED=La boîte noire n'a pas pu être lue : {reason}
 LBL_BLACKBOX_AUTO_SKIPPED=La carte signale une erreur, mais la boîte noire n'est pas lue maintenant (se connecter d'abord en mode actif).
 BTN_QUERY_FEATURES=Fonctions optionnelles

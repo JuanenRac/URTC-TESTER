@@ -233,6 +233,7 @@ SELFTEST_STEP_SCAN_PROBE=Scan probe is event-driven (only sends on physical impa
 SELFTEST_MOTION_INFO=This tool has no telemetry to verify - STEP/DIR/EN commands are one-shot with no response by design.
 SELFTEST_NO_STEPS=No self-test steps are defined for this tool yet.
 SELFTEST_DONE=Done.
+
 # Log lines of the Qt Quick deck: QTLOG_<TOKEN> is shown instead of the English token; QTLOGD_ are fixed detail sentences
 QTLOG_ACTIVE_TOOL=Active tool
 QTLOG_ALL_OFF_FAILED=All-off failed
@@ -368,9 +369,7 @@ QTLOGD_NO_RESPONSE=no response
 QT_EXTRAS_PANEL=Fault recorder, optional functions, rack bench, thermal view
 BTN_READ_BLACK_BOX=Read the black box
 LBL_AUTO_BLACK_BOX=Read it automatically when the board reports an error
-LBL_BLACKBOX_SAVED=Black box: {summary}
-CSV: {csv}
-JSON: {json}
+LBL_BLACKBOX_SAVED=Black box: {summary}\nCSV: {csv}\nJSON: {json}
 LBL_BLACKBOX_FAILED=The black box could not be read: {reason}
 LBL_BLACKBOX_AUTO_SKIPPED=The board reports an error, but the black box is not read now (connect in active mode first).
 BTN_QUERY_FEATURES=Optional functions

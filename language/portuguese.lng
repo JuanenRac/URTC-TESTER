@@ -234,6 +234,7 @@ SELFTEST_STEP_SCAN_PROBE=A sonda de varrimento funciona por eventos (só envia c
 SELFTEST_MOTION_INFO=Esta ferramenta não tem telemetria a verificar: os comandos STEP/DIR/EN são de envio único e, por conceção, não têm resposta.
 SELFTEST_NO_STEPS=Ainda não há passos de autoteste definidos para esta ferramenta.
 SELFTEST_DONE=Concluído.
+
 # Log lines of the Qt Quick deck: QTLOG_<TOKEN> is shown instead of the English token; QTLOGD_ are fixed detail sentences
 QTLOG_ACTIVE_TOOL=Ferramenta ativa
 QTLOG_ALL_OFF_FAILED=Falha ao desligar tudo
@@ -369,9 +370,7 @@ QTLOGD_NO_RESPONSE=sem resposta
 QT_EXTRAS_PANEL=Caixa negra, funções opcionais, bancada do rack, vista térmica
 BTN_READ_BLACK_BOX=Ler a caixa negra
 LBL_AUTO_BLACK_BOX=Lê-la automaticamente quando a placa indicar um erro
-LBL_BLACKBOX_SAVED=Caixa negra: {summary}
-CSV: {csv}
-JSON: {json}
+LBL_BLACKBOX_SAVED=Caixa negra: {summary}\nCSV: {csv}\nJSON: {json}
 LBL_BLACKBOX_FAILED=Não foi possível ler a caixa negra: {reason}
 LBL_BLACKBOX_AUTO_SKIPPED=A placa indica um erro, mas a caixa negra não é lida agora (ligue primeiro em modo ativo).
 BTN_QUERY_FEATURES=Funções opcionais

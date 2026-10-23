@@ -233,6 +233,7 @@ SELFTEST_STEP_SCAN_PROBE=スキャンプローブはイベント駆動です（�
 SELFTEST_MOTION_INFO=このツールには確認できるテレメトリがありません。STEP/DIR/EN コマンドは設計上、1 回だけ送信され応答はありません。
 SELFTEST_NO_STEPS=このツールにはまだセルフテストの手順が定義されていません。
 SELFTEST_DONE=完了しました。
+
 # Log lines of the Qt Quick deck: QTLOG_<TOKEN> is shown instead of the English token; QTLOGD_ are fixed detail sentences
 QTLOG_ACTIVE_TOOL=アクティブツール
 QTLOG_ALL_OFF_FAILED=全停止に失敗
@@ -368,9 +369,7 @@ QTLOGD_NO_RESPONSE=応答なし
 QT_EXTRAS_PANEL=ブラックボックス、オプション機能、ラック試験台、熱画像
 BTN_READ_BLACK_BOX=ブラックボックスを読む
 LBL_AUTO_BLACK_BOX=ボードがエラーを報告したら自動で読む
-LBL_BLACKBOX_SAVED=ブラックボックス: {summary}
-CSV: {csv}
-JSON: {json}
+LBL_BLACKBOX_SAVED=ブラックボックス: {summary}\nCSV: {csv}\nJSON: {json}
 LBL_BLACKBOX_FAILED=ブラックボックスを読めませんでした: {reason}
 LBL_BLACKBOX_AUTO_SKIPPED=ボードがエラーを報告していますが、今はブラックボックスを読みません（先にアクティブモードで接続してください）。
 BTN_QUERY_FEATURES=オプション機能

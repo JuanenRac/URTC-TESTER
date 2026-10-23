@@ -139,8 +139,7 @@ arranque. As traduções residem em ficheiros de texto simples em `language/`
 um por linha - as linhas que começam
 por `#` e as linhas em branco são ignoradas, e um `\n` literal dentro de um valor
 torna-se uma quebra de linha real (utilizado pelas poucas mensagens de diálogo
-com várias linhas). Editável diretamente se uma tradução precisar de correção, ou como
-ponto de partida para outro idioma (adicione `language/<name>.lng`, adicione
+com várias linhas). Gerados a partir do catálogo do URTC-COMMON (uma tradução corrige-se lá e os ficheiros são escritos de novo, nunca à mão), ou como ponto de partida para outro idioma (adicione `language/<name>.lng`, adicione
 `("<name>", "Native Name")` a `AVAILABLE_LANGUAGES` perto do topo de
 `tester_config.py` e defina `"language": "<name>"` em `config.json`). Uma
 chave em falta num ficheiro de idioma recorre a mostrar o próprio nome dessa chave

@@ -135,8 +135,7 @@ viven en archivos de texto plano bajo `language/` (`english.lng`,
 `japanese.lng`, `portuguese.lng`) como pares simples `CLAVE=Valor`, uno por línea - las líneas que empiezan con `#` y
 las líneas en blanco se ignoran, y un `\n` literal dentro de un valor se
 convierte en un salto de línea real (usado por el puñado de mensajes de
-diálogo multilínea). Editable directamente si una traducción necesita
-corregirse, o como punto de partida para otro idioma (añade
+diálogo multilínea). Generados desde el catálogo de URTC-COMMON (una traducción se corrige allí y los archivos se escriben de nuevo, nunca a mano), o como punto de partida para otro idioma (añade
 `language/<nombre>.lng`, añade `("<nombre>", "Nombre Nativo")` a
 `AVAILABLE_LANGUAGES` cerca del principio de `tester_config.py`, y pon
 `"language": "<nombre>"` en `config.json`). Una clave que falte en un

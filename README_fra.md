@@ -146,8 +146,7 @@ texte brut sous `language/` (`english.lng`, `spanish.lng`, `italian.lng`,
 paires simples `CLE=Valeur`, une par ligne - les lignes commençant par `#` et les lignes vides sont
 ignorées, et un `\n` littéral dans une valeur devient un vrai saut de
 ligne (utilisé par la poignée de messages de dialogue multi-lignes).
-Modifiable directement si une traduction nécessite une correction, ou
-comme point de départ pour une autre langue (ajoutez
+Générés depuis le catalogue d'URTC-COMMON (une traduction s'y corrige et les fichiers sont réécrits, jamais modifiés à la main), ou comme point de départ pour une autre langue (ajoutez
 `language/<nom>.lng`, ajoutez `("<nom>", "Nom Natif")` à
 `AVAILABLE_LANGUAGES` près du début de `tester_config.py`, et définissez
 `"language": "<nom>"` dans `config.json`). Une clé manquante d'un
