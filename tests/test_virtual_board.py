@@ -56,3 +56,9 @@ def test_a_port_that_nobody_listens_on_is_reported_not_raised(tmp_path, capsys):
     code = tester_cli.main(["info", "--transport", "serial", "--port", url, "--out", str(tmp_path)])
     assert code != 0
     assert "ERROR" in capsys.readouterr().out
+
+
+def test_the_virtual_ports_come_from_the_environment_variable_and_only_urls_count():
+    env = {tr.VIRTUAL_PORT_ENV: "socket://127.0.0.1:7777, COM3 ,rfc2217://host:2217,,/dev/ttyUSB0"}
+    assert tr.virtual_ports(env) == ["socket://127.0.0.1:7777", "rfc2217://host:2217"]
+    assert tr.virtual_ports({}) == []

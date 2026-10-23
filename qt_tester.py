@@ -105,7 +105,7 @@ from tester_config import (
     list_serial_ports,
 )
 from tester_result_record import session_manifest
-from tester_transports import SLCAN, SocketCAN, list_socketcan_interfaces
+from tester_transports import SLCAN, SocketCAN, list_socketcan_interfaces, virtual_ports
 from urtc_ui import LanguageModel, connection_badge, format_can_id, format_hex
 
 
@@ -876,6 +876,7 @@ class TesterQtBridge(QObject):
             ports.extend(name for name in sorted(self._socketcan_ports) if name not in ports)
         else:
             self._socketcan_ports = set()
+        ports.extend(url for url in virtual_ports() if url not in ports)  # a virtual board named in URTC_VIRTUAL_PORT
         self._ports = ports
         if self._selected_port not in ports:
             self._selected_port = self._preferred_port if self._preferred_port in ports else (ports[0] if ports else "")

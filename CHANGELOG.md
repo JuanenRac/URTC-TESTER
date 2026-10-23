@@ -4,7 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
-- **A virtual board stands in for the hardware:** `urtc_can/virtual_board.py` from URTC-COMMON (a SLCAN server over TCP with a model of the board) is reached through `--transport serial --port socket://host:port`, so `info` and plans of queries run end to end with no adapter; 4 new tests, one of them over the real pyserial URL handler.
+- **A virtual board stands in for the hardware:** `urtc_can/virtual_board.py` from URTC-COMMON (a SLCAN server over TCP with a model of the board) is reached through `--transport serial --port socket://host:port`, so `info` and plans of queries run end to end with no adapter; the window lists the URLs named in `URTC_VIRTUAL_PORT` (comma separated) next to the real ports; 5 new tests, one of them over the real pyserial URL handler.
 - The rack simulator speaks frame version 2 (big-endian temperature in the pre-heat command), and the shared rack vectors were refreshed.
 - The CI holds the tests to a coverage floor of 65 percent (measured 73; `pytest-cov` is in `requirements-dev.txt`).
 
