@@ -36,11 +36,6 @@ def main():
         # no window and no PySide6: identify, self-test and run test plans from a script (tester_cli.py)
         from tester_cli import main as headless_main
         return headless_main([arg for arg in sys.argv[1:] if arg != "--headless"])
-    if "--legacy" in sys.argv:
-        print(
-            "Note: the classic Tkinter window has been retired; the Qt Quick deck starts instead.",
-            file=sys.stderr,
-        )
     try:
         from qt_tester import run_qtquick
     except ImportError as exc:

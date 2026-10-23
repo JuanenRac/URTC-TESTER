@@ -3,7 +3,7 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
-"""Text renderers for the raw bus monitor's recorded frames, shared by the Tk window and the Qt Quick deck.
+"""Text renderers for the raw bus monitor's recorded frames, shared by the original window and the Qt Quick deck.
 
 A row is ``(time, can_id, dlc, data_hex, dt_ms)`` exactly as the monitor tables hold them: ``time`` is
 ``"HH:MM:SS.mmm"``, ``can_id`` starts with the hex ID (``"0x1A0 (name)"`` or ``"1A0"``), ``data_hex`` is ``""``

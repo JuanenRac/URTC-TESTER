@@ -218,7 +218,7 @@ class CANBusMonitor:
 class BusStats:
     """Sliding-window frame rate and estimated bus load, counted at the
     transport (every frame either direction), so it works for every
-    reader in the app - the Tk GUI's one monitor thread and the Qt UI's
+    reader in the app - the original GUI's one monitor thread and the Qt UI's
     many ad-hoc readers alike - without touching any of them.
 
     Bus load is an ESTIMATE from the standard CAN base-frame size (47 bits

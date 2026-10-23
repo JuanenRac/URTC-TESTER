@@ -1,5 +1,5 @@
 # =============================================================================
-# URTC Tester - the self-test, shared by the Qt Quick deck and the Tkinter window
+# URTC Tester - the self-test, shared by the Qt Quick deck and the original window
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
@@ -8,7 +8,7 @@
 Nothing here knows about a window.  ``run_self_test`` asks the caller for one primitive, ``exchange(send, expect_id,
 timeout)``: put the frame ``send`` (a ``(can_id, data)`` pair, or None) on the bus and return the data of the first
 frame with ``expect_id`` that arrives within ``timeout`` seconds, or None.  The caller decides how the bus is read
-(the Tk window has a reader thread of its own, the Qt deck holds the transport lock) and what it shows.
+(the original window has a reader thread of its own, the Qt deck holds the transport lock) and what it shows.
 
 Every command is a safe, at-rest value (setpoint 0, speed 0, power 0): this verifies that the round trip works, not
 that an actuator really moves, because confirming that needs a person watching.  Tools with no telemetry (plain
@@ -58,7 +58,7 @@ class SelfTestLine:
 class SelfTestResult:
     tool_id: int
     lines: list[SelfTestLine] = field(default_factory=list)
-    sent_drill_command: bool = False  # the Tk window must forget the drill speed it believes is set
+    sent_drill_command: bool = False  # the original window must forget the drill speed it believes is set
 
     @property
     def failed(self) -> int:

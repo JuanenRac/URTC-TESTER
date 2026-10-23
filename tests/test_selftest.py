@@ -1,5 +1,5 @@
 # =============================================================================
-# URTC Tester - the self-test shared by the Qt Quick deck and the Tkinter window
+# URTC Tester - the self-test shared by the Qt Quick deck and the original window
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
