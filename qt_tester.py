@@ -34,12 +34,14 @@ import zipfile
 from pathlib import Path
 
 import advanced_protocol as protocol
+import tester_blackbox_view as bbview
+import tester_replay
 import tester_extras as extras
 from tester_bus_monitor import FrameFilter
 import tester_telemetry as tele
 from tester_selftest import run_self_test
 from tester_trace_export import render as render_trace
-from PySide6.QtCore import QObject, Property, QUrl, Signal, Slot
+from PySide6.QtCore import QObject, Property, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
@@ -120,6 +122,8 @@ class TesterQtBridge(QObject):
 
     changed = Signal()
     monitorChanged = Signal()
+    replayChanged = Signal()
+    blackBoxViewChanged = Signal()
     logChanged = Signal()
     _connectionResult = Signal(object, str)
     _bitrateDetected = Signal(str)
@@ -162,6 +166,19 @@ class TesterQtBridge(QObject):
         self._listen_only = True
         self._busy = False
         self._update_model: UpdateModel | None = None
+        # Replay of a recorded trace: its own rows, apart from the monitor of the bus, and a timer that only moves the player.
+        self._replay_player: tester_replay.TracePlayer | None = None
+        self._replay_rows: collections.deque = collections.deque(maxlen=self.MONITOR_MAX_ROWS)
+        self._replay_notice = ""
+        self._replay_speed = 1.0
+        self._replay_loop = False
+        self._replay_timer = QTimer(self)
+        self._replay_timer.setInterval(40)
+        self._replay_timer.timeout.connect(self._replay_tick)
+        # The black box record the viewer draws (read from the board or opened from a saved file).
+        self._bb_series: dict = {}
+        self._bb_lines: list[str] = []
+        self._bb_notice = ""
         # The transport can only be read from one thread at a time: every worker that reads from it holds this for the whole exchange.
         self._io_lock = threading.RLock()
         self._thermal_columns = 32
@@ -694,6 +711,190 @@ class TesterQtBridge(QObject):
         self._log(f"BUS_MONITOR_EXPORTED {len(rows)} frames {path}")
         return path
 
+    # -- replay of a recorded bus trace (the logic is in tester_replay.py) --------------------------------------------------------
+    @staticmethod
+    def _now_ms() -> float:
+        return time.monotonic() * 1000.0
+
+    @Property(bool, notify=replayChanged)
+    def replayLoaded(self) -> bool:
+        return self._replay_player is not None
+
+    @Property(str, notify=replayChanged)
+    def replayState(self) -> str:
+        return self._replay_player.state if self._replay_player is not None else tester_replay.IDLE
+
+    @Property(bool, notify=replayChanged)
+    def replayPlaying(self) -> bool:
+        return self._replay_player is not None and self._replay_player.state == tester_replay.PLAYING
+
+    @Property(int, notify=replayChanged)
+    def replayPercent(self) -> int:
+        return int(self._replay_player.progress * 100) if self._replay_player is not None else 0
+
+    @Property(str, notify=replayChanged)
+    def replayProgressText(self) -> str:
+        player = self._replay_player
+        return _("LBL_REPLAY_PROGRESS", played=player.played, total=player.total) if player is not None else ""
+
+    @Property(float, notify=replayChanged)
+    def replaySpeed(self) -> float:
+        return self._replay_speed
+
+    @Property("QVariantList", constant=True)
+    def replaySpeeds(self) -> list:
+        return list(tester_replay.SPEEDS)
+
+    @Property(bool, notify=replayChanged)
+    def replayLoop(self) -> bool:
+        return self._replay_loop
+
+    @Property(str, notify=replayChanged)
+    def replayNotice(self) -> str:
+        return self._replay_notice
+
+    @Property(str, constant=True)
+    def replayBadge(self) -> str:
+        return _("LBL_REPLAY_BADGE")
+
+    @Property("QVariantList", notify=replayChanged)
+    def replayLines(self) -> list:
+        newest = list(self._replay_rows)[-self.MONITOR_SHOWN_ROWS:]
+        return [f"{_('LBL_REPLAY_BADGE')}  {at:>9.1f} ms  {can_id:<6} [{dlc}]  {data}" for at, can_id, dlc, data in reversed(newest)]
+
+    @Slot(str)
+    def openReplay(self, path_text: str) -> None:
+        """Load a .trc / .asc trace for replay. Nothing is sent and nothing is played until the person presses play."""
+        path = QUrl(path_text).toLocalFile() if path_text.startswith("file:") else path_text
+        self.stopReplay()
+        try:
+            parsed = tester_replay.load_trace(path)
+        except tester_replay.ReplayError as exc:
+            key = {"too_big": "LBL_REPLAY_TOO_BIG", "empty": "LBL_REPLAY_EMPTY"}.get(exc.code, "LBL_REPLAY_UNREADABLE")
+            self._replay_player = None
+            self._replay_notice = _(key)
+            self._log(f"REPLAY_LOAD_FAILED {exc.code}")
+        else:
+            self._replay_player = tester_replay.TracePlayer(parsed.entries, self._replay_speed, self._replay_loop)
+            self._replay_rows.clear()
+            self._replay_notice = _("LBL_REPLAY_REJECTED", count=parsed.rejected) if parsed.rejected else ""
+            self._log(f"REPLAY_LOADED {len(parsed.entries)} frames, {parsed.rejected} rejected")
+        self.replayChanged.emit()
+
+    @Slot()
+    def playReplay(self) -> None:
+        player = self._replay_player
+        if player is None:
+            return
+        if self._transport is not None:
+            self._replay_notice = _("LBL_REPLAY_BLOCKED")  # a recording is never mixed with what a connected board says
+            self.replayChanged.emit()
+            return
+        if player.state == tester_replay.FINISHED:
+            player.stop()
+            self._replay_rows.clear()
+        elif player.state == tester_replay.IDLE:
+            self._replay_rows.clear()
+        self._replay_notice = ""
+        player.start(self._now_ms())
+        self._replay_timer.start()
+        self.replayChanged.emit()
+
+    @Slot()
+    def pauseReplay(self) -> None:
+        if self._replay_player is not None:
+            self._replay_player.pause(self._now_ms())
+        self._replay_timer.stop()
+        self.replayChanged.emit()
+
+    @Slot()
+    def stopReplay(self) -> None:
+        self._replay_timer.stop()
+        if self._replay_player is not None:
+            self._replay_player.stop()
+        self.replayChanged.emit()
+
+    @Slot()
+    def clearReplay(self) -> None:
+        self.stopReplay()
+        self._replay_rows.clear()
+        self._replay_notice = ""
+        self.replayChanged.emit()
+
+    @Slot(float)
+    def setReplaySpeed(self, speed: float) -> None:
+        self._replay_speed = tester_replay.checked_speed(speed)
+        if self._replay_player is not None:
+            self._replay_player.speed = self._replay_speed
+        self.replayChanged.emit()
+
+    @Slot(bool)
+    def setReplayLoop(self, enabled: bool) -> None:
+        self._replay_loop = bool(enabled)
+        if self._replay_player is not None:
+            self._replay_player.loop = self._replay_loop
+        self.replayChanged.emit()
+
+    def _replay_tick(self) -> None:
+        player = self._replay_player
+        if player is None or player.state != tester_replay.PLAYING:
+            self._replay_timer.stop()
+            return
+        if self._transport is not None:  # a board was connected while the replay played: it pauses itself
+            self.pauseReplay()
+            self._replay_notice = _("LBL_REPLAY_BLOCKED")
+            self.replayChanged.emit()
+            return
+        for entry in player.advance(self._now_ms()):
+            self._replay_rows.append((entry.time_ms, format_can_id(entry.can_id, extended=entry.can_id > 0x7FF), len(entry.data), format_hex(entry.data, "")))
+        if player.state != tester_replay.PLAYING:
+            self._replay_timer.stop()
+        self.replayChanged.emit()
+
+    # -- the black box viewer (the logic is in tester_blackbox_view.py) -------------------------------------------------------------
+    @Property("QVariantMap", notify=blackBoxViewChanged)
+    def blackBoxSeries(self) -> dict:
+        return self._bb_series
+
+    @Property(bool, notify=blackBoxViewChanged)
+    def hasBlackBoxView(self) -> bool:
+        return bool(self._bb_series)
+
+    @Property("QVariantList", notify=blackBoxViewChanged)
+    def blackBoxLines(self) -> list:
+        return self._bb_lines
+
+    @Property(str, notify=blackBoxViewChanged)
+    def blackBoxViewNotice(self) -> str:
+        return self._bb_notice
+
+    @Property(str, notify=blackBoxViewChanged)
+    def blackBoxSpanText(self) -> str:
+        span = self._bb_series.get("span_ms") if self._bb_series else None
+        return _("LBL_BLACKBOX_SPAN", seconds=f"{span / 1000.0:.1f}") if span is not None else ""
+
+    def _show_black_box(self, record) -> None:
+        self._bb_series = bbview.chart_series(record)
+        self._bb_lines = bbview.table_lines(record)
+        self.blackBoxViewChanged.emit()
+
+    @Slot(str)
+    def openBlackBox(self, path_text: str) -> None:
+        """Open a record saved earlier (JSON or CSV written by this tool) and draw it: no board is needed."""
+        path = QUrl(path_text).toLocalFile() if path_text.startswith("file:") else path_text
+        name = os.path.basename(path)
+        try:
+            record = bbview.load_record(path)
+        except bbview.ViewError as exc:
+            reason = _("LBL_BLACKBOX_TOO_BIG") if exc.code == "too_big" else str(exc)
+            self._bb_notice = _("LBL_BLACKBOX_OPEN_FAILED", name=name, reason=reason)
+            self._log(f"BLACK_BOX_OPEN_FAILED {exc.code}")
+        else:
+            self._show_black_box(record)
+            self._bb_notice = _("LBL_BLACKBOX_OPEN_OK", name=name, count=len(record.samples))
+            self._log(f"BLACK_BOX_OPENED {len(record.samples)} samples")
+        self.blackBoxViewChanged.emit()
+
     @Property(bool, notify=changed)
     def canWatchTelemetry(self) -> bool:
         """Deliberately NOT canActuateSelectedProfile - that also requires
@@ -1180,7 +1381,7 @@ class TesterQtBridge(QObject):
                 try:
                     record = extras.download_black_box(transport.send_frame, transport.read_frame)
                     csv_path, json_path = extras.save_black_box(record, tester_config.LOGS_FOLDER)
-                    self._queryResult.emit("black_box", ("ok", extras.summarize_black_box(record), csv_path, json_path))
+                    self._queryResult.emit("black_box", ("ok", extras.summarize_black_box(record), csv_path, json_path, record))
                 except Exception as exc:
                     self._queryResult.emit("black_box", ("fail", str(exc)))
 
@@ -1306,6 +1507,7 @@ class TesterQtBridge(QObject):
         threading.Thread(target=_worker, daemon=True, name="urtc-tester-thermal-view").start()
 
     def shutdownOutputs(self) -> None:
+        self._replay_timer.stop()
         try:
             self._stop_all_watchdogs()
             if not self._listen_only:
@@ -1733,6 +1935,9 @@ class TesterQtBridge(QObject):
         elif key == "black_box":
             if result is not None and result[0] == "ok":
                 text = _("LBL_BLACKBOX_SAVED", summary=result[1], csv=result[2], json=result[3])
+                if len(result) > 4:
+                    self._show_black_box(result[4])
+                    self._bb_notice = ""
                 self._log(f"BLACK_BOX_SAVED {result[2]} {result[3]}")
             else:
                 text = _("LBL_BLACKBOX_FAILED", reason=result[1] if result else "?")

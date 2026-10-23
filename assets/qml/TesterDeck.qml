@@ -131,6 +131,21 @@ ApplicationWindow {
         onAccepted: testerBackend.exportReadoutCsv(selectedFile.toString())
     }
 
+    FileDialog {
+        id: replayOpenDialog
+        title: testerBackend.uiText("BTN_REPLAY_OPEN")
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["Bus traces (*.trc *.asc)", "All files (*)"]
+        onAccepted: testerBackend.openReplay(selectedFile.toString())
+    }
+    FileDialog {
+        id: blackBoxOpenDialog
+        title: testerBackend.uiText("BTN_BLACKBOX_OPEN")
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["Black box records (*.json *.csv)", "All files (*)"]
+        onAccepted: testerBackend.openBlackBox(selectedFile.toString())
+    }
+
     UpdateDialog {
         id: updateDialog
         model: testerBackend.updates
@@ -1063,6 +1078,81 @@ ApplicationWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
+                    Text { text: testerBackend.uiText("TITLE_BLACKBOX_VIEW"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 12; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+                    GameButton { text: testerBackend.uiText("BTN_BLACKBOX_OPEN"); accent: "#24465e"; Layout.preferredWidth: 280; onClicked: blackBoxOpenDialog.open() }
+                }
+                Text { visible: testerBackend.blackBoxViewNotice !== ""; text: testerBackend.blackBoxViewNotice; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                Text { visible: !testerBackend.hasBlackBoxView; text: testerBackend.uiText("LBL_BLACKBOX_VIEW_EMPTY"); color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                Canvas {
+                    id: blackBoxChart
+                    visible: testerBackend.hasBlackBoxView
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 170
+                    property var series: testerBackend.blackBoxSeries
+                    onSeriesChanged: requestPaint()
+                    onWidthChanged: requestPaint()
+                    onPaint: {
+                        var ctx = getContext("2d")
+                        ctx.reset()
+                        ctx.fillStyle = "#07131c"
+                        ctx.fillRect(0, 0, width, height)
+                        var s = series
+                        if (!s || !s.ticks || s.ticks.length === 0) return
+                        var padL = 34, padR = 8, padT = 8, padB = 8
+                        var w = width - padL - padR, h = height - padT - padB
+                        var span = Math.max(1, s.span_ms)
+                        var range = Math.max(1, s.maximum - s.minimum)
+                        function px(i) { return padL + (s.ticks[i] / span) * w }
+                        function py(t) { return padT + h - ((t - s.minimum) / range) * h }
+                        ctx.strokeStyle = "#1c3548"; ctx.fillStyle = "#91a8bd"; ctx.lineWidth = 1; ctx.font = "9px sans-serif"
+                        for (var g = 0; g <= 4; g++) {
+                            var value = s.minimum + (range * g) / 4
+                            var y = py(value)
+                            ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(width - padR, y); ctx.stroke()
+                            ctx.fillText(String(Math.round(value)), 2, y + 3)
+                        }
+                        function line(values, color) {
+                            ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath()
+                            for (var i = 0; i < values.length; i++) {
+                                if (i === 0) ctx.moveTo(px(i), py(values[i])); else ctx.lineTo(px(i), py(values[i]))
+                            }
+                            ctx.stroke()
+                        }
+                        line(s.target, "#f3ba55")
+                        line(s.current, "#43db9b")
+                        if (s.trigger >= 0) {
+                            ctx.strokeStyle = "#ee6b80"; ctx.lineWidth = 2
+                            ctx.beginPath(); ctx.moveTo(px(s.trigger), padT); ctx.lineTo(px(s.trigger), padT + h); ctx.stroke()
+                        }
+                    }
+                }
+                RowLayout {
+                    visible: testerBackend.hasBlackBoxView
+                    Layout.fillWidth: true
+                    spacing: 12
+                    Rectangle { width: 14; height: 3; color: "#43db9b" }
+                    Text { text: testerBackend.uiText("LBL_BLACKBOX_LEGEND_CURRENT"); color: muted; font.pixelSize: 10 }
+                    Rectangle { width: 14; height: 3; color: "#f3ba55" }
+                    Text { text: testerBackend.uiText("LBL_BLACKBOX_LEGEND_TARGET"); color: muted; font.pixelSize: 10 }
+                    Rectangle { width: 3; height: 12; color: "#ee6b80" }
+                    Text { text: testerBackend.uiText("LBL_BLACKBOX_LEGEND_TRIGGER"); color: muted; font.pixelSize: 10 }
+                    Item { Layout.fillWidth: true }
+                    Text { text: testerBackend.blackBoxSpanText; color: muted; font.pixelSize: 10 }
+                }
+                Rectangle {
+                    visible: testerBackend.hasBlackBoxView
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 110
+                    color: "#07131c"; radius: 8; border.width: 1; border.color: panelBorder
+                    ListView {
+                        anchors.fill: parent; anchors.margins: 6; clip: true
+                        model: testerBackend.blackBoxLines
+                        delegate: Text { width: ListView.view.width; text: modelData; color: textPrimary; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideRight }
+                    }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
                     CheckBox { id: featRamps; text: testerBackend.uiText("LBL_FEATURE_MOTION_RAMPS"); font.pixelSize: 10 }
                     CheckBox { id: featHealth; text: testerBackend.uiText("LBL_FEATURE_HEALTH_PROFILE"); font.pixelSize: 10 }
                     CheckBox { id: featHsi; text: testerBackend.uiText("LBL_FEATURE_HSI_AUTOTRIM"); font.pixelSize: 10 }
@@ -1257,6 +1347,62 @@ ApplicationWindow {
                     Text { text: String(testerBackend.monitorCount); color: muted; font.pixelSize: 10 }
                     GameButton { text: testerBackend.uiText("BTN_EXPORT_TRC"); accent: "#24465e"; Layout.fillWidth: true; enabled: testerBackend.monitorCount > 0; onClicked: testerBackend.exportMonitor("trc") }
                     GameButton { text: testerBackend.uiText("BTN_EXPORT_ASC"); accent: "#24465e"; Layout.fillWidth: true; enabled: testerBackend.monitorCount > 0; onClicked: testerBackend.exportMonitor("asc") }
+                }
+
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    Text { text: testerBackend.uiText("TITLE_REPLAY"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+                    Rectangle {
+                        visible: testerBackend.replayLoaded
+                        radius: 6; color: "#5a4a22"; border.width: 1; border.color: "#f3ba55"
+                        implicitWidth: replayBadgeText.implicitWidth + 14; implicitHeight: 20
+                        Text { id: replayBadgeText; anchors.centerIn: parent; text: testerBackend.replayBadge; color: "#f3ba55"; font.bold: true; font.pixelSize: 10 }
+                    }
+                }
+                Text { text: testerBackend.uiText("HELP_REPLAY"); color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton { text: testerBackend.uiText("BTN_REPLAY_OPEN"); accent: "#24465e"; Layout.fillWidth: true; onClicked: replayOpenDialog.open() }
+                    GameButton {
+                        text: testerBackend.replayPlaying ? testerBackend.uiText("BTN_REPLAY_PAUSE") : testerBackend.uiText("BTN_REPLAY_PLAY")
+                        accent: "#24465e"
+                        Layout.fillWidth: true
+                        enabled: testerBackend.replayLoaded
+                        onClicked: testerBackend.replayPlaying ? testerBackend.pauseReplay() : testerBackend.playReplay()
+                    }
+                    GameButton { text: testerBackend.uiText("BTN_REPLAY_STOP"); accent: "#7a2f2f"; Layout.fillWidth: true; enabled: testerBackend.replayLoaded; onClicked: testerBackend.stopReplay() }
+                    GameButton { text: testerBackend.uiText("BTN_CLEAR"); accent: "#24465e"; Layout.fillWidth: true; onClicked: testerBackend.clearReplay() }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    Text { text: testerBackend.uiText("LBL_REPLAY_SPEED"); color: muted; font.pixelSize: 11 }
+                    ComboBox {
+                        id: replaySpeedBox
+                        model: testerBackend.replaySpeeds
+                        Layout.preferredWidth: 90
+                        font.pixelSize: 11
+                        displayText: String(currentValue) + "x"
+                        currentIndex: Math.max(0, testerBackend.replaySpeeds.indexOf(testerBackend.replaySpeed))
+                        onActivated: testerBackend.setReplaySpeed(currentValue)
+                    }
+                    CheckBox { text: testerBackend.uiText("LBL_REPLAY_LOOP"); checked: testerBackend.replayLoop; font.pixelSize: 11; onToggled: testerBackend.setReplayLoop(checked) }
+                    Text { text: testerBackend.replayProgressText; color: muted; font.pixelSize: 10; Layout.fillWidth: true; horizontalAlignment: Text.AlignRight }
+                }
+                ProgressBar { visible: testerBackend.replayLoaded; Layout.fillWidth: true; from: 0; to: 100; value: testerBackend.replayPercent }
+                Text { visible: testerBackend.replayNotice !== ""; text: testerBackend.replayNotice; color: "#f3ba55"; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 120
+                    color: "#07131c"; radius: 8; border.width: 1; border.color: panelBorder
+                    ListView {
+                        anchors.fill: parent; anchors.margins: 6; clip: true
+                        model: testerBackend.replayLines
+                        delegate: Text { width: ListView.view.width; text: modelData; color: "#f3ba55"; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideRight }
+                    }
                 }
 
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
