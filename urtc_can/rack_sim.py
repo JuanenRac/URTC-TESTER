@@ -1,6 +1,6 @@
 """Simulator of the tool rack (URTC-SMART-RACK) for the programs that talk to it: no board needed.
 
-It follows the rack firmware: the serial frame (start byte 0xA5, version, sequence, command, length, payload, CRC-8),
+It follows the rack firmware: the serial frame (start byte 0xA5, version 2, sequence, command, length, payload, CRC-8; every multi-byte value big-endian),
 the SET_PREHEAT command with the per-tool limits, the anti-replay sequence per tool, the link watchdog that sends every
 target to the safe state, the slot inventory with the identity of each tool (type and serial number) and the longest
 pre-heat without a tool swap. The vectors in ``conformance/rack_vectors.json`` are checked against the C code of the
@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 SOF = 0xA5
-VERSION = 1
+VERSION = 2
 MAX_PAYLOAD = 16
 CMD_SET_PREHEAT = 0x01
 CAN_ID_SET_PREHEAT = 0x260
@@ -69,7 +69,7 @@ def parse_frame(buf: bytes) -> tuple[str, dict | None]:
 
 
 def encode_set_preheat(seq: int, tool_id: int, target_c: int) -> bytes:
-    return encode_frame(seq, CMD_SET_PREHEAT, bytes([tool_id, target_c & 0xFF, (target_c >> 8) & 0xFF]))
+    return encode_frame(seq, CMD_SET_PREHEAT, bytes([tool_id, (target_c >> 8) & 0xFF, target_c & 0xFF]))
 
 
 def encode_set_preheat_can(seq: int, tool_id: int, target_c: int) -> bytes:
@@ -88,7 +88,7 @@ def validate_set_preheat(payload: bytes) -> tuple[str, int, int]:
         return "tool_id_absent", tool, 0
     if tool > TOOL_ID_LAST:
         return "tool_id_invalid", tool, 0
-    target = payload[1] | (payload[2] << 8)
+    target = (payload[1] << 8) | payload[2]
     if target > RACK_CEILING_C:
         return "temp_out_of_range", tool, target
     ceiling = MAX_PREHEAT_C.get(tool, 0)
@@ -196,8 +196,7 @@ class SimulatedRack:
             return Reply("none", detail="not a rack frame")
         self.tick(now_ms)
         self.last_rx_ms = now_ms
-        payload = bytes([data[0], data[2], data[1]])  # big-endian temperature on the bus, little-endian in the checker
-        return self._set_preheat(data[3], payload, now_ms)
+        return self._set_preheat(data[3], bytes(data[:3]), now_ms)  # the same three bytes as the serial payload: tool, temperature big-endian
 
     def _set_preheat(self, seq: int, payload: bytes, now_ms: int) -> Reply:
         status, tool, target = validate_set_preheat(payload)
