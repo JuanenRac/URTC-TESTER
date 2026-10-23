@@ -23,6 +23,21 @@ The **Help** button opens five short steps in the language of the window: connec
 
 **Check for updates** asks GitHub once, only when you press it. Both options are conservative: the check at start is off, and an update is installed only after you confirm it and only if the signature of the package matches the key of the releases pinned in the program; the previous version is kept so you can go back.
 
+## The same pictures in the other languages
+
+The program has eight interface languages. These are the same three pictures of the tester taken with each of them (`python tools/capture_screens.py --all-languages` writes them again; `--language german` writes one language). The texts are those of the program, not of this page, so a picture shows exactly what a person who chose that language sees.
+
+| Language | Window | Help | Updates |
+|---|---|---|---|
+| English | [window](screenshots/tester-deck.png) | [help](screenshots/tester-help.png) | [updates](screenshots/tester-updates.png) |
+| Español | [window](screenshots/tester-deck-es.png) | [help](screenshots/tester-help-es.png) | [updates](screenshots/tester-updates-es.png) |
+| Deutsch | [window](screenshots/tester-deck-de.png) | [help](screenshots/tester-help-de.png) | [updates](screenshots/tester-updates-de.png) |
+| Français | [window](screenshots/tester-deck-fr.png) | [help](screenshots/tester-help-fr.png) | [updates](screenshots/tester-updates-fr.png) |
+| Italiano | [window](screenshots/tester-deck-it.png) | [help](screenshots/tester-help-it.png) | [updates](screenshots/tester-updates-it.png) |
+| 日本語 | [window](screenshots/tester-deck-ja.png) | [help](screenshots/tester-help-ja.png) | [updates](screenshots/tester-updates-ja.png) |
+| 简体中文 | [window](screenshots/tester-deck-zh.png) | [help](screenshots/tester-help-zh.png) | [updates](screenshots/tester-updates-zh.png) |
+| Português | [window](screenshots/tester-deck-pt.png) | [help](screenshots/tester-help-pt.png) | [updates](screenshots/tester-updates-pt.png) |
+
 ## What the pictures do not show
 
 They do not show a board answering. Nothing in this guide has been run against a real board; the README lists what has and has not been checked.
