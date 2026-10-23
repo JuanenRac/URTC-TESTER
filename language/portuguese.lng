@@ -5,7 +5,7 @@
 
 LBL_ACTUAL_RPM=RPM real:
 LBL_ANALOG_READING=Leitura analógica (ADC de 12 bits):
-BTN_AUTO_DETECT=Autodeteção
+BTN_AUTO_DETECT=Deteção automática
 LBL_CAN_ID_HEX=ID CAN (hex):
 BTN_CLEAR=Limpar
 BTN_CONNECT=Ligar
@@ -55,7 +55,7 @@ OPT_REVERSE=Recuar
 OPT_CLOCKWISE=Horário
 OPT_COUNTER_CLOCKWISE=Anti-horário
 OPT_OFF=Desligado
-OPT_SYNCHRONOUS_STROBE=Estroboscópio sincronizado
+OPT_SYNCHRONOUS_STROBE=Estroboscópio síncrono
 OPT_FIXED_CONTINUOUS=Fixo contínuo
 WARN_NO_CARRIER=AVISO: {interface} reporta sem portadora - é o que o kernel mostra durante uma condição de bus-off do CAN (demasiados erros de transmissão) ou uma ligação igualmente em baixo. Se o adaptador está ligado e cablado a um barramento ativo, experimenta: sudo ip link set {interface} down && sudo ip link set {interface} up type can bitrate 500000 restart-ms 100
 LOG_BUS_READ_ERROR=erro de leitura do barramento: {e}
@@ -259,7 +259,7 @@ QTLOG_BUS_MONITOR_EXPORT_FAILED=Falha ao exportar o monitor do barramento
 QTLOG_BUS_MONITOR_FAILED=O monitor do barramento falhou
 QTLOG_BUS_MONITOR_STARTED=Monitor do barramento iniciado
 QTLOG_BUS_MONITOR_STOPPED=Monitor do barramento parado
-QTLOG_CONNECTION_FAILED=Falha na ligação
+QTLOG_CONNECTION_FAILED=Falhou a ligação
 QTLOG_CUSTOM_FRAME_BLOCKED=Trama personalizada bloqueada
 QTLOG_CUSTOM_FRAME_PERIODIC_BLOCKED=Trama personalizada periódica bloqueada
 QTLOG_CUSTOM_FRAME_PERIODIC_RESUMING=Trama personalizada periódica retomada
