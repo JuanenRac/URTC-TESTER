@@ -12,8 +12,8 @@ desktop application after validation. Follow `requirements.txt` before running
 `urtc_tester.py`.
 
 The tests and the checks of the CI need two more packages, which `requirements-dev.txt` lists:
-`python -m pip install -r requirements.txt -r requirements-dev.txt`, then `python -m pytest` and
-`python -m ruff check .`. Without a window, `python urtc_tester.py --headless ...` runs the test plans
+`python -m pip install -r requirements.txt -r requirements-dev.txt`, then `python -m pytest`,
+`python -m ruff check .` and `python -m mypy` (the type check of the program and of the copies of the shared code). Without a window, `python urtc_tester.py --headless ...` runs the test plans
 (see `HEADLESS.md`).
 
 The validation scripts syntax-check Python plus the Qt Quick diagnostics deck.

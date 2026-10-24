@@ -39,7 +39,7 @@ URTC ボード向けのライブ CAN バステスターです。フラッシャ�
 ラッシュには一切触れないため、これによってボードが開始時より動作しなく
 なることはありません。
 
-**正直な現状確認 - 実際に今動くもの:** Qt Quick に移行した制御系統向けの CAN ペイロードエンコーダー（`advanced_protocol.py`）は本物であり、`tests/` のテスト（`python -m pytest -q`）でカバーされている。このリポジトリ自身の CI（`.github/workflows/ci.yml`）もこれらを、`ruff check`、`tools/ci_validate.py`、各 `.py` ファイルの構文コンパイル、4つの `verify_qt_*.py` スクリプトとともに実行するため、そこでのリグレッションはビルドを失敗させる。リポジトリ直下にある4つの `verify_qt_*.py` スクリプト（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`, `verify_qt_selftest.py`）は、意図的に `tests/` の外に置かれた本物のエンドツーエンドチェックであり、本物のクロススレッドシグナル配信を伴う偽のトランスポートに対して検証を行う——`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で4つとも通過し、CI でも実行される。これが自動的に検証されている範囲の正直な上限だ。トランスポート層、CAN ID/バイトレイアウトの処理、そして Qt Quick ブリッジのロジックは本物であり、模擬フレームに対して検証されているが、実機のハードウェアに対してではない——下記の「Known limitations」がすでに述べている通り、これは USB アクセスのない環境で構築されたため、ここにあるものはまだ何も実機ボードに対して検証されていない。`qt_tester.py` と `assets/qml/TesterDeck.qml` が実質的な実装本体（合計で数千行）であり、模擬ボードを使ったテストと検証スクリプトで動作確認されているが、実機では一度も試されていない。
+**正直な現状確認 - 実際に今動くもの:** Qt Quick に移行した制御系統向けの CAN ペイロードエンコーダー（`advanced_protocol.py`）は本物であり、`tests/` のテスト（`python -m pytest -q`）でカバーされている。このリポジトリ自身の CI（`.github/workflows/ci.yml`）もこれらを、`ruff check`、`python -m mypy`、`tools/ci_validate.py`、各 `.py` ファイルの構文コンパイル、4つの `verify_qt_*.py` スクリプトとともに実行するため、そこでのリグレッションはビルドを失敗させる。リポジトリ直下にある4つの `verify_qt_*.py` スクリプト（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`, `verify_qt_selftest.py`）は、意図的に `tests/` の外に置かれた本物のエンドツーエンドチェックであり、本物のクロススレッドシグナル配信を伴う偽のトランスポートに対して検証を行う——`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で4つとも通過し、CI でも実行される。これが自動的に検証されている範囲の正直な上限だ。トランスポート層、CAN ID/バイトレイアウトの処理、そして Qt Quick ブリッジのロジックは本物であり、模擬フレームに対して検証されているが、実機のハードウェアに対してではない——下記の「Known limitations」がすでに述べている通り、これは USB アクセスのない環境で構築されたため、ここにあるものはまだ何も実機ボードに対して検証されていない。`qt_tester.py` と `assets/qml/TesterDeck.qml` が実質的な実装本体（合計で数千行）であり、模擬ボードを使ったテストと検証スクリプトで動作確認されているが、実機では一度も試されていない。
 
 > **安全性とセキュリティの現状:** このエコシステムは認証された安全システムではなく、実装済みの URTC 基板もまだ存在しません。ブートローダーはファームウェアイメージを CRC32 と共有鍵の HMAC-SHA256 で検査しており、非対称署名ではありません(予定)。公開されているアプリケーションイメージは公開の開発用鍵(`signing_key_kind: dev`)で署名されているため、誰でもブートローダーが受け入れるイメージを作れます。実際の基板には何も送信されていません。ここに書かれた内容を人の安全のために頼る前に、[セキュリティベースライン](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)と[脅威モデル](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)をお読みください。
 
@@ -433,7 +433,12 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 ├── plans/                      テストプランの例 (JSON)
 ├── tester_telemetry.py         各ツールのライブ値と記録された系列
 ├── tester_trace_export.py      .trc / .asc フレームエクスポートの書き出し
+├── tester_replay.py            記録した .trc / .asc トレースの再生（自前のタイマーを持たないプレーヤー）
+├── tester_blackbox_view.py     デッキが描画するブラックボックス記録：グラフの系列、表、ボードなしで開く保存済み記録
+├── tester_result_record.py     アダプター、ファームウェア、SHA-256 で特定したログに結び付けた結果記録（JSON）
+├── tester_extras.py            故障レコーダー、オプション機能、ヒーター PID、ラックベンチ、サーマルビューの Qt 非依存ロジック
 ├── urtc_ui/                    共有 UI ヘルパー（URTC-COMMON のコピー）
+├── urtc_can/                   URTC-COMMON からコピーした共有コード：プロトコル、トランスポート、仮想ボード、更新、ヘルプ、ツールヘッドのウィンドウ
 ├── advanced_protocol.py        Qt Quick に移行した制御ファミリー向けの純粋な
 │                                CAN ペイロードエンコーダー——ハードウェア不要のテスト
 ├── verify_qt_custom_frame.py        tests/ の外に置かれた、Qt Quick の Custom CAN Frame パネルの本物のエンドツーエンド検証（本物の Qt イベントループが必要）
@@ -441,7 +446,9 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 ├── verify_qt_utility_panels.py      tests/ の外に置かれた、Qt Quick のユーティリティパネル（Global Controls / Expansion Board / F-RAM）の本物のエンドツーエンド検証
 ├── verify_qt_selftest.py            tests/ の外に置かれた、Qt Quick セルフテストのエンドツーエンドチェック
 ├── tests/
-│   └── test_advanced_protocol.py   advanced_protocol.py のエンコーダー用ハードウェア不要テスト——CI で実行される、上記の正直な現状確認を参照
+│   ├── test_advanced_protocol.py   advanced_protocol.py のエンコーダー用ハードウェア不要テスト——CI で実行される、上記の正直な現状確認を参照
+│   ├── test_*.py                   プログラムの領域ごとに 1 ファイル。CI が実行し、Qt のものは画面なしで動かす
+│   └── fixtures/                   他のプログラムと共有するベクターと記録したトレース
 ├── requirements.txt            pyserial>=3.5 + PySide6>=6.8,<7
 ├── build_exe.bat               独立 Windows バイナリビルドスクリプト（PyInstaller）
 ├── build_exe.sh                同上、Linux 向け
@@ -451,15 +458,24 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 ├── bump_version.py             オドメーター式バージョンインクリメント、ビルドスクリプトが実行
 ├── bump_manifest_version.py    urtc.project.json のバージョンをネイティブ側と同期（--sync）
 ├── URTC_Tester.spec            両方のビルドスクリプトが使用する PyInstaller の spec
+├── requirements-dev.txt / requirements*.lock テストとビルドの依存関係（ハッシュで固定）
+├── mypy.ini / ruff.toml / pytest.ini 型チェックと静的チェックの設定
+├── urtc_i18n.lock.json         URTC-COMMON のカタログから生成した言語ファイルのロックファイル
+├── urtc.project.json           プロジェクトマニフェスト（バージョン、成熟度、証拠）
+├── run.bat / run.sh            プログラムを起動する
 ├── assets/
 │   ├── URTC_APP_ICON.svg       ウィンドウ/タスクバーアイコンのソース（独立した小型デザイン）
 │   ├── URTC_LOGO_TESTER.svg    バナーのソース（ベクター）
 │   ├── qml/
-│   │   └── TesterDeck.qml      既定のコマンドデッキの Qt Quick UI
+│   │   ├── TesterDeck.qml      既定のコマンドデッキの Qt Quick UI
+│   │   ├── HelpDialog.qml      クイックガイドのウィンドウ（共有）
+│   │   ├── NodePickerDialog.qml ツールヘッドのウィンドウ（共有）
+│   │   ├── UpdateDialog.qml    更新確認のウィンドウ（共有）
+│   │   └── urtc_common.lock.json URTC-COMMON からコピーしたファイルのロックファイル
 │   ├── urtc_icon.ico           Windows アイコン、URTC_APP_ICON.svg から構築
 │   └── urtc_icon.png           同上、PNG 形式（Linux）
 ├── images/
-│   ├── URTC_LOGO_TESTER.svg    本 README の先頭に表示される Logo バナー
+│   ├── URTC_TESTER_BANNER.svg  本 README の先頭に表示される Logo バナー
 │   └── URTC_TESTER_V1_1.png    本ツールのメインウィンドウのスクリーンショット（下記の写真を参照）
 ├── language/
 │   ├── english.lng             デフォルト言語、プレーンテキストの KEY=Value 文字列
@@ -478,16 +494,23 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 ├── README_ita.md               イタリア語翻訳
 ├── README_fra.md               フランス語翻訳
 ├── README_deu.md               ドイツ語翻訳
+├── README_por.md               ポルトガル語翻訳
 ├── README_zho.md               中国語翻訳
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
 │   ├── CANBUS.md
-│   └── THERMAL_RUNAWAY_BENCH_TEST.md
+│   ├── THERMAL_RUNAWAY_BENCH_TEST.md
+│   ├── HEADLESS.md                  ウィンドウなしのテスター：コマンド、計画、終了コード
+│   ├── WINDOW_GUIDE.md              ウィンドウを順に説明（8 言語の実画像付き）
+│   └── screenshots/                 ウィンドウガイドの画像（8 言語）
 ├── tools/
 │   ├── build_test.py                     バージョンを更新しないコンパイル確認 + Qt Quick デッキのソース検証
-│   └── ci_validate.py                    CI が使用する manifest/CHANGELOG/docs の検証
+│   ├── ci_validate.py                    CI が使用する manifest/CHANGELOG/docs の検証
+│   ├── capture_screens.py                画面なしでウィンドウガイドの画像を撮る（1 言語または全言語）
+│   ├── make_update_package.py            リリースの更新パッケージをビルドして署名する
+│   └── _doc_policy.py / _readme_parity.py / _tracked_names.py ci_validate.py が使う共有チェック
 └── README_jpn.md               本ファイル
 ```
 

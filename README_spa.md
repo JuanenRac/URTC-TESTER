@@ -40,7 +40,7 @@ lectura de telemetría contra la aplicación en ejecución; nunca toca la
 flash, así que no hay nada aquí que pueda dejar la placa menos operativa
 de lo que estaba al empezar.
 
-**Comprobación de honestidad - lo que realmente funciona hoy:** los codificadores de payload CAN para las familias de control migradas a Qt Quick (`advanced_protocol.py`) son reales y están cubiertos por los tests de `tests/` (`python -m pytest -q`). La propia CI de este repositorio (`.github/workflows/ci.yml`) también los ejecuta, junto con `ruff check`, `tools/ci_validate.py`, una compilación de sintaxis de cada archivo `.py` y los cuatro scripts `verify_qt_*.py`, así que una regresión ahí hace fallar la build. Los cuatro scripts `verify_qt_*.py` en la raíz del repositorio (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) son comprobaciones reales de extremo a extremo, deliberadamente fuera de `tests/`, contra un transporte falso con entrega real de señales entre hilos - los cuatro pasan con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que la CI también ejecuta. Ese es el techo honesto de lo que se verifica automáticamente: la capa de transporte, el manejo de ID/diseño de bytes CAN, y la lógica del puente Qt Quick son reales y se ejercitan contra tramas simuladas, no hardware real - como ya dice "Known limitations" más abajo, esto se construyó sin acceso USB, así que nada de esto se ha comprobado todavía contra una placa real. `qt_tester.py` y `assets/qml/TesterDeck.qml` son la implementación real y sustancial (miles de líneas combinadas), ejercitada por los tests con placas simuladas y por los scripts de verificación, nunca por una placa real.
+**Comprobación de honestidad - lo que realmente funciona hoy:** los codificadores de payload CAN para las familias de control migradas a Qt Quick (`advanced_protocol.py`) son reales y están cubiertos por los tests de `tests/` (`python -m pytest -q`). La propia CI de este repositorio (`.github/workflows/ci.yml`) también los ejecuta, junto con `ruff check`, `python -m mypy`, `tools/ci_validate.py`, una compilación de sintaxis de cada archivo `.py` y los cuatro scripts `verify_qt_*.py`, así que una regresión ahí hace fallar la build. Los cuatro scripts `verify_qt_*.py` en la raíz del repositorio (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) son comprobaciones reales de extremo a extremo, deliberadamente fuera de `tests/`, contra un transporte falso con entrega real de señales entre hilos - los cuatro pasan con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que la CI también ejecuta. Ese es el techo honesto de lo que se verifica automáticamente: la capa de transporte, el manejo de ID/diseño de bytes CAN, y la lógica del puente Qt Quick son reales y se ejercitan contra tramas simuladas, no hardware real - como ya dice "Known limitations" más abajo, esto se construyó sin acceso USB, así que nada de esto se ha comprobado todavía contra una placa real. `qt_tester.py` y `assets/qml/TesterDeck.qml` son la implementación real y sustancial (miles de líneas combinadas), ejercitada por los tests con placas simuladas y por los scripts de verificación, nunca por una placa real.
 
 > **Estado de seguridad física y de ciberseguridad:** este ecosistema no es un sistema de seguridad certificado y todavía no existe ninguna placa URTC poblada. Los bootloaders comprueban las imágenes de firmware con CRC32 y un HMAC-SHA256 de clave compartida, no con una firma asimétrica (prevista); las imágenes de aplicación publicadas están firmadas con la clave pública de desarrollo (`signing_key_kind: dev`), así que cualquiera puede producir una imagen que el bootloader acepte; no se ha transmitido nada a una placa real. Lee la [línea base de seguridad](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) y el [modelo de amenazas](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) antes de fiarte de cualquier afirmación de aquí para la seguridad de una persona.
 
@@ -449,7 +449,12 @@ firmware - está documentado en
 ├── plans/                      Planes de prueba de ejemplo (JSON)
 ├── tester_telemetry.py         Lecturas en directo de cada herramienta y la serie registrada
 ├── tester_trace_export.py      Escritores de las exportaciones de tramas .trc / .asc
+├── tester_replay.py            Reproducción de una traza .trc / .asc grabada (un reproductor sin temporizador propio)
+├── tester_blackbox_view.py     El registro de la caja negra tal como lo dibuja el panel: series del gráfico, tabla y registros guardados abiertos sin placa
+├── tester_result_record.py     Registros de resultado ligados al adaptador, al firmware y a un log por su SHA-256 (JSON)
+├── tester_extras.py            Lógica sin Qt de la caja negra, las funciones opcionales, el PID del calentador, el banco del rack y la vista térmica
 ├── urtc_ui/                    Ayudas de interfaz compartidas (copia de URTC-COMMON)
+├── urtc_can/                   Código compartido copiado de URTC-COMMON: protocolo, transportes, placa virtual, actualizaciones, ayuda y la ventana de cabezales
 ├── advanced_protocol.py        Encoders puros de payload CAN para las familias
 │                                de controles migradas a Qt Quick - tests sin hardware
 ├── verify_qt_custom_frame.py        Comprobación real de extremo a extremo, fuera de tests/, del panel Qt Quick Custom CAN Frame (necesita un bucle de eventos Qt real)
@@ -457,7 +462,9 @@ firmware - está documentado en
 ├── verify_qt_utility_panels.py      Comprobación real de extremo a extremo, fuera de tests/, de los paneles de utilidad Qt Quick (Global Controls / Expansion Board / F-RAM)
 ├── verify_qt_selftest.py            Comprobación real de extremo a extremo, fuera de tests/, del autotest de Qt Quick
 ├── tests/
-│   └── test_advanced_protocol.py   Tests sin hardware para los encoders de advanced_protocol.py - los ejecuta la CI, ver Comprobación de honestidad arriba
+│   ├── test_advanced_protocol.py   Tests sin hardware para los encoders de advanced_protocol.py - los ejecuta la CI, ver Comprobación de honestidad arriba
+│   ├── test_*.py                   Un archivo por área del programa; la CI los ejecuta, los de Qt sin pantalla
+│   └── fixtures/                   Vectores compartidos con los otros programas y trazas grabadas
 ├── requirements.txt            pyserial>=3.5 + PySide6>=6.8,<7
 ├── build_exe.bat               Script de compilación del binario independiente
 │                                para Windows (PyInstaller)
@@ -468,17 +475,26 @@ firmware - está documentado en
 ├── bump_version.py             Incremento de versión tipo cuentakilómetros, ejecutado por los scripts de build
 ├── bump_manifest_version.py    Sincroniza la versión de urtc.project.json con la nativa (--sync)
 ├── URTC_Tester.spec            Spec de PyInstaller usado por ambos scripts de build
+├── requirements-dev.txt / requirements*.lock Dependencias de los tests y de la compilación, cerradas con hashes
+├── mypy.ini / ruff.toml / pytest.ini Ajustes de la comprobación de tipos y de las comprobaciones estáticas
+├── urtc_i18n.lock.json         Bloqueo de los archivos de idioma generados desde el catálogo de URTC-COMMON
+├── urtc.project.json           Manifiesto del proyecto (versión, madurez, evidencia)
+├── run.bat / run.sh            Inician el programa
 ├── assets/
 │   ├── URTC_APP_ICON.svg       Origen del icono de ventana/barra de tareas (diseño
 │                                pequeño independiente)
 │   ├── URTC_LOGO_TESTER.svg    Origen del banner (vectorial)
 │   ├── qml/
-│   │   └── TesterDeck.qml      UI Qt Quick del deck de comandos predeterminado
+│   │   ├── TesterDeck.qml      UI Qt Quick del deck de comandos predeterminado
+│   │   ├── HelpDialog.qml      La ventana de la guía rápida (compartida)
+│   │   ├── NodePickerDialog.qml La ventana de cabezales (compartida)
+│   │   ├── UpdateDialog.qml    La ventana de Buscar actualizaciones (compartida)
+│   │   └── urtc_common.lock.json Bloqueo de los ficheros copiados de URTC-COMMON
 │   ├── urtc_icon.ico           Icono de Windows, generado a partir de
 │                                URTC_APP_ICON.svg
 │   └── urtc_icon.png           El mismo, en formato PNG (Linux)
 ├── images/
-│   ├── URTC_LOGO_TESTER.svg    Banner del logo mostrado en la parte superior de
+│   ├── URTC_TESTER_BANNER.svg  Banner del logo mostrado en la parte superior de
 │                                este README
 │   └── URTC_TESTER_V1_1.png    Captura de la ventana principal de la herramienta
 │                                (ver Fotos más abajo)
@@ -501,16 +517,23 @@ firmware - está documentado en
 ├── README_ita.md               Traducción al italiano
 ├── README_fra.md               Traducción al francés
 ├── README_deu.md               Traducción al alemán
+├── README_por.md               Traducción al portugués
 ├── README_zho.md               Traducción al chino
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
 │   ├── CANBUS.md
-│   └── THERMAL_RUNAWAY_BENCH_TEST.md
+│   ├── THERMAL_RUNAWAY_BENCH_TEST.md
+│   ├── HEADLESS.md                  El tester sin ventana: comandos, planes y códigos de salida
+│   ├── WINDOW_GUIDE.md              La ventana paso a paso, con imágenes reales en los ocho idiomas
+│   └── screenshots/                 Las imágenes de la guía de la ventana, en los ocho idiomas
 ├── tools/
 │   ├── build_test.py                     Comprobación de compilación sin subir versión + validación de fuentes del deck Qt Quick
-│   └── ci_validate.py                    Validación de manifest/CHANGELOG/docs usada por la CI
+│   ├── ci_validate.py                    Validación de manifest/CHANGELOG/docs usada por la CI
+│   ├── capture_screens.py                Toma las imágenes de la guía de la ventana sin pantalla (un idioma o todos)
+│   ├── make_update_package.py            Construye y firma el paquete de actualización de una versión publicada
+│   └── _doc_policy.py / _readme_parity.py / _tracked_names.py Comprobaciones compartidas que usa ci_validate.py
 └── README_jpn.md               Traducción al japonés
 ```
 

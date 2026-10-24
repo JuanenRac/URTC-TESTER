@@ -35,7 +35,7 @@
 一切都是针对当前正在运行的应用程序的运行时指令或遥测读取；它从不触碰
 闪存，因此这里没有任何东西会让板卡的可用性比开始时更差。
 
-**诚实核查 - 今天真正能运行的部分：** 为迁移到 Qt Quick 的控制系列所提供的 CAN 负载编码器（`advanced_protocol.py`）是真实的，并由 `tests/` 中的测试覆盖（`python -m pytest -q`）。这个仓库自己的 CI（`.github/workflows/ci.yml`）也会运行它们，同时运行 `ruff check`、`tools/ci_validate.py`、对每个 `.py` 文件的语法编译以及四个 `verify_qt_*.py` 脚本，所以那里的回归会导致构建失败。仓库根目录下的四个 `verify_qt_*.py` 脚本（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`, `verify_qt_selftest.py`）是真实的、刻意放在 `tests/` 之外的端到端检查，针对一个带有真实跨线程信号传递的模拟传输层——运行 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 时四者都能通过，CI 也会运行它们。这就是自动验证所能达到的诚实上限：传输层、CAN ID/字节布局处理，以及 Qt Quick 桥接逻辑都是真实的，并且针对模拟帧进行了验证，而不是真实硬件——正如下文"Known limitations"已经指出的，这套工具是在没有 USB 访问权限的环境下构建的，所以这里的任何东西都还没有针对真实板卡验证过。`qt_tester.py` 和 `assets/qml/TesterDeck.qml` 是真实而庞大的实现（合计数千行代码），由使用模拟板卡的测试和验证脚本检验，从未在真实板卡上运行过。
+**诚实核查 - 今天真正能运行的部分：** 为迁移到 Qt Quick 的控制系列所提供的 CAN 负载编码器（`advanced_protocol.py`）是真实的，并由 `tests/` 中的测试覆盖（`python -m pytest -q`）。这个仓库自己的 CI（`.github/workflows/ci.yml`）也会运行它们，同时运行 `ruff check`、`python -m mypy`、`tools/ci_validate.py`、对每个 `.py` 文件的语法编译以及四个 `verify_qt_*.py` 脚本，所以那里的回归会导致构建失败。仓库根目录下的四个 `verify_qt_*.py` 脚本（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`, `verify_qt_selftest.py`）是真实的、刻意放在 `tests/` 之外的端到端检查，针对一个带有真实跨线程信号传递的模拟传输层——运行 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 时四者都能通过，CI 也会运行它们。这就是自动验证所能达到的诚实上限：传输层、CAN ID/字节布局处理，以及 Qt Quick 桥接逻辑都是真实的，并且针对模拟帧进行了验证，而不是真实硬件——正如下文"Known limitations"已经指出的，这套工具是在没有 USB 访问权限的环境下构建的，所以这里的任何东西都还没有针对真实板卡验证过。`qt_tester.py` 和 `assets/qml/TesterDeck.qml` 是真实而庞大的实现（合计数千行代码），由使用模拟板卡的测试和验证脚本检验，从未在真实板卡上运行过。
 
 > **安全与安防现状:**本生态系统不是经认证的安全系统,目前也不存在已组装的 URTC 电路板。引导程序使用 CRC32 和共享密钥的 HMAC-SHA256 校验固件映像,而非非对称签名(计划中);已发布的应用映像使用公开的开发密钥签名(`signing_key_kind: dev`),因此任何人都可以生成引导程序接受的映像;尚未向任何真实电路板发送过任何内容。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
@@ -358,7 +358,12 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 ├── plans/                      测试计划示例 (JSON)
 ├── tester_telemetry.py         各工具的实时读数与记录的数据序列
 ├── tester_trace_export.py      .trc / .asc 帧导出的写入代码
+├── tester_replay.py            回放已录制的 .trc / .asc 轨迹（播放器自身不带定时器）
+├── tester_blackbox_view.py     面板绘制的黑匣子记录：图表数据序列、表格，以及无需开发板即可打开的已保存记录
+├── tester_result_record.py     与适配器、固件以及按 SHA-256 标识的日志绑定的结果记录（JSON）
+├── tester_extras.py            故障记录器、可选功能、加热器 PID、机架试验台和热成像视图中不依赖 Qt 的逻辑
 ├── urtc_ui/                    共享界面辅助代码（URTC-COMMON 的副本）
+├── urtc_can/                   复制自 URTC-COMMON 的共享代码：协议、传输、虚拟板、更新、帮助和工具头窗口
 ├── advanced_protocol.py        为迁移到 Qt Quick 的控制系列提供的纯 CAN
 │                                负载编码器——无需硬件的测试
 ├── verify_qt_custom_frame.py        真实的、放在 tests/ 之外的端到端检查，验证 Qt Quick Custom CAN Frame 面板（需要真实的 Qt 事件循环）
@@ -366,7 +371,9 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 ├── verify_qt_utility_panels.py      真实的、放在 tests/ 之外的端到端检查，验证 Qt Quick 实用面板（Global Controls / Expansion Board / F-RAM）
 ├── verify_qt_selftest.py            位于 tests/ 之外的 Qt Quick 自检端到端检查
 ├── tests/
-│   └── test_advanced_protocol.py   针对 advanced_protocol.py 编码器的无硬件测试——CI 会运行它，见上文诚实核查
+│   ├── test_advanced_protocol.py   针对 advanced_protocol.py 编码器的无硬件测试——CI 会运行它，见上文诚实核查
+│   ├── test_*.py                   按程序的每个领域各有一个文件；CI 会运行它们，涉及 Qt 的测试在无屏幕模式下运行
+│   └── fixtures/                   与其他程序共享的向量和已录制的轨迹
 ├── requirements.txt            pyserial>=3.5 + PySide6>=6.8,<7
 ├── build_exe.bat               独立 Windows 二进制文件构建脚本（PyInstaller）
 ├── build_exe.sh                同上，适用于 Linux
@@ -376,15 +383,24 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 ├── bump_version.py             里程表式版本递增，由构建脚本运行
 ├── bump_manifest_version.py    将 urtc.project.json 的版本与原生版本同步（--sync）
 ├── URTC_Tester.spec            两个构建脚本共用的 PyInstaller 规范文件
+├── requirements-dev.txt / requirements*.lock 测试和构建所用依赖，带哈希锁定
+├── mypy.ini / ruff.toml / pytest.ini 类型检查和静态检查的设置
+├── urtc_i18n.lock.json         由 URTC-COMMON 目录生成的语言文件的锁定文件
+├── urtc.project.json           项目清单（版本、成熟度、证据）
+├── run.bat / run.sh            启动程序
 ├── assets/
 │   ├── URTC_APP_ICON.svg       窗口/任务栏图标源文件（独立小型设计）
 │   ├── URTC_LOGO_TESTER.svg    横幅源文件（矢量图）
 │   ├── qml/
-│   │   └── TesterDeck.qml      默认指令面板的 Qt Quick UI
+│   │   ├── TesterDeck.qml      默认指令面板的 Qt Quick UI
+│   │   ├── HelpDialog.qml      快速指南窗口（共享）
+│   │   ├── NodePickerDialog.qml 工具头窗口（共享）
+│   │   ├── UpdateDialog.qml    检查更新窗口（共享）
+│   │   └── urtc_common.lock.json 复制自 URTC-COMMON 的文件的锁定文件
 │   ├── urtc_icon.ico           Windows 图标，由 URTC_APP_ICON.svg 构建
 │   └── urtc_icon.png           同上，PNG 形式（Linux）
 ├── images/
-│   ├── URTC_LOGO_TESTER.svg    显示在本 README 顶部的 Logo 横幅
+│   ├── URTC_TESTER_BANNER.svg  显示在本 README 顶部的 Logo 横幅
 │   └── URTC_TESTER_V1_1.png    本工具主窗口的截图（见下方照片）
 ├── language/
 │   ├── english.lng             默认语言，纯文本 KEY=Value 字符串
@@ -403,16 +419,23 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 ├── README_ita.md               意大利语翻译
 ├── README_fra.md               法语翻译
 ├── README_deu.md               德语翻译
+├── README_por.md               葡萄牙语翻译
 ├── README_jpn.md               日语翻译
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── BUILD_AND_RUN.md
 │   ├── INTEGRATION_CONTRACT.md
 │   ├── CANBUS.md
-│   └── THERMAL_RUNAWAY_BENCH_TEST.md
+│   ├── THERMAL_RUNAWAY_BENCH_TEST.md
+│   ├── HEADLESS.md                  无窗口的测试器：命令、计划和退出码
+│   ├── WINDOW_GUIDE.md              逐步介绍窗口，附八种语言的真实图片
+│   └── screenshots/                 窗口指南的图片，八种语言各一套
 ├── tools/
 │   ├── build_test.py                     不递增版本号的编译检查 + Qt Quick 面板源码校验
-│   └── ci_validate.py                    CI 使用的 manifest/CHANGELOG/docs 校验
+│   ├── ci_validate.py                    CI 使用的 manifest/CHANGELOG/docs 校验
+│   ├── capture_screens.py                无屏幕生成窗口指南的图片（一种语言或全部语言）
+│   ├── make_update_package.py            构建并签名某个发布版本的更新包
+│   └── _doc_policy.py / _readme_parity.py / _tracked_names.py ci_validate.py 使用的共享检查
 └── README_zho.md               本文件
 ```
 
