@@ -5,23 +5,43 @@
 # =============================================================================
 import json
 import tempfile
-import time
 import threading
+import types
 import unittest
 from pathlib import Path
 from unittest import mock
 
 import tester_config
+import tester_plan
 from tester_simulator import SimulatedBoard
 
 try:
     import qt_tester
-    from PySide6.QtCore import QCoreApplication
+    from PySide6.QtCore import QCoreApplication, Qt
 except ImportError:  # PySide6 is not installed
     qt_tester = None
     QCoreApplication = None
+    Qt = None
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+class InlineThread:
+    """A thread that runs its function when it is started, in the thread that starts it."""
+
+    def __init__(self, target=None, args=(), kwargs=None, name=None, daemon=None):
+        self._target, self._args, self._kwargs = target, args, kwargs or {}
+
+    def start(self):
+        self._target(*self._args, **self._kwargs)
+
+    def is_alive(self):
+        return False
+
+    def join(self, timeout=None):
+        pass
+
+
 READ_ONLY = {
     "format": 1, "name": "read-only-check", "description": "Asks and changes nothing.",
     "steps": [{"do": "query_version", "label": "the application answers"}, {"do": "check_faults", "label": "no fault"}],
@@ -61,21 +81,17 @@ class QtPlanTests(unittest.TestCase):
         self.bridge._listen_only = False
 
     def _on_question(self, answer):
-        """What the person in front of the board does when a plan asks something; the connection is undone at the end of the test, so no
-        reference cycle keeps the bridge (and the threads that signal it) alive into the next test."""
-        self.bridge.planConfirmRequested.connect(answer)
+        """What the person in front of the board does when a plan asks something; the connection is undone at the end of the test."""
+        self.bridge.planConfirmRequested.connect(answer, Qt.ConnectionType.DirectConnection)
         self.addCleanup(self.bridge.planConfirmRequested.disconnect)
 
     def _run(self, name, allow=False):
-        """Starts the plan the way the window does and waits for the worker to end."""
-        self.bridge.refreshPlans()
-        self.bridge.runPlan(name, allow)
-        # the worker reports through queued signals: the events are delivered here, as the window's loop would
-        deadline = time.monotonic() + 30
-        while self.bridge.planRunning and time.monotonic() < deadline:
-            QCoreApplication.processEvents()
-            time.sleep(0.01)
-        QCoreApplication.processEvents()
+        """Starts the plan the way the window does. The worker threads run inline (no thread at all): the plan, the question to the person and
+        the signals that report them all happen in the thread of the test, so nothing is left running when the test ends."""
+        proxy = types.SimpleNamespace(Thread=InlineThread, Event=threading.Event, RLock=threading.RLock, Lock=threading.Lock)
+        with mock.patch.object(qt_tester, "threading", proxy), mock.patch.object(tester_plan, "threading", proxy):
+            self.bridge.refreshPlans()
+            self.bridge.runPlan(name, allow)
         self.assertFalse(self.bridge.planRunning)
 
     def test_the_plans_next_to_the_program_are_listed_and_a_broken_one_is_reported(self):
