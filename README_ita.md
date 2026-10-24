@@ -472,7 +472,6 @@ firmware - è documentato in
 │   ├── URTC_APP_ICON.svg       Sorgente dell'icona finestra/barra applicazioni
 │                                (design standalone piccolo)
 │   ├── URTC_LOGO_TESTER.svg    Sorgente del banner (vettoriale)
-│   ├── HYDRA_UMC_ICON.svg      Sorgente vettoriale animata HYDRA-UMC mantenuta
 │   ├── qml/
 │   │   └── TesterDeck.qml      UI Qt Quick del command deck predefinito
 │   ├── urtc_icon.ico           Icona Windows, generata da URTC_APP_ICON.svg
@@ -635,6 +634,12 @@ Questo programma può cercare una versione più recente di sé stesso: il pulsan
 
 Quali versioni dei programmi URTC funzionano insieme, e quale versione del protocollo parla ciascuna, è elencato nella tabella di compatibilità generata da URTC-COMMON: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
 <!-- /urtc-section:compatibility -->
+
+<!-- urtc-section:heads -->
+## 🧭 Più teste utensile su un bus
+
+Il firmware può far condividere un bus CAN a più teste utensile (l'estensione multinodo). È **disattivata per impostazione predefinita**, e un bus con una sola testa funziona esattamente come prima. La finestra **Teste** trova le teste, elenca ciascuna con indirizzo, utensile e numero di serie, e mostra il suo stato: pronta, selezionata, conflitto di indirizzo, guasto memorizzato, nel suo bootloader o persa. Ne selezioni una, il programma chiede conferma e solo dopo le invia qualcosa; finché sul bus ci sono più teste, un comando viene rifiutato finché una non è selezionata e l'ha confermato. Se la testa selezionata si perde, tutte le teste passano allo stato sicuro (una casella della finestra lo disattiva). Provata solo contro un modello del bus, non con schede. Vedi `docs/MULTINODE.md` in URTC-COMMON.
+<!-- /urtc-section:heads -->
 
 ## 📜 LICENZA
 

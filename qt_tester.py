@@ -108,8 +108,12 @@ from tester_config import (
 )
 from tester_result_record import session_manifest
 from tester_transports import SLCAN, SocketCAN, list_socketcan_interfaces, virtual_ports
-from urtc_can import update_service
+from urtc_can import tools_catalog, update_service, versioning
 from urtc_can.help_qt import HelpModel
+from urtc_can.multinode_host import MultinodeHost
+from urtc_can.node_picker import GatedTransport, NodePicker, config_reader_for, transport_io
+from urtc_can.node_picker_qt import NodePickerModel
+from urtc_can.protocol import CAN_ID_SLAVE_APP_PATCH, CAN_ID_SLAVE_REG_READ
 from urtc_can.update_qt import UpdateModel
 from urtc_ui import LanguageModel, connection_badge, format_can_id, format_hex
 
@@ -168,6 +172,8 @@ class TesterQtBridge(QObject):
         self._busy = False
         self._update_model: UpdateModel | None = None
         self._help_model: HelpModel | None = None
+        self._node_model: NodePickerModel | None = None
+        self._slave_frames: list[tuple[int, bytes]] = []
         # Replay of a recorded trace: its own rows, apart from the monitor of the bus, and a timer that only moves the player.
         self._replay_player: tester_replay.TracePlayer | None = None
         self._replay_rows: collections.deque = collections.deque(maxlen=self.MONITOR_MAX_ROWS)
@@ -291,6 +297,27 @@ class TesterQtBridge(QObject):
             )
             self._update_model = UpdateModel(service, language=lambda: tester_config._current_language, save_options=save, parent=self)
         return self._update_model
+
+    @Property(QObject, constant=True)
+    def nodes(self) -> QObject:
+        """The window that finds the tool heads of the bus and selects one. With one head and no multinode extension (the default of the
+        firmware) it finds nobody and everything is sent as always; with several heads, a command goes only to the one the person selected
+        and confirmed. It stays off the bus while an operation of the program runs."""
+        if self._node_model is None:
+            def save(value: bool) -> None:
+                save_config({"multinode_release_on_lapse": value})
+
+            self._node_model = NodePickerModel(language=lambda: tester_config._current_language, save_release=save, app_busy=lambda: self._busy, parent=self)
+            self._node_model.restoreReleaseOption(bool(load_config().get("multinode_release_on_lapse", True)))
+            self._node_model.start()
+        return self._node_model
+
+    def _attach_node_picker(self, transport):
+        """Wrap a freshly opened transport so single-head frames are checked against the selected head, and give the picker to the window."""
+        picker = NodePicker(MultinodeHost(transport_io(transport)), config_reader=config_reader_for(transport),
+                            language=lambda: tester_config._current_language, lock=self._io_lock)
+        self.nodes.attach(picker)
+        return GatedTransport(transport, picker)
 
     @Property(QObject, constant=True)
     def help(self) -> QObject:
@@ -1150,6 +1177,7 @@ class TesterQtBridge(QObject):
                 self._transport.close()
             finally:
                 self._transport = None
+                self.nodes.attach(None)
                 self._active_tool = "No active probe yet"
                 self._active_tool_id = -1
                 self._version = "No board version received"
@@ -1178,7 +1206,7 @@ class TesterQtBridge(QObject):
             self._connectionResult.emit(None, str(exc))
 
     def _on_connection_result(self, transport, error: str) -> None:
-        self._transport = transport
+        self._transport = None if transport is None else self._attach_node_picker(transport)
         if error:
             self._set_state(status="CONNECTION FAILED", busy=False)
             self._log(f"CONNECTION_FAILED {error}")
@@ -2566,6 +2594,28 @@ class TesterQtBridge(QObject):
                 return frame[1]
         return None
 
+    @staticmethod
+    def _read_slave_application(transport, tool_data) -> list[tuple[int, bytes]]:
+        """The frames that answer a read of the version of the expansion slave (0x221 for register 0x01, then its 0x222 companion). Asked only
+        when the tool that answered has an expansion board; the minor number is not in the answer, and a slave application from before the patch
+        field sends no companion."""
+        entry = tools_catalog.tool_by_id(tool_data[0]) if tool_data else None
+        if entry is None or entry.get("expansion_board") == "none":
+            return []
+        transport.send_frame(*versioning.slave_app_version_request())
+        frames: list[tuple[int, bytes]] = []
+        deadline = time.monotonic() + 1.0
+        while time.monotonic() < deadline:
+            frame = transport.read_frame(timeout=0.1)
+            if frame is None:
+                continue
+            frames.append((frame[0], bytes(frame[1])))
+            if frame[0] == CAN_ID_SLAVE_REG_READ:
+                deadline = min(deadline, time.monotonic() + 0.2)      # the companion, if there is one, follows at once
+            if {CAN_ID_SLAVE_REG_READ, CAN_ID_SLAVE_APP_PATCH} <= {entry[0] for entry in frames}:
+                break
+        return frames
+
     def _probe_worker(self) -> None:
         with self._io_lock:
             try:
@@ -2578,6 +2628,7 @@ class TesterQtBridge(QObject):
                 version_data = self._wait_for(CAN_ID_VERSION_RESPONSE, 1.5)
                 # Firmware 0.3.5 and newer sends the patch number in the next frame; older firmware sends nothing.
                 self._version_patch_frame = self._wait_for(CAN_ID_VERSION_PATCH_RESPONSE, VERSION_PATCH_GRACE_S) if version_data is not None else None
+                self._slave_frames = self._read_slave_application(transport, tool_data)
                 self._probeResult.emit(tool_data, version_data, "")
             except Exception as exc:
                 self._probeResult.emit(None, None, str(exc))
@@ -2612,6 +2663,11 @@ class TesterQtBridge(QObject):
             version_text = protocol.firmware_version_text(major, minor, self._version_patch_frame)
             self._version = f"{role} v{version_text} - HW 0x{hardware_id:08X} ({identity})"
             self._log(f"BOARD_VERSION {self._version}")
+            slave = versioning.parse_slave_app_version(self._slave_frames)
+            if slave is not None:
+                line = f"{_('QT_SLAVE_APP_LABEL')}: {_('QT_SLAVE_APP_VALUE', version=versioning.slave_app_version_text(slave), hw=slave['hardware_id'])}"
+                self._version = f"{self._version}\n{line}"
+                self._log(f"SLAVE_APP_VERSION {versioning.slave_app_version_text(slave)} HW {slave['hardware_id']}")
         else:
             self._version = "No response to version query"
             self._log("BOARD_VERSION no response")
@@ -2637,6 +2693,7 @@ def run_qtquick() -> int:
     bridge = TesterQtBridge()
     # Closing the window switches every output off first (the watchdog threads are daemons and die without sending their safe-off frame).
     app.aboutToQuit.connect(bridge.shutdownOutputs)
+    app.aboutToQuit.connect(lambda: bridge.nodes.stop())
     engine = QQmlApplicationEngine()
     engine.rootContext().setContextProperty("testerBackend", bridge)
     qml_path = Path(__file__).resolve().parent / "assets" / "qml" / "TesterDeck.qml"

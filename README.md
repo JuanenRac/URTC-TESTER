@@ -433,7 +433,6 @@ firmware-flash authority of its own - is documented in
 ├── assets/
 │   ├── URTC_APP_ICON.svg       Window/taskbar icon source (small standalone design)
 │   ├── URTC_LOGO_TESTER.svg    Banner source (vector)
-│   ├── HYDRA_UMC_ICON.svg      Maintained animated HYDRA-UMC vector source
 │   ├── qml/
 │   │   └── TesterDeck.qml      Qt Quick UI for the default command deck
 │   ├── urtc_icon.ico           Windows icon, built from URTC_APP_ICON.svg
@@ -593,6 +592,12 @@ This program can look for a newer version of itself: the "Check for updates" but
 
 Which versions of the URTC programs work together, and which protocol version each one speaks, is listed in the compatibility table that URTC-COMMON generates: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
 <!-- /urtc-section:compatibility -->
+
+<!-- urtc-section:heads -->
+## 🧭 Several tool heads on one bus
+
+The firmware can let several tool heads share one CAN bus (the multinode extension). It is **off by default**, and a bus with one head works exactly as before. The **Tool heads** window finds the heads, lists each with its address, tool and serial number, and shows its state: ready, selected, address conflict, fault latched, in its bootloader or lost. You select one, the program asks you to confirm, and only then does it send anything to that head; while several heads are on the bus, a command is refused until one is selected and has confirmed it. If the selected head is lost, every head is put in its safe state (a checkbox of the window switches that off). It has been tried against a model of the bus only, not against boards. See `docs/MULTINODE.md` in URTC-COMMON.
+<!-- /urtc-section:heads -->
 
 ## 📜 LICENSE
 
