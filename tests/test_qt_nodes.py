@@ -147,6 +147,9 @@ def test_the_version_line_of_the_probe_adds_the_slave_application(qt_app):
     bridge._slave_frames = [(0x221, bytes.fromhex("000303cc01000000")), (0x222, bytes([1, 5]))]
     bridge._on_probe_result(bytes([0, 0, 0, 0]), bytes.fromhex("000303cc01000003"), "")
     assert bridge.boardVersion.endswith("\nSlave application: v0.?.5 / HW 0x0303CC01")
+    bridge._slave_frames = [(0x221, bytes.fromhex("000303cc01000000")), (0x222, bytes([1, 4, 2]))]
+    bridge._on_probe_result(bytes([0, 0, 0, 0]), bytes.fromhex("000303cc01000003"), "")
+    assert bridge.boardVersion.endswith("\nSlave application: v0.2.4 / HW 0x0303CC01")
     bridge._slave_frames = []
     bridge._on_probe_result(bytes([0, 0, 0, 0]), bytes.fromhex("000303cc01000003"), "")
     assert "Slave application" not in bridge.boardVersion

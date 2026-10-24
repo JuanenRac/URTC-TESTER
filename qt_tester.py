@@ -2613,8 +2613,8 @@ class TesterQtBridge(QObject):
     @staticmethod
     def _read_slave_application(transport, tool_data) -> list[tuple[int, bytes]]:
         """The frames that answer a read of the version of the expansion slave (0x221 for register 0x01, then its 0x222 companion). Asked only
-        when the tool that answered has an expansion board; the minor number is not in the answer, and a slave application from before the patch
-        field sends no companion."""
+        when the tool that answered has an expansion board; the whole minor number comes from the companion, and a slave application from before
+        the patch field sends none."""
         entry = tools_catalog.tool_by_id(tool_data[0]) if tool_data else None
         if entry is None or entry.get("expansion_board") == "none":
             return []

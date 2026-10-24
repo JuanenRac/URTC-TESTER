@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The whole version of the slave application:** the identity probe shows `v0.2.4` for the slave application where it showed `v0.?.4`: the master sends the low byte of the minor number in a third byte of the `0x222` companion frame and the shared code joins it with the high byte of the `0x221` answer. A slave or a master from before that byte still shows the minor as `?`.
 - **The probe reads what the board counts and keeps:** when the board answers the identity probe, the program also reads, read only, the CAN error counters (0x7FB, shown as `TEC n / REC n` and logged), the saved F-RAM state (0x1A3) and the thermal statistics (0x1A7), so a person does not have to press three more buttons; the label `QTLOG_ERROR_COUNTERS` exists in the eight languages.
 - **The bus health check runs on the connection the window holds:** with the gate of the tool heads around the adapter, the periodic check had been given the adapter itself and stopped at its first turn; it now gets the connection the window keeps, and its carrier check of a SocketCAN interface looks through the gate.
 - **The status line of the window in the language of the program:** the statuses the window sets (`READY`, `CONNECTED COM3`, `CAN-OTA IN PROGRESS` ...) have texts in the eight languages in the catalog (`QTSTATUS_*`), shown by `translate_status`; what follows the words (the port, the bit rate) is kept, and a test checks that every literal status the window sets has a text in every language.
