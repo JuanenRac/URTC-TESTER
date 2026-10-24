@@ -58,6 +58,7 @@ from tester_config import (
     load_config,
     save_config,
     translate_log_line,
+    translate_status,
     CAN_ID_ACTIVE_TOOL_RESP,
     CAN_ID_3DP_LAYER_FAN_CMD,
     CAN_ID_3DP_THERMAL_MOTION,
@@ -515,7 +516,7 @@ class TesterQtBridge(QObject):
 
     @Property(str, notify=changed)
     def status(self) -> str:
-        return self._status
+        return translate_status(self._status)
 
     @Slot(result=str)
     def refreshBusStats(self) -> str:

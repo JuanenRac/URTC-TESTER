@@ -432,7 +432,7 @@ def evaluate_thermal_runaway_bench_test(before: dict | None, after: dict | None,
         reasons.append("no 0x1AB answer - the board needs URTC firmware 0.3.3 or newer")
     if quick is None:
         reasons.append("no 0x111 answer after the fault")
-    if reasons:
+    if reasons or before is None or after is None or quick is None:
         return False, reasons
     if not quick["system_error"]:
         reasons.append("0x111 byte 1: no critical error latched - the heater was NOT cut")

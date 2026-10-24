@@ -197,6 +197,19 @@ def translate_log_line(message):
             return label
     return str(message)
 
+def translate_status(message):
+    """Shows the status line of the window in the interface language. The status is a few uppercase English words (``CONNECTED COM3``): the
+    longest run of words from the start that has a text (``QTSTATUS_<WORDS>``) is translated and what follows (the port, the bit rate) is kept.
+    A status without a text is returned unchanged; a token such as ``SWD_FLASH_COMPLETE`` goes through ``translate_log_line``."""
+    text = str(message)
+    words = text.split(" ")
+    for count in range(len(words), 0, -1):
+        key = "QTSTATUS_" + re.sub(r"[^A-Z0-9]+", "_", " ".join(words[:count])).strip("_")
+        label = _translations.get(key)
+        if label:
+            return " ".join([label, *words[count:]])
+    return translate_log_line(text)
+
 
 def _load_custom_id_names():
     """Optional, not included by default: urtc_custom_ids.json next to
@@ -225,7 +238,7 @@ def _load_custom_id_names():
 CUSTOM_ID_NAMES = _load_custom_id_names()
 
 if getattr(sys, "frozen", False):
-    ICON_IMAGE_PATH = os.path.normpath(os.path.join(sys._MEIPASS, "assets", "urtc_icon.png"))
+    ICON_IMAGE_PATH = os.path.normpath(os.path.join(getattr(sys, "_MEIPASS"), "assets", "urtc_icon.png"))
 else:
     ICON_IMAGE_PATH = os.path.normpath(os.path.join(base_dir, "assets", "urtc_icon.png"))
 

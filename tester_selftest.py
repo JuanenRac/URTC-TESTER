@@ -112,7 +112,7 @@ def run_self_test(
             if expect_id is None:
                 add(INFO, description)
                 continue
-            send = (command_id, command_data) if command_id is not None else None
+            send = (command_id, command_data) if command_id is not None and command_data is not None else None
             response = exchange(send, expect_id, timeout)
             if command_id == CAN_ID_DRILL_CMD:
                 result.sent_drill_command = True

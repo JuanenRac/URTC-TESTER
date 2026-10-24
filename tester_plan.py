@@ -34,7 +34,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 import advanced_protocol as protocol
 import tester_selftest
@@ -231,7 +231,7 @@ def _validate_step(where: str, kind: str, step: dict, plan_actuates: bool) -> li
             problems.append(f"{where}: within_ms must be 1 to {MAX_WAIT_MS}")
         if "length" in step and (isinstance(step["length"], bool) or not isinstance(step["length"], int) or not 0 <= step["length"] <= 8):
             problems.append(f"{where}: length must be 0 to 8")
-        value = step.get("value")
+        value: Any = step.get("value")
         if "value" in step:
             ok = isinstance(value, dict) and set(value) <= {"offset", "width", "min", "max"} and {"offset", "width"} <= set(value)
             ok = ok and all(isinstance(value[k], int) and not isinstance(value[k], bool) for k in value)
