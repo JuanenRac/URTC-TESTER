@@ -32,6 +32,7 @@ import threading
 import time
 import zipfile
 from pathlib import Path
+from typing import Any
 
 import advanced_protocol as protocol
 import tester_blackbox_view as bbview
@@ -168,7 +169,7 @@ class TesterQtBridge(QObject):
         saved_bitrate = saved.get("bitrate")
         self._bitrate_label = saved_bitrate if saved_bitrate in dict(SLCAN_BITRATES) else "500 kbit/s"
         self._selected_port = ""
-        self._transport = None
+        self._transport: Any = None
         self._listen_only = True
         self._busy = False
         self._update_model: UpdateModel | None = None
@@ -1196,6 +1197,7 @@ class TesterQtBridge(QObject):
 
     def _connect_worker(self) -> None:
         try:
+            transport: SocketCAN | SLCAN
             if self._selected_port in self._socketcan_ports:
                 transport = SocketCAN(self._selected_port, log=self._log)
                 transport.open_channel(listen_only=self._listen_only)
@@ -1752,7 +1754,7 @@ class TesterQtBridge(QObject):
             4: (CAN_ID_VACUUM_TELEMETRY, "vacuum", self._decode_vacuum_frame),
             11: (CAN_ID_IMPACT_EVENT, "scan_probe", self._decode_scan_probe_frame),
         }.get(self._selected_tool_id, (None, None, None))
-        if can_id is None or not self._require_telemetry_profile({4, 11}):
+        if can_id is None or key is None or decode is None or not self._require_telemetry_profile({4, 11}):
             self._log("TELEMETRY_WATCH_BLOCKED profile identity/connection gate not satisfied")
             return
         if self._telemetry_stops:
@@ -1952,7 +1954,7 @@ class TesterQtBridge(QObject):
         threading.Thread(target=_worker, daemon=True, name=f"urtc-tester-query-{key}").start()
 
     @Slot(str, object)
-    def _on_query_result(self, key: str, result: object) -> None:
+    def _on_query_result(self, key: str, result: Any) -> None:
         # LBL_NO_RESPONSE_OLDER_FW is a real, pre-existing key - no fallback needed here.
         no_response = _("LBL_NO_RESPONSE_OLDER_FW")
         if key == "fram_state":
@@ -2662,7 +2664,8 @@ class TesterQtBridge(QObject):
             if quick is not None and quick["thermal_fault"]:
                 state = f"{state} - THERMAL FAULT {quick['thermal_fault_name']}"
             if quick is not None and quick["reset_causes"]:
-                self._log(f"RESET_CAUSE {', '.join(quick['reset_causes'])}")
+                reset_causes: Any = quick["reset_causes"]
+                self._log(f"RESET_CAUSE {', '.join(reset_causes)}")
             self._active_tool = f"{name} (ID {tool_id}) - {state}"
             self._active_tool_id = tool_id
             self._log(f"ACTIVE_TOOL id={tool_id} name={name} state={state}")
