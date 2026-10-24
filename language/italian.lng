@@ -291,6 +291,7 @@ QTLOG_FLYING_PROBE_TRIGGER_BLOCKED=Trigger della sonda volante bloccato
 QTLOG_FLYING_PROBE_TRIGGER_FAILED=Trigger della sonda volante non riuscito
 QTLOG_FLYING_PROBE_TRIGGER_SENT=Trigger della sonda volante inviato
 QTLOG_FRAM_STATE=Stato della FRAM
+QTLOG_ERROR_COUNTERS=Contatori di errore CAN
 QTLOG_FREE_TOOL_CONFIG=Configurazione dello strumento libero
 QTLOG_GLOBAL_STATUS_BLOCKED=Richiesta dello stato globale bloccata
 QTLOG_GLOBAL_STATUS_SENT=Richiesta dello stato globale inviata

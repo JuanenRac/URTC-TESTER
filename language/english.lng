@@ -290,6 +290,7 @@ QTLOG_FLYING_PROBE_TRIGGER_BLOCKED=Flying probe trigger blocked
 QTLOG_FLYING_PROBE_TRIGGER_FAILED=Flying probe trigger failed
 QTLOG_FLYING_PROBE_TRIGGER_SENT=Flying probe trigger sent
 QTLOG_FRAM_STATE=FRAM state
+QTLOG_ERROR_COUNTERS=CAN error counters
 QTLOG_FREE_TOOL_CONFIG=Free tool configuration
 QTLOG_GLOBAL_STATUS_BLOCKED=Global status request blocked
 QTLOG_GLOBAL_STATUS_SENT=Global status request sent

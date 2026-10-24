@@ -291,6 +291,7 @@ QTLOG_FLYING_PROBE_TRIGGER_BLOCKED=Flying-Probe-Auslösung blockiert
 QTLOG_FLYING_PROBE_TRIGGER_FAILED=Flying-Probe-Auslösung fehlgeschlagen
 QTLOG_FLYING_PROBE_TRIGGER_SENT=Flying-Probe-Auslösung gesendet
 QTLOG_FRAM_STATE=FRAM-Zustand
+QTLOG_ERROR_COUNTERS=CAN-Fehlerzähler
 QTLOG_FREE_TOOL_CONFIG=Konfiguration des freien Werkzeugs
 QTLOG_GLOBAL_STATUS_BLOCKED=Anfrage des globalen Status blockiert
 QTLOG_GLOBAL_STATUS_SENT=Anfrage des globalen Status gesendet

@@ -114,7 +114,7 @@ from urtc_can.help_qt import HelpModel
 from urtc_can.multinode_host import MultinodeHost
 from urtc_can.node_picker import GatedTransport, NodePicker, config_reader_for, transport_io
 from urtc_can.node_picker_qt import NodePickerModel
-from urtc_can.protocol import CAN_ID_SLAVE_APP_PATCH, CAN_ID_SLAVE_REG_READ
+from urtc_can.protocol import decode_error_counters_response, CAN_ID_ERROR_COUNTERS_RESPONSE, CAN_ID_QUERY_ERROR_COUNTERS, CAN_ID_SLAVE_APP_PATCH, CAN_ID_SLAVE_REG_READ
 from urtc_can.update_qt import UpdateModel
 from urtc_ui import LanguageModel, connection_badge, format_can_id, format_hex
 
@@ -1215,7 +1215,7 @@ class TesterQtBridge(QObject):
             mode = "LISTEN-ONLY" if self._listen_only else "ACTIVE CHECKS"
             self._set_state(status=f"CONNECTED {mode}", busy=False)
             self._log(f"TRANSPORT_CONNECTED port={self._selected_port} mode={mode}")
-            self._start_bus_health(transport)
+            self._start_bus_health(self._transport)
 
     @Slot()
     def probeIdentity(self) -> None:
@@ -1279,7 +1279,8 @@ class TesterQtBridge(QObject):
                 continue
             bad = bool(problems)
             reason = ", ".join(_(key, **args) for key, args in problems) if bad else ""
-            if isinstance(transport, SocketCAN) and SocketCAN.check_carrier(transport.interface) is False:
+            raw = getattr(transport, "_transport", transport)  # what the window holds may be the gate around the adapter
+            if isinstance(raw, SocketCAN) and SocketCAN.check_carrier(raw.interface) is False:
                 bad = True
                 reason = _("MSG_NO_CARRIER_SESSION", interface=transport.interface)
             if bad != was_bad:
@@ -1970,6 +1971,13 @@ class TesterQtBridge(QObject):
         elif key == "thermal_stats":
             text = format_thermal_stats(result)
             self._log(f"THERMAL_STATS {result}")
+        elif key == "error_counters":
+            if result is None:
+                text = no_response
+                self._log("ERROR_COUNTERS no response")
+            else:
+                text = f"TEC {result['tec']} / REC {result['rec']}"
+                self._log(f"ERROR_COUNTERS {text}")
         elif key == "black_box":
             if result is not None and result[0] == "ok":
                 text = _("LBL_BLACKBOX_SAVED", summary=result[1], csv=result[2], json=result[3])
@@ -2076,6 +2084,13 @@ class TesterQtBridge(QObject):
         if not self.canUseUtilityPanels:
             return
         self._run_query("fram_state", (CAN_ID_QUERY_FRAM_STATE, b""), CAN_ID_FRAM_STATE_RESP, protocol.decode_fram_state)
+
+    @Slot()
+    def queryErrorCounters(self) -> None:
+        """The CAN error counters of the board (0x7FB, answered by the application and by the bootloader): read only."""
+        if not self.canUseUtilityPanels:
+            return
+        self._run_query("error_counters", (CAN_ID_QUERY_ERROR_COUNTERS, b""), CAN_ID_ERROR_COUNTERS_RESPONSE, decode_error_counters_response)
 
     @Slot()
     def queryThermalStats(self) -> None:
@@ -2674,6 +2689,11 @@ class TesterQtBridge(QObject):
             self._log("BOARD_VERSION no response")
         outcome = "PROBE COMPLETE" if tool_data is not None or version_data is not None else "NO RESPONSE"
         self._set_state(status=outcome, busy=False)
+        if tool_data is not None or version_data is not None:
+            # the board answered: read what it counts and keeps, so a person does not have to press three more buttons (read only)
+            self.queryErrorCounters()
+            self.queryFramState()
+            self.queryThermalStats()
         # The board says it is in error: read its black box once for that fault, if the option is on.
         if tool_data is not None and self._auto_black_box.feed(bytes(tool_data)):
             if self.canUseUtilityPanels:

@@ -162,3 +162,34 @@ def test_the_slave_application_line_follows_the_vectors_of_the_shared_code(qt_ap
             assert "Slave application" not in bridge.boardVersion, case["name"]
         else:
             assert f"v{case['text']} " in bridge.boardVersion, case["name"]
+
+
+def test_the_error_counters_read_by_the_probe_are_shown_and_logged(qt_app):
+    bridge = qt_tester.TesterQtBridge()
+    bridge._on_query_result("error_counters", protocol.decode_error_counters_response(bytes([3, 7])))
+    assert bridge._query_texts["error_counters"] == "TEC 3 / REC 7"
+    assert any(line.startswith("ERROR_COUNTERS TEC 3 / REC 7") or "TEC 3 / REC 7" in line for line in bridge._logs)
+    bridge._on_query_result("error_counters", None)
+    assert "older firmware" in bridge._query_texts["error_counters"] or "No response" in bridge._query_texts["error_counters"]
+
+
+def test_a_probe_that_got_an_answer_reads_the_counters_the_fram_state_and_the_thermal_statistics(qt_app):
+    bridge = qt_tester.TesterQtBridge()
+    asked = []
+    bridge._run_query = lambda key, *args, **kwargs: asked.append(key)
+    bridge._transport = object()
+    bridge._listen_only = False
+    bridge._on_probe_result(bytes([0, 0, 0, 0]), bytes.fromhex("000303cc01000003"), "")
+    assert asked == ["error_counters", "fram_state", "thermal_stats"]
+    asked.clear()
+    bridge._on_probe_result(None, None, "")
+    assert asked == []
+
+
+def test_the_health_check_of_the_bus_runs_on_the_connection_the_window_holds(qt_app):
+    bridge = qt_tester.TesterQtBridge()
+    transport, _bus = node_picker.sim_transport((2,))
+    seen = []
+    bridge._start_bus_health = lambda held: seen.append(held)
+    bridge._on_connection_result(transport, "")
+    assert seen == [bridge._transport] and seen[0] is not transport
