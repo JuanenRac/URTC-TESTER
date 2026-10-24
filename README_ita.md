@@ -473,7 +473,7 @@ firmware - è documentato in
 ├── build-test.bat              Controllo build/compilazione senza incremento di versione
 ├── build-test.sh                Lo stesso, per Linux
 ├── bump.py                     Comando esplicito per alzare la versione (compilare non la alza mai)
-├── bump_version.py             Incremento di versione stile contachilometri, eseguito dagli script di build
+├── bump_version.py             Incremento di versione stile contachilometri, chiamato da bump.py
 ├── bump_manifest_version.py    Sincronizza la versione di urtc.project.json con quella nativa (--sync)
 ├── URTC_Tester.spec            Spec di PyInstaller usato da entrambi gli script di
 ├── requirements-dev.txt / requirements*.lock Dipendenze dei test e della compilazione, bloccate con hash
@@ -557,6 +557,7 @@ Questo progetto fa parte dell'ecosistema robotico HYDRA-UMC dello stesso autore 
 
 **Progetti Fratelli** — gli altri strumenti della propria famiglia di strumenti CAN-bus di URTC
 - **[URTC-FLASHER](https://github.com/JuanenRac/URTC-FLASHER)** — strumento desktop con GUI per il flashing delle schede URTC, CAN-OTA più SWD/JTAG a chip intero.
+- **[URTC-COMMON](https://github.com/JuanenRac/URTC-COMMON)** — il protocollo CAN scritto una sola volta come dati (specifica, tabelle generate, vettori di conformità) e il codice condiviso dai programmi; questo repository contiene copie delle parti che usa.
 - **[URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY)** — un gateway davanti al bus CAN che lascia passare solo gli identificatori di un elenco, ne limita la frequenza e chiede una chiave di sessione.
 - **[URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — alternativa basata su browser a URTC-TESTER tramite la Web Serial API, senza installazione locale.
 
