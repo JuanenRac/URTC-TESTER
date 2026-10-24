@@ -11,6 +11,7 @@ import QtQuick.VectorImage
 
 ApplicationWindow {
     id: window
+    Component.onCompleted: testerBackend.refreshPlans()
     width: 1440
     height: 900
     minimumWidth: 1080
@@ -87,7 +88,7 @@ ApplicationWindow {
             }
             Text {
                 Layout.fillWidth: true
-                text: "PROFILE #" + testerBackend.selectedToolId
+                text: testerBackend.uiText("QT_PROFILE_LABEL") + " #" + testerBackend.selectedToolId
                     + "  •  " + motionDirection.currentText.toUpperCase()
                     + "  •  " + motionSteps.text + " STEPS"
                 color: window.cyan
@@ -240,7 +241,7 @@ ApplicationWindow {
             }
             Text {
                 Layout.fillWidth: true
-                text: "PROFILE #" + testerBackend.selectedToolId + "  •  " + testerBackend.activeTool
+                text: testerBackend.uiText("QT_PROFILE_LABEL") + " #" + testerBackend.selectedToolId + "  •  " + testerBackend.activeTool
                 color: "#f7b955"
                 font.family: "Cascadia Mono"
                 font.bold: true
@@ -261,6 +262,60 @@ ApplicationWindow {
                     Layout.preferredWidth: 126
                     onClicked: { selfTestConfirm.close(); testerBackend.runSelfTest() }
                 }
+            }
+        }
+    }
+
+    Connections {
+        target: testerBackend
+        function onPlanConfirmRequested(question) {
+            planOperatorText.text = question
+            planOperator.open()
+        }
+    }
+
+    Dialog {
+        id: planActuationConfirm
+        modal: true
+        anchors.centerIn: parent
+        width: Math.min(parent.width - 48, 510)
+        title: testerBackend.uiText("TITLE_RUN_PLAN_Q")
+        standardButtons: Dialog.NoButton
+        background: Rectangle { color: window.panel; radius: 16; border.width: 1; border.color: "#f7b955" }
+        contentItem: ColumnLayout {
+            spacing: 12
+            Text { Layout.fillWidth: true; text: testerBackend.uiText("MSG_PLAN_ACTUATION_CONFIRM"); color: window.textPrimary; wrapMode: Text.WordWrap }
+            RowLayout {
+                Layout.fillWidth: true
+                Item { Layout.fillWidth: true }
+                GameButton { text: testerBackend.uiText("QT_CANCEL"); accent: "#24465e"; Layout.preferredWidth: 126; onClicked: planActuationConfirm.close() }
+                GameButton {
+                    text: testerBackend.uiText("QT_CONFIRM")
+                    accent: "#b86a35"
+                    Layout.preferredWidth: 126
+                    onClicked: { planActuationConfirm.close(); testerBackend.runPlan(testerBackend.planList[planChoice.currentIndex].name, true) }
+                }
+            }
+        }
+    }
+
+    Dialog {
+        id: planOperator
+        modal: true
+        closePolicy: Popup.NoAutoClose
+        anchors.centerIn: parent
+        width: Math.min(parent.width - 48, 510)
+        title: testerBackend.uiText("TITLE_PLAN_OPERATOR")
+        standardButtons: Dialog.NoButton
+        background: Rectangle { color: window.panel; radius: 16; border.width: 1; border.color: "#38d4e6" }
+        contentItem: ColumnLayout {
+            spacing: 12
+            Text { id: planOperatorText; Layout.fillWidth: true; color: window.textPrimary; wrapMode: Text.WordWrap }
+            RowLayout {
+                Layout.fillWidth: true
+                Item { Layout.fillWidth: true }
+                GameButton { text: testerBackend.uiText("QT_PLAN_NO"); accent: "#24465e"; Layout.preferredWidth: 126; onClicked: { planOperator.close(); testerBackend.answerPlanConfirm(false) } }
+                GameButton { text: testerBackend.uiText("QT_PLAN_YES"); accent: "#b86a35"; Layout.preferredWidth: 170; onClicked: { planOperator.close(); testerBackend.answerPlanConfirm(true) } }
             }
         }
     }
@@ -288,7 +343,7 @@ ApplicationWindow {
             }
             Text {
                 Layout.fillWidth: true
-                text: "PROFILE #" + testerBackend.selectedToolId + "  •  " + testerBackend.activeTool
+                text: testerBackend.uiText("QT_PROFILE_LABEL") + " #" + testerBackend.selectedToolId + "  •  " + testerBackend.activeTool
                 color: "#f7b955"
                 font.family: "Cascadia Mono"
                 font.bold: true
@@ -371,7 +426,7 @@ ApplicationWindow {
                     spacing: 0
                     Text { text: "URTC"; color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 10 }
                     Text { text: "TESTER"; color: textPrimary; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 19 }
-                    Text { text: "LIVE CAN DIAGNOSTICS - SAFE TEST CONTROL"; color: muted; font.family: "Bahnschrift"; font.pixelSize: 8 }
+                    Text { text: testerBackend.uiText("QT_TAGLINE"); color: muted; font.family: "Bahnschrift"; font.pixelSize: 8 }
                 }
                 Item { Layout.fillWidth: true }
                 Text { text: testerBackend.status; color: testerBackend.statusColor; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 11 }
@@ -941,6 +996,84 @@ ApplicationWindow {
                         font.pixelSize: 10
                         wrapMode: Text.WordWrap
                     }
+                }
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+                Text { text: testerBackend.uiText("QT_PLANS"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                Text {
+                    visible: testerBackend.planList.length === 0
+                    text: testerBackend.uiText("QT_PLAN_NONE")
+                    color: muted
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                    font.pixelSize: 10
+                }
+                Text {
+                    visible: testerBackend.planProblems.length > 0
+                    text: testerBackend.planProblems
+                    color: "#ee6b80"
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                    font.pixelSize: 10
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    ComboBox {
+                        id: planChoice
+                        Layout.fillWidth: true
+                        model: testerBackend.planList
+                        textRole: "name"
+                        enabled: !testerBackend.planRunning && testerBackend.planList.length > 0
+                    }
+                    GameButton { text: testerBackend.uiText("BTN_REFRESH_PLANS"); accent: "#24465e"; Layout.preferredWidth: 150; enabled: !testerBackend.planRunning; onClicked: testerBackend.refreshPlans() }
+                }
+                Text {
+                    visible: planChoice.currentIndex >= 0 && testerBackend.planList.length > 0
+                    text: planChoice.currentIndex >= 0 && testerBackend.planList.length > 0
+                        ? (testerBackend.planList[planChoice.currentIndex].description + "\n"
+                           + (testerBackend.planList[planChoice.currentIndex].actuates ? testerBackend.uiText("QT_PLAN_ACTUATES") : testerBackend.uiText("QT_PLAN_READ_ONLY")))
+                        : ""
+                    color: muted
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                    font.pixelSize: 10
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    GameButton {
+                        text: testerBackend.uiText("BTN_RUN_PLAN")
+                        Layout.fillWidth: true
+                        accent: "#b86a35"
+                        enabled: testerBackend.canRunPlan && planChoice.currentIndex >= 0 && testerBackend.planList.length > 0
+                        onClicked: testerBackend.planList[planChoice.currentIndex].actuates ? planActuationConfirm.open() : testerBackend.runPlan(testerBackend.planList[planChoice.currentIndex].name, false)
+                    }
+                    GameButton {
+                        text: testerBackend.uiText("BTN_CANCEL_PLAN")
+                        accent: "#24465e"
+                        Layout.preferredWidth: 170
+                        visible: testerBackend.planRunning
+                        onClicked: testerBackend.cancelPlan()
+                    }
+                }
+                Repeater {
+                    model: testerBackend.planLines
+                    delegate: Text {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        text: "[" + modelData.status + "] " + modelData.text
+                        color: modelData.status === "PASS" ? "#43db9b" : (modelData.status === "FAIL" || modelData.status === "ERROR" ? "#ee6b80" : muted)
+                        font.family: "Cascadia Mono"
+                        font.pixelSize: 10
+                        wrapMode: Text.WordWrap
+                    }
+                }
+                Text {
+                    visible: testerBackend.planSummary.length > 0
+                    text: testerBackend.planSummary
+                    color: textPrimary
+                    wrapMode: Text.WrapAnywhere
+                    Layout.fillWidth: true
+                    font.pixelSize: 10
+                    font.bold: true
                 }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
                 Text { text: testerBackend.uiText("QT_MOTION_CONTROL"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }

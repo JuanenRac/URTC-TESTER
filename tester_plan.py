@@ -342,9 +342,11 @@ Confirm = Callable[[str], bool]
 
 
 def run_plan(plan: dict, transport, *, allow_actuation: bool = False, confirm: Confirm | None = None, clock: Callable[[], float] = time.monotonic,
-             sleep: Callable[[float], None] = time.sleep, stop: Callable[[], bool] = lambda: False, listen_only: bool = False) -> PlanReport:
+             sleep: Callable[[float], None] = time.sleep, stop: Callable[[], bool] = lambda: False, listen_only: bool = False,
+             progress: Callable[[StepResult], None] | None = None) -> PlanReport:
     """Run the steps of an already valid plan. A step that fails does not stop the plan, an error (the board did not answer at all
-    when it had to, a refused actuation, an operator who is not there) ends it; the outputs are switched off afterwards."""
+    when it had to, a refused actuation, an operator who is not there) ends it; the outputs are switched off afterwards.
+    ``progress`` is called with the result of each step as soon as it is known (a window shows the plan while it runs)."""
     problems = validate_plan(plan)
     if problems:
         raise PlanError("the plan is not valid: " + "; ".join(problems))
@@ -358,6 +360,7 @@ def run_plan(plan: dict, transport, *, allow_actuation: bool = False, confirm: C
             label = step.get("label", "")
             if ended or stop():
                 report.steps.append(StepResult(number, kind, label, SKIPPED, "not run"))
+                _tell(progress, report.steps[-1])
                 continue
             try:
                 outcome, message = _RUNNERS[kind](step, bus, state, plan, allow_actuation, confirm, listen_only)
@@ -366,6 +369,7 @@ def run_plan(plan: dict, transport, *, allow_actuation: bool = False, confirm: C
             except Exception as exc:  # a transport that fails mid-plan is an error of that step, not a crash
                 outcome, message = ERROR, f"{type(exc).__name__}: {exc}"
             report.steps.append(StepResult(number, kind, label, outcome, message))
+            _tell(progress, report.steps[-1])
             if outcome == ERROR:
                 ended = True
     finally:
@@ -380,6 +384,16 @@ def run_plan(plan: dict, transport, *, allow_actuation: bool = False, confirm: C
     elif any(s.outcome == SKIPPED for s in report.steps):
         report.outcome = ERROR
     return report
+
+
+def _tell(progress: Callable[[StepResult], None] | None, result: StepResult) -> None:
+    """A window that shows the steps while they run must never break the plan it shows."""
+    if progress is None:
+        return
+    try:
+        progress(result)
+    except Exception:
+        pass
 
 
 def _all_off(bus: Bus, listen_only: bool) -> str:

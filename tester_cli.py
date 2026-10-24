@@ -99,12 +99,17 @@ def _exit_code(outcome: str) -> int:
 
 
 def _write_results(report, plan_name: str, args, out_dir: Path) -> tuple[Path, Path]:
+    return write_report(report, plan_name, f"{args.transport}:{args.port or 'in-memory'}", out_dir)
+
+
+def write_report(report, plan_name: str, adapter: str, out_dir: Path) -> tuple[Path, Path]:
+    """The log of a plan and its result record (naming the log by its SHA-256), side by side in `out_dir`: (log path, record path)."""
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d_%H%M%S")
     log_path = out_dir / f"{plan_name}_{stamp}.log"
     log_path.write_text(report.log_text(plan_name), encoding="utf-8")
     record = make_record(
-        test_name=plan_name, outcome=report.outcome, adapter=f"{args.transport}:{args.port or 'in-memory'}",
+        test_name=plan_name, outcome=report.outcome, adapter=adapter,
         firmware_version=report.firmware_version or "unknown", bus="can", bitrate=BITRATE, log_path=log_path,
         detail=f"tool {report.tool_id if report.tool_id is not None else 'unknown'}; {report.summary()}",
     )

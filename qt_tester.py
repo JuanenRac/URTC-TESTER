@@ -37,7 +37,9 @@ from typing import Any
 import advanced_protocol as protocol
 import tester_blackbox_view as bbview
 import tester_replay
+import tester_cli
 import tester_extras as extras
+import tester_plan
 from tester_bus_monitor import FrameFilter
 import tester_telemetry as tele
 from tester_selftest import run_self_test
@@ -126,12 +128,15 @@ class TesterQtBridge(QObject):
 
     MONITOR_MAX_ROWS = 2000  # the table keeps the newest frames; older ones are dropped
     MONITOR_SHOWN_ROWS = 14  # the deck shows the newest few
+    PLAN_CONFIRM_SECONDS = 300  # how long a confirm step of a plan waits for a person before it counts as a no
 
     changed = Signal()
     monitorChanged = Signal()
     replayChanged = Signal()
     blackBoxViewChanged = Signal()
     logChanged = Signal()
+    planChanged = Signal()
+    planConfirmRequested = Signal(str)
     _connectionResult = Signal(object, str)
     _bitrateDetected = Signal(str)
     _monitorUpdated = Signal()
@@ -153,6 +158,8 @@ class TesterQtBridge(QObject):
     _readoutUpdated = Signal(str, str, float)
     _busHealth = Signal(bool, str)
     _selfTestDone = Signal(int, str)
+    _planLine = Signal(str, str)
+    _planDone = Signal(str, str)
     # Real, tool-independent utility queries (Global Controls/Expansion
     # Board/F-RAM) - one shared signal rather
     # than one per action, since they're all the same real shape (a
@@ -192,6 +199,15 @@ class TesterQtBridge(QObject):
         # The transport can only be read from one thread at a time: every worker that reads from it holds this for the whole exchange.
         self._io_lock = threading.RLock()
         self._thermal_columns = 32
+        # Test plans: the files found next to the program, the lines of the run in progress and the answer of the person to a confirm step.
+        self._plan_list: list[dict[str, object]] = []
+        self._plan_problems = ""
+        self._plan_lines: list[dict[str, str]] = []
+        self._plan_summary = ""
+        self._plan_running = False
+        self._plan_cancel = threading.Event()
+        self._plan_answered = threading.Event()
+        self._plan_answer: bool | None = None
         self._status = "READ-ONLY READY"
         self._active_tool = "No active probe yet"
         self._active_tool_id = -1
@@ -281,6 +297,8 @@ class TesterQtBridge(QObject):
         self._readoutUpdated.connect(self._on_readout)
         self._busHealth.connect(self._on_bus_health)
         self._selfTestDone.connect(self._on_self_test_done)
+        self._planLine.connect(self._on_plan_line)
+        self._planDone.connect(self._on_plan_done)
         self.scanPorts()
 
     @Property(QObject, constant=True)
@@ -1363,6 +1381,143 @@ class TesterQtBridge(QObject):
         else:
             self._set_state(status="ACTIVE CHECKS ARMED", busy=False)
             self._log(f"SELFTEST_COMPLETE failed={failed}")
+
+
+    # -- test plans -------------------------------------------------------
+    # A plan (tester_plan.py) is a short list of steps in a JSON file next to the program. The deck lists them, runs one against the
+    # connected board with the same engine as the command line, shows each step as it ends and saves the log with a result record.
+    @Property("QVariantList", notify=planChanged)
+    def planList(self) -> list[dict[str, object]]:
+        return list(self._plan_list)
+
+    @Property(str, notify=planChanged)
+    def planProblems(self) -> str:
+        return self._plan_problems
+
+    @Property("QVariantList", notify=planChanged)
+    def planLines(self) -> list[dict[str, str]]:
+        return list(self._plan_lines)
+
+    @Property(bool, notify=planChanged)
+    def planRunning(self) -> bool:
+        return self._plan_running
+
+    @Property(str, notify=planChanged)
+    def planSummary(self) -> str:
+        return self._plan_summary
+
+    @Property(bool, notify=changed)
+    def canRunPlan(self) -> bool:
+        """The plan sends queries, so it needs the armed connection (not listen-only), no other reader of the bus and no plan already running."""
+        return (self.connected and not self._listen_only and not self._busy and not self._telemetry_stops
+                and self._monitor_stop is None and not self._plan_running)
+
+    @Slot()
+    def refreshPlans(self) -> None:
+        folder = os.path.join(tester_config.base_dir, "plans")
+        found: list[dict[str, object]] = []
+        problems: list[str] = []
+        try:
+            names = sorted(name for name in os.listdir(folder) if name.lower().endswith(".json"))
+        except OSError:
+            names = []
+        for file_name in names:
+            path = os.path.join(folder, file_name)
+            try:
+                plan = tester_plan.load_plan(path)
+            except tester_plan.PlanError as exc:
+                problems.append(f"{file_name}: {exc}")
+                continue
+            found.append({
+                "name": plan["name"], "description": str(plan.get("description", "")), "actuates": bool(plan.get("actuation")),
+                "steps": len(plan["steps"]), "path": path,
+            })
+        self._plan_list = found
+        self._plan_problems = "; ".join(problems)
+        self.planChanged.emit()
+
+    @Slot(str, bool)
+    def runPlan(self, name: str, allow_actuation: bool) -> None:
+        """Run the plan called `name` (QML asks for a confirmation first when the plan commands outputs)."""
+        entry = next((item for item in self._plan_list if item["name"] == name), None)
+        transport = self._transport
+        if entry is None or transport is None or not self.canRunPlan:
+            self._log(f"PLAN_BLOCKED {name}")
+            return
+        try:
+            plan = tester_plan.load_plan(str(entry["path"]))
+        except tester_plan.PlanError as exc:
+            self._log(f"PLAN_FAILED {name} {exc}")
+            return
+        self._stop_all_watchdogs()
+        self._plan_cancel.clear()
+        self._plan_lines = []
+        self._plan_summary = ""
+        self._plan_running = True
+        self._set_state(status="PLAN RUNNING", busy=True)
+        self._log(f"PLAN_STARTED {name} actuation={bool(plan.get('actuation')) and allow_actuation}")
+        self.planChanged.emit()
+        threading.Thread(
+            target=self._plan_worker, args=(plan, transport, bool(allow_actuation)), daemon=True, name="urtc-tester-qt-plan",
+        ).start()
+
+    def _plan_worker(self, plan: dict, transport, allow_actuation: bool) -> None:
+        def progress(step) -> None:
+            self._planLine.emit(step.outcome.upper(), f"{step.index}. {step.kind}{' [' + step.label + ']' if step.label else ''}: {step.message}")
+
+        with self._io_lock:
+            try:
+                report = tester_plan.run_plan(
+                    plan, transport, allow_actuation=allow_actuation, confirm=self._plan_confirm,
+                    stop=lambda: self._plan_cancel.is_set() or self._transport is None, progress=progress,
+                )
+                counts = {key: sum(1 for s in report.steps if s.outcome == key) for key in (tester_plan.PASS, tester_plan.FAIL, tester_plan.ERROR, tester_plan.SKIPPED)}
+                summary = _("QT_PLAN_SUMMARY", outcome=_(f"QT_PLAN_OUTCOME_{report.outcome.upper()}"), passed=counts[tester_plan.PASS],
+                            failed=counts[tester_plan.FAIL], errors=counts[tester_plan.ERROR], skipped=counts[tester_plan.SKIPPED])
+                try:
+                    log_path, _record = tester_cli.write_report(report, plan["name"], f"deck:{self._selected_port or 'in-memory'}", Path(LOGS_FOLDER))
+                    summary += "\n" + _("QT_PLAN_SAVED", log=str(log_path))
+                except OSError as exc:
+                    self._log(f"PLAN_SAVE_FAILED {exc}")
+                self._planDone.emit(report.outcome, summary)
+            except Exception as exc:
+                self._planDone.emit("error", f"{type(exc).__name__}: {exc}")
+
+    def _plan_confirm(self, text: str) -> bool:
+        """A confirm step: the person in front of the board answers in the window; no answer within the time (or a cancel) is a no."""
+        self._plan_answer = None
+        self._plan_answered.clear()
+        self.planConfirmRequested.emit(text)
+        deadline = time.monotonic() + self.PLAN_CONFIRM_SECONDS
+        while time.monotonic() < deadline and not self._plan_cancel.is_set():
+            if self._plan_answered.wait(0.1):
+                break
+        return bool(self._plan_answer)
+
+    @Slot(bool)
+    def answerPlanConfirm(self, accepted: bool) -> None:
+        self._plan_answer = bool(accepted)
+        self._plan_answered.set()
+
+    @Slot()
+    def cancelPlan(self) -> None:
+        """Stop after the step that is running; the outputs the plan started are switched off by the engine."""
+        self._plan_cancel.set()
+        self._plan_answer = False
+        self._plan_answered.set()
+
+    @Slot(str, str)
+    def _on_plan_line(self, status: str, text: str) -> None:
+        self._plan_lines.append({"status": status, "text": text})
+        self.planChanged.emit()
+
+    @Slot(str, str)
+    def _on_plan_done(self, outcome: str, summary: str) -> None:
+        self._plan_running = False
+        self._plan_summary = summary
+        self._set_state(status="ACTIVE CHECKS ARMED", busy=False)
+        self._log(f"PLAN_COMPLETE {outcome}")
+        self.planChanged.emit()
 
     @Slot(int)
     def selectToolProfile(self, tool_id: int) -> None:
