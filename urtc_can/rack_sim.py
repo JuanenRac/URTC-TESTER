@@ -68,6 +68,115 @@ def parse_frame(buf: bytes) -> tuple[str, dict | None]:
     return OK, {"seq": buf[2], "cmd": buf[3], "payload": bytes(buf[5:5 + length])}
 
 
+DEFRAMER_TIMEOUT_MS = 20      # the longest silence inside a frame of the serial link
+MAX_FRAME_SIZE = 5 + MAX_PAYLOAD + 1
+
+
+@dataclass
+class DeframerStats:
+    frames_ok: int = 0       # frames handed over
+    crc_errors: int = 0      # candidates with the right shape and the wrong CRC
+    bad_headers: int = 0     # candidates with an unsupported version or an impossible length
+    resyncs: int = 0         # times it restarted from a later start byte
+    timeouts: int = 0        # half frames dropped by the inter-byte timeout
+    dropped_bytes: int = 0   # bytes thrown away for any reason
+
+
+class StreamDeframer:
+    """Frames out of a stream of bytes, as the rack firmware does it (rack_deframer.c of URTC-SMART-RACK).
+
+    A serial link delivers bytes, not frames: a byte can be lost, a frame can come in pieces, noise can sit between two frames. This
+    looks for the start byte, collects what the header says belongs to the frame and hands it over only when its CRC is right; when the
+    bytes do not fit (wrong version, impossible length, bad CRC) it throws away the first byte of the candidate and looks again from
+    the next start byte it already holds, so the frame after a damaged one is not lost with it. A frame that stops half-way is dropped
+    after a silence longer than the timeout. The counters are the ones of the firmware, and ``conformance/rack_vectors.json`` holds
+    streams that the firmware and this class both pass.
+    """
+
+    def __init__(self, timeout_ms: int = DEFRAMER_TIMEOUT_MS) -> None:
+        self.timeout_ms = timeout_ms or DEFRAMER_TIMEOUT_MS
+        self.buf = bytearray()
+        self.last_byte_ms = 0
+        self.stats = DeframerStats()
+
+    def _drop_front(self, n: int) -> None:
+        n = min(n, len(self.buf))
+        self.stats.dropped_bytes += n
+        del self.buf[:n]
+
+    def _next_start(self) -> int:
+        skip = 1
+        while skip < len(self.buf) and self.buf[skip] != SOF:
+            skip += 1
+        return skip
+
+    def _resync(self) -> None:
+        self.stats.resyncs += 1
+        self._drop_front(self._next_start())
+
+    def _extract(self) -> bytes | None:
+        while self.buf:
+            if self.buf[0] != SOF:
+                self._drop_front(self._next_start())
+                continue
+            if len(self.buf) >= 2 and self.buf[1] != VERSION:
+                self.stats.bad_headers += 1
+                self._resync()
+                continue
+            if len(self.buf) < 5:
+                return None
+            payload_len = self.buf[4]
+            if payload_len > MAX_PAYLOAD:
+                self.stats.bad_headers += 1
+                self._resync()
+                continue
+            total = 6 + payload_len
+            if len(self.buf) < total:
+                return None
+            status, _frame = parse_frame(bytes(self.buf[:total]))
+            if status != OK:
+                if status == "crc_mismatch":
+                    self.stats.crc_errors += 1
+                else:
+                    self.stats.bad_headers += 1
+                self._resync()
+                continue
+            frame = bytes(self.buf[:total])
+            self.stats.frames_ok += 1
+            del self.buf[:total]  # consumed, not dropped
+            return frame
+        return None
+
+    def push(self, byte: int, now_ms: int) -> bytes | None:
+        """One received byte; the frame it completes, if any. Call ``next()`` after a frame until it gives None."""
+        if self.buf and ((now_ms - self.last_byte_ms) & 0xFFFFFFFF) > self.timeout_ms:
+            self.stats.timeouts += 1
+            self.stats.dropped_bytes += len(self.buf)
+            self.buf.clear()
+        self.last_byte_ms = now_ms & 0xFFFFFFFF
+        if len(self.buf) >= MAX_FRAME_SIZE:
+            self._drop_front(1)
+        self.buf.append(byte & 0xFF)
+        return self._extract()
+
+    def next(self) -> bytes | None:
+        """Another frame among the bytes already held (after a resynchronisation they can contain a whole one)."""
+        return self._extract()
+
+    def feed(self, data: bytes, now_ms: int) -> list[bytes]:
+        """Every frame the bytes of ``data``, all received at ``now_ms``, complete."""
+        frames: list[bytes] = []
+        for byte in data:
+            frame = self.push(byte, now_ms)
+            while frame is not None:
+                frames.append(frame)
+                frame = self.next()
+        return frames
+
+    def reset(self) -> None:
+        self.buf.clear()
+
+
 def encode_set_preheat(seq: int, tool_id: int, target_c: int) -> bytes:
     return encode_frame(seq, CMD_SET_PREHEAT, bytes([tool_id, (target_c >> 8) & 0xFF, target_c & 0xFF]))
 
@@ -132,6 +241,7 @@ class SimulatedRack:
     started_ms: dict[int, int] = field(default_factory=dict)
     expired: set[int] = field(default_factory=set)
     log: list[str] = field(default_factory=list)
+    deframer: StreamDeframer = field(default_factory=StreamDeframer)
 
     # -- inventory ----------------------------------------------------------------------------------------------
     def set_slot(self, slot: int, tool_id: int, serial: int = 0) -> None:
@@ -190,6 +300,10 @@ class SimulatedRack:
         if frame["cmd"] != CMD_SET_PREHEAT:
             return Reply("none", detail="command not acted on")
         return self._set_preheat(frame["seq"], frame["payload"], now_ms)
+
+    def receive_stream(self, data: bytes, now_ms: int) -> list[Reply]:
+        """The bytes that arrived on the serial line at ``now_ms``: the deframer finds the frames and each one is handled like ``receive``."""
+        return [self.receive(frame, now_ms) for frame in self.deframer.feed(data, now_ms)]
 
     def receive_can(self, can_id: int, data: bytes, now_ms: int) -> Reply:
         if can_id != CAN_ID_SET_PREHEAT or len(data) != 8:
