@@ -605,17 +605,17 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 このプログラムは自分自身の新しいバージョンを探せます。「更新を確認」ボタンは GitHub に一度だけ問い合わせ、お使いのシステム向けで新しい場合にだけ署名付きパッケージを提案します。確認を有効にしない限り、何も自動では確認もインストールもされず、更新にはあなたの確認が必要です。パッケージは SHA-256 と、プログラムに固定されたリリース鍵の署名に一致しなければなりません。前のバージョンは保持され、新しいバージョンが起動しない場合は自動的に復元されます。`urtc-updater --cli package list|check|install|rollback` はコマンドラインからフラッシャーとテスターに対して同じことを行い、`install --file` はネットワークなしで動作します。
 <!-- /urtc-section:updates -->
 
-<!-- urtc-section:compatibility -->
-## 🧩 互換性
-
-どのバージョンの URTC プログラムが連携して動作し、それぞれがどのプロトコルバージョンを話すかは、URTC-COMMON が生成する互換性表に載っています：[docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md)。
-<!-- /urtc-section:compatibility -->
-
 <!-- urtc-section:heads -->
 ## 🧭 1本のバスに複数のツールヘッド
 
 ファームウェアは複数のツールヘッドを1本のCANバスで共有できます（マルチノード拡張）。これは**初期状態でオフ**で、ヘッドが1つのバスはこれまでとまったく同じに動作します。**ヘッド**ウィンドウはヘッドを検索し、それぞれをアドレス・ツール・シリアル番号とともに一覧し、準備完了・選択中・アドレスの競合・異常を保持・ブートローダー中・喪失のいずれかの状態を示します。1つを選ぶと確認が求められ、それからはじめてそのヘッドに何かが送信されます。バス上に複数のヘッドがある間は、1つが選択されて確認応答するまでコマンドは拒否されます。選択中のヘッドを見失うと、すべてのヘッドが安全状態になります（ウィンドウのチェックボックスでオフにできます）。バスのモデルに対してのみ試験しており、実機では未試験です。URTC-COMMON の `docs/MULTINODE.md` を参照してください。
 <!-- /urtc-section:heads -->
+
+<!-- urtc-section:compatibility -->
+## 🧩 互換性
+
+どのバージョンの URTC プログラムが連携して動作し、それぞれがどのプロトコルバージョンを話すかは、URTC-COMMON が生成する互換性表に載っています：[docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md)。
+<!-- /urtc-section:compatibility -->
 
 ## 📜 ライセンス
 
