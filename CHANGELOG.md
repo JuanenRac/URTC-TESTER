@@ -9,6 +9,7 @@ All notable changes to this project are documented here.
 - **Project status is the second section of the README,** right after At a glance, in the eight languages.
 - **The copy of the shared CAN layer is up to date again:** the files copied from URTC-COMMON were refreshed to its latest version, and the lock file says so.
 - **The full CI runs every night:** a scheduled workflow runs the complete baseline again on the default branch and opens (or updates) one issue when it fails, so a change in a runner image, a toolchain or a pinned dependency is found the next day instead of with the next unrelated change.
+- **The copy of the shared update code is current:** downloads now follow a redirect only to another allowed https host, and the bytes really written while extracting a package count towards the size limit.
 
 ## [0.4.2] - Test plans in the window and the whole version of the slave application
 
