@@ -54,6 +54,21 @@ iniziato.
 | Destinazione | Il PC di chi lo usa |
 | Su hardware reale | Solo simulato: provato con emulatori, test double o simulatori; per questa versione non risulta alcuna esecuzione su hardware reale |
 
+<!-- urtc-section:status_tester -->
+## 🚦 Stato del progetto
+
+🟢 fatto e verificato · 🟡 funziona, con limiti noti · 🟠 a metà o non verificato · 🔴 non fatto o non funzionante. Nulla è verde se non ha mai girato su hardware reale.
+
+| Parte | Stato | Ciò che il repository può dimostrare |
+| --- | :---: | --- |
+| Software | 🟡 | Funziona su un PC e contro il simulatore; mai usato con una scheda reale. |
+| Interfaccia | 🟡 | La finestra funziona ed è verificata con una scheda simulata; non provata con un adattatore reale. |
+| Test | 🟢 | La suite di test passa nella CI a ogni push. |
+| Hardware reale | 🟠 | Nessuna esecuzione su una scheda reale: la prova al banco è ancora da fare. |
+| Documentazione | 🟡 | README in otto lingue e documenti di riferimento; le traduzioni non sono state riviste da madrelingua. |
+
+<!-- /urtc-section:status_tester -->
+
 ## 1. 🆚 Relazione con il flasher
 
 Questo strumento e [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) condividono lo stesso layer di
@@ -666,21 +681,6 @@ Il firmware può far condividere un bus CAN a più teste utensile (l'estensione 
 
 Quali versioni dei programmi URTC funzionano insieme, e quale versione del protocollo parla ciascuna, è elencato nella tabella di compatibilità generata da URTC-COMMON: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
 <!-- /urtc-section:compatibility -->
-
-<!-- urtc-section:status_tester -->
-## 💡 Stato del progetto
-
-🟢 fatto e verificato · 🟡 funziona, con limiti noti · 🟠 a metà o non verificato · 🔴 non fatto o non funzionante. Nulla è verde se non ha mai girato su hardware reale.
-
-| Parte | Stato | Ciò che il repository può dimostrare |
-| --- | :---: | --- |
-| Software | 🟡 | Funziona su un PC e contro il simulatore; mai usato con una scheda reale. |
-| Interfaccia | 🟡 | La finestra funziona ed è verificata con una scheda simulata; non provata con un adattatore reale. |
-| Test | 🟢 | La suite di test passa nella CI a ogni push. |
-| Hardware reale | 🟠 | Nessuna esecuzione su una scheda reale: la prova al banco è ancora da fare. |
-| Documentazione | 🟡 | README in otto lingue e documenti di riferimento; le traduzioni non sono state riviste da madrelingua. |
-
-<!-- /urtc-section:status_tester -->
 
 ## 📜 LICENZA
 

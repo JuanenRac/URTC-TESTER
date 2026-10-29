@@ -55,6 +55,21 @@ begonnen hat.
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
 
+<!-- urtc-section:status_tester -->
+## 🚦 Projektstatus
+
+🟢 fertig und überprüft · 🟡 funktioniert, mit bekannten Grenzen · 🟠 halb fertig oder nicht überprüft · 🔴 nicht gemacht oder funktioniert nicht. Nichts ist grün, wenn es nie auf echter Hardware lief.
+
+| Teil | Status | Was das Repository belegen kann |
+| --- | :---: | --- |
+| Software | 🟡 | Läuft am PC und gegen den Simulator; nie an einer echten Platine ausgeführt. |
+| Oberfläche | 🟡 | Das Fenster läuft und wird gegen eine simulierte Platine geprüft; nicht mit einem echten Adapter probiert. |
+| Tests | 🟢 | Die Testsuite besteht bei jedem Push in der CI. |
+| Echte Hardware | 🟠 | Noch kein Lauf an einer echten Platine: der Bankversuch steht noch aus. |
+| Dokumentation | 🟡 | README in acht Sprachen und Referenzdokumente; die Übersetzungen wurden nicht von Muttersprachlern geprüft. |
+
+<!-- /urtc-section:status_tester -->
+
 ## 1. 🆚 Beziehung zum Flasher
 
 Dieses Tool und [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) teilen sich denselben
@@ -686,21 +701,6 @@ Die Firmware kann mehrere Werkzeugköpfe an einem CAN-Bus betreiben (die Multino
 
 Welche Versionen der URTC-Programme zusammenarbeiten und welche Protokollversion jede spricht, steht in der Kompatibilitätstabelle, die URTC-COMMON erzeugt: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
 <!-- /urtc-section:compatibility -->
-
-<!-- urtc-section:status_tester -->
-## 💡 Projektstatus
-
-🟢 fertig und überprüft · 🟡 funktioniert, mit bekannten Grenzen · 🟠 halb fertig oder nicht überprüft · 🔴 nicht gemacht oder funktioniert nicht. Nichts ist grün, wenn es nie auf echter Hardware lief.
-
-| Teil | Status | Was das Repository belegen kann |
-| --- | :---: | --- |
-| Software | 🟡 | Läuft am PC und gegen den Simulator; nie an einer echten Platine ausgeführt. |
-| Oberfläche | 🟡 | Das Fenster läuft und wird gegen eine simulierte Platine geprüft; nicht mit einem echten Adapter probiert. |
-| Tests | 🟢 | Die Testsuite besteht bei jedem Push in der CI. |
-| Echte Hardware | 🟠 | Noch kein Lauf an einer echten Platine: der Bankversuch steht noch aus. |
-| Dokumentation | 🟡 | README in acht Sprachen und Referenzdokumente; die Übersetzungen wurden nicht von Muttersprachlern geprüft. |
-
-<!-- /urtc-section:status_tester -->
 
 ## 📜 LIZENZ
 

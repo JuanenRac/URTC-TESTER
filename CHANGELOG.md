@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The layout of the README is checked in the CI:** the validator runs `tools/universal_readme_check.py` and lists, as a warning, what differs from the universal layout of the README.
+- **Project status is the second section of the README,** right after At a glance, in the eight languages.
 - **The copy of the shared CAN layer is up to date again:** the files copied from URTC-COMMON were refreshed to its latest version, and the lock file says so.
 
 ## [0.4.2] - Test plans in the window and the whole version of the slave application

@@ -54,6 +54,21 @@ puisse laisser la carte moins fonctionnelle qu'au départ.
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
 
+<!-- urtc-section:status_tester -->
+## 🚦 État du projet
+
+🟢 fait et vérifié · 🟡 fonctionne, avec des limites connues · 🟠 à moitié fait ou non vérifié · 🔴 non fait ou non fonctionnel. Rien n'est vert si cela n'a jamais tourné sur du vrai matériel.
+
+| Partie | État | Ce que le dépôt peut démontrer |
+| --- | :---: | --- |
+| Logiciel | 🟡 | Fonctionne sur un PC et face au simulateur ; jamais utilisé avec une vraie carte. |
+| Interface | 🟡 | La fenêtre fonctionne et est vérifiée face à une carte simulée ; non essayée avec un vrai adaptateur. |
+| Tests | 🟢 | La suite de tests passe dans la CI à chaque push. |
+| Matériel réel | 🟠 | Pas encore d'essai sur une vraie carte : l'essai au banc reste à faire. |
+| Documentation | 🟡 | README en huit langues et documents de référence ; les traductions n'ont pas été relues par des locuteurs natifs. |
+
+<!-- /urtc-section:status_tester -->
+
 ## 1. 🆚 Relation avec le flasher
 
 Cet outil et [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) partagent la même couche de transport
@@ -679,21 +694,6 @@ Le firmware peut faire partager un bus CAN à plusieurs têtes d'outil (l'extens
 
 Les versions des programmes URTC qui fonctionnent ensemble, et la version du protocole que parle chacune, figurent dans le tableau de compatibilité que génère URTC-COMMON : [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
 <!-- /urtc-section:compatibility -->
-
-<!-- urtc-section:status_tester -->
-## 💡 État du projet
-
-🟢 fait et vérifié · 🟡 fonctionne, avec des limites connues · 🟠 à moitié fait ou non vérifié · 🔴 non fait ou non fonctionnel. Rien n'est vert si cela n'a jamais tourné sur du vrai matériel.
-
-| Partie | État | Ce que le dépôt peut démontrer |
-| --- | :---: | --- |
-| Logiciel | 🟡 | Fonctionne sur un PC et face au simulateur ; jamais utilisé avec une vraie carte. |
-| Interface | 🟡 | La fenêtre fonctionne et est vérifiée face à une carte simulée ; non essayée avec un vrai adaptateur. |
-| Tests | 🟢 | La suite de tests passe dans la CI à chaque push. |
-| Matériel réel | 🟠 | Pas encore d'essai sur une vraie carte : l'essai au banc reste à faire. |
-| Documentation | 🟡 | README en huit langues et documents de référence ; les traductions n'ont pas été relues par des locuteurs natifs. |
-
-<!-- /urtc-section:status_tester -->
 
 ## 📜 LICENCE
 
