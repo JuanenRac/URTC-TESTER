@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.0.7",
+  "urtc_common_version": "0.0.8",
   "files": {
     "__init__.py": {
       "from": "src/urtc_common/__init__.py",
-      "sha256": "ba877c40c966806cefe0b2b2951d6ef413553a590865fd9be7e2b7d256d2d63c"
+      "sha256": "b3184774937f4a52635745a6db567e639df61532b819564a6a204da0c8e1d6c5"
     },
     "blackbox.py": {
       "from": "src/urtc_common/blackbox.py",

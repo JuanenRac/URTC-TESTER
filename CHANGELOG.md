@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The copy of the shared CAN layer is up to date again:** the files copied from URTC-COMMON were refreshed to its latest version, and the lock file says so.
+
 ## [0.4.2] - Test plans in the window and the whole version of the slave application
 
 ### Firmware and protocol
