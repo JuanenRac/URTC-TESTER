@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.4.3] - The evidence of every test in the common format, its own mark and the universal README
 
 - **A run of the command line also leaves its result in the shape the other programs use:** next to the log and the result record, `urtc_evidence_<name>.json` holds the same result as a `urtc-evidence/1` record (tool, time, adapter, bus, bit rate, the log with its SHA-256, outcome and a digest of the record), the shape the flasher writes for an update and the updater can export for its install log. The log and the result record are unchanged, and a copy that cannot be written never fails a run.
 - **Related Projects lists the URTC family:** the section names the repositories of URTC by group, each with one short line about what it is for, and, in one short line each, the sister projects (independent ecosystems of the same author that share the base and the tools), in the eight languages. It no longer says that URTC is part of another ecosystem.
