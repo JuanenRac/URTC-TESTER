@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from tester_result_record import RecordError, ResultRecord, load_record, make_record, save_record, session_manifest  # noqa: E402
+from tester_result_record import RecordError, ResultRecord, load_record, make_record, save_evidence, save_record, session_manifest, evidence_record  # noqa: E402
 
 
 class ResultRecordTests(unittest.TestCase):
@@ -89,6 +89,42 @@ class ResultRecordTests(unittest.TestCase):
         self.assertNotIn("outcome", manifest)
         self.assertNotEqual(manifest["log_sha256"], session_manifest("other", transport="SLCAN")["log_sha256"])
 
+
+class EvidenceShapeTests(unittest.TestCase):
+    """The result as a ``urtc-evidence/1`` record."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.dir = Path(self._tmp.name)
+        self.log = self.dir / "run-001.log"
+        self.log.write_text("frame 0x123 ok\n", encoding="utf-8")
+
+    def _record(self, **overrides):
+        args = dict(test_name="can-self-test", outcome="pass", adapter="usb-can-1", firmware_version="0.3.1", bus="can0", bitrate=500000, log_path=self.log)
+        args.update(overrides)
+        return make_record(**args)
+
+    def test_a_result_becomes_a_checkable_record_of_the_common_shape(self):
+        from urtc_can import evidence
+
+        shape = evidence_record(self._record(), tool_version="0.4.2", timestamp_utc="2026-01-02T03:04:05Z")
+        self.assertEqual(evidence.verify(shape), [])
+        self.assertEqual((shape["kind"], shape["outcome"], shape["tool_version"]), ("test", "pass", "0.4.2"))
+        self.assertEqual(shape["transport"], {"adapter": "usb-can-1", "bus": "can0", "bitrate": 500000})
+        self.assertEqual(shape["artifacts"][0]["sha256"], self._record().log_sha256)
+
+    def test_an_unknown_firmware_version_is_left_out_and_the_time_defaults_to_now(self):
+        shape = evidence_record(self._record(firmware_version="unknown"), tool_version="0.4.2")
+        self.assertNotIn("version_after", shape["subject"])
+        self.assertTrue(shape["timestamp_utc"].endswith("Z"))
+
+    def test_it_is_written_as_json(self):
+        import json
+
+        path = self.dir / "shape.json"
+        save_evidence(self._record(outcome="fail"), path, tool_version="0.4.2", timestamp_utc="2026-01-02T03:04:05Z")
+        self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["outcome"], "fail")
 
 if __name__ == "__main__":
     unittest.main()

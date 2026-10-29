@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -77,6 +78,22 @@ def make_record(
 
 def save_record(record: ResultRecord, path: Path) -> None:
     path.write_text(json.dumps(asdict(record), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def evidence_record(record: ResultRecord, *, tool_version: str, timestamp_utc: str | None = None, operator: str = "") -> dict:
+    """The result as a ``urtc-evidence/1`` record, the shape the flasher and the updater use for what they did.
+
+    The result record has no time of its own: the time of the call (UTC) is used unless one is given. Raises ``ValueError`` when something does not
+    fit the shape (a firmware version that is not a number is simply left out).
+    """
+    from urtc_can import evidence
+
+    stamp = timestamp_utc or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    return evidence.from_result_record(asdict(record), tool_version=tool_version, timestamp_utc=stamp, operator=operator)
+
+
+def save_evidence(record: ResultRecord, path: Path, *, tool_version: str, timestamp_utc: str | None = None, operator: str = "") -> None:
+    path.write_text(json.dumps(evidence_record(record, tool_version=tool_version, timestamp_utc=timestamp_utc, operator=operator), indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def load_record(path: Path, log_directory: Path | None = None) -> ResultRecord:

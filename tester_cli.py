@@ -28,7 +28,8 @@ import time
 from pathlib import Path
 
 import tester_plan
-from tester_result_record import make_record, save_record
+from tester_config import TESTER_VERSION
+from tester_result_record import make_record, save_evidence, save_record
 
 EXIT_PASS, EXIT_FAIL, EXIT_USAGE, EXIT_ERROR, EXIT_CANCELLED = 0, 1, 2, 3, 130
 TRANSPORTS = ("serial", "socketcan", "python-can", "simulate", "replay")
@@ -115,6 +116,10 @@ def write_report(report, plan_name: str, adapter: str, out_dir: Path) -> tuple[P
     )
     record_path = log_path.with_suffix(".json")
     save_record(record, record_path)
+    try:
+        save_evidence(record, out_dir / f"urtc_evidence_{log_path.stem}.json", tool_version=TESTER_VERSION)
+    except (OSError, ValueError):
+        pass  # the common-shape copy is an extra: the log and the result record above are what a run leaves, and they are written
     return log_path, record_path
 
 

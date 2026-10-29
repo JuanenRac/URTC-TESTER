@@ -150,6 +150,12 @@ def test_info_and_selftest_pass_against_the_simulated_head_and_leave_a_checkable
     assert len(records) == 1
     record = load_record(records[0], tmp_path)  # the log still matches the hash recorded with the result
     assert record.outcome == "pass" and record.firmware_version == "0.4.0" and record.adapter == "simulate:in-memory"
+    # next to the result record the run leaves the same result in the shape the flasher and the updater use
+    from urtc_can import evidence
+
+    (shape_path,) = sorted(tmp_path.glob("urtc_evidence_selftest_*.json"))
+    shape = json.loads(shape_path.read_text(encoding="utf-8"))
+    assert evidence.verify(shape) == [] and shape["kind"] == "test" and shape["outcome"] == "pass" and shape["artifacts"][0]["sha256"] == record.log_sha256
     log = (tmp_path / record.log_file)
     log.write_text(log.read_text(encoding="utf-8") + "edited\n", encoding="utf-8")
     with pytest.raises(Exception):
