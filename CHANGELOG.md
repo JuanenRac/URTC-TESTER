@@ -4,7 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
-- **Related Projects lists the URTC family:** the section names the repositories of URTC by group and, in one short line each, the sister projects (independent ecosystems of the same author that share the base and the tools), in the eight languages. It no longer says that URTC is part of another ecosystem.
+- **Related Projects lists the URTC family:** the section names the repositories of URTC by group, each with one short line about what it is for, and, in one short line each, the sister projects (independent ecosystems of the same author that share the base and the tools), in the eight languages. It no longer says that URTC is part of another ecosystem.
 - **The README follows the universal layout in the eight languages:** the numbered sections are now the fixed ones (Overview, Features, Security & Safety, Interfaces, Quick start, Testing, Build & Release, Roadmap & Known limits...), the Architecture and the Repository Structure are drawn from `docs/architecture.json` and `docs/structure.json`, the annotated tree of the files is `docs/SOURCE_MAP.md`, and the licenses of the code and of the documentation open the LICENSE section. The page states the number of tests (531) in At a glance and in a badge.
 - **The layout of the README is checked in the CI:** the validator runs `tools/universal_readme_check.py` and lists, as a warning, what differs from the universal layout of the README.
 - **Project status is the second section of the README,** right after At a glance, in the eight languages.

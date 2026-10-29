@@ -7,7 +7,7 @@ URTC_Tester.spec
 
 # Real per-session test-run logs (logs/.gitkeep keeps the directory itself)
 logs/*.log
-# HYDRA-UMC shared secret protection
+# Local secrets are never committed
 .env
 .env.*
 !.env.example
