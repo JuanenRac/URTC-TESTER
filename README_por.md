@@ -15,30 +15,21 @@
   🇵🇹 <b>Português</b>
 </p>
 
+### Um testador de barramento CAN em direto para a placa URTC: mostra apenas os controlos e a telemetria da cabeça de ferramenta ligada
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
+  <img src="https://img.shields.io/badge/Tests-531-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
-
-**Versão:** 0.4.2 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
-
-Licença: **GPL-3.0-or-later** para o código-fonte, **CC BY-SA 4.0** para esta
-documentação - consulte `LICENSE` neste repositório, ou a secção "License and
-Copyright Notices" no final deste documento.
-
-Um exercitador de barramento CAN em tempo real para a placa URTC. Liga-se através do mesmo
-adaptador USB-CAN que o flasher utiliza, pergunta à placa para qual dos seus 25 perfis de
-ferramenta está atualmente configurada com jumpers e mostra apenas os controlos e a telemetria
-dessa ferramenta - não uma janela a tentar representar as 25 ao mesmo tempo. Tudo o que faz é
-um comando em tempo de execução ou uma leitura de telemetria sobre a aplicação atualmente em
-execução; nunca toca na flash, pelo que nada aqui pode deixar a placa menos funcional do que
-estava ao início.
+---
 
 **Verificação de honestidade - o que realmente funciona hoje:** os codificadores de payload CAN para as famílias de controlo Qt Quick migradas (`advanced_protocol.py`) são reais e estão cobertos pelos testes de `tests/` (`python -m pytest -q`). O CI deste repositório (`.github/workflows/ci.yml`) também os executa, juntamente com `ruff check`, `python -m mypy`, `tools/ci_validate.py`, uma compilação de sintaxe de cada ficheiro `.py` e os quatro scripts `verify_qt_*.py`, pelo que uma regressão aí faz falhar a compilação. Os quatro scripts `verify_qt_*.py` na raiz do repositório (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) são verificações end-to-end reais, deliberadamente fora de `tests/`, contra um transporte simulado com entrega real de Signals entre threads - os quatro passam com `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que o CI também executa. Esse é o limite honesto do que é verificado automaticamente: a camada de transporte, o tratamento dos IDs CAN/disposição de bytes e a lógica da ponte Qt Quick são reais e exercitados com frames simuladas, não com hardware real - como as "Limitações conhecidas" abaixo já indicam, isto foi construído sem acesso a USB, pelo que nada aqui foi ainda verificado numa placa real. `qt_tester.py` e `assets/qml/TesterDeck.qml` são a implementação real e substancial (milhares de linhas no total), exercitada pelos testes com placas simuladas e pelos scripts de verificação, e nunca por uma placa real.
+
+---
 
 > **Estado de segurança (safety e security):** este ecossistema não é um sistema de segurança certificado e ainda não existe nenhuma placa URTC montada. Os bootloaders verificam as imagens de firmware com CRC32 e um HMAC-SHA256 de chave partilhada, não com uma assinatura assimétrica (prevista); as imagens de aplicação publicadas estão assinadas com a chave pública de desenvolvimento (`signing_key_kind: dev`), pelo que qualquer pessoa pode produzir uma imagem que o bootloader aceita; nada foi transmitido a uma placa real. Leia a [base de segurança](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) e o [modelo de ameaças](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) antes de confiar em qualquer afirmação aqui para a segurança de uma pessoa.
 
@@ -48,9 +39,12 @@ estava ao início.
 |---|---|
 | Versão | `0.4.2` |
 | Maturidade | Funcional |
+| Testes | 531 (`python -m pytest -q`) |
 | Tecnologia | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destino | O PC de quem o usa |
 | Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |
+
+**Ir para:** [Visão geral](#-visão-geral) · [Arquitetura](#-arquitetura) · [Funcionalidades](#-funcionalidades) · [Segurança](#-segurança-e-proteção) · [Interfaces](#-interfaces) · [Início rápido](#-início-rápido) · [Testes](#-testes) · [Estrutura](#-estrutura-do-repositório) · [Relacionados](#-projetos-relacionados)
 
 <!-- urtc-section:status_tester -->
 ## 🚦 Estado do projeto
@@ -67,7 +61,17 @@ estava ao início.
 
 <!-- /urtc-section:status_tester -->
 
-## 1. 🆚 Relação com o flasher
+## 🎯 Visão geral
+
+Um exercitador de barramento CAN em tempo real para a placa URTC. Liga-se através do mesmo
+adaptador USB-CAN que o flasher utiliza, pergunta à placa para qual dos seus 25 perfis de
+ferramenta está atualmente configurada com jumpers e mostra apenas os controlos e a telemetria
+dessa ferramenta - não uma janela a tentar representar as 25 ao mesmo tempo. Tudo o que faz é
+um comando em tempo de execução ou uma leitura de telemetria sobre a aplicação atualmente em
+execução; nunca toca na flash, pelo que nada aqui pode deixar a placa menos funcional do que
+estava ao início.
+
+### Relação com o flasher
 
 Esta ferramenta e o [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) partilham a mesma camada de transporte (as classes SLCAN e
 SocketCAN são idênticas), uma vez que ambas precisam, no fundo, apenas de colocar
@@ -84,91 +88,43 @@ Se não tem a certeza de qual precisa: se a placa já está a executar
 firmware e quer verificar se uma ferramenta realmente funciona (o aquecedor aquece,
 o motor roda, o LED acende), precisa desta.
 
-## 2. 📦 Instalar e executar
+## 🧩 Papel no URTC
 
-O mesmo padrão do flasher:
+O URTC-TESTER é o programa que verifica o que uma cabeça de ferramenta URTC realmente faz enquanto executa a sua aplicação: liga-se pelo mesmo adaptador USB-CAN do URTC-FLASHER, pergunta à placa para qual dos seus 25 perfis de ferramenta está configurada com jumpers e mostra apenas os controlos e a telemetria dessa ferramenta, nunca uma janela que tente representar as 25. Tudo o que faz é um comando em execução ou uma leitura de telemetria; nunca toca na flash, pelo que não pode deixar uma placa pior do que a encontrou. O protocolo que fala é o do URTC-COMMON, e o URTC-WEB-STUDIO oferece os mesmos fluxos num navegador.
 
-```
-pip install -r requirements.txt
-python urtc_tester.py          # Windows
-python3 urtc_tester.py         # Linux
-```
+## 🏛️ Arquitetura
 
-Ou crie um binário autónomo: `build_exe.bat` no Windows, `./build_exe.sh`
-no Linux. Ambos limpam primeiro `build/`/`dist/` e incluem `assets/` (o
-banner e o ícone) no executável - consulte
-[docs/BUILD_AND_RUN.md](docs/BUILD_AND_RUN.md) para o percurso de validação
-`build-test.bat`/`build-test.sh`, que não altera a versão e sobre o qual estes scripts de empacotamento
-se constroem, e o README do próprio flasher para o raciocínio mais completo por detrás
-dos próprios scripts de empacotamento, uma vez que se aplica aqui de forma idêntica.
+<p align="center">
+  <img src="images/architecture.svg" alt="Arquitetura de URTC-TESTER: quem o usa, o que contém e de que depende" width="100%">
+</p>
 
-**Versionamento:** `TESTER_VERSION` (em `tester_config.py`, apresentada na
-barra de título, na caixa Sobre, nos registos de sessão e nos pacotes de depuração) segue
-`MAJOR.MINOR.PATCH`. Ambos os scripts de compilação a incrementam automaticamente imediatamente antes
-de cada compilação real através de `bump_version.py`, ao estilo de "conta-quilómetros" em base 10: PATCH
-+1, transitando para MINOR assim que PATCH passa de 9 (p. ex. `0.1.9` → `0.2.0`).
-Executar a partir do código-fonte (`python urtc_tester.py`) nunca lhe toca - apenas uma
-execução real de `build_exe.bat`/`build_exe.sh` o faz. MAJOR nunca é incrementada
-automaticamente, apenas à mão. Consulte `CHANGELOG.md` para o histórico de versões.
+Como as partes deste repositório se encaixam: quem o usa, o que contém e de que depende. A imagem é desenhada a partir de `docs/architecture.json` e verificada com o código.
 
-### Visual command deck
+<!-- urtc-section:updates -->
+### Como se atualiza
 
-O command deck **Qt Quick** é agora o predefinido real:
-~~~
-python urtc_tester.py
-~~~
-Utiliza os transportes SLCAN/SocketCAN e inicia em modo apenas de escuta,
-pelo que não pode transmitir até armar deliberadamente as verificações ativas. Cada
-um dos comandos próprios dos 25 perfis de ferramenta tem aqui cobertura real e confirmada
-(movimento, furação, AOI, eletroíman, pulso de soldadura por pontos/ultrassónica, projeção
-de pasta, flying probe, inspeção térmica, os 5 atuadores com watchdog-keepalive,
-telemetria de vácuo/scan-probe), cada um controlado da mesma forma: uma
-correspondência de identidade, um modo ativo explicitamente armado e uma confirmação do utilizador em
-QML antes de qualquer transmissão. Nada disto foi ainda verificado numa placa real - consulte "Limitações conhecidas" abaixo.
+Este programa pode procurar uma versão mais recente de si próprio: o botão «Procurar atualizações» pergunta uma vez ao GitHub e só propõe um pacote assinado se for para o seu sistema e mais recente. Nada é verificado nem instalado por si só, a não ser que ative a verificação, e uma atualização precisa da sua confirmação. O pacote tem de coincidir com o seu SHA-256 e com a assinatura da chave das versões fixada no programa; a versão anterior é guardada e reposta sozinha se a nova não arrancar. `urtc-updater --cli package list|check|install|rollback` faz o mesmo na linha de comandos para o flasher e o tester, e `install --file` funciona sem rede.
+<!-- /urtc-section:updates -->
 
-O painel também mostra os **valores em direto** da ferramenta detetada (temperatura com gráfico deslizante e exportação CSV, RPM, fins de curso; só escutam, por isso funcionam no modo só de escuta e junto a uma saída em funcionamento), executa o **autoteste**, avisa no cabeçalho quando a **verificação de saúde do bus** (uma consulta da ferramenta ativa a cada 3 segundos enquanto mais nada usa o bus) vê um problema, e tem uma caixa **Acerca do URTC Tester** com o Readme, a Licença e a página do GitHub, junto a **Guardar registos...**.
+## 🖼️ Capturas de ecrã
 
-O cabeçalho da janela Qt Quick tem um seletor de idioma; a escolha é guardada e aplica-se no próximo arranque. Também consulta e repõe a posição do alimentador de fio do ferro de soldar (estimativa em malha aberta; a reposição pede confirmação). A sonda de identidade mostra também o número de patch do firmware quando a placa o envia (firmware URTC 0.3.5 e posterior); o firmware mais antigo mostra apenas maior.menor.
+<p align="center">
+  <img src="images/URTC_TESTER_V1_1.png" alt="Janela do URTC Tester" width="700">
+</p>
 
-O fluxo de diagnóstico CAN em direto existente utiliza agora uma superfície de command deck azul-marinho/ciano: cabeçalho de produto, cartão de ligação de alto contraste, separadores de ferramentas claros, registo de sessão escuro e canal de progresso visível. Esta alteração visual e de acessibilidade não modifica a monitorização passiva nem o encaminhamento de comandos, e nada disto foi experimentado numa placa real.
+**Registador de falhas, funções opcionais, bancada do rack e vista térmica (novo, verificado apenas com simulações):** o painel lê a caixa negra da placa (`0x1A8` / `0x1A9`) e guarda-a em CSV e JSON, automaticamente uma vez por cada erro indicado pela placa quando essa opção está ativa; liga as funções opcionais do firmware (`0x1AE` / `0x1AF`, desligadas por predefinição, com efeito após o próximo arranque); tem um rack de ferramentas simulado com o protocolo série do URTC-SMART-RACK, a identidade de cada cabeça (tipo e número de série) e a exportação de uma página de estado; e mostra a imagem de inspeção térmica em falsa cor (uma imagem simulada di-lo). Os nomes e tipos das ferramentas vêm agora dos perfis de ferramenta partilhados do URTC-COMMON. Nada disto foi usado com uma placa real.
 
-### Cabeçalho e ferramentas
+**PID do aquecedor (novo, verificado só com simulações):** o painel lê o estado do PID do aquecedor do firmware (`0x1B9` / `0x1BA`: os ganhos em vigor, o estado e a saída do último ciclo de controlo), guarda ganhos (de 0 a 600) e inicia ou cancela o autoajuste por relé, que aquece a ponta em torno do ponto de regulação atual do ferro de soldar (100 a 445 C) e guarda os ganhos encontrados. Guardar ganhos e iniciar o autoajuste pedem a confirmação habitual; cancelar não. A cabeça simulada da linha de comandos (`--transport simulate`) também responde a estas tramas. A função tem de ser ativada antes, entre as funções opcionais; nada disto foi usado com uma placa real.
 
-- **Cabeçalho** - o estado da ligação, o aviso de saúde do bus, o seletor de idioma (a escolha é guardada e aplica-se no próximo arranque) e a versão.
-- **Guardar registos...** e **EXPORTAR SESSÃO (REGISTO COM HASH)** - o registo do ecrã como texto simples, ou um zip com o registo, um manifesto que o identifica pelo seu SHA-256 e o diagnóstico do sistema (ver «Registos e pacotes de depuração» abaixo).
-- **Acerca do URTC Tester** - versão e autor, com botões para **Readme** (no idioma da interface, quando existe tradução), **Licença** e a página **GitHub do URTC** do projeto.
+Estas imagens são a janela real, desenhada sem ecrã tal como abre (nada ligado, nada enviado). O guia percorre o painel, a janela de Ajuda e a de atualização.
 
-### Estrutura de ficheiros
+![A janela, passo a passo](docs/screenshots/tester-deck.png)
 
-Esta ferramenta está organizada em módulos por responsabilidade, puramente para
-legibilidade - não há diferença funcional entre tê-los como
-ficheiros separados ou como um único ficheiro grande. Consulte a secção
-"📂 Repository Structure" perto do final deste documento para
-a descrição completa ficheiro a ficheiro.
+[Guia com imagens](docs/WINDOW_GUIDE.md)
 
-**Idioma**: inglês por predefinição. Alterado com o seletor de idioma no cabeçalho da janela - altera a interface (rótulos, botões, caixas de diálogo e mensagens de registo) para qualquer um dos 8 idiomas disponíveis, guardado
-imediatamente em `config.json` junto a esta ferramenta, aplicado no próximo
-arranque. As traduções residem em ficheiros de texto simples em `language/`
-(`english.lng`, `spanish.lng`, `italian.lng`, `french.lng`,
-`german.lng`, `chinese.lng`, `japanese.lng`, `portuguese.lng`) como simples pares `KEY=Value`,
-um por linha - as linhas que começam
-por `#` e as linhas em branco são ignoradas, e um `\n` literal dentro de um valor
-torna-se uma quebra de linha real (utilizado pelas poucas mensagens de diálogo
-com várias linhas). Gerados a partir do catálogo do URTC-COMMON (uma tradução corrige-se lá e os ficheiros são escritos de novo, nunca à mão), ou como ponto de partida para outro idioma (adicione `language/<name>.lng`, adicione
-`("<name>", "Native Name")` a `AVAILABLE_LANGUAGES` perto do topo de
-`tester_config.py` e defina `"language": "<name>"` em `config.json`). Uma
-chave em falta num ficheiro de idioma recorre a mostrar o próprio nome dessa chave
-em vez de falhar, e um ficheiro de idioma em falta ou ilegível
-(edição incorreta, nome de ficheiro errado) recorre ao inglês para toda a
-interface - em ambos os casos a ferramenta continua utilizável enquanto a divergência
-é resolvida.
+## ✨ Funcionalidades
 
-**Configuração de SLCAN/SocketCAN no Linux** (reflash do adaptador, permissões da porta série,
-ativação com `ip link`) é exatamente igual à secção 1 do flasher - consulte
-o [README do próprio URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER),
-secções 1 e 2, em vez de a duplicar aqui.
-
-## 3. ⚙️ Como funciona
+### Como funciona
 
 A janela está organizada em três colunas: a esquerda e o centro contêm as
 secções sempre visíveis abaixo (1-4, depois 6), a direita contém o painel
@@ -303,7 +259,7 @@ a coluna de ID mostra esse nome amigável junto ao ID hexadecimal em bruto -
 útil para quem testa o tráfego de uma placa de expansão personalizada
 sem precisar de modificar o código-fonte desta ferramenta.
 
-## 4. 🧰 Cobertura de ferramentas
+### Cobertura de ferramentas
 
 Cada um dos 25 perfis tem o seu próprio painel, construído diretamente a partir de
 `docs/CANBUS.md`:
@@ -348,7 +304,7 @@ pára. A ventoinha do hotend não tem watchdog (tem antes um detetor de bloqueio
 - A porta e o débito são lembrados para a próxima sessão (`config.json`) e o deck Qt Quick tem o seu próprio seletor de débito. A **autodeteção** começa por apenas escutar a cada débito (nada é transmitido num barramento ativo) e só pergunta a cada débito quando o barramento está completamente silencioso.
 - O Monitor de barramento em bruto pode ser limitado a alguns IDs CAN (**Filtro de ID**) e às tramas cujos dados mudaram (**Só alterações**).
 
-### 🔥 Teste de bancada de thermal runaway (firmware URTC 0.3.2+ / 0.3.3+)
+#### 🔥 Teste de bancada de thermal runaway (firmware URTC 0.3.2+ / 0.3.3+)
 
 O Detect mostra agora *porquê* uma placa travou num erro: o byte 4 de `0x111` (proteção
 contra thermal runaway: MAXTEMP, HEATING_NO_RISE ou DROPPED_AT_TARGET) é apresentado no
@@ -359,7 +315,24 @@ de firmware mais antigo (`0x111` de 4 bytes, sem `0x1AB`) são reportadas como "
 reported", nunca como zero. O procedimento passo a passo para confirmar a proteção numa
 placa real é [`docs/THERMAL_RUNAWAY_BENCH_TEST.md`](docs/THERMAL_RUNAWAY_BENCH_TEST.md).
 
-## 5. 📋 Registos e pacotes de depuração
+<!-- urtc-section:heads -->
+### Várias cabeças de ferramenta num barramento
+
+O firmware pode fazer várias cabeças de ferramenta partilharem um barramento CAN (a extensão multinó). Vem **desativada por defeito**, e um barramento com uma só cabeça funciona exatamente como antes. A janela **Cabeças** encontra as cabeças, lista cada uma com o seu endereço, ferramenta e número de série, e mostra o seu estado: pronta, selecionada, conflito de endereço, falha retida, no seu bootloader ou perdida. Seleciona uma, o programa pede confirmação e só depois lhe envia alguma coisa; enquanto houver várias cabeças no barramento, um comando é recusado até uma estar selecionada e o ter confirmado. Se a cabeça selecionada se perder, todas as cabeças passam ao estado seguro (uma caixa da janela desativa-o). Só foi testada contra um modelo do barramento, não com placas. Veja `docs/MULTINODE.md` em URTC-COMMON.
+<!-- /urtc-section:heads -->
+
+## 🔒 Segurança e proteção
+
+| Risco | Defesa |
+|---|---|
+| Uma ordem enviada a uma placa que não é a ferramenta que a janela mostra | O painel de uma ferramenta só é mostrado para a ferramenta que a própria placa comunicou, e cada comando está condicionado por uma correspondência de identidade |
+| Transmitir sem querer | A janela arranca em modo só de escuta: não pode transmitir até as verificações ativas serem armadas deliberadamente, e cada ação que atua sobre a placa pede primeiro uma confirmação na janela |
+| Danificar a placa | O testador nunca toca na flash: tudo o que faz é um comando em execução ou uma leitura de telemetria contra a aplicação que está a funcionar |
+| Um registo que alguém pudesse alterar | A exportação da sessão é um zip com o registo, um manifesto que o nomeia pelo seu SHA-256 e os diagnósticos do sistema |
+
+Nada disto foi experimentado numa placa real e nada é uma função de segurança certificada; veja as limitações abaixo.
+
+## 🔌 Interfaces
 
 Tal como no flasher: um registo de sessão com marca temporal é escrito automaticamente
 em `logs/` (pode ser apagado com segurança), e **Export Debug Bundle**
@@ -381,7 +354,143 @@ detetada) para entregar a quem estiver a depurar um problema numa cabeça de fer
 
 **Sem hardware:** uma placa virtual faz as vezes do adaptador e da placa. Execute `python -m urtc_can.virtual_board` e indique o seu URL série como porta (`--transport serial --port socket://127.0.0.1:7777`); a placa responde à consulta de versão e ao estado rápido como uma aplicação, pelo que `info` e os planos de consultas correm de ponta a ponta sem nada ligado. É um modelo escrito a partir da descrição do protocolo, não uma cabeça de ferramenta: o autoteste de uma ferramenta informa o que não consegue ler.
 
-## 6. ⚠️ Limitações conhecidas
+## 🚀 Início rápido
+
+O mesmo padrão do flasher:
+
+```
+pip install -r requirements.txt
+python urtc_tester.py          # Windows
+python3 urtc_tester.py         # Linux
+```
+
+### Visual command deck
+
+O command deck **Qt Quick** é agora o predefinido real:
+~~~
+python urtc_tester.py
+~~~
+Utiliza os transportes SLCAN/SocketCAN e inicia em modo apenas de escuta,
+pelo que não pode transmitir até armar deliberadamente as verificações ativas. Cada
+um dos comandos próprios dos 25 perfis de ferramenta tem aqui cobertura real e confirmada
+(movimento, furação, AOI, eletroíman, pulso de soldadura por pontos/ultrassónica, projeção
+de pasta, flying probe, inspeção térmica, os 5 atuadores com watchdog-keepalive,
+telemetria de vácuo/scan-probe), cada um controlado da mesma forma: uma
+correspondência de identidade, um modo ativo explicitamente armado e uma confirmação do utilizador em
+QML antes de qualquer transmissão. Nada disto foi ainda verificado numa placa real - consulte "Limitações conhecidas" abaixo.
+
+O painel também mostra os **valores em direto** da ferramenta detetada (temperatura com gráfico deslizante e exportação CSV, RPM, fins de curso; só escutam, por isso funcionam no modo só de escuta e junto a uma saída em funcionamento), executa o **autoteste**, avisa no cabeçalho quando a **verificação de saúde do bus** (uma consulta da ferramenta ativa a cada 3 segundos enquanto mais nada usa o bus) vê um problema, e tem uma caixa **Acerca do URTC Tester** com o Readme, a Licença e a página do GitHub, junto a **Guardar registos...**.
+
+O cabeçalho da janela Qt Quick tem um seletor de idioma; a escolha é guardada e aplica-se no próximo arranque. Também consulta e repõe a posição do alimentador de fio do ferro de soldar (estimativa em malha aberta; a reposição pede confirmação). A sonda de identidade mostra também o número de patch do firmware quando a placa o envia (firmware URTC 0.3.5 e posterior); o firmware mais antigo mostra apenas maior.menor.
+
+O fluxo de diagnóstico CAN em direto existente utiliza agora uma superfície de command deck azul-marinho/ciano: cabeçalho de produto, cartão de ligação de alto contraste, separadores de ferramentas claros, registo de sessão escuro e canal de progresso visível. Esta alteração visual e de acessibilidade não modifica a monitorização passiva nem o encaminhamento de comandos, e nada disto foi experimentado numa placa real.
+
+### Cabeçalho e ferramentas
+
+- **Cabeçalho** - o estado da ligação, o aviso de saúde do bus, o seletor de idioma (a escolha é guardada e aplica-se no próximo arranque) e a versão.
+- **Guardar registos...** e **EXPORTAR SESSÃO (REGISTO COM HASH)** - o registo do ecrã como texto simples, ou um zip com o registo, um manifesto que o identifica pelo seu SHA-256 e o diagnóstico do sistema (ver «Registos e pacotes de depuração» abaixo).
+- **Acerca do URTC Tester** - versão e autor, com botões para **Readme** (no idioma da interface, quando existe tradução), **Licença** e a página **GitHub do URTC** do projeto.
+
+### Estrutura de ficheiros
+
+Esta ferramenta está organizada em módulos por responsabilidade, puramente para
+legibilidade - não há diferença funcional entre tê-los como
+ficheiros separados ou como um único ficheiro grande. Consulte a secção
+"📂 Repository Structure" perto do final deste documento para
+a descrição completa ficheiro a ficheiro.
+
+**Idioma**: inglês por predefinição. Alterado com o seletor de idioma no cabeçalho da janela - altera a interface (rótulos, botões, caixas de diálogo e mensagens de registo) para qualquer um dos 8 idiomas disponíveis, guardado
+imediatamente em `config.json` junto a esta ferramenta, aplicado no próximo
+arranque. As traduções residem em ficheiros de texto simples em `language/`
+(`english.lng`, `spanish.lng`, `italian.lng`, `french.lng`,
+`german.lng`, `chinese.lng`, `japanese.lng`, `portuguese.lng`) como simples pares `KEY=Value`,
+um por linha - as linhas que começam
+por `#` e as linhas em branco são ignoradas, e um `\n` literal dentro de um valor
+torna-se uma quebra de linha real (utilizado pelas poucas mensagens de diálogo
+com várias linhas). Gerados a partir do catálogo do URTC-COMMON (uma tradução corrige-se lá e os ficheiros são escritos de novo, nunca à mão), ou como ponto de partida para outro idioma (adicione `language/<name>.lng`, adicione
+`("<name>", "Native Name")` a `AVAILABLE_LANGUAGES` perto do topo de
+`tester_config.py` e defina `"language": "<name>"` em `config.json`). Uma
+chave em falta num ficheiro de idioma recorre a mostrar o próprio nome dessa chave
+em vez de falhar, e um ficheiro de idioma em falta ou ilegível
+(edição incorreta, nome de ficheiro errado) recorre ao inglês para toda a
+interface - em ambos os casos a ferramenta continua utilizável enquanto a divergência
+é resolvida.
+
+**Configuração de SLCAN/SocketCAN no Linux** (reflash do adaptador, permissões da porta série,
+ativação com `ip link`) é exatamente igual à secção 1 do flasher - consulte
+o [README do próprio URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER),
+secções 1 e 2, em vez de a duplicar aqui.
+
+<!-- urtc-section:compatibility -->
+### Requisitos e compatibilidade
+
+As versões dos programas URTC que funcionam em conjunto, e a versão do protocolo que cada uma fala, constam da tabela de compatibilidade que o URTC-COMMON gera: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
+<!-- /urtc-section:compatibility -->
+
+## 🧪 Testes
+
+O conjunto tem 531 testes (`python -m pytest -q`; com Qt numa máquina sem ecrã, `QT_QPA_PLATFORM=offscreen`; os que precisam do PySide6 são ignorados sem ele): os codificadores e descodificadores de carga CAN de cada família de ferramentas, os transportes SLCAN e SocketCAN contra simulações, a sonda de identidade, o autoteste, os reenvios de vigilância, a verificação de saúde do barramento, os planos de teste e o modo sem janela, a exportação da sessão com o seu hash, os ficheiros de idioma e os painéis Qt Quick. Quatro scripts na raiz (`verify_qt_*.py`) comandam os painéis Qt Quick de ponta a ponta com um ciclo de eventos Qt real. A CI executa também `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Nada disto correu contra uma placa real.
+
+## 🏗️ Compilação e publicação
+
+Ou crie um binário autónomo: `build_exe.bat` no Windows, `./build_exe.sh`
+no Linux. Ambos limpam primeiro `build/`/`dist/` e incluem `assets/` (o
+banner e o ícone) no executável - consulte
+[docs/BUILD_AND_RUN.md](docs/BUILD_AND_RUN.md) para o percurso de validação
+`build-test.bat`/`build-test.sh`, que não altera a versão e sobre o qual estes scripts de empacotamento
+se constroem, e o README do próprio flasher para o raciocínio mais completo por detrás
+dos próprios scripts de empacotamento, uma vez que se aplica aqui de forma idêntica.
+
+**Versão:** `TESTER_VERSION` (em `tester_config.py`, mostrada na barra de título, na caixa Acerca de, nos registos de sessão e nos pacotes de depuração) segue `MAJOR.MINOR.PATCH` e só sobe com o passo explícito `python bump.py`. Executar a partir do código (`python urtc_tester.py`) e compilar (`build_exe.bat` / `build_exe.sh`) nunca lhe tocam. Veja `CHANGELOG.md` para o histórico de versões.
+
+## 📂 Estrutura do repositório
+
+<p align="center">
+  <img src="images/repository-structure.svg" alt="Estrutura do repositório URTC-TESTER" width="100%">
+</p>
+
+<details>
+<summary>Versão em texto da árvore</summary>
+
+```text
+URTC-TESTER/
+├── urtc_tester.py                                     ponto de entrada
+├── qt_tester.py                                       o painel Qt Quick
+├── tester_*.py                                        transportes, monitor, autoteste, planos, telemetria
+├── advanced_protocol.py                               codificadores puros de cargas CAN
+├── verify_qt_*.py                                     verificações de ponta a ponta dos painéis Qt
+├── urtc_can/                                          protocolo, transportes e atualizações (cópia)
+├── urtc_ui/                                           auxiliares de interface (cópia)
+├── tests/                                             um ficheiro de testes por área
+├── plans/                                             planos de teste de exemplo (JSON)
+├── language/                                          os oito ficheiros de idioma .lng
+├── assets/                                            QML, faixa e ícone
+├── docs/                                              arquitetura, compilação e execução
+├── logs/                                              registos de sessão (fora do Git)
+├── tools/                                             verificação de compilação e ferramentas partilhadas
+├── images/                                            faixa e imagens deste README
+├── .github/                                           fluxo de CI e modelos de issues e pull requests
+├── test.sh test.bat                                   executam os testes
+├── run.sh run.bat                                     arrancam o programa
+├── build-test.sh build-test.bat                       scripts de compilação e testes que não alteram nada no repositório
+├── urtc.project.json                                  manifesto: versão, papel, maturidade e comando de compilação
+├── CHANGELOG.md                                       o que mudou em cada versão
+├── SECURITY.md SUPPORT.md LICENSE                     política de segurança, suporte e licença
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md                 como contribuir e código de conduta
+├── .gitattributes .gitignore                          definições do Git
+├── build_exe.sh build_exe.bat                         programa autónomo (PyInstaller)
+├── bump.py bump_version.py bump_manifest_version.py   scripts que sobem a versão
+├── requirements*.txt requirements*.lock               dependências, com os seus bloqueios
+├── mypy.ini ruff.toml .coveragerc                     definições de tipos, lint e cobertura
+├── urtc_i18n.lock.json                                bloqueio dos ficheiros de idioma gerados
+└── NOTICE LICENSE.md                                  aviso de direitos de autor e licença da documentação
+```
+
+</details>
+
+A lista anotada de cada ficheiro de código, uma linha por ficheiro, está em [docs/SOURCE_MAP.md](docs/SOURCE_MAP.md).
+
+## 🗺️ Roteiro e limites conhecidos
 
 O contrato de evidência desta ferramenta - o que conta como aprovado/reprovado/desconhecido, porque
 a ausência de evidência é sempre desconhecido e nunca aprovado, e porque não concede
@@ -410,116 +519,9 @@ qualquer autoridade própria de gravação de firmware - está documentado em
   verificação automatizada desse botão; verificá-las continua a significar
   observar o hardware real a responder aos controlos do seu próprio painel.
 
-## 📂 Estrutura do repositório
+## 🌍 Idiomas
 
-```
-/
-├── urtc_tester.py             Ponto de entrada - inicia o painel Qt Quick
-├── qt_tester.py                Front end Qt Quick - painel de comandos real por defeito, só de leitura por omissão
-├── tester_config.py            Constantes de configuração/idioma/protocolo (IDs CAN, nomes
-│                                das ferramentas, MOTION_TOOL_IDS, AVAILABLE_LANGUAGES,
-│                                EXPANSION_BOARD_TYPES)
-├── tester_transports.py        Classes de transporte SLCAN e SocketCAN
-├── tester_bus_monitor.py       Thread de leitura CAN em segundo plano (CANBusMonitor)
-├── tester_autodetect.py        Pesquisa da velocidade de um adaptador SLCAN
-├── tester_selftest.py          Passos e execução do autoteste (sem código de janela)
-├── tester_plan.py              Planos de teste: validação, executor e o «tudo desligado» posterior
-├── tester_cli.py               O tester sem janela (--headless): info, selftest, run-plan
-├── tester_simulator.py         Cabeça de ferramenta simulada e leitor de traços gravados
-├── plans/                      Planos de teste de exemplo (JSON)
-├── tester_telemetry.py         Valores em direto de cada ferramenta e a série registada
-├── tester_trace_export.py      Escrita das exportações de tramas .trc / .asc
-├── tester_replay.py            Reprodução de um registo .trc / .asc gravado (um leitor sem temporizador próprio)
-├── tester_blackbox_view.py     O registo da caixa negra tal como o painel o desenha: séries do gráfico, tabela e registos guardados abertos sem placa
-├── tester_result_record.py     Registos de resultado ligados ao adaptador, ao firmware e a um registo (log) pelo seu SHA-256 (JSON)
-├── tester_extras.py            Lógica sem Qt do gravador de falhas, das funções opcionais, do PID do aquecedor, da bancada do rack e da vista térmica
-├── urtc_ui/                    Auxiliares de interface partilhados (cópia do URTC-COMMON)
-├── urtc_can/                   Código partilhado copiado de URTC-COMMON: protocolo, transportes, placa virtual, atualizações, ajuda e a janela das cabeças de ferramenta
-├── advanced_protocol.py        Codificadores puros de payload CAN para as famílias de
-│                                controlos migradas para Qt Quick - testes sem hardware
-├── verify_qt_custom_frame.py        Verificação real de ponta a ponta, fora de tests/, do painel Custom CAN Frame de Qt Quick (precisa de um ciclo de eventos Qt real)
-├── verify_qt_telemetry_watch.py     Verificação real de ponta a ponta, fora de tests/, da telemetria de Qt Quick (Vacuum Pickup / Scan Probe)
-├── verify_qt_utility_panels.py      Verificação real de ponta a ponta, fora de tests/, dos painéis utilitários de Qt Quick (Global Controls / Expansion Board / F-RAM)
-├── verify_qt_selftest.py            Verificação real de ponta a ponta, fora de tests/, do autoteste Qt Quick
-├── tests/
-│   ├── test_advanced_protocol.py   Testes sem hardware para os codificadores de advanced_protocol.py - executados pela CI, ver a verificação de honestidade acima
-│   ├── test_*.py                   Um ficheiro por área do programa; a CI executa-os, os de Qt sem ecrã
-│   └── fixtures/                   Vetores partilhados com os outros programas e registos gravados
-├── requirements.txt            pyserial>=3.5 + PySide6>=6.8,<7
-├── build_exe.bat               Script de compilação do binário autónomo para Windows (PyInstaller)
-├── build_exe.sh                O mesmo, para Linux
-├── build-test.bat              Verificação de compilação sem subir a versão
-├── build-test.sh                O mesmo, para Linux
-├── bump.py                     Comando explícito para subir a versão (compilar nunca a sobe)
-├── bump_version.py             Subida de versão tipo conta-quilómetros, chamada por bump.py
-├── bump_manifest_version.py    Sincroniza a versão de urtc.project.json com a nativa (--sync)
-├── URTC_Tester.spec            Spec do PyInstaller usado pelos dois scripts de compilação
-├── requirements-dev.txt / requirements*.lock Dependências dos testes e da compilação, fixadas com hashes
-├── mypy.ini / ruff.toml / pytest.ini Definições da verificação de tipos e das verificações estáticas
-├── urtc_i18n.lock.json         Bloqueio dos ficheiros de idioma gerados a partir do catálogo de URTC-COMMON
-├── urtc.project.json           Manifesto do projeto (versão, maturidade, evidência)
-├── run.bat / run.sh            Iniciam o programa
-├── assets/
-│   ├── URTC_APP_ICON.svg       Origem do ícone da janela/barra de tarefas (desenho pequeno independente)
-│   ├── URTC_LOGO_TESTER.svg    Origem do banner (vetorial)
-│   ├── qml/
-│   │   ├── TesterDeck.qml      UI Qt Quick do painel de comandos predefinido
-│   │   ├── HelpDialog.qml      A janela do guia rápido (partilhada)
-│   │   ├── NodePickerDialog.qml A janela das cabeças de ferramenta (partilhada)
-│   │   ├── UpdateDialog.qml    A janela de procura de atualizações (partilhada)
-│   │   └── urtc_common.lock.json Bloqueio dos ficheiros copiados de URTC-COMMON
-│   ├── urtc_icon.ico           Ícone do Windows, gerado a partir de URTC_APP_ICON.svg
-│   └── urtc_icon.png           O mesmo, em formato PNG (Linux)
-├── images/
-│   ├── URTC_TESTER_BANNER.svg  Banner do logótipo mostrado no topo deste README
-│   └── URTC_TESTER_V1_1.png    Captura da janela principal da ferramenta (ver Fotografias abaixo)
-├── language/
-│   ├── english.lng             Idioma por omissão, textos simples KEY=Value
-│   ├── spanish.lng
-│   ├── italian.lng
-│   ├── french.lng
-│   ├── german.lng
-│   ├── japanese.lng
-│   ├── chinese.lng
-│   └── portuguese.lng
-├── logs/                       Registos de sessão escritos aqui durante a execução (podem apagar-se sem problema)
-├── LICENSE                     Texto completo da licença - ver Licença e Avisos de
-│                                Direitos de Autor abaixo
-├── NOTICE                      Aviso de direitos de autor e licença da documentação
-├── README.md                   Versão em inglês
-├── README_spa.md               Tradução para espanhol
-├── README_ita.md               Tradução para italiano
-├── README_fra.md               Tradução para francês
-├── README_deu.md               Tradução para alemão
-├── README_por.md               Este ficheiro
-├── README_zho.md               Tradução para chinês
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── BUILD_AND_RUN.md
-│   ├── INTEGRATION_CONTRACT.md
-│   ├── CANBUS.md
-│   ├── THERMAL_RUNAWAY_BENCH_TEST.md
-│   ├── HEADLESS.md                  O tester sem janela: comandos, planos e códigos de saída
-│   ├── WINDOW_GUIDE.md              A janela passo a passo, com imagens reais nos oito idiomas
-│   └── screenshots/                 As imagens do guia da janela, nos oito idiomas
-├── tools/
-│   ├── build_test.py                     Verificação de compilação sem subir a versão + validação do código-fonte do painel Qt Quick
-│   ├── ci_validate.py                    Validação de manifesto/CHANGELOG/docs usada pela CI
-│   ├── capture_screens.py                Tira as imagens do guia da janela sem ecrã (um idioma ou todos)
-│   ├── make_update_package.py            Constrói e assina o pacote de atualização de uma versão publicada
-│   └── _doc_policy.py / _readme_parity.py / _tracked_names.py Verificações partilhadas usadas por ci_validate.py
-└── README_jpn.md               Tradução para japonês
-```
-
-## 📸 Fotografias
-
-<p align="center">
-  <img src="images/URTC_TESTER_V1_1.png" alt="Janela do URTC Tester" width="700">
-</p>
-
-**Registador de falhas, funções opcionais, bancada do rack e vista térmica (novo, verificado apenas com simulações):** o painel lê a caixa negra da placa (`0x1A8` / `0x1A9`) e guarda-a em CSV e JSON, automaticamente uma vez por cada erro indicado pela placa quando essa opção está ativa; liga as funções opcionais do firmware (`0x1AE` / `0x1AF`, desligadas por predefinição, com efeito após o próximo arranque); tem um rack de ferramentas simulado com o protocolo série do URTC-SMART-RACK, a identidade de cada cabeça (tipo e número de série) e a exportação de uma página de estado; e mostra a imagem de inspeção térmica em falsa cor (uma imagem simulada di-lo). Os nomes e tipos das ferramentas vêm agora dos perfis de ferramenta partilhados do URTC-COMMON. Nada disto foi usado com uma placa real.
-
-**PID do aquecedor (novo, verificado só com simulações):** o painel lê o estado do PID do aquecedor do firmware (`0x1B9` / `0x1BA`: os ganhos em vigor, o estado e a saída do último ciclo de controlo), guarda ganhos (de 0 a 600) e inicia ou cancela o autoajuste por relé, que aquece a ponta em torno do ponto de regulação atual do ferro de soldar (100 a 445 C) e guarda os ganhos encontrados. Guardar ganhos e iniciar o autoajuste pedem a confirmação habitual; cancelar não. A cabeça simulada da linha de comandos (`--transport simulate`) também responde a estas tramas. A função tem de ser ativada antes, entre as funções opcionais; nada disto foi usado com uma placa real.
+O README e os textos existem em inglês, espanhol, francês, italiano, alemão, chinês, japonês e português europeu.
 
 ## 🔗 Projetos relacionados
 
@@ -614,33 +616,33 @@ Este projeto faz parte do ecossistema de robótica HYDRA-UMC do mesmo autor (Jua
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — coordenador de incidentes de manutenção: um papel de edge de baixos privilégios recolhe um instantâneo sanitizado de inventário/saúde, um papel de control-plane apresenta-o em modo só de leitura e pede a um fornecedor de IA que sugira um diagnóstico - nunca aplica um patch nem implementa nada.
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — anfitrião de desenvolvimento reproduzível (Raspberry Pi 5 / CM5) que armazena o código-fonte do ecossistema e executa tarefas de compilação/teste limitadas sob uma fila durável; um papel de desenvolvimento dedicado, explicitamente não um CM5 operacional.
 
-## 🖼️ A janela, passo a passo
+## 📚 Documentação
 
-Estas imagens são a janela real, desenhada sem ecrã tal como abre (nada ligado, nada enviado). O guia percorre o painel, a janela de Ajuda e a de atualização.
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — stack tecnológica e diretrizes de código para um pull request.
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — as normas de comportamento esperadas nesta comunidade.
+- **[SECURITY.md](SECURITY.md)** — como reportar uma vulnerabilidade, e as áreas de foco de segurança reais deste projeto.
+- **[SUPPORT.md](SUPPORT.md)** — onde colocar questões e reportar erros.
+- **[LICENSE.md](LICENSE.md)** — a licença própria deste projeto.
 
-![A janela, passo a passo](docs/screenshots/tester-deck.png)
+## 🤝 Contribuir e comunidade
 
-[Guia com imagens](docs/WINDOW_GUIDE.md)
+* Antes de um pull request execute `URTC_CI=1 python tools/ci_validate.py`: tem de passar. Veja [CONTRIBUTING.md](CONTRIBUTING.md) e o [código de conduta](CODE_OF_CONDUCT.md).
+* O README existe em oito idiomas: uma alteração ao texto faz-se nos oito ficheiros, e as secções partilhadas com outros repositórios são escritas por `tools/readme_sections.py` do URTC-COMMON.
+* Uma alteração ao protocolo CAN começa no URTC-COMMON (`spec/can_protocol.json`) e chega a este repositório através da cópia verificada.
+* Não descreva como a funcionar numa placa aquilo que só foi compilado.
+* Comunique uma vulnerabilidade em privado: [SECURITY.md](SECURITY.md). Perguntas, ideias e relatórios: electrohobby3d@gmail.com ([SUPPORT.md](SUPPORT.md)).
 
-<!-- urtc-section:updates -->
-## 🔄 Como se atualiza
+## 👤 AUTOR
 
-Este programa pode procurar uma versão mais recente de si próprio: o botão «Procurar atualizações» pergunta uma vez ao GitHub e só propõe um pacote assinado se for para o seu sistema e mais recente. Nada é verificado nem instalado por si só, a não ser que ative a verificação, e uma atualização precisa da sua confirmação. O pacote tem de coincidir com o seu SHA-256 e com a assinatura da chave das versões fixada no programa; a versão anterior é guardada e reposta sozinha se a nova não arrancar. `urtc-updater --cli package list|check|install|rollback` faz o mesmo na linha de comandos para o flasher e o tester, e `install --file` funciona sem rede.
-<!-- /urtc-section:updates -->
-
-<!-- urtc-section:heads -->
-## 🧭 Várias cabeças de ferramenta num barramento
-
-O firmware pode fazer várias cabeças de ferramenta partilharem um barramento CAN (a extensão multinó). Vem **desativada por defeito**, e um barramento com uma só cabeça funciona exatamente como antes. A janela **Cabeças** encontra as cabeças, lista cada uma com o seu endereço, ferramenta e número de série, e mostra o seu estado: pronta, selecionada, conflito de endereço, falha retida, no seu bootloader ou perdida. Seleciona uma, o programa pede confirmação e só depois lhe envia alguma coisa; enquanto houver várias cabeças no barramento, um comando é recusado até uma estar selecionada e o ter confirmado. Se a cabeça selecionada se perder, todas as cabeças passam ao estado seguro (uma caixa da janela desativa-o). Só foi testada contra um modelo do barramento, não com placas. Veja `docs/MULTINODE.md` em URTC-COMMON.
-<!-- /urtc-section:heads -->
-
-<!-- urtc-section:compatibility -->
-## 🧩 Compatibilidade
-
-As versões dos programas URTC que funcionam em conjunto, e a versão do protocolo que cada uma fala, constam da tabela de compatibilidade que o URTC-COMMON gera: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
-<!-- /urtc-section:compatibility -->
+**JuanenRac** (Electro Hobby 3D)
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
 
 ## 📜 LICENÇA
+
+Licença: **GPL-3.0-or-later** para o código-fonte, **CC BY-SA 4.0** para esta
+documentação - consulte `LICENSE` neste repositório, ou a secção "License and
+Copyright Notices" no final deste documento.
 
 O URTC Tester é (c) 2026 JuanenRac (Electro Hobby 3D). Este aviso tem de
 ser incluído em quaisquer distribuições deste projeto ou de obras derivadas.
@@ -674,19 +676,3 @@ um âmbito semelhante em
 Se construir sobre este projeto, tenha presente a divisão de licenças: as alterações ao código
 devem manter-se GPL-3.0-or-later, os derivados da documentação devem manter-se CC
 BY-SA - cada um com atribuição a este projeto e ao seu autor.
-
----
-
-## 📚 Documentação e comunidade
-
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — stack tecnológica e diretrizes de código para um pull request.
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — as normas de comportamento esperadas nesta comunidade.
-- **[SECURITY.md](SECURITY.md)** — como reportar uma vulnerabilidade, e as áreas de foco de segurança reais deste projeto.
-- **[SUPPORT.md](SUPPORT.md)** — onde colocar questões e reportar erros.
-- **[LICENSE.md](LICENSE.md)** — a licença própria deste projeto.
-
-## 👤 AUTOR
-
-**JuanenRac** (Electro Hobby 3D)
-📧 electrohobby3d@gmail.com
-📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)

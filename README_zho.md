@@ -15,27 +15,21 @@
   <a href="README_por.md">🇵🇹 Português</a>
 </p>
 
+### URTC 板的实时 CAN 总线测试器：只显示已接入工具头的控件和遥测数据
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
+  <img src="https://img.shields.io/badge/Tests-531-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
-
-**版本：** 0.4.2 · **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
-
-许可证：源代码为 **GPL-3.0-or-later**，本文档为 **CC BY-SA 4.0**——见本仓库中的
-`LICENSE`，或本文档末尾的“许可证与版权声明”一节。
-
-一款面向 URTC 板卡的实时 CAN 总线测试器。它通过与刷写工具相同的 USB-CAN
-适配器连接，询问板卡当前跳接为其 25 种工具配置文件中的哪一种，并仅显示
-该工具自身的控件和遥测——而非试图用一个窗口同时表示全部 25 种。它所做的
-一切都是针对当前正在运行的应用程序的运行时指令或遥测读取；它从不触碰
-闪存，因此这里没有任何东西会让板卡的可用性比开始时更差。
+---
 
 **诚实核查 - 今天真正能运行的部分：** 为迁移到 Qt Quick 的控制系列所提供的 CAN 负载编码器（`advanced_protocol.py`）是真实的，并由 `tests/` 中的测试覆盖（`python -m pytest -q`）。这个仓库自己的 CI（`.github/workflows/ci.yml`）也会运行它们，同时运行 `ruff check`、`python -m mypy`、`tools/ci_validate.py`、对每个 `.py` 文件的语法编译以及四个 `verify_qt_*.py` 脚本，所以那里的回归会导致构建失败。仓库根目录下的四个 `verify_qt_*.py` 脚本（`verify_qt_custom_frame.py`、`verify_qt_telemetry_watch.py`、`verify_qt_utility_panels.py`, `verify_qt_selftest.py`）是真实的、刻意放在 `tests/` 之外的端到端检查，针对一个带有真实跨线程信号传递的模拟传输层——运行 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 时四者都能通过，CI 也会运行它们。这就是自动验证所能达到的诚实上限：传输层、CAN ID/字节布局处理，以及 Qt Quick 桥接逻辑都是真实的，并且针对模拟帧进行了验证，而不是真实硬件——正如下文"Known limitations"已经指出的，这套工具是在没有 USB 访问权限的环境下构建的，所以这里的任何东西都还没有针对真实板卡验证过。`qt_tester.py` 和 `assets/qml/TesterDeck.qml` 是真实而庞大的实现（合计数千行代码），由使用模拟板卡的测试和验证脚本检验，从未在真实板卡上运行过。
+
+---
 
 > **安全与安防现状:**本生态系统不是经认证的安全系统,目前也不存在已组装的 URTC 电路板。引导程序使用 CRC32 和共享密钥的 HMAC-SHA256 校验固件映像,而非非对称签名(计划中);已发布的应用映像使用公开的开发密钥签名(`signing_key_kind: dev`),因此任何人都可以生成引导程序接受的映像;尚未向任何真实电路板发送过任何内容。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
@@ -45,9 +39,12 @@
 |---|---|
 | 版本 | `0.4.2` |
 | 成熟度 | 可用 |
+| 测试 | 531 (`python -m pytest -q`) |
 | 技术栈 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
+
+**跳转到：** [概述](#-概述) · [架构](#-架构) · [功能](#-功能) · [安全](#-安全与防护) · [接口](#-接口) · [快速开始](#-快速开始) · [测试](#-测试) · [结构](#-仓库结构) · [相关项目](#-相关项目)
 
 <!-- urtc-section:status_tester -->
 ## 🚦 项目状态
@@ -64,7 +61,15 @@
 
 <!-- /urtc-section:status_tester -->
 
-## 1. 🆚 与刷写工具的关系
+## 🎯 概述
+
+一款面向 URTC 板卡的实时 CAN 总线测试器。它通过与刷写工具相同的 USB-CAN
+适配器连接，询问板卡当前跳接为其 25 种工具配置文件中的哪一种，并仅显示
+该工具自身的控件和遥测——而非试图用一个窗口同时表示全部 25 种。它所做的
+一切都是针对当前正在运行的应用程序的运行时指令或遥测读取；它从不触碰
+闪存，因此这里没有任何东西会让板卡的可用性比开始时更差。
+
+### 与刷写工具的关系
 
 本工具与 [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) 共享
 同一个传输层（SLCAN 和 SocketCAN 类是完全相同的），因为两者最终都只需要
@@ -79,81 +84,43 @@
 如果你不确定需要哪一个：如果板卡已经在运行固件，而你想检查某个工具是否
 真的能用（加热器加热、电机转动、LED 点亮），你需要的就是这一个。
 
-## 2. 📦 安装与运行
+## 🧩 在 URTC 中的角色
 
-与刷写工具相同的模式：
+URTC-TESTER 是检查 URTC 工具头在运行其应用程序时实际行为的程序：它通过与 URTC-FLASHER 相同的 USB-CAN 适配器连接，询问板子的跳线对应 25 种工具配置中的哪一种，只显示该工具的控件和遥测数据，而不是试图同时表示全部 25 种的窗口。它所做的一切都是运行时命令或遥测读取，从不触碰闪存，因此不会让板子比发现时更糟。它使用的协议来自 URTC-COMMON，URTC-WEB-STUDIO 在浏览器中提供相同的工作流程。
 
-```
-pip install -r requirements.txt
-python urtc_tester.py          # Windows
-python3 urtc_tester.py         # Linux
-```
+## 🏛️ 架构
 
-或构建一个独立的二进制文件：Windows 上使用 `build_exe.bat`，Linux 上使用
-`./build_exe.sh`。两者都会先清理 `build/`/`dist/`，并将 `assets/`（横幅
-和图标）打包进可执行文件中——这些打包脚本所依赖的不递增版本号的验证路径
-（`build-test.bat`/`build-test.sh`）见
-[docs/BUILD_AND_RUN.md](docs/BUILD_AND_RUN.md)，打包脚本本身的完整推理
-见刷写工具自身的 README，因为它在这里同样适用。
+<p align="center">
+  <img src="images/architecture.svg" alt="URTC-TESTER 的架构：谁在使用、包含什么、依赖什么" width="100%">
+</p>
 
-**版本管理：** `TESTER_VERSION`（在 `tester_config.py` 中，显示在标题栏、
-关于对话框、会话日志和调试包中）遵循 `MAJOR.MINOR.PATCH`。两个构建脚本
-都会通过 `bump_version.py`，在每次真正的构建之前自动递增它，采用十进制
-“里程表”方式：PATCH +1，一旦 PATCH 超过 9 就进位到 MINOR（例如
-`0.1.9` → `0.2.0`）。从源码运行（`python urtc_tester.py`）绝不会触碰它——
-只有一次真正的 `build_exe.bat`/`build_exe.sh` 运行才会。MAJOR 从不自动
-递增，只能手动更改。版本历史见 `CHANGELOG.md`。
+本仓库各部分如何协作：谁在使用它、它包含什么、它依赖什么。图片由 `docs/architecture.json` 绘制，并与代码核对。
 
-### 可视化控制台
+<!-- urtc-section:updates -->
+### 如何更新
 
-**Qt Quick** 命令控制台现在是真正的默认界面：
-~~~
-python urtc_tester.py
-~~~
-它使用 SLCAN/SocketCAN 传输，并以只监听模式启动，因此在你明确启用主动检查前
-不会发送任何内容。25 种工具配置各自的命令在此都有经过确认的真实覆盖
-（运动、钻头、AOI、电磁铁、点焊/超声波焊接脉冲、锡膏喷射、飞针、热成像检测、
-5 个带看门狗保活的执行器、真空/扫描探头遥测），每一项都经过同样的关卡：
-身份匹配、明确启用的主动模式，以及发送前在 QML 中的用户确认。
-这些都尚未在真实板卡上检查过 —— 见下方“已知限制”。
+本程序可以查找自身的较新版本：“检查更新”按钮只向 GitHub 查询一次，只有当包适用于您的系统且更新时才会提供已签名的包。除非您打开检查，否则不会自行检查或安装，更新需要您的确认。包必须与其 SHA-256 以及程序中固定的发布密钥签名一致；上一版本会保留，新版本无法启动时会自动恢复。`urtc-updater --cli package list|check|install|rollback` 可在命令行中为刷写器和测试器完成同样的操作，`install --file` 无需网络即可使用。
+<!-- /urtc-section:updates -->
 
-该控制台还会显示检测到的工具的**实时读数**（带滚动曲线和 CSV 导出的温度、转速、限位开关；它们只监听，因此在仅监听模式下以及输出正在运行时也能使用），可运行**自检**，当**总线健康检查**（在没有其他操作占用总线时，每 3 秒查询一次当前工具）发现问题时会在标题栏警告，并提供带有 Readme、许可证和 GitHub 页面的 **关于 URTC Tester** 对话框，旁边是 **保存日志...**。
+## 🖼️ 屏幕截图
 
-Qt Quick 窗口的标题栏有语言选择器；所选语言会被保存，并在下次启动时生效。它还可以查询并重置烙铁送丝器的位置（开环估计值；重置需要确认）。 身份探测在电路板发送补丁号时（URTC 固件 0.3.5 及更新版本）也会显示固件补丁号；更旧的固件只显示主版本.次版本。
+<p align="center">
+  <img src="images/URTC_TESTER_V1_1.png" alt="URTC Tester window" width="700">
+</p>
 
-现有的实时 CAN 诊断流程现在使用深海军蓝/青色控制界面：产品标题、高对比度连接卡、清晰的工具标签页、深色会话日志以及可见的进度通道。这只是视觉与可访问性改动，不会改变被动监控或命令路由，其中任何内容也从未在真实板卡上试过。
+**故障记录器、可选功能、机架试验台和热像(新增,仅用模拟对象检查):** 面板读取板卡的黑匣子(`0x1A8` / `0x1A9`)并保存为 CSV 和 JSON,该选项开启时,板卡每报告一次错误就自动读取一次;可切换固件的可选功能(`0x1AE` / `0x1AF`,默认关闭,下次上电后生效);提供一个模拟的工具机架,使用 URTC-SMART-RACK 的串行协议、每个工具头的身份(类型和序列号)以及状态页导出;并以伪彩色显示热检测图像(模拟图像会明确标注)。工具名称和类别现在来自 URTC-COMMON 的共享工具配置。这些都没有在真实板卡上使用过。
 
-### 标题栏与工具
+**加热器 PID（新增，仅用模拟验证）:** 控制台读取固件加热器 PID 的状态（`0x1B9` / `0x1BA`: 当前生效的增益、状态和上一个控制周期的输出），保存增益（0 到 600），并启动或取消继电器式自整定；自整定会在烙铁当前设定温度（100 到 445 C）附近加热烙铁头，并保存找到的增益。保存增益和启动自整定需要通常的确认，取消则不需要。命令行的模拟工具头（`--transport simulate`）也会应答这些帧。须先在可选功能中打开该功能；以上内容都没有在真实电路板上使用过。
 
-- **标题栏** - 连接状态、总线健康警告、语言选择器（选择会被保存，并在下次启动时生效）和版本号。
-- **保存日志...** 和 **导出会话（带哈希的日志）** - 以纯文本保存屏幕日志，或保存包含日志、以 SHA-256 标识该日志的清单和系统诊断的 zip（见下文“日志与调试包”）。
-- **关于 URTC Tester** - 版本和作者，带有 **自述文件**（有翻译时使用界面语言）、**许可证** 和项目 **URTC GitHub** 页面的按钮。
+这些图片是真实的窗口，在没有屏幕的情况下按打开时的样子绘制（未连接任何设备，未发送任何内容）。指南依次介绍面板、帮助窗口和更新窗口。
 
-### 文件结构
+![窗口分步指南](docs/screenshots/tester-deck.png)
 
-本工具按职责被组织为多个模块，纯粹是为了可读性——将它们作为独立文件与
-作为一个大文件，在功能上没有任何区别。完整的逐文件分解见本文档末尾附近
-的“📂 仓库结构”一节。
+[图文指南](docs/WINDOW_GUIDE.md)
 
-**语言**：默认为英语。通过窗口顶部的语言选择器切换——将界面（标签、按钮、对话框和日志消息）切换为 8 种可用语言中的任意一种，立即保存到本工具旁边的 `config.json`，在下次启动时
-应用。翻译文件以纯文本形式存放在 `language/` 下（`english.lng`、
-`spanish.lng`、`italian.lng`、`french.lng`、`german.lng`、`chinese.lng`、
-`japanese.lng`、`portuguese.lng`），采用简单的
-`KEY=Value` 键值对，一行一个——以 `#` 开头的行和空行会被忽略，值内部的
-字面 `\n` 会变成真正的换行符（用于少数几个多行对话框消息）。这些文件由 URTC-COMMON 的目录生成（翻译在那里修正后重新写入文件，从不手工编辑），也可以将其作为新增另一种语言的起点（添加
-`language/<name>.lng`，在 `tester_config.py` 顶部附近的
-`AVAILABLE_LANGUAGES` 中添加 `("<name>", "本地语言名称")`，并在
-`config.json` 中设置 `"language": "<name>"`）。语言文件中缺失的键会
-回退为显示该键自身的名称而不是崩溃，缺失或无法读取的语言文件（编辑
-错误、文件名错误）会为整个界面回退到英语——无论哪种情况，工具在问题
-被解决之前都能保持可用。
+## ✨ 功能
 
-**Linux SLCAN/SocketCAN 设置**（适配器重新刷写、串口权限、`ip link`
-启用）与刷写工具的第 1 节完全相同——请参见 [URTC Flasher 自身的
-README](https://github.com/JuanenRac/URTC-FLASHER) 第 1 和第 2 节，
-此处不再重复。
-
-## 3. ⚙️ 工作原理
+### 工作原理
 
 窗口布局为三列：左列和中列容纳下方始终可见的部分（第 1-4 节，然后是
 第 6 节），右列容纳第 5 节的逐工具面板，这是窗口中唯一真正根据检测结果
@@ -258,7 +225,7 @@ FM24CL64B 共享 OLED 自身的硬件 I2C2 总线——这是一个核心板卡�
 ID 列会在原始十六进制 ID 旁边显示该友好名称——对于任何在不需要修改本
 工具源码的情况下测试自定义扩展板自身流量的人来说都很有用。
 
-## 4. 🧰 工具覆盖范围
+### 工具覆盖范围
 
 25 种配置文件的每一种都有自己的面板，直接基于 `docs/CANBUS.md` 构建：
 
@@ -299,7 +266,7 @@ ID 列会在原始十六进制 ID 旁边显示该友好名称——对于任何�
 - 端口和波特率会为下次会话记住（`config.json`），Qt Quick 面板有自己的波特率选择器。**自动检测**首先只在每个波特率下监听（在运行中的总线上不发送任何内容），只有当总线完全静默时才在每个波特率下发起询问。
 - 原始总线监视器可以限制为某些 CAN ID（**ID 过滤**）以及数据发生变化的帧（**仅显示变化**）。
 
-### 🔥 热失控台架测试（URTC 固件 0.3.2+ / 0.3.3+）
+#### 🔥 热失控台架测试（URTC 固件 0.3.2+ / 0.3.3+）
 
 Detect 现在会显示板卡锁定错误的*原因*：`0x111` 的第 4 字节（热失控保护：
 MAXTEMP、HEATING_NO_RISE 或 DROPPED_AT_TARGET）显示在板卡状态中，由硬件看门狗
@@ -309,7 +276,24 @@ MAXTEMP、HEATING_NO_RISE 或 DROPPED_AT_TARGET）显示在板卡状态中，由
 在真实板卡上验证该保护的分步流程见
 [`docs/THERMAL_RUNAWAY_BENCH_TEST.md`](docs/THERMAL_RUNAWAY_BENCH_TEST.md)。
 
-## 5. 📋 日志与调试包
+<!-- urtc-section:heads -->
+### 一条总线上的多个工具头
+
+固件可以让多个工具头共用一条 CAN 总线（多节点扩展）。它**默认关闭**，只有一个工具头的总线与以前完全一样地工作。**工具头**窗口会查找工具头，列出每个工具头的地址、工具和序列号，并显示其状态：就绪、已选择、地址冲突、故障已锁定、处于引导程序或已丢失。您选择一个后，程序会先请您确认，之后才向该工具头发送任何内容；只要总线上有多个工具头，在选中一个并得到它的确认之前，命令都会被拒绝。如果所选工具头丢失，所有工具头都会进入安全状态（窗口中的复选框可关闭此行为）。目前只针对总线模型测试过，没有在电路板上试过。参见 URTC-COMMON 中的 `docs/MULTINODE.md`。
+<!-- /urtc-section:heads -->
+
+## 🔒 安全与防护
+
+| 风险 | 防御 |
+|---|---|
+| 向并非窗口所示工具的板子发送命令 | 只有板子自己报告的工具才会显示其面板，每条命令都以身份匹配为前提 |
+| 无意间发送 | 窗口以仅监听模式启动：在有意启用主动检查之前无法发送，每个作用于板子的操作都会先在窗口中要求确认 |
+| 损坏板子 | 测试器从不触碰闪存：它所做的一切都是针对正在运行的应用程序的运行时命令或遥测读取 |
+| 可能被人改动的日志 | 会话导出是一个 zip，包含日志、以其 SHA-256 命名它的清单和系统诊断信息 |
+
+这一切都没有在真实的板子上试过，也都不是经过认证的安全功能；见下面的限制。
+
+## 🔌 接口
 
 与刷写工具相同：一个带时间戳的会话日志会自动写入 `logs/`（删除是安全
 的），**导出调试包**会将当前屏幕上的日志加上基本的系统诊断信息
@@ -330,7 +314,134 @@ MAXTEMP、HEATING_NO_RISE 或 DROPPED_AT_TARGET）显示在板卡状态中，由
 
 **无需硬件：** 虚拟板可代替适配器和板子。运行 `python -m urtc_can.virtual_board`，再把它的串口 URL 作为端口（`--transport serial --port socket://127.0.0.1:7777`）；该板会像应用程序一样响应版本查询和快速状态，因此即使什么都没连接，`info` 和只含查询的计划也能完整运行。它是根据协议描述编写的模型，不是工具头：工具的自检会报告它读不到的内容。
 
-## 6. ⚠️ 已知限制
+## 🚀 快速开始
+
+与刷写工具相同的模式：
+
+```
+pip install -r requirements.txt
+python urtc_tester.py          # Windows
+python3 urtc_tester.py         # Linux
+```
+
+### 可视化控制台
+
+**Qt Quick** 命令控制台现在是真正的默认界面：
+~~~
+python urtc_tester.py
+~~~
+它使用 SLCAN/SocketCAN 传输，并以只监听模式启动，因此在你明确启用主动检查前
+不会发送任何内容。25 种工具配置各自的命令在此都有经过确认的真实覆盖
+（运动、钻头、AOI、电磁铁、点焊/超声波焊接脉冲、锡膏喷射、飞针、热成像检测、
+5 个带看门狗保活的执行器、真空/扫描探头遥测），每一项都经过同样的关卡：
+身份匹配、明确启用的主动模式，以及发送前在 QML 中的用户确认。
+这些都尚未在真实板卡上检查过 —— 见下方“已知限制”。
+
+该控制台还会显示检测到的工具的**实时读数**（带滚动曲线和 CSV 导出的温度、转速、限位开关；它们只监听，因此在仅监听模式下以及输出正在运行时也能使用），可运行**自检**，当**总线健康检查**（在没有其他操作占用总线时，每 3 秒查询一次当前工具）发现问题时会在标题栏警告，并提供带有 Readme、许可证和 GitHub 页面的 **关于 URTC Tester** 对话框，旁边是 **保存日志...**。
+
+Qt Quick 窗口的标题栏有语言选择器；所选语言会被保存，并在下次启动时生效。它还可以查询并重置烙铁送丝器的位置（开环估计值；重置需要确认）。 身份探测在电路板发送补丁号时（URTC 固件 0.3.5 及更新版本）也会显示固件补丁号；更旧的固件只显示主版本.次版本。
+
+现有的实时 CAN 诊断流程现在使用深海军蓝/青色控制界面：产品标题、高对比度连接卡、清晰的工具标签页、深色会话日志以及可见的进度通道。这只是视觉与可访问性改动，不会改变被动监控或命令路由，其中任何内容也从未在真实板卡上试过。
+
+### 标题栏与工具
+
+- **标题栏** - 连接状态、总线健康警告、语言选择器（选择会被保存，并在下次启动时生效）和版本号。
+- **保存日志...** 和 **导出会话（带哈希的日志）** - 以纯文本保存屏幕日志，或保存包含日志、以 SHA-256 标识该日志的清单和系统诊断的 zip（见下文“日志与调试包”）。
+- **关于 URTC Tester** - 版本和作者，带有 **自述文件**（有翻译时使用界面语言）、**许可证** 和项目 **URTC GitHub** 页面的按钮。
+
+### 文件结构
+
+本工具按职责被组织为多个模块，纯粹是为了可读性——将它们作为独立文件与
+作为一个大文件，在功能上没有任何区别。完整的逐文件分解见本文档末尾附近
+的“📂 仓库结构”一节。
+
+**语言**：默认为英语。通过窗口顶部的语言选择器切换——将界面（标签、按钮、对话框和日志消息）切换为 8 种可用语言中的任意一种，立即保存到本工具旁边的 `config.json`，在下次启动时
+应用。翻译文件以纯文本形式存放在 `language/` 下（`english.lng`、
+`spanish.lng`、`italian.lng`、`french.lng`、`german.lng`、`chinese.lng`、
+`japanese.lng`、`portuguese.lng`），采用简单的
+`KEY=Value` 键值对，一行一个——以 `#` 开头的行和空行会被忽略，值内部的
+字面 `\n` 会变成真正的换行符（用于少数几个多行对话框消息）。这些文件由 URTC-COMMON 的目录生成（翻译在那里修正后重新写入文件，从不手工编辑），也可以将其作为新增另一种语言的起点（添加
+`language/<name>.lng`，在 `tester_config.py` 顶部附近的
+`AVAILABLE_LANGUAGES` 中添加 `("<name>", "本地语言名称")`，并在
+`config.json` 中设置 `"language": "<name>"`）。语言文件中缺失的键会
+回退为显示该键自身的名称而不是崩溃，缺失或无法读取的语言文件（编辑
+错误、文件名错误）会为整个界面回退到英语——无论哪种情况，工具在问题
+被解决之前都能保持可用。
+
+**Linux SLCAN/SocketCAN 设置**（适配器重新刷写、串口权限、`ip link`
+启用）与刷写工具的第 1 节完全相同——请参见 [URTC Flasher 自身的
+README](https://github.com/JuanenRac/URTC-FLASHER) 第 1 和第 2 节，
+此处不再重复。
+
+<!-- urtc-section:compatibility -->
+### 要求与兼容性
+
+哪些版本的 URTC 程序可以配合使用、各自使用哪个协议版本，列在 URTC-COMMON 生成的兼容性表中：[docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md)。
+<!-- /urtc-section:compatibility -->
+
+## 🧪 测试
+
+测试套件共有 531 个测试（`python -m pytest -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；需要 PySide6 的测试在没有它时会被跳过）：每个工具系列的 CAN 载荷编码器和解码器、针对模拟对象的 SLCAN 和 SocketCAN 传输层、身份探测、自检、看门狗保活、总线健康检查、测试计划和无窗口模式、带哈希的会话导出、语言文件以及 Qt Quick 面板。根目录下的四个脚本（`verify_qt_*.py`）用真实的 Qt 事件循环对 Qt Quick 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。这一切都没有针对真实的板子运行过。
+
+## 🏗️ 构建与发布
+
+或构建一个独立的二进制文件：Windows 上使用 `build_exe.bat`，Linux 上使用
+`./build_exe.sh`。两者都会先清理 `build/`/`dist/`，并将 `assets/`（横幅
+和图标）打包进可执行文件中——这些打包脚本所依赖的不递增版本号的验证路径
+（`build-test.bat`/`build-test.sh`）见
+[docs/BUILD_AND_RUN.md](docs/BUILD_AND_RUN.md)，打包脚本本身的完整推理
+见刷写工具自身的 README，因为它在这里同样适用。
+
+**版本：** `TESTER_VERSION`（位于 `tester_config.py`，显示在标题栏、“关于”对话框、会话日志和调试包中）遵循 `MAJOR.MINOR.PATCH`，只会通过明确的 `python bump.py` 步骤提高。从源码运行（`python urtc_tester.py`）和构建（`build_exe.bat` / `build_exe.sh`）从不触碰它。版本历史见 `CHANGELOG.md`。
+
+## 📂 仓库结构
+
+<p align="center">
+  <img src="images/repository-structure.svg" alt="URTC-TESTER 的仓库结构" width="100%">
+</p>
+
+<details>
+<summary>目录树的文本版</summary>
+
+```text
+URTC-TESTER/
+├── urtc_tester.py                                     入口
+├── qt_tester.py                                       Qt Quick 面板
+├── tester_*.py                                        传输、监视、自检、计划、遥测
+├── advanced_protocol.py                               纯 CAN 载荷编码器
+├── verify_qt_*.py                                     Qt 面板的端到端检查
+├── urtc_can/                                          协议、传输和更新（副本）
+├── urtc_ui/                                           界面辅助（副本）
+├── tests/                                             每个领域一个测试文件
+├── plans/                                             示例测试计划 (JSON)
+├── language/                                          八个 .lng 语言文件
+├── assets/                                            QML、横幅和图标
+├── docs/                                              架构、构建与运行
+├── logs/                                              会话日志（不进入 Git）
+├── tools/                                             构建检查和共用工具
+├── images/                                            横幅和本 README 的图片
+├── .github/                                           CI 工作流以及 Issue 和 Pull Request 模板
+├── test.sh test.bat                                   运行测试
+├── run.sh run.bat                                     启动程序
+├── build-test.sh build-test.bat                       构建并测试的脚本，不会修改仓库内容
+├── urtc.project.json                                  清单：版本、角色、成熟度和构建命令
+├── CHANGELOG.md                                       每个版本的变更
+├── SECURITY.md SUPPORT.md LICENSE                     安全政策、支持和许可证
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md                 如何参与贡献和行为准则
+├── .gitattributes .gitignore                          Git 设置
+├── build_exe.sh build_exe.bat                         独立程序 (PyInstaller)
+├── bump.py bump_version.py bump_manifest_version.py   提升版本号的脚本
+├── requirements*.txt requirements*.lock               依赖及其锁文件
+├── mypy.ini ruff.toml .coveragerc                     类型检查、lint 和覆盖率设置
+├── urtc_i18n.lock.json                                生成语言文件的锁文件
+└── NOTICE LICENSE.md                                  版权声明和文档许可证
+```
+
+</details>
+
+每个源文件的带注释清单（每个文件一行）见 [docs/SOURCE_MAP.md](docs/SOURCE_MAP.md)。
+
+## 🗺️ 路线图与已知限制
 
 本工具的证据契约——什么算作 pass/fail/unknown、为什么缺失证据永远是
 unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷写权限——记录
@@ -353,116 +464,9 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
   按钮时，其他 18 种工具不会得到任何自动检查；验证它们仍然意味着要
   观察实际硬件对其自身面板控件的响应。
 
-## 📂 仓库结构
+## 🌍 语言
 
-```
-/
-├── urtc_tester.py             入口点——启动 Qt Quick 控制台
-├── qt_tester.py                Qt Quick 前端——默认的正式指令面板，默认只读
-│
-├── tester_config.py            配置/语言/协议常量（CAN ID、工具名称、
-│                                MOTION_TOOL_IDS、AVAILABLE_LANGUAGES、
-│                                EXPANSION_BOARD_TYPES）
-├── tester_transports.py        SLCAN 和 SocketCAN 传输类
-├── tester_bus_monitor.py       后台 CAN 读取线程（CANBusMonitor）
-├── tester_autodetect.py        SLCAN 适配器的比特率搜索
-├── tester_selftest.py          自检的步骤与执行（不含窗口代码）
-├── tester_plan.py              测试计划: 校验、执行及其后的“全部关闭”
-├── tester_cli.py               无窗口的测试器 (--headless): info、selftest、run-plan
-├── tester_simulator.py         模拟工具头与已录制轨迹的播放器
-├── plans/                      测试计划示例 (JSON)
-├── tester_telemetry.py         各工具的实时读数与记录的数据序列
-├── tester_trace_export.py      .trc / .asc 帧导出的写入代码
-├── tester_replay.py            回放已录制的 .trc / .asc 轨迹（播放器自身不带定时器）
-├── tester_blackbox_view.py     面板绘制的黑匣子记录：图表数据序列、表格，以及无需开发板即可打开的已保存记录
-├── tester_result_record.py     与适配器、固件以及按 SHA-256 标识的日志绑定的结果记录（JSON）
-├── tester_extras.py            故障记录器、可选功能、加热器 PID、机架试验台和热成像视图中不依赖 Qt 的逻辑
-├── urtc_ui/                    共享界面辅助代码（URTC-COMMON 的副本）
-├── urtc_can/                   复制自 URTC-COMMON 的共享代码：协议、传输、虚拟板、更新、帮助和工具头窗口
-├── advanced_protocol.py        为迁移到 Qt Quick 的控制系列提供的纯 CAN
-│                                负载编码器——无需硬件的测试
-├── verify_qt_custom_frame.py        真实的、放在 tests/ 之外的端到端检查，验证 Qt Quick Custom CAN Frame 面板（需要真实的 Qt 事件循环）
-├── verify_qt_telemetry_watch.py     真实的、放在 tests/ 之外的端到端检查，验证 Qt Quick 遥测（Vacuum Pickup / Scan Probe）
-├── verify_qt_utility_panels.py      真实的、放在 tests/ 之外的端到端检查，验证 Qt Quick 实用面板（Global Controls / Expansion Board / F-RAM）
-├── verify_qt_selftest.py            位于 tests/ 之外的 Qt Quick 自检端到端检查
-├── tests/
-│   ├── test_advanced_protocol.py   针对 advanced_protocol.py 编码器的无硬件测试——CI 会运行它，见上文诚实核查
-│   ├── test_*.py                   按程序的每个领域各有一个文件；CI 会运行它们，涉及 Qt 的测试在无屏幕模式下运行
-│   └── fixtures/                   与其他程序共享的向量和已录制的轨迹
-├── requirements.txt            pyserial>=3.5 + PySide6>=6.8,<7
-├── build_exe.bat               独立 Windows 二进制文件构建脚本（PyInstaller）
-├── build_exe.sh                同上，适用于 Linux
-├── build-test.bat              不递增版本号的构建/编译检查
-├── build-test.sh                同上，适用于 Linux
-├── bump.py                     显式的版本递增命令（编译从不递增）
-├── bump_version.py             里程表式版本递增，由 bump.py 运行
-├── bump_manifest_version.py    将 urtc.project.json 的版本与原生版本同步（--sync）
-├── URTC_Tester.spec            两个构建脚本共用的 PyInstaller 规范文件
-├── requirements-dev.txt / requirements*.lock 测试和构建所用依赖，带哈希锁定
-├── mypy.ini / ruff.toml / pytest.ini 类型检查和静态检查的设置
-├── urtc_i18n.lock.json         由 URTC-COMMON 目录生成的语言文件的锁定文件
-├── urtc.project.json           项目清单（版本、成熟度、证据）
-├── run.bat / run.sh            启动程序
-├── assets/
-│   ├── URTC_APP_ICON.svg       窗口/任务栏图标源文件（独立小型设计）
-│   ├── URTC_LOGO_TESTER.svg    横幅源文件（矢量图）
-│   ├── qml/
-│   │   ├── TesterDeck.qml      默认指令面板的 Qt Quick UI
-│   │   ├── HelpDialog.qml      快速指南窗口（共享）
-│   │   ├── NodePickerDialog.qml 工具头窗口（共享）
-│   │   ├── UpdateDialog.qml    检查更新窗口（共享）
-│   │   └── urtc_common.lock.json 复制自 URTC-COMMON 的文件的锁定文件
-│   ├── urtc_icon.ico           Windows 图标，由 URTC_APP_ICON.svg 构建
-│   └── urtc_icon.png           同上，PNG 形式（Linux）
-├── images/
-│   ├── URTC_TESTER_BANNER.svg  显示在本 README 顶部的 Logo 横幅
-│   └── URTC_TESTER_V1_1.png    本工具主窗口的截图（见下方照片）
-├── language/
-│   ├── english.lng             默认语言，纯文本 KEY=Value 字符串
-│   ├── spanish.lng
-│   ├── italian.lng
-│   ├── french.lng
-│   ├── german.lng
-│   ├── japanese.lng
-│   ├── chinese.lng
-│   └── portuguese.lng
-├── logs/                       运行时会话日志写入此处（删除是安全的）
-├── LICENSE                     完整许可证文本——见下方许可证与版权声明
-├── NOTICE                      版权声明和文档许可证
-├── README.md                   英文原版
-├── README_spa.md               西班牙语翻译
-├── README_ita.md               意大利语翻译
-├── README_fra.md               法语翻译
-├── README_deu.md               德语翻译
-├── README_por.md               葡萄牙语翻译
-├── README_jpn.md               日语翻译
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── BUILD_AND_RUN.md
-│   ├── INTEGRATION_CONTRACT.md
-│   ├── CANBUS.md
-│   ├── THERMAL_RUNAWAY_BENCH_TEST.md
-│   ├── HEADLESS.md                  无窗口的测试器：命令、计划和退出码
-│   ├── WINDOW_GUIDE.md              逐步介绍窗口，附八种语言的真实图片
-│   └── screenshots/                 窗口指南的图片，八种语言各一套
-├── tools/
-│   ├── build_test.py                     不递增版本号的编译检查 + Qt Quick 面板源码校验
-│   ├── ci_validate.py                    CI 使用的 manifest/CHANGELOG/docs 校验
-│   ├── capture_screens.py                无屏幕生成窗口指南的图片（一种语言或全部语言）
-│   ├── make_update_package.py            构建并签名某个发布版本的更新包
-│   └── _doc_policy.py / _readme_parity.py / _tracked_names.py ci_validate.py 使用的共享检查
-└── README_zho.md               本文件
-```
-
-## 📸 照片
-
-<p align="center">
-  <img src="images/URTC_TESTER_V1_1.png" alt="URTC Tester window" width="700">
-</p>
-
-**故障记录器、可选功能、机架试验台和热像(新增,仅用模拟对象检查):** 面板读取板卡的黑匣子(`0x1A8` / `0x1A9`)并保存为 CSV 和 JSON,该选项开启时,板卡每报告一次错误就自动读取一次;可切换固件的可选功能(`0x1AE` / `0x1AF`,默认关闭,下次上电后生效);提供一个模拟的工具机架,使用 URTC-SMART-RACK 的串行协议、每个工具头的身份(类型和序列号)以及状态页导出;并以伪彩色显示热检测图像(模拟图像会明确标注)。工具名称和类别现在来自 URTC-COMMON 的共享工具配置。这些都没有在真实板卡上使用过。
-
-**加热器 PID（新增，仅用模拟验证）:** 控制台读取固件加热器 PID 的状态（`0x1B9` / `0x1BA`: 当前生效的增益、状态和上一个控制周期的输出），保存增益（0 到 600），并启动或取消继电器式自整定；自整定会在烙铁当前设定温度（100 到 445 C）附近加热烙铁头，并保存找到的增益。保存增益和启动自整定需要通常的确认，取消则不需要。命令行的模拟工具头（`--transport simulate`）也会应答这些帧。须先在可选功能中打开该功能；以上内容都没有在真实电路板上使用过。
+README 和文本提供英语、西班牙语、法语、意大利语、德语、汉语、日语和欧洲葡萄牙语版本。
 
 ## 🔗 相关项目
 
@@ -557,33 +561,32 @@ unknown 而不是 pass、以及为什么本工具自身不授予任何固件刷�
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — 维护事件协调器：一个低权限的边缘角色采集经过脱敏的库存/健康快照，一个控制面角色以只读方式渲染它，并请求某个 AI 提供方给出诊断建议——从不应用补丁，也从不部署任何内容。
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — 可复现的开发主机（Raspberry Pi 5 / CM5），保存整个生态系统的源代码，并在持久队列下运行有界的构建/测试任务；这是专用的开发角色，明确区别于运行中的 CM5。
 
-## 🖼️ 窗口分步指南
+## 📚 文档
 
-这些图片是真实的窗口，在没有屏幕的情况下按打开时的样子绘制（未连接任何设备，未发送任何内容）。指南依次介绍面板、帮助窗口和更新窗口。
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** —— 提交 Pull Request 所需的技术栈和编码规范。
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** —— 本社区所期望的行为准则。
+- **[SECURITY.md](SECURITY.md)** —— 如何报告漏洞，以及本项目真实的安全关注重点。
+- **[SUPPORT.md](SUPPORT.md)** —— 在哪里提问和报告缺陷。
+- **[LICENSE.md](LICENSE.md)** —— 本项目自身的许可证。
 
-![窗口分步指南](docs/screenshots/tester-deck.png)
+## 🤝 参与贡献与社区
 
-[图文指南](docs/WINDOW_GUIDE.md)
+* 提交 Pull Request 之前请运行 `URTC_CI=1 python tools/ci_validate.py`：必须通过。参见 [CONTRIBUTING.md](CONTRIBUTING.md) 和[行为准则](CODE_OF_CONDUCT.md)。
+* README 有八种语言：修改文字时要同步修改全部八个文件，与其他仓库共用的章节由 URTC-COMMON 的 `tools/readme_sections.py` 写入。
+* 对 CAN 协议的修改从 URTC-COMMON（`spec/can_protocol.json`）开始，并通过经过核对的副本进入本仓库。
+* 不要把仅仅构建过的东西描述为已在板子上运行。
+* 请私下报告漏洞：[SECURITY.md](SECURITY.md)。问题、想法和报告：electrohobby3d@gmail.com（[SUPPORT.md](SUPPORT.md)）。
 
-<!-- urtc-section:updates -->
-## 🔄 如何更新
+## 👤 作者
 
-本程序可以查找自身的较新版本：“检查更新”按钮只向 GitHub 查询一次，只有当包适用于您的系统且更新时才会提供已签名的包。除非您打开检查，否则不会自行检查或安装，更新需要您的确认。包必须与其 SHA-256 以及程序中固定的发布密钥签名一致；上一版本会保留，新版本无法启动时会自动恢复。`urtc-updater --cli package list|check|install|rollback` 可在命令行中为刷写器和测试器完成同样的操作，`install --file` 无需网络即可使用。
-<!-- /urtc-section:updates -->
-
-<!-- urtc-section:heads -->
-## 🧭 一条总线上的多个工具头
-
-固件可以让多个工具头共用一条 CAN 总线（多节点扩展）。它**默认关闭**，只有一个工具头的总线与以前完全一样地工作。**工具头**窗口会查找工具头，列出每个工具头的地址、工具和序列号，并显示其状态：就绪、已选择、地址冲突、故障已锁定、处于引导程序或已丢失。您选择一个后，程序会先请您确认，之后才向该工具头发送任何内容；只要总线上有多个工具头，在选中一个并得到它的确认之前，命令都会被拒绝。如果所选工具头丢失，所有工具头都会进入安全状态（窗口中的复选框可关闭此行为）。目前只针对总线模型测试过，没有在电路板上试过。参见 URTC-COMMON 中的 `docs/MULTINODE.md`。
-<!-- /urtc-section:heads -->
-
-<!-- urtc-section:compatibility -->
-## 🧩 兼容性
-
-哪些版本的 URTC 程序可以配合使用、各自使用哪个协议版本，列在 URTC-COMMON 生成的兼容性表中：[docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md)。
-<!-- /urtc-section:compatibility -->
+**JuanenRac**（Electro Hobby 3D）
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
 
 ## 📜 许可证
+
+许可证：源代码为 **GPL-3.0-or-later**，本文档为 **CC BY-SA 4.0**——见本仓库中的
+`LICENSE`，或本文档末尾的“许可证与版权声明”一节。
 
 URTC Tester 版权所有 (c) 2026 JuanenRac（Electro Hobby 3D）。分发本项目
 或其衍生作品时必须包含此声明。
@@ -611,19 +614,3 @@ URTC Tester 版权所有 (c) 2026 JuanenRac（Electro Hobby 3D）。分发本项
 如果你基于本项目进行开发，请留意这种许可证划分：代码更改应保持
 GPL-3.0-or-later，文档衍生品应保持 CC BY-SA——每一项都需附带指向本项目及其
 作者的署名。
-
----
-
-## 📚 文档与社区
-
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** —— 提交 Pull Request 所需的技术栈和编码规范。
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** —— 本社区所期望的行为准则。
-- **[SECURITY.md](SECURITY.md)** —— 如何报告漏洞，以及本项目真实的安全关注重点。
-- **[SUPPORT.md](SUPPORT.md)** —— 在哪里提问和报告缺陷。
-- **[LICENSE.md](LICENSE.md)** —— 本项目自身的许可证。
-
-## 👤 作者
-
-**JuanenRac**（Electro Hobby 3D）
-📧 electrohobby3d@gmail.com
-📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)

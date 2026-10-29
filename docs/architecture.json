@@ -1,0 +1,157 @@
+{
+  "repo": "URTC-TESTER",
+  "ecosystem": "urtc",
+  "tagline": "A live CAN exerciser: it asks the board which tool it is, shows that tool's controls and telemetry, and transmits only when armed.",
+  "description": "URTC-TESTER connects to a URTC board through a USB-CAN adapter (SLCAN or SocketCAN), reads which of the 25 tool profiles the board is jumpered for and shows the controls and the telemetry of that tool in a Qt Quick window. It starts in listen-only mode, never touches flash and can also run without a window from test plans. Everything is tested against simulated boards; nothing has been run on a real board.",
+  "columns": [
+    "WHO USES IT",
+    "THE TESTER",
+    "WHAT IT TALKS TO"
+  ],
+  "nodes": [
+    {
+      "id": "person",
+      "column": 0,
+      "level": "external",
+      "title": "A person at the bench",
+      "lines": [
+        "the Qt Quick command deck,",
+        "listen-only until active checks",
+        "are armed"
+      ],
+      "code": [
+        "qt_tester.py",
+        "urtc_tester.py"
+      ]
+    },
+    {
+      "id": "line",
+      "column": 0,
+      "level": "external",
+      "title": "A production line or CI",
+      "lines": [
+        "--headless: info, selftest,",
+        "run-plan and validate-plan with",
+        "JSON test plans"
+      ],
+      "code": [
+        "tester_cli.py",
+        "tester_plan.py"
+      ]
+    },
+    {
+      "id": "tools",
+      "column": 1,
+      "level": "tested",
+      "title": "Tool panels",
+      "lines": [
+        "command bytes and telemetry",
+        "decode per tool family, with an",
+        "identity match and keepalives"
+      ],
+      "code": [
+        "advanced_protocol.py",
+        "tester_telemetry.py",
+        "tester_config.py"
+      ]
+    },
+    {
+      "id": "bus",
+      "column": 1,
+      "level": "tested",
+      "title": "Transports and monitor",
+      "lines": [
+        "SLCAN and SocketCAN, a reader,",
+        "bit-rate search and the raw",
+        "bus monitor"
+      ],
+      "code": [
+        "tester_transports.py",
+        "tester_bus_monitor.py",
+        "tester_autodetect.py"
+      ]
+    },
+    {
+      "id": "check",
+      "column": 1,
+      "level": "tested",
+      "title": "Self-test and plans",
+      "lines": [
+        "at-rest checks per tool, test plans",
+        "and an all-off after them"
+      ],
+      "code": [
+        "tester_selftest.py",
+        "tester_plan.py"
+      ]
+    },
+    {
+      "id": "rec",
+      "column": 1,
+      "level": "tested",
+      "title": "Records and replay",
+      "lines": [
+        "session export with a hash, trace",
+        "files and a replay with no board"
+      ],
+      "code": [
+        "tester_result_record.py",
+        "tester_trace_export.py",
+        "tester_replay.py"
+      ]
+    },
+    {
+      "id": "board",
+      "column": 2,
+      "level": "untested",
+      "title": "USB-CAN adapter, board",
+      "lines": [
+        "a URTC tool head behind an",
+        "adapter; never connected to this",
+        "program"
+      ]
+    },
+    {
+      "id": "common",
+      "column": 2,
+      "level": "external",
+      "title": "URTC-COMMON",
+      "lines": [
+        "protocol, vectors and the quick",
+        "guide, copied and kept equal"
+      ],
+      "code": [
+        "urtc_can",
+        "urtc_ui"
+      ]
+    },
+    {
+      "id": "sim",
+      "column": 2,
+      "level": "config",
+      "title": "Simulated head",
+      "lines": [
+        "a head and a recorded trace that",
+        "answer like the real ones"
+      ],
+      "code": [
+        "tester_simulator.py"
+      ]
+    }
+  ],
+  "edges": [
+    {"from": "person", "to": "tools", "label": "arm", "level": "tested"},
+    {"from": "line", "to": "check", "label": "plan", "level": "tested"},
+    {"from": "tools", "to": "bus", "level": "tested"},
+    {"from": "bus", "to": "board", "label": "CAN", "level": "untested"},
+    {"from": "check", "to": "rec", "level": "tested"},
+    {"from": "bus", "to": "sim", "level": "tested"}
+  ],
+  "legend": {
+    "tested": "covered by tests against simulated boards",
+    "config": "stands in for a board",
+    "untested": "has not run on real hardware",
+    "external": "a person, a script or another repository"
+  },
+  "footer": "The tester never touches flash: every action is a runtime command or a telemetry read."
+}

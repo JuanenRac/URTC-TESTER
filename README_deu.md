@@ -15,6 +15,7 @@
   <a href="README_por.md">🇵🇹 Português</a>
 </p>
 
+### Ein Live-CAN-Bus-Prüfer für die URTC-Platine: Er zeigt nur die Bedienelemente und die Telemetrie des angesteckten Werkzeugkopfs
 
 <p align="center">
   <img src="https://img.shields.io/badge/Lizenz-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
@@ -23,25 +24,11 @@
   <img src="https://img.shields.io/badge/Protokoll-CAN-yellow.svg" alt="CAN">
 </p>
 
-
-**Version:** 0.4.2 · **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
-
-Lizenz: **GPL-3.0-or-later** für den Quellcode, **CC BY-SA 4.0** für diese
-Dokumentation - siehe `LICENSE` in diesem Repository, oder den
-Abschnitt „Lizenz und Urheberrechtshinweise" am Ende dieses Dokuments.
-
-Ein Live-CAN-Bus-Testwerkzeug für die URTC-Platine. Es verbindet sich
-über denselben USB-CAN-Adapter, den auch der Flasher verwendet, fragt
-die Platine, für welches ihrer 25 Werkzeugprofile sie aktuell per Jumper
-konfiguriert ist, und zeigt nur die eigenen Steuerelemente und die
-Telemetrie dieses Werkzeugs - nicht ein einziges Fenster, das versucht,
-alle 25 gleichzeitig darzustellen. Alles, was es tut, ist ein
-Laufzeitbefehl oder ein Telemetrie-Lesevorgang gegen die laufende
-Anwendung; es berührt niemals die Flash, sodass es hier nichts gibt, das
-die Platine weniger funktionsfähig zurücklassen könnte, als sie
-begonnen hat.
+---
 
 **Ehrlichkeitscheck - was heute wirklich funktioniert:** die CAN-Payload-Encoder für die auf Qt Quick migrierten Steuerungsfamilien (`advanced_protocol.py`) sind real und durch die Tests in `tests/` abgedeckt (`python -m pytest -q`). Die eigene CI dieses Repos (`.github/workflows/ci.yml`) führt sie ebenfalls aus, zusammen mit `ruff check`, `python -m mypy`, `tools/ci_validate.py`, einer Syntaxkompilierung jeder `.py`-Datei und den vier `verify_qt_*.py`-Skripten, sodass eine Regression dort den Build fehlschlagen lässt. Die vier `verify_qt_*.py`-Skripte im Repo-Root (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) sind echte, bewusst außerhalb von `tests/` gehaltene End-to-End-Prüfungen gegen einen simulierten Transport mit echter Cross-Thread-Signal-Zustellung - alle vier bestehen mit `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, was die CI ebenfalls ausführt. Das ist die ehrliche Obergrenze dessen, was automatisch verifiziert wird: die Transportschicht, die CAN-ID-/Byte-Layout-Verarbeitung und die Qt-Quick-Brückenlogik sind real und werden gegen simulierte Frames geprüft, nicht gegen echte Hardware - wie "Known limitations" weiter unten bereits sagt, wurde dies ohne USB-Zugriff gebaut, sodass hier noch nichts gegen eine echte Platine geprüft wurde. `qt_tester.py` und `assets/qml/TesterDeck.qml` sind die reale, umfangreiche Implementierung (zusammen tausende Zeilen), geprüft durch die Tests mit simulierten Platinen und die Verify-Skripte, nie durch eine echte Platine.
+
+---
 
 > **Stand von Sicherheit (Safety) und Security:** Dieses Ökosystem ist kein zertifiziertes Sicherheitssystem, und es existiert noch keine bestückte URTC-Platine. Die Bootloader prüfen Firmware-Images mit CRC32 und einem HMAC-SHA256 mit gemeinsamem Schlüssel, nicht mit einer asymmetrischen Signatur (geplant); die veröffentlichten Anwendungs-Images sind mit dem öffentlichen Entwicklungsschlüssel signiert (`signing_key_kind: dev`), sodass jeder ein vom Bootloader akzeptiertes Image erzeugen kann; an eine echte Platine wurde noch nichts gesendet. Lesen Sie die [Sicherheitsbasis](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) und das [Bedrohungsmodell](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md), bevor Sie sich für die Sicherheit einer Person auf eine Aussage hier verlassen.
 
@@ -51,9 +38,12 @@ begonnen hat.
 |---|---|
 | Version | `0.4.2` |
 | Reifegrad | Funktionsfähig |
+| Tests | 531 (`python -m pytest -q`) |
 | Technik | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
+
+**Springe zu:** [Überblick](#-überblick) · [Architektur](#-architektur) · [Funktionen](#-funktionen) · [Sicherheit](#-sicherheit-und-schutz) · [Schnittstellen](#-schnittstellen) · [Schnellstart](#-schnellstart) · [Tests](#-tests) · [Struktur](#-struktur-des-repositorys) · [Verwandte](#-verwandte-projekte)
 
 <!-- urtc-section:status_tester -->
 ## 🚦 Projektstatus
@@ -70,7 +60,20 @@ begonnen hat.
 
 <!-- /urtc-section:status_tester -->
 
-## 1. 🆚 Beziehung zum Flasher
+## 🎯 Überblick
+
+Ein Live-CAN-Bus-Testwerkzeug für die URTC-Platine. Es verbindet sich
+über denselben USB-CAN-Adapter, den auch der Flasher verwendet, fragt
+die Platine, für welches ihrer 25 Werkzeugprofile sie aktuell per Jumper
+konfiguriert ist, und zeigt nur die eigenen Steuerelemente und die
+Telemetrie dieses Werkzeugs - nicht ein einziges Fenster, das versucht,
+alle 25 gleichzeitig darzustellen. Alles, was es tut, ist ein
+Laufzeitbefehl oder ein Telemetrie-Lesevorgang gegen die laufende
+Anwendung; es berührt niemals die Flash, sodass es hier nichts gibt, das
+die Platine weniger funktionsfähig zurücklassen könnte, als sie
+begonnen hat.
+
+### Beziehung zum Flasher
 
 Dieses Tool und [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) teilen sich denselben
 Transport-Layer (die SLCAN- und SocketCAN-Klassen sind identisch), da
@@ -89,95 +92,43 @@ bereits Firmware ausführt und Sie prüfen wollen, ob ein Werkzeug
 tatsächlich funktioniert (die Heizung heizt, der Motor dreht sich, die
 LED leuchtet), wollen Sie dieses.
 
-## 2. 📦 Installation und Ausführung
+## 🧩 Rolle in URTC
 
-Dasselbe Schema wie der Flasher:
+URTC-TESTER ist das Programm, das prüft, was ein URTC-Werkzeugkopf tatsächlich tut, während er seine Anwendung ausführt: Es verbindet sich über denselben USB-CAN-Adapter wie URTC-FLASHER, fragt die Platine, für welches ihrer 25 Werkzeugprofile sie gebrückt ist, und zeigt nur die Bedienelemente und die Telemetrie dieses Werkzeugs, nie ein Fenster, das alle 25 darstellen will. Alles, was es tut, ist ein Befehl zur Laufzeit oder ein Telemetrie-Lesezugriff; es berührt nie den Flash und kann eine Platine daher nicht schlechter zurücklassen, als es sie vorgefunden hat. Das Protokoll ist das von URTC-COMMON, und URTC-WEB-STUDIO bietet dieselben Abläufe im Browser.
 
-```
-pip install -r requirements.txt
-python urtc_tester.py          # Windows
-python3 urtc_tester.py         # Linux
-```
+## 🏛️ Architektur
 
-Oder erstellen Sie ein eigenständiges Binary: `build_exe.bat` unter
-Windows, `./build_exe.sh` unter Linux. Beide bereinigen zuerst
-`build/`/`dist/` und bündeln `assets/` (das Banner und das Symbol) in
-das Executable - siehe [docs/BUILD_AND_RUN.md](docs/BUILD_AND_RUN.md)
-für den versionsneutralen Validierungspfad
-(`build-test.bat`/`build-test.sh`), auf dem diese Paketierungsskripte
-aufbauen, und das eigene README des Flashers für die vollständige
-Begründung hinter den Paketierungsskripten selbst, da sie hier identisch
-gilt.
+<p align="center">
+  <img src="images/architecture.svg" alt="Architektur von URTC-TESTER: wer es nutzt, was es enthält und wovon es abhängt" width="100%">
+</p>
 
-**Versionierung:** `TESTER_VERSION` (in `tester_config.py`, angezeigt in
-der Titelleiste, im Über-Dialog, in Sitzungsprotokollen und in
-Debug-Paketen) folgt dem Schema `MAJOR.MINOR.PATCH`. Beide Build-Skripte
-erhöhen sie automatisch unmittelbar vor jedem echten Build über
-`bump_version.py`, nach einer "Kilometerzähler"-Regel im Zehnersystem:
-PATCH +1, und sobald PATCH 9 überschreitet, wird es auf 0 zurückgesetzt
-und MINOR steigt um 1 (z. B. `0.1.9` → `0.2.0`). Das Ausführen aus dem
-Quellcode (`python urtc_tester.py`) verändert sie nie - nur ein echter
-Lauf von `build_exe.bat`/`build_exe.sh` tut dies. MAJOR wird nie
-automatisch erhöht, nur von Hand. Siehe `CHANGELOG.md` für die
-Versionshistorie.
+Wie die Teile dieses Repositorys zusammenpassen: wer es nutzt, was es enthält und wovon es abhängt. Das Bild wird aus `docs/architecture.json` gezeichnet und gegen den Code geprüft.
 
-### Visuelles Steuerpult
+<!-- urtc-section:updates -->
+### So wird aktualisiert
 
-Das **Qt-Quick**-Kommandopult ist jetzt der echte Standard:
-~~~
-python urtc_tester.py
-~~~
-Es nutzt die Transporte SLCAN/SocketCAN und startet im
-Nur-Lese-Modus, kann also erst senden, wenn aktive Prüfungen bewusst aktiviert
-werden. Jeder der Befehle der 25 Werkzeugprofile ist hier real und bestätigt
-abgedeckt (Bewegung, Bohrer, AOI, Elektromagnet, Punkt-/Ultraschall-
-Schweißpuls, Pastendosierung, Flying Probe, Thermoinspektion, die 5 Aktoren
-mit Watchdog-Keepalive, Vakuum-/Scan-Probe-Telemetrie), jeweils gleich
-abgesichert: eine Identitätsübereinstimmung, ein ausdrücklich aktivierter
-aktiver Modus und eine Benutzerbestätigung in QML, bevor etwas gesendet wird.
-Bisher wurde nichts davon an einer echten Platine geprüft - siehe „Bekannte Einschränkungen“ unten.
+Dieses Programm kann nach einer neueren Version seiner selbst suchen: Die Schaltfläche „Nach Updates suchen“ fragt GitHub einmal und bietet ein signiertes Paket nur an, wenn es für Ihr System ist und neuer. Nichts wird von selbst geprüft oder installiert, solange Sie die Prüfung nicht einschalten, und ein Update braucht Ihre Bestätigung. Das Paket muss zu seinem SHA-256 und zur Signatur des im Programm angehefteten Release-Schlüssels passen; die vorherige Version bleibt erhalten und wird von selbst wiederhergestellt, wenn die neue nicht startet. `urtc-updater --cli package list|check|install|rollback` macht dasselbe auf der Kommandozeile für Flasher und Tester, und `install --file` funktioniert ohne Netzwerk.
+<!-- /urtc-section:updates -->
 
-Das Pult zeigt außerdem die **Live-Werte** des erkannten Werkzeugs (Temperatur mit rollendem Diagramm und CSV-Export, Drehzahl, Endschalter; sie hören nur zu und funktionieren daher im Nur-Hören-Modus und neben einem laufenden Ausgang), führt den **Selbsttest** aus, warnt in der Kopfzeile, wenn die **Busgesundheitsprüfung** (alle 3 Sekunden eine Abfrage des aktiven Werkzeugs, solange nichts anderes den Bus nutzt) ein Problem sieht, und hat einen **Über URTC Tester**-Dialog mit Readme, Lizenz und GitHub-Seite neben **Protokolle speichern...**.
+## 🖼️ Screenshots
 
-Der Kopf des Qt-Quick-Fensters hat eine Sprachauswahl; die Auswahl wird gespeichert und gilt beim nächsten Start. Außerdem fragt es die Position des Drahtvorschubs des Lötkolbens ab und setzt sie zurück (Schätzung im offenen Regelkreis; das Zurücksetzen verlangt eine Bestätigung). Die Identitätsabfrage zeigt auch die Patch-Nummer der Firmware, wenn die Platine sie sendet (URTC-Firmware 0.3.5 und neuer); ältere Firmware zeigt nur Major.Minor.
+<p align="center">
+  <img src="images/URTC_TESTER_V1_1.png" alt="URTC Tester Fenster" width="700">
+</p>
 
-Der bestehende Live-CAN-Diagnoseablauf verwendet jetzt eine dunkelblau-cyanfarbene Steueroberfläche: Produktkopf, kontrastreiche Verbindungskarte, klare Werkzeug-Tabs, dunkles Sitzungsprotokoll und sichtbarer Fortschritt. Diese Änderung von Darstellung und Zugänglichkeit verändert weder passives Monitoring noch Befehlsrouting, und nichts davon wurde auf einer echten Platine ausprobiert.
+**Fehlerrekorder, optionale Funktionen, Rack-Prüfstand und Wärmebild (neu, nur mit Attrappen geprüft):** Das Deck liest die Blackbox der Platine (`0x1A8` / `0x1A9`) und speichert sie als CSV und JSON, bei eingeschalteter Option automatisch einmal für jeden gemeldeten Fehler; es schaltet die optionalen Firmware-Funktionen (`0x1AE` / `0x1AF`, standardmäßig aus, wirksam nach dem nächsten Einschalten); es hat ein simuliertes Werkzeug-Rack mit dem seriellen Protokoll von URTC-SMART-RACK, der Identität jedes Kopfes (Typ und Seriennummer) und dem Export einer Statusseite; und es zeigt das Wärmebild der thermischen Inspektion in Falschfarben (ein simuliertes Bild sagt das). Die Werkzeugnamen und -arten stammen jetzt aus den gemeinsamen Werkzeugprofilen von URTC-COMMON. Nichts davon wurde mit einer echten Platine benutzt.
 
-### Kopfzeile und Werkzeuge
+**Heizer-PID (neu, nur mit Attrappen geprüft):** das Deck liest den Zustand des Heizer-PID der Firmware (`0x1B9` / `0x1BA`: die gültigen Verstärkungen, den Zustand und den Ausgang des letzten Regelzyklus), speichert Verstärkungen (0 bis 600) und startet oder bricht den Relais-Autotune ab, der die Spitze um den aktuellen Sollwert des Lötkolbens (100 bis 445 C) heizt und die gefundenen Verstärkungen speichert. Verstärkungen speichern und den Autotune starten verlangen die übliche Bestätigung, das Abbrechen nicht. Der simulierte Kopf der Kommandozeile (`--transport simulate`) beantwortet diese Frames ebenfalls. Die Funktion muss vorher bei den optionalen Funktionen eingeschaltet werden; nichts davon wurde mit einer echten Platine benutzt.
 
-- **Kopfzeile** - der Verbindungsstatus, die Busgesundheitswarnung, die Sprachauswahl (die Wahl wird gespeichert und gilt ab dem nächsten Start) und die Version.
-- **Protokolle speichern...** und **SITZUNG EXPORTIEREN (LOG MIT HASH)** - das Bildschirmprotokoll als reiner Text bzw. ein Zip mit dem Protokoll, einem Manifest, das es über seinen SHA-256 benennt, und der Systemdiagnose (siehe „Protokolle und Debug-Pakete“ unten).
-- **Über URTC Tester** - Version und Autor, mit Schaltflächen für **Readme** (in der Sprache der Oberfläche, wenn eine Übersetzung existiert), **Lizenz** und die **URTC GitHub**-Seite des Projekts.
+Diese Bilder zeigen das echte Fenster, ohne Bildschirm gezeichnet, so wie es sich öffnet (nichts verbunden, nichts gesendet). Die Anleitung führt durch das Deck, das Hilfefenster und das Update-Fenster.
 
-### Dateistruktur
+![Das Fenster, Schritt für Schritt](docs/screenshots/tester-deck.png)
 
-Dieses Tool ist aus Gründen der Lesbarkeit in Module nach Zuständigkeit organisiert - es gibt keinen funktionalen Unterschied zwischen separaten Dateien und einer großen Datei. `tester_config.py` enthält die Konfigurations-/Sprach-/Protokollkonstanten, `tester_transports.py` enthält SLCAN/SocketCAN, `tester_bus_monitor.py` enthält den Frame-Filter und die Busstatistik, `qt_tester.py` ist die Qt-Quick-Brücke (mit `assets/qml/TesterDeck.qml`), `tester_selftest.py`, `tester_telemetry.py` und `tester_autodetect.py` sind die fensterlose Logik von Selbsttest, Live-Werten und Bitratensuche, und `urtc_tester.py` ist nur der Einstiegspunkt.
+[Anleitung mit Bildern](docs/WINDOW_GUIDE.md)
 
-**Sprache**: Englisch als Standard. Wird mit der Sprachauswahl in der Kopfzeile des Fensters gewechselt - wechselt die Oberfläche (Beschriftungen, Schaltflächen, Dialoge, und Protokollnachrichten) zu einer der 8 verfügbaren Sprachen,
-speichert sofort in `config.json` neben diesem Tool, angewendet beim
-nächsten Start. Übersetzungen leben in reinen Textdateien unter
-`language/` (`english.lng`, `spanish.lng`, `italian.lng`, `french.lng`,
-`german.lng`, `chinese.lng`, `japanese.lng`, `portuguese.lng`) als einfache
-`SCHLÜSSEL=Wert`-Paare, eines pro Zeile -
-Zeilen, die mit `#` beginnen, und leere Zeilen werden ignoriert, und ein
-wörtliches `\n` innerhalb eines Werts wird zu einem echten Zeilenumbruch
-(verwendet von der Handvoll mehrzeiliger Dialognachrichten). Aus dem Katalog von URTC-COMMON erzeugt (eine Übersetzung wird dort korrigiert und die Dateien werden neu geschrieben, nie von Hand bearbeitet), oder als Ausgangspunkt für eine andere Sprache (fügen Sie `language/<name>.lng`
-hinzu, fügen Sie `("<name>", "Eigener Name")` zu `AVAILABLE_LANGUAGES`
-nahe dem Anfang von `tester_config.py` hinzu, und setzen Sie
-`"language": "<name>"` in `config.json`). Ein fehlender Schlüssel aus
-einer Sprachdatei fällt darauf zurück, den Namen dieses Schlüssels
-selbst anzuzeigen, statt abzustürzen, und eine fehlende oder unlesbare
-Sprachdatei (fehlerhafte Bearbeitung, falscher Dateiname) fällt für die
-gesamte Oberfläche auf Englisch zurück - so oder so bleibt das Tool
-nutzbar, während die Unstimmigkeit behoben wird.
+## ✨ Funktionen
 
-**SLCAN/SocketCAN-Einrichtung unter Linux** (Adapter-Reflash, serielle
-Berechtigungen, Aktivierung mit `ip link`) ist genau dieselbe wie
-Abschnitt 1 des Flashers - siehe die eigene
-[README von URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)
-Abschnitte 1 und 2, statt es hier zu duplizieren.
-
-## 3. ⚙️ Wie es funktioniert
+### Wie es funktioniert
 
 Das Fenster ist in 3 Spalten angeordnet: links und mittig enthalten die
 immer sichtbaren Abschnitte unten (1-4, dann 6), rechts enthält das
@@ -343,7 +294,7 @@ für jeden, der den eigenen Verkehr einer benutzerdefinierten
 Erweiterungsplatine testet, ohne den Quellcode dieses Tools ändern zu
 müssen.
 
-## 4. 🧰 Werkzeugabdeckung
+### Werkzeugabdeckung
 
 Jedes der 25 Profile hat sein eigenes Panel, direkt aus
 `docs/CANBUS.md` aufgebaut:
@@ -390,7 +341,7 @@ keinen Watchdog (stattdessen einen Stillstandsdetektor - siehe
 - Port und Bitrate werden für die nächste Sitzung gemerkt (`config.json`), und das Qt-Quick-Deck hat eine eigene Bitraten-Auswahl. Die **automatische Erkennung** hört zuerst nur bei jeder Bitrate zu (auf einem aktiven Bus wird nichts gesendet) und fragt nur dann bei jeder Bitrate nach, wenn der Bus völlig still ist.
 - Der Rohdaten-Busmonitor lässt sich auf einige CAN-IDs (**ID-Filter**) und auf Frames mit geänderten Daten (**Nur Änderungen**) beschränken.
 
-### 🔥 Prüfstandstest für thermisches Durchgehen (URTC-Firmware 0.3.2+ / 0.3.3+)
+#### 🔥 Prüfstandstest für thermisches Durchgehen (URTC-Firmware 0.3.2+ / 0.3.3+)
 
 Detect zeigt jetzt, *warum* eine Platine einen Fehler verriegelt hat: Byte 4
 von `0x111` (Schutz vor thermischem Durchgehen: MAXTEMP, HEATING_NO_RISE oder
@@ -403,7 +354,24 @@ letzten Fehler. Antworten älterer Firmware (`0x111` mit 4 Bytes, kein
 Schritt-für-Schritt-Anleitung zur Prüfung an einer echten Platine steht in
 [`docs/THERMAL_RUNAWAY_BENCH_TEST.md`](docs/THERMAL_RUNAWAY_BENCH_TEST.md).
 
-## 5. 📋 Protokolle und Debug-Pakete
+<!-- urtc-section:heads -->
+### Mehrere Werkzeugköpfe an einem Bus
+
+Die Firmware kann mehrere Werkzeugköpfe an einem CAN-Bus betreiben (die Multinode-Erweiterung). Sie ist **standardmäßig aus**, und ein Bus mit einem Kopf arbeitet genau wie bisher. Das Fenster **Köpfe** findet die Köpfe, listet jeden mit Adresse, Werkzeug und Seriennummer und zeigt seinen Zustand: bereit, ausgewählt, Adresskonflikt, Fehler gespeichert, im Bootloader oder verloren. Sie wählen einen aus, das Programm fragt nach einer Bestätigung und sendet erst danach etwas an diesen Kopf; solange mehrere Köpfe am Bus hängen, wird ein Befehl abgelehnt, bis einer ausgewählt ist und es bestätigt hat. Geht der ausgewählte Kopf verloren, wechseln alle Köpfe in ihren sicheren Zustand (ein Kontrollkästchen des Fensters schaltet das ab). Getestet wurde nur gegen ein Modell des Busses, nicht mit Platinen. Siehe `docs/MULTINODE.md` in URTC-COMMON.
+<!-- /urtc-section:heads -->
+
+## 🔒 Sicherheit und Schutz
+
+| Risiko | Abwehr |
+|---|---|
+| Ein Befehl an eine Platine, die nicht das Werkzeug ist, das das Fenster zeigt | Das Panel eines Werkzeugs wird nur für das Werkzeug gezeigt, das die Platine selbst gemeldet hat, und jeder Befehl ist an eine Identitätsübereinstimmung gebunden |
+| Unbeabsichtigtes Senden | Das Fenster startet im reinen Hörmodus: Es kann nicht senden, bis aktive Prüfungen bewusst scharf geschaltet werden, und jede Aktion, die auf die Platine wirkt, verlangt vorher eine Bestätigung im Fenster |
+| Die Platine beschädigen | Der Tester berührt nie den Flash: Alles, was er tut, ist ein Befehl zur Laufzeit oder ein Telemetrie-Lesezugriff auf die laufende Anwendung |
+| Ein Protokoll, das jemand verändern könnte | Der Sitzungsexport ist ein Zip mit dem Protokoll, einem Manifest, das es über seinen SHA-256 benennt, und den Diagnosedaten des Systems |
+
+Nichts davon wurde an einer echten Platine erprobt, und nichts davon ist eine zertifizierte Sicherheitsfunktion; siehe die Einschränkungen unten.
+
+## 🔌 Schnittstellen
 
 Wie beim Flasher: ein zeitgestempeltes Sitzungsprotokoll wird
 automatisch nach `logs/` geschrieben (sicher zu
@@ -427,7 +395,144 @@ Werkzeugkopfproblem debuggt.
 
 **Ohne Hardware:** Eine virtuelle Platine ersetzt Adapter und Platine. Starte `python -m urtc_can.virtual_board` und gib ihre serielle URL als Port an (`--transport serial --port socket://127.0.0.1:7777`); die Platine beantwortet die Versionsabfrage und den Schnellstatus wie eine Anwendung, sodass `info` und Pläne aus Abfragen ohne angeschlossene Geräte vollständig durchlaufen. Sie ist ein Modell nach der Protokollbeschreibung, kein Werkzeugkopf: Der Selbsttest eines Werkzeugs meldet, was er nicht lesen kann.
 
-## 6. ⚠️ Bekannte Einschränkungen
+## 🚀 Schnellstart
+
+Dasselbe Schema wie der Flasher:
+
+```
+pip install -r requirements.txt
+python urtc_tester.py          # Windows
+python3 urtc_tester.py         # Linux
+```
+
+### Visuelles Steuerpult
+
+Das **Qt-Quick**-Kommandopult ist jetzt der echte Standard:
+~~~
+python urtc_tester.py
+~~~
+Es nutzt die Transporte SLCAN/SocketCAN und startet im
+Nur-Lese-Modus, kann also erst senden, wenn aktive Prüfungen bewusst aktiviert
+werden. Jeder der Befehle der 25 Werkzeugprofile ist hier real und bestätigt
+abgedeckt (Bewegung, Bohrer, AOI, Elektromagnet, Punkt-/Ultraschall-
+Schweißpuls, Pastendosierung, Flying Probe, Thermoinspektion, die 5 Aktoren
+mit Watchdog-Keepalive, Vakuum-/Scan-Probe-Telemetrie), jeweils gleich
+abgesichert: eine Identitätsübereinstimmung, ein ausdrücklich aktivierter
+aktiver Modus und eine Benutzerbestätigung in QML, bevor etwas gesendet wird.
+Bisher wurde nichts davon an einer echten Platine geprüft - siehe „Bekannte Einschränkungen“ unten.
+
+Das Pult zeigt außerdem die **Live-Werte** des erkannten Werkzeugs (Temperatur mit rollendem Diagramm und CSV-Export, Drehzahl, Endschalter; sie hören nur zu und funktionieren daher im Nur-Hören-Modus und neben einem laufenden Ausgang), führt den **Selbsttest** aus, warnt in der Kopfzeile, wenn die **Busgesundheitsprüfung** (alle 3 Sekunden eine Abfrage des aktiven Werkzeugs, solange nichts anderes den Bus nutzt) ein Problem sieht, und hat einen **Über URTC Tester**-Dialog mit Readme, Lizenz und GitHub-Seite neben **Protokolle speichern...**.
+
+Der Kopf des Qt-Quick-Fensters hat eine Sprachauswahl; die Auswahl wird gespeichert und gilt beim nächsten Start. Außerdem fragt es die Position des Drahtvorschubs des Lötkolbens ab und setzt sie zurück (Schätzung im offenen Regelkreis; das Zurücksetzen verlangt eine Bestätigung). Die Identitätsabfrage zeigt auch die Patch-Nummer der Firmware, wenn die Platine sie sendet (URTC-Firmware 0.3.5 und neuer); ältere Firmware zeigt nur Major.Minor.
+
+Der bestehende Live-CAN-Diagnoseablauf verwendet jetzt eine dunkelblau-cyanfarbene Steueroberfläche: Produktkopf, kontrastreiche Verbindungskarte, klare Werkzeug-Tabs, dunkles Sitzungsprotokoll und sichtbarer Fortschritt. Diese Änderung von Darstellung und Zugänglichkeit verändert weder passives Monitoring noch Befehlsrouting, und nichts davon wurde auf einer echten Platine ausprobiert.
+
+### Kopfzeile und Werkzeuge
+
+- **Kopfzeile** - der Verbindungsstatus, die Busgesundheitswarnung, die Sprachauswahl (die Wahl wird gespeichert und gilt ab dem nächsten Start) und die Version.
+- **Protokolle speichern...** und **SITZUNG EXPORTIEREN (LOG MIT HASH)** - das Bildschirmprotokoll als reiner Text bzw. ein Zip mit dem Protokoll, einem Manifest, das es über seinen SHA-256 benennt, und der Systemdiagnose (siehe „Protokolle und Debug-Pakete“ unten).
+- **Über URTC Tester** - Version und Autor, mit Schaltflächen für **Readme** (in der Sprache der Oberfläche, wenn eine Übersetzung existiert), **Lizenz** und die **URTC GitHub**-Seite des Projekts.
+
+### Dateistruktur
+
+Dieses Tool ist aus Gründen der Lesbarkeit in Module nach Zuständigkeit organisiert - es gibt keinen funktionalen Unterschied zwischen separaten Dateien und einer großen Datei. `tester_config.py` enthält die Konfigurations-/Sprach-/Protokollkonstanten, `tester_transports.py` enthält SLCAN/SocketCAN, `tester_bus_monitor.py` enthält den Frame-Filter und die Busstatistik, `qt_tester.py` ist die Qt-Quick-Brücke (mit `assets/qml/TesterDeck.qml`), `tester_selftest.py`, `tester_telemetry.py` und `tester_autodetect.py` sind die fensterlose Logik von Selbsttest, Live-Werten und Bitratensuche, und `urtc_tester.py` ist nur der Einstiegspunkt.
+
+**Sprache**: Englisch als Standard. Wird mit der Sprachauswahl in der Kopfzeile des Fensters gewechselt - wechselt die Oberfläche (Beschriftungen, Schaltflächen, Dialoge, und Protokollnachrichten) zu einer der 8 verfügbaren Sprachen,
+speichert sofort in `config.json` neben diesem Tool, angewendet beim
+nächsten Start. Übersetzungen leben in reinen Textdateien unter
+`language/` (`english.lng`, `spanish.lng`, `italian.lng`, `french.lng`,
+`german.lng`, `chinese.lng`, `japanese.lng`, `portuguese.lng`) als einfache
+`SCHLÜSSEL=Wert`-Paare, eines pro Zeile -
+Zeilen, die mit `#` beginnen, und leere Zeilen werden ignoriert, und ein
+wörtliches `\n` innerhalb eines Werts wird zu einem echten Zeilenumbruch
+(verwendet von der Handvoll mehrzeiliger Dialognachrichten). Aus dem Katalog von URTC-COMMON erzeugt (eine Übersetzung wird dort korrigiert und die Dateien werden neu geschrieben, nie von Hand bearbeitet), oder als Ausgangspunkt für eine andere Sprache (fügen Sie `language/<name>.lng`
+hinzu, fügen Sie `("<name>", "Eigener Name")` zu `AVAILABLE_LANGUAGES`
+nahe dem Anfang von `tester_config.py` hinzu, und setzen Sie
+`"language": "<name>"` in `config.json`). Ein fehlender Schlüssel aus
+einer Sprachdatei fällt darauf zurück, den Namen dieses Schlüssels
+selbst anzuzeigen, statt abzustürzen, und eine fehlende oder unlesbare
+Sprachdatei (fehlerhafte Bearbeitung, falscher Dateiname) fällt für die
+gesamte Oberfläche auf Englisch zurück - so oder so bleibt das Tool
+nutzbar, während die Unstimmigkeit behoben wird.
+
+**SLCAN/SocketCAN-Einrichtung unter Linux** (Adapter-Reflash, serielle
+Berechtigungen, Aktivierung mit `ip link`) ist genau dieselbe wie
+Abschnitt 1 des Flashers - siehe die eigene
+[README von URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)
+Abschnitte 1 und 2, statt es hier zu duplizieren.
+
+<!-- urtc-section:compatibility -->
+### Voraussetzungen und Kompatibilität
+
+Welche Versionen der URTC-Programme zusammenarbeiten und welche Protokollversion jede spricht, steht in der Kompatibilitätstabelle, die URTC-COMMON erzeugt: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
+<!-- /urtc-section:compatibility -->
+
+## 🧪 Tests
+
+Die Suite hat 531 Tests (`python -m pytest -q`; mit Qt auf einem Rechner ohne Bildschirm `QT_QPA_PLATFORM=offscreen`; die, die PySide6 brauchen, werden ohne übersprungen): die CAN-Nutzdaten-Kodierer und -Dekodierer jeder Werkzeugfamilie, die SLCAN- und SocketCAN-Transporte gegen Attrappen, die Identitätsabfrage, der Selbsttest, die Watchdog-Keepalives, die Busgesundheitsprüfung, die Testpläne und der Modus ohne Fenster, der Sitzungsexport mit seinem Hash, die Sprachdateien und die Qt-Quick-Panels. Vier Skripte im Wurzelverzeichnis (`verify_qt_*.py`) steuern die Qt-Quick-Panels mit einer echten Qt-Ereignisschleife durchgängig an. Die CI führt außerdem `ruff check`, `python -m mypy` und `tools/ci_validate.py` aus. Nichts davon lief gegen eine echte Platine.
+
+## 🏗️ Build und Veröffentlichung
+
+Oder erstellen Sie ein eigenständiges Binary: `build_exe.bat` unter
+Windows, `./build_exe.sh` unter Linux. Beide bereinigen zuerst
+`build/`/`dist/` und bündeln `assets/` (das Banner und das Symbol) in
+das Executable - siehe [docs/BUILD_AND_RUN.md](docs/BUILD_AND_RUN.md)
+für den versionsneutralen Validierungspfad
+(`build-test.bat`/`build-test.sh`), auf dem diese Paketierungsskripte
+aufbauen, und das eigene README des Flashers für die vollständige
+Begründung hinter den Paketierungsskripten selbst, da sie hier identisch
+gilt.
+
+**Version:** `TESTER_VERSION` (in `tester_config.py`, sichtbar in der Titelleiste, im Über-Dialog, in den Sitzungsprotokollen und in den Debug-Paketen) folgt `MAJOR.MINOR.PATCH` und wird nur durch den ausdrücklichen Schritt `python bump.py` erhöht. Das Ausführen aus dem Quelltext (`python urtc_tester.py`) und das Bauen (`build_exe.bat` / `build_exe.sh`) berühren sie nie. Den Versionsverlauf siehe `CHANGELOG.md`.
+
+## 📂 Struktur des Repositorys
+
+<p align="center">
+  <img src="images/repository-structure.svg" alt="Struktur des Repositorys URTC-TESTER" width="100%">
+</p>
+
+<details>
+<summary>Textversion des Baums</summary>
+
+```text
+URTC-TESTER/
+├── urtc_tester.py                                     Einstiegspunkt
+├── qt_tester.py                                       das Qt-Quick-Deck
+├── tester_*.py                                        Transporte, Monitor, Selbsttest, Pläne, Telemetrie
+├── advanced_protocol.py                               reine CAN-Nutzdaten-Kodierer
+├── verify_qt_*.py                                     End-to-End-Prüfungen der Qt-Panels
+├── urtc_can/                                          Protokoll, Transporte und Updates (Kopie)
+├── urtc_ui/                                           Oberflächen-Helfer (Kopie)
+├── tests/                                             eine Testdatei je Bereich
+├── plans/                                             Beispiel-Testpläne (JSON)
+├── language/                                          die acht .lng-Sprachdateien
+├── assets/                                            QML, Banner und Symbol
+├── docs/                                              Architektur, Build und Betrieb
+├── logs/                                              Sitzungsprotokolle (nicht in Git)
+├── tools/                                             Build-Prüfung und gemeinsame Werkzeuge
+├── images/                                            Banner und Bilder dieses READMEs
+├── .github/                                           CI-Workflow sowie Vorlagen für Issues und Pull Requests
+├── test.sh test.bat                                   führen die Tests aus
+├── run.sh run.bat                                     starten das Programm
+├── build-test.sh build-test.bat                       Build- und Testskripte, die im Repository nichts ändern
+├── urtc.project.json                                  Manifest: Version, Rolle, Reifegrad und Build-Befehl
+├── CHANGELOG.md                                       was sich in jeder Version geändert hat
+├── SECURITY.md SUPPORT.md LICENSE                     Sicherheitsrichtlinie, Support und Lizenz
+├── CONTRIBUTING.md CODE_OF_CONDUCT.md                 wie man mitwirkt, und der Verhaltenskodex
+├── .gitattributes .gitignore                          Git-Einstellungen
+├── build_exe.sh build_exe.bat                         eigenständiges Programm (PyInstaller)
+├── bump.py bump_version.py bump_manifest_version.py   Skripte, die die Version erhöhen
+├── requirements*.txt requirements*.lock               Abhängigkeiten, mit ihren Sperren
+├── mypy.ini ruff.toml .coveragerc                     Einstellungen für Typen, Lint und Abdeckung
+├── urtc_i18n.lock.json                                Sperre der erzeugten Sprachdateien
+└── NOTICE LICENSE.md                                  Urheberrechtshinweis und Dokumentationslizenz
+```
+
+</details>
+
+Die kommentierte Liste jeder Quelldatei, eine Zeile je Datei, steht in [docs/SOURCE_MAP.md](docs/SOURCE_MAP.md).
+
+## 🗺️ Roadmap und bekannte Grenzen
 
 Der Evidenz-Vertrag dieses Tools - was als pass/fail/unknown zählt,
 warum fehlende Evidenz immer unknown und nie pass bedeutet, und warum es
@@ -464,124 +569,9 @@ dokumentiert.
   der Reaktion auf die Bedienelemente ihres eigenen Panels zu
   beobachten.
 
-## 📂 Repository-Struktur
+## 🌍 Sprachen
 
-```
-/
-├── urtc_tester.py             Einstiegspunkt - startet das Qt-Quick-Pult
-├── qt_tester.py                Qt-Quick-Frontend - echtes Standard-Command-Deck, standardmäßig
-│                                schreibgeschützt
-├── tester_config.py            Konfigurations-/Sprach-/Protokollkonstanten
-│                                (CAN-IDs, Werkzeugnamen, MOTION_TOOL_IDS,
-│                                AVAILABLE_LANGUAGES, EXPANSION_BOARD_TYPES)
-├── tester_transports.py        SLCAN- und SocketCAN-Transportklassen
-├── tester_bus_monitor.py       Hintergrund-Thread für CAN-Lesevorgänge
-│                                (CANBusMonitor)
-├── tester_autodetect.py        Bitratensuche für einen SLCAN-Adapter
-├── tester_selftest.py          Selbsttest-Schritte und -Ablauf (ohne Fenstercode)
-├── tester_plan.py              Prüfpläne: Validierung, Ablauf und das anschließende „Alles aus“
-├── tester_cli.py               Der Tester ohne Fenster (--headless): info, selftest, run-plan
-├── tester_simulator.py         Simulierter Werkzeugkopf und Player für aufgezeichnete Mitschnitte
-├── plans/                      Beispiel-Prüfpläne (JSON)
-├── tester_telemetry.py         Live-Werte jedes Werkzeugs und die aufgezeichnete Reihe
-├── tester_trace_export.py      Schreiber der .trc-/.asc-Frame-Exporte
-├── tester_replay.py            Wiedergabe einer aufgezeichneten .trc- / .asc-Spur (ein Player ohne eigenen Timer)
-├── tester_blackbox_view.py     Der Blackbox-Datensatz, wie das Deck ihn zeichnet: Diagrammreihen, Tabelle, gespeicherte Datensätze ohne Platine geöffnet
-├── tester_result_record.py     Ergebnisdatensätze, die an Adapter, Firmware und ein Log über dessen SHA-256 gebunden sind (JSON)
-├── tester_extras.py            Qt-freie Logik von Fehlerrekorder, optionalen Funktionen, Heizungs-PID, Rack-Prüfstand und Wärmebild
-├── urtc_ui/                    Gemeinsame Oberflächen-Hilfen (Kopie aus URTC-COMMON)
-├── urtc_can/                   Gemeinsamer Code, aus URTC-COMMON kopiert: Protokoll, Transporte, virtuelle Platine, Updates, Hilfe und das Fenster der Werkzeugköpfe
-├── advanced_protocol.py        Reine CAN-Payload-Encoder für die auf Qt Quick
-│                                migrierten Steuerungsfamilien - hardwarefreie Tests
-├── verify_qt_custom_frame.py        Echte End-to-End-Prüfung außerhalb von tests/ des Qt-Quick-Panels Custom CAN Frame (braucht eine echte Qt-Ereignisschleife)
-├── verify_qt_telemetry_watch.py     Echte End-to-End-Prüfung außerhalb von tests/ der Qt-Quick-Telemetrie (Vacuum Pickup / Scan Probe)
-├── verify_qt_utility_panels.py      Echte End-to-End-Prüfung außerhalb von tests/ der Qt-Quick-Utility-Panels (Global Controls / Expansion Board / F-RAM)
-├── verify_qt_selftest.py            Echte End-to-End-Prüfung außerhalb von tests/ des Qt-Quick-Selbsttests
-├── tests/
-│   ├── test_advanced_protocol.py   Hardwarefreie Tests für die Encoder von advanced_protocol.py - von der CI ausgeführt, siehe Ehrlichkeitscheck oben
-│   ├── test_*.py                   Eine Datei je Bereich des Programms; die CI führt sie aus, die mit Qt ohne Bildschirm
-│   └── fixtures/                   Mit den anderen Programmen geteilte Vektoren und aufgezeichnete Spuren
-├── requirements.txt            pyserial>=3.5 + PySide6>=6.8,<7
-├── build_exe.bat               Build-Skript für die eigenständige Windows-Binary
-│                                (PyInstaller)
-├── build_exe.sh                Dasselbe, für Linux
-├── build-test.bat              Build-/Kompilierprüfung ohne Versionserhöhung
-├── build-test.sh                Dasselbe, für Linux
-├── bump.py                     Ausdrücklicher Befehl zum Erhöhen der Version (Kompilieren erhöht nie)
-├── bump_version.py             Versionserhöhung im Kilometerzähler-Stil, von bump.py aufgerufen
-├── bump_manifest_version.py    Synchronisiert die Version von urtc.project.json mit der nativen (--sync)
-├── URTC_Tester.spec            PyInstaller-Spec, die von beiden Build-Skripten
-├── requirements-dev.txt / requirements*.lock Abhängigkeiten der Tests und des Builds, mit Hashes festgelegt
-├── mypy.ini / ruff.toml / pytest.ini Einstellungen der Typprüfung und der statischen Prüfungen
-├── urtc_i18n.lock.json         Sperrdatei der aus dem Katalog von URTC-COMMON erzeugten Sprachdateien
-├── urtc.project.json           Projektmanifest (Version, Reifegrad, Nachweise)
-├── run.bat / run.sh            Starten das Programm
-│                                verwendet wird
-├── assets/
-│   ├── URTC_APP_ICON.svg       Quelle des Fenster-/Taskleisten-Icons (kleines
-│                                eigenständiges Design)
-│   ├── URTC_LOGO_TESTER.svg    Banner-Quelle (Vektor)
-│   ├── qml/
-│   │   ├── TesterDeck.qml      Qt-Quick-UI des Standard-Command-Decks
-│   │   ├── HelpDialog.qml      Das Fenster der Kurzanleitung (gemeinsam)
-│   │   ├── NodePickerDialog.qml Das Fenster der Werkzeugköpfe (gemeinsam)
-│   │   ├── UpdateDialog.qml    Das Fenster der Update-Suche (gemeinsam)
-│   │   └── urtc_common.lock.json Sperrdatei der aus URTC-COMMON kopierten Dateien
-│   ├── urtc_icon.ico           Windows-Icon, erzeugt aus URTC_APP_ICON.svg
-│   └── urtc_icon.png           Dasselbe, als PNG (Linux)
-├── images/
-│   ├── URTC_TESTER_BANNER.svg  Logo-Banner, das oben in diesem README gezeigt
-│                                wird
-│   └── URTC_TESTER_V1_1.png    Screenshot des Hauptfensters des Tools (siehe
-│                                Fotos unten)
-├── language/
-│   ├── english.lng             Standardsprache, reine Text-KEY=Value-Zeichenketten
-│   ├── spanish.lng
-│   ├── italian.lng
-│   ├── french.lng
-│   ├── german.lng
-│   ├── japanese.lng
-│   ├── chinese.lng
-│   └── portuguese.lng
-├── logs/                       Sitzungsprotokolle, die hier zur Laufzeit
-│                                geschrieben werden (gefahrlos löschbar)
-├── LICENSE                     Vollständiger Lizenztext - siehe Lizenz und
-│                                Urheberrechtshinweise unten
-├── NOTICE                      Copyright-Hinweis und Lizenz der Dokumentation
-├── README.md                   Englische Version
-├── README_spa.md               Spanische Übersetzung
-├── README_ita.md               Italienische Übersetzung
-├── README_fra.md               Französische Übersetzung
-├── README_deu.md               Diese Datei
-├── README_por.md               Portugiesische Übersetzung
-├── README_zho.md               Chinesische Übersetzung
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── BUILD_AND_RUN.md
-│   ├── INTEGRATION_CONTRACT.md
-│   ├── CANBUS.md
-│   ├── THERMAL_RUNAWAY_BENCH_TEST.md
-│   ├── HEADLESS.md                  Der Tester ohne Fenster: Befehle, Pläne und Exit-Codes
-│   ├── WINDOW_GUIDE.md              Das Fenster Schritt für Schritt, mit echten Bildern in den acht Sprachen
-│   └── screenshots/                 Die Bilder der Fensteranleitung in den acht Sprachen
-├── tools/
-│   ├── build_test.py                     Kompilierprüfung ohne Versionserhöhung + Validierung der Qt-Quick-Deck-Quellen
-│   ├── ci_validate.py                    Manifest-/CHANGELOG-/Doku-Validierung, von der CI genutzt
-│   ├── capture_screens.py                Nimmt die Bilder der Fensteranleitung ohne Bildschirm auf (eine Sprache oder alle)
-│   ├── make_update_package.py            Baut und signiert das Update-Paket einer Veröffentlichung
-│   └── _doc_policy.py / _readme_parity.py / _tracked_names.py Gemeinsame Prüfungen, die ci_validate.py verwendet
-└── README_jpn.md               Japanische Übersetzung
-```
-
-## 📸 Fotos
-
-<p align="center">
-  <img src="images/URTC_TESTER_V1_1.png" alt="URTC Tester Fenster" width="700">
-</p>
-
-**Fehlerrekorder, optionale Funktionen, Rack-Prüfstand und Wärmebild (neu, nur mit Attrappen geprüft):** Das Deck liest die Blackbox der Platine (`0x1A8` / `0x1A9`) und speichert sie als CSV und JSON, bei eingeschalteter Option automatisch einmal für jeden gemeldeten Fehler; es schaltet die optionalen Firmware-Funktionen (`0x1AE` / `0x1AF`, standardmäßig aus, wirksam nach dem nächsten Einschalten); es hat ein simuliertes Werkzeug-Rack mit dem seriellen Protokoll von URTC-SMART-RACK, der Identität jedes Kopfes (Typ und Seriennummer) und dem Export einer Statusseite; und es zeigt das Wärmebild der thermischen Inspektion in Falschfarben (ein simuliertes Bild sagt das). Die Werkzeugnamen und -arten stammen jetzt aus den gemeinsamen Werkzeugprofilen von URTC-COMMON. Nichts davon wurde mit einer echten Platine benutzt.
-
-**Heizer-PID (neu, nur mit Attrappen geprüft):** das Deck liest den Zustand des Heizer-PID der Firmware (`0x1B9` / `0x1BA`: die gültigen Verstärkungen, den Zustand und den Ausgang des letzten Regelzyklus), speichert Verstärkungen (0 bis 600) und startet oder bricht den Relais-Autotune ab, der die Spitze um den aktuellen Sollwert des Lötkolbens (100 bis 445 C) heizt und die gefundenen Verstärkungen speichert. Verstärkungen speichern und den Autotune starten verlangen die übliche Bestätigung, das Abbrechen nicht. Der simulierte Kopf der Kommandozeile (`--transport simulate`) beantwortet diese Frames ebenfalls. Die Funktion muss vorher bei den optionalen Funktionen eingeschaltet werden; nichts davon wurde mit einer echten Platine benutzt.
+README und Texte gibt es auf Englisch, Spanisch, Französisch, Italienisch, Deutsch, Chinesisch, Japanisch und europäischem Portugiesisch.
 
 ## 🔗 Verwandte Projekte
 
@@ -676,33 +666,33 @@ Dieses Projekt ist Teil des HYDRA-UMC-Robotik-Ökosystems desselben Autors (Juan
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — Wartungsvorfall-Koordinator: eine Edge-Rolle mit niedrigem Privileg sammelt einen bereinigten Inventar-/Gesundheits-Snapshot, eine Control-Plane-Rolle rendert ihn schreibgeschützt und bittet einen KI-Anbieter um einen Diagnosevorschlag - wendet nie einen Patch an und stellt nie etwas bereit.
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — reproduzierbarer Entwicklungshost (Raspberry Pi 5 / CM5), der den Quellcode des Ökosystems vorhält und begrenzte Build-/Test-Aufgaben über eine dauerhafte Warteschlange ausführt; eine dedizierte Entwicklerrolle, ausdrücklich kein operativer CM5.
 
-## 🖼️ Das Fenster, Schritt für Schritt
+## 📚 Dokumentation
 
-Diese Bilder zeigen das echte Fenster, ohne Bildschirm gezeichnet, so wie es sich öffnet (nichts verbunden, nichts gesendet). Die Anleitung führt durch das Deck, das Hilfefenster und das Update-Fenster.
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — Technologie-Stack und Coding-Richtlinien für einen Pull Request.
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — die in dieser Community erwarteten Verhaltensstandards.
+- **[SECURITY.md](SECURITY.md)** — wie man eine Schwachstelle meldet, und die echten Sicherheitsschwerpunkte dieses Projekts.
+- **[SUPPORT.md](SUPPORT.md)** — wo man Fragen stellt und Fehler meldet.
+- **[LICENSE.md](LICENSE.md)** — die eigene Lizenz dieses Projekts.
 
-![Das Fenster, Schritt für Schritt](docs/screenshots/tester-deck.png)
+## 🤝 Mitwirken und Community
 
-[Anleitung mit Bildern](docs/WINDOW_GUIDE.md)
+* Führe vor einem Pull Request `URTC_CI=1 python tools/ci_validate.py` aus: es muss bestehen. Siehe [CONTRIBUTING.md](CONTRIBUTING.md) und den [Verhaltenskodex](CODE_OF_CONDUCT.md).
+* Das README gibt es in acht Sprachen: Eine Textänderung wird in allen acht Dateien vorgenommen, und die mit anderen Repositorys geteilten Abschnitte schreibt `tools/readme_sections.py` von URTC-COMMON.
+* Eine Änderung am CAN-Protokoll beginnt in URTC-COMMON (`spec/can_protocol.json`) und gelangt über die geprüfte Kopie in dieses Repository.
+* Beschreibe nichts als auf einer Platine funktionierend, was nur gebaut wurde.
+* Melde eine Schwachstelle privat: [SECURITY.md](SECURITY.md). Fragen, Ideen und Meldungen: electrohobby3d@gmail.com ([SUPPORT.md](SUPPORT.md)).
 
-<!-- urtc-section:updates -->
-## 🔄 So wird aktualisiert
+## 👤 AUTOR
 
-Dieses Programm kann nach einer neueren Version seiner selbst suchen: Die Schaltfläche „Nach Updates suchen“ fragt GitHub einmal und bietet ein signiertes Paket nur an, wenn es für Ihr System ist und neuer. Nichts wird von selbst geprüft oder installiert, solange Sie die Prüfung nicht einschalten, und ein Update braucht Ihre Bestätigung. Das Paket muss zu seinem SHA-256 und zur Signatur des im Programm angehefteten Release-Schlüssels passen; die vorherige Version bleibt erhalten und wird von selbst wiederhergestellt, wenn die neue nicht startet. `urtc-updater --cli package list|check|install|rollback` macht dasselbe auf der Kommandozeile für Flasher und Tester, und `install --file` funktioniert ohne Netzwerk.
-<!-- /urtc-section:updates -->
-
-<!-- urtc-section:heads -->
-## 🧭 Mehrere Werkzeugköpfe an einem Bus
-
-Die Firmware kann mehrere Werkzeugköpfe an einem CAN-Bus betreiben (die Multinode-Erweiterung). Sie ist **standardmäßig aus**, und ein Bus mit einem Kopf arbeitet genau wie bisher. Das Fenster **Köpfe** findet die Köpfe, listet jeden mit Adresse, Werkzeug und Seriennummer und zeigt seinen Zustand: bereit, ausgewählt, Adresskonflikt, Fehler gespeichert, im Bootloader oder verloren. Sie wählen einen aus, das Programm fragt nach einer Bestätigung und sendet erst danach etwas an diesen Kopf; solange mehrere Köpfe am Bus hängen, wird ein Befehl abgelehnt, bis einer ausgewählt ist und es bestätigt hat. Geht der ausgewählte Kopf verloren, wechseln alle Köpfe in ihren sicheren Zustand (ein Kontrollkästchen des Fensters schaltet das ab). Getestet wurde nur gegen ein Modell des Busses, nicht mit Platinen. Siehe `docs/MULTINODE.md` in URTC-COMMON.
-<!-- /urtc-section:heads -->
-
-<!-- urtc-section:compatibility -->
-## 🧩 Kompatibilität
-
-Welche Versionen der URTC-Programme zusammenarbeiten und welche Protokollversion jede spricht, steht in der Kompatibilitätstabelle, die URTC-COMMON erzeugt: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
-<!-- /urtc-section:compatibility -->
+**JuanenRac** (Electro Hobby 3D)
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
 
 ## 📜 LIZENZ
+
+Lizenz: **GPL-3.0-or-later** für den Quellcode, **CC BY-SA 4.0** für diese
+Dokumentation - siehe `LICENSE` in diesem Repository, oder den
+Abschnitt „Lizenz und Urheberrechtshinweise" am Ende dieses Dokuments.
 
 URTC Tester ist (c) 2026 JuanenRac (Electro Hobby 3D). Dieser Hinweis
 muss in jeder Verteilung dieses Projekts oder abgeleiteter Werke
@@ -740,19 +730,3 @@ Wenn Sie auf diesem Projekt aufbauen, denken Sie an die Lizenztrennung:
 Codeänderungen sollten GPL-3.0-or-later bleiben, Dokumentationsableitungen
 sollten CC BY-SA bleiben - jeweils mit Zuschreibung zurück an dieses
 Projekt und seinen Autor.
-
----
-
-## 📚 Dokumentation & Community
-
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — Technologie-Stack und Coding-Richtlinien für einen Pull Request.
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — die in dieser Community erwarteten Verhaltensstandards.
-- **[SECURITY.md](SECURITY.md)** — wie man eine Schwachstelle meldet, und die echten Sicherheitsschwerpunkte dieses Projekts.
-- **[SUPPORT.md](SUPPORT.md)** — wo man Fragen stellt und Fehler meldet.
-- **[LICENSE.md](LICENSE.md)** — die eigene Lizenz dieses Projekts.
-
-## 👤 AUTOR
-
-**JuanenRac** (Electro Hobby 3D)
-📧 electrohobby3d@gmail.com
-📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)

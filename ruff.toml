@@ -1,6 +1,6 @@
 # Lint rules: real defects only (undefined names, unused code, syntax errors,
 # exception chaining and loop-variable bugs).
-extend-exclude = [".venv", "build", "dist"]
+extend-exclude = [".venv", "build", "dist", "tools/_readme_svg.py", "tools/make_architecture.py", "tools/make_structure.py"]
 
 [lint]
 select = ["E9", "F", "B904", "B007"]
