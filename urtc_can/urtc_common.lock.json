@@ -72,7 +72,7 @@
     },
     "rack_sim.py": {
       "from": "src/urtc_common/rack_sim.py",
-      "sha256": "35281cc7559826744981d1027c8b5a57128c1905af539663db8468d72f41d702"
+      "sha256": "a8209a86f30e6a27aba522a0bc23e80bf163f3ba517c57db6e01cf919c168ace"
     },
     "rack_status.py": {
       "from": "src/urtc_common/rack_status.py",

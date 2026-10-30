@@ -16,7 +16,7 @@
     },
     "rack_vectors.json": {
       "from": "conformance/rack_vectors.json",
-      "sha256": "5178aa02bd91c9a9cf71013b5980ebc874d7be3051f87d3ec063c21e437a1ecf"
+      "sha256": "ddba4a0250c75e2bab9b203c273831335486ed3b2a665871420b69bbf950cdd1"
     },
     "slave_version_vectors.json": {
       "from": "conformance/slave_version_vectors.json",

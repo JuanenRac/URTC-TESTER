@@ -3,7 +3,7 @@
 It follows the rack firmware: the serial frame (start byte 0xA5, version 2, sequence, command, length, payload, CRC-8; every multi-byte value big-endian),
 the SET_PREHEAT command with the per-tool limits, the anti-replay sequence per tool, the link watchdog that sends every
 target to the safe state, the slot inventory with the identity of each tool (type and serial number) and the longest
-pre-heat without a tool swap. The vectors in ``conformance/rack_vectors.json`` are checked against the C code of the
+pre-heat without a tool swap, and the free-configuration mode of a head (ID jumpers 0x1F: the tool is asked for, never assumed). The vectors in ``conformance/rack_vectors.json`` are checked against the C code of the
 rack and against this module, so the two cannot drift apart unnoticed.
 
 Standard library only. Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
@@ -243,6 +243,117 @@ def validate_set_preheat(payload: bytes) -> tuple[str, int, int]:
     return OK, tool, target
 
 
+# ---- free configuration of a head (ID jumpers 0x1F) ---------------------------------------------------------------------------------
+# A head whose five ID jumpers all read 1 does not say which tool it is: the tool is a value stored in its F-RAM (CAN 0x1A2 writes it, 0x1A3
+# reports it). The rack never assumes "no tool" for such a head and never guesses one: it asks, checks the answer and uses the identity it
+# gets exactly like one read from jumpers. Until a valid answer arrives the head has no identity, so nothing is ordered to it.
+FREE_TOOL_JUMPER = 31                 # the jumper reading that means "ask the head"
+CAN_ID_FREE_TOOL_QUERY = 0x1A3        # the query (payload ignored) and its two-byte answer: jumper reading, selection
+FREE_TOOL_SELECTION_MAX = 25          # the answer carries tool id + 1; 0 is "not set"
+FREE_TOOL_REPLY_LEN = 2
+
+
+@dataclass
+class FreeToolConfig:
+    """Timing of the query. The firmware keeps the same four values in its configuration structure, not in its logic."""
+
+    query_timeout_ms: int = 250       # how long one query waits for the answer
+    max_attempts: int = 3             # queries of one round (the first one included) before the round counts as unanswered
+    retry_backoff_ms: int = 2000      # pause after an unanswered or invalid round before the next round
+    refresh_period_ms: int = 5000     # while resolved, ask again this often to notice a change; 0 = never ask again
+
+
+def classify_jumper(raw_bits: int) -> tuple[str, int | None]:
+    """What a jumper reading means: ("direct", tool) for 0..24, ("free", None) for 31, ("invalid", None) for 25..30. Bits above the fifth are ignored."""
+    value = raw_bits & 0x1F
+    if value <= TOOL_ID_LAST:
+        return "direct", value
+    if value == FREE_TOOL_JUMPER:
+        return "free", None
+    return "invalid", None
+
+
+def parse_free_tool_reply(payload: bytes) -> int | None:
+    """The tool a 0x1A3 answer names, or None when it names none: it needs two bytes, the jumper reading must be 31 (otherwise the
+    head is not in free mode), and the selection 1..25 (tool id + 1; 0 is not set, 26 or more is no tool). Extra bytes are ignored."""
+    if len(payload) < FREE_TOOL_REPLY_LEN or payload[0] != FREE_TOOL_JUMPER:
+        return None
+    selection = payload[1]
+    return selection - 1 if 1 <= selection <= FREE_TOOL_SELECTION_MAX else None
+
+
+class FreeToolResolver:
+    """The identity of one head in free mode. Time is passed in. ``tool`` is None until a valid answer arrives (and again after it is lost).
+
+    ``step`` hands in the answer (if any) and then asks what to do: it returns (query, event). ``query`` is True when the rack must send the
+    0x1A3 query now. ``event`` is one of none, resolved (a first valid answer), confirmed (the same tool again), changed (another tool: handle
+    it as a tool change), lost (the answer was invalid or the head stayed silent for a whole round: the identity is withdrawn).
+    """
+
+    def __init__(self, config: FreeToolConfig | None = None) -> None:
+        self.config = config or FreeToolConfig()
+        self.tool: int | None = None
+        self.attempts = 0              # queries sent in the round in flight; 0 = none in flight
+        self.deadline_ms = 0           # in flight: when the current query gives up
+        self.next_ms = 0               # idle: when the next round starts
+        self.armed = False             # false until the first query has been sent
+
+    @property
+    def resolved(self) -> bool:
+        return self.tool is not None
+
+    @staticmethod
+    def _due(now_ms: int, when_ms: int) -> bool:
+        return ((now_ms - when_ms) & 0xFFFFFFFF) < 0x80000000
+
+    def _settle(self, now_ms: int, backoff: bool) -> None:
+        self.attempts = 0
+        self.armed = True
+        self.next_ms = (now_ms + (self.config.retry_backoff_ms if backoff else self.config.refresh_period_ms)) & 0xFFFFFFFF
+
+    def on_reply(self, payload: bytes, now_ms: int) -> str:
+        tool = parse_free_tool_reply(payload)
+        if tool is None:
+            was = self.tool is not None
+            self.tool = None
+            self._settle(now_ms, True)
+            return "lost" if was else "none"
+        previous = self.tool
+        self.tool = tool
+        self._settle(now_ms, False)
+        if previous is None:
+            return "resolved"
+        return "confirmed" if previous == tool else "changed"
+
+    def poll(self, now_ms: int) -> tuple[bool, str]:
+        cfg = self.config
+        if self.attempts == 0:
+            if self.armed and not self._due(now_ms, self.next_ms):
+                return False, "none"
+            if self.armed and self.tool is not None and cfg.refresh_period_ms == 0:
+                return False, "none"
+            self.armed = True
+            self.attempts = 1
+            self.deadline_ms = (now_ms + cfg.query_timeout_ms) & 0xFFFFFFFF
+            return True, "none"
+        if not self._due(now_ms, self.deadline_ms):
+            return False, "none"
+        if self.attempts < max(1, cfg.max_attempts):
+            self.attempts += 1
+            self.deadline_ms = (now_ms + cfg.query_timeout_ms) & 0xFFFFFFFF
+            return True, "none"
+        was = self.tool is not None
+        self.tool = None
+        self._settle(now_ms, True)
+        return False, "lost" if was else "none"
+
+    def step(self, now_ms: int, reply: bytes | None = None) -> tuple[bool, str]:
+        event = self.on_reply(reply, now_ms) if reply is not None else "none"
+        query, polled = self.poll(now_ms)
+        return query, event if event != "none" else polled
+
+
+
 @dataclass
 class Slot:
     occupied: bool = False
@@ -281,6 +392,9 @@ class SimulatedRack:
     expired: set[int] = field(default_factory=set)
     log: list[str] = field(default_factory=list)
     deframer: StreamDeframer = field(default_factory=StreamDeframer)
+    free_config: FreeToolConfig = field(default_factory=FreeToolConfig)
+    free: dict[int, FreeToolResolver] = field(default_factory=dict)  # slot -> resolver, for the heads whose jumpers read 31
+    invalid_slots: set[int] = field(default_factory=set)  # slots whose head reads an unassigned jumper value
 
     # -- inventory ----------------------------------------------------------------------------------------------
     def set_slot(self, slot: int, tool_id: int, serial: int = 0) -> None:
@@ -300,6 +414,47 @@ class SimulatedRack:
         self.slots[slot] = Slot(True, tool_id, serial & 0xFF, 0)
         self.started_ms.pop(slot, None)
         self.expired.discard(slot)
+
+    # -- free configuration (jumpers 31) -----------------------------------------------------------------------------
+    def set_slot_jumpers(self, slot: int, raw_bits: int, serial: int = 0) -> str:
+        """A head is in a slot and its ID jumpers read ``raw_bits``. Returns "direct", "free" or "invalid". Only a direct reading gives the
+        slot an identity at once; a free one waits for the answer of the head (see ``free_tool_step``) and an invalid one never gets any.
+        In both of the last two cases the slot has no tool, so no target can be set on it."""
+        if not 0 <= slot < SLOTS:
+            raise ValueError("slot out of range")
+        kind, tool = classify_jumper(raw_bits)
+        self.free.pop(slot, None)
+        self.invalid_slots.discard(slot)
+        if tool is not None:
+            self.set_slot(slot, tool, serial)
+        else:
+            self.set_slot(slot, TOOL_ID_NONE)
+            if kind == "free":
+                self.free[slot] = FreeToolResolver(self.free_config)
+            else:
+                self.invalid_slots.add(slot)
+        return kind
+
+    def free_tool_step(self, slot: int, now_ms: int, reply: bytes | None = None) -> tuple[bool, str]:
+        """Time passes for the head of ``slot`` (and, perhaps, its 0x1A3 answer arrives): returns (send the query, event). A new or changed
+        identity moves the slot to that tool with no target (a change of tool); a withdrawn one empties the slot."""
+        resolver = self.free.get(slot)
+        if resolver is None:
+            return False, "none"
+        query, event = resolver.step(now_ms, reply)
+        if event in ("resolved", "changed") and resolver.tool is not None:
+            self.set_slot(slot, resolver.tool)
+        elif event == "lost":
+            self.set_slot(slot, TOOL_ID_NONE)
+        return query, event
+
+    def slot_identity(self, slot: int) -> str:
+        """"tool" (identity known), "pending" (free mode, no valid answer yet), "invalid" (unassigned jumpers) or "empty"."""
+        if self.slots[slot].occupied:
+            return "tool"
+        if slot in self.free:
+            return "pending"
+        return "invalid" if slot in self.invalid_slots else "empty"
 
     def _find(self, tool_id: int) -> int | None:
         for i, s in enumerate(self.slots):
