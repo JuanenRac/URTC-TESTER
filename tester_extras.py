@@ -165,15 +165,20 @@ class RackBench:
         self.now_ms = 0
         self.seq = 0
         self.log: list[str] = []
+        self.last_reply: dict | None = None   # the reply frame of the last command, read: ack, command, tool, reason code and name
 
     def rack_head(self, slot: int, tool_id: int, serial: int = 0) -> str:
         self.rack.set_slot(slot, tool_id, serial)
         return f"slot {slot}: {'empty' if tool_id == rack_sim.TOOL_ID_NONE else f'tool {tool_id}' + (f' serial {serial}' if serial else '')}"
 
-    def send_preheat(self, tool_id: int, target_c: int) -> str:
+    def send_preheat(self, tool_id: int, target_c: int, gap_ms: int | None = None) -> str:
+        """Send a pre-heat order. ``gap_ms`` is the time since the previous order: by default the least interval the rack accepts between two commands for one tool
+        (a person at the keyboard is never faster than that); a smaller gap shows how the rack holds back a flood."""
+        self.now_ms += self.rack.min_interval_ms if gap_ms is None else max(0, gap_ms)
         self.seq = (self.seq + 1) & 0xFF
         frame = rack_sim.encode_set_preheat(self.seq, tool_id, target_c)
         reply = self.rack.receive(frame, self.now_ms)
+        self.last_reply = rack_sim.parse_reply(reply.frame) if reply.frame else None   # what a program reading the line would see
         text = f"{reply.kind.upper()}" + (f" {reply.action}" if reply.action != "none" else "") + (f" ({reply.detail})" if reply.detail else "")
         self.log.append(text)
         return text

@@ -1659,7 +1659,17 @@ class TesterQtBridge(QObject):
 
     @Slot(int, int)
     def rackBenchPreheat(self, tool_id: int, target_c: int) -> None:
-        self._bench_report(self._bench.send_preheat(int(tool_id), int(target_c)))
+        text = self._bench.send_preheat(int(tool_id), int(target_c))
+        reply = self._bench.last_reply          # the answer of the rack, read from its frame: acknowledgement or refusal with the reason
+        if reply is not None:
+            reasons = {
+                "applied": _("LBL_RACK_REPLY_APPLIED"), "repeat": _("LBL_RACK_REPLY_REPEAT"), "wrong_length": _("LBL_RACK_REPLY_WRONG_LENGTH"),
+                "tool_absent": _("LBL_RACK_REPLY_TOOL_ABSENT"), "temp_out_of_range": _("LBL_RACK_REPLY_TEMP_OUT_OF_RANGE"),
+                "tool_invalid": _("LBL_RACK_REPLY_TOOL_INVALID"), "not_heatable": _("LBL_RACK_REPLY_NOT_HEATABLE"),
+                "held_rate": _("LBL_RACK_REPLY_HELD_RATE"), "unknown_command": _("LBL_RACK_REPLY_UNKNOWN_COMMAND"),
+            }
+            text += " - " + reasons.get(str(reply["reason"]), str(reply["reason"]))
+        self._bench_report(text)
 
     @Slot(int)
     def rackBenchAdvance(self, ms: int) -> None:

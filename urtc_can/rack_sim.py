@@ -23,6 +23,17 @@ TOOL_ID_LAST = 24
 RACK_CEILING_C = 400
 LINK_TIMEOUT_MS = 250
 PREHEAT_MAX_MS = 600_000
+COMMAND_MIN_INTERVAL_MS = 20  # two commands for one tool closer than this: the second is held (RACK_COMMAND_MIN_INTERVAL_MS)
+CMD_ACK = 0x81
+CMD_NACK = 0x82
+REPLY_PAYLOAD_LEN = 3
+REPLY_TOOL_NONE = 0xFF
+# The reason the rack tells the sender, in the order of rack_reply_code_t of the firmware (APPLIED and REPEAT are acknowledgements, the rest refusals).
+REPLY_CODES = ("applied", "repeat", "wrong_length", "tool_absent", "temp_out_of_range", "tool_invalid", "not_heatable", "held_rate", "unknown_command")
+REPLY_ACKNOWLEDGEMENTS = ("applied", "repeat")
+# The status of a SET_PREHEAT check, as the reason the sender is told.
+STATUS_TO_REPLY = {"wrong_payload_len": "wrong_length", "tool_id_absent": "tool_absent", "temp_out_of_range": "temp_out_of_range",
+                   "tool_id_invalid": "tool_invalid", "tool_not_heatable": "not_heatable"}
 SLOTS = 8
 # The highest pre-heat target of each tool; a tool that is not listed has no heater and takes only 0.
 MAX_PREHEAT_C = {0: RACK_CEILING_C, 10: 310, 19: RACK_CEILING_C}
@@ -186,6 +197,30 @@ def encode_set_preheat_can(seq: int, tool_id: int, target_c: int) -> bytes:
     return bytes([tool_id, (target_c >> 8) & 0xFF, target_c & 0xFF, seq & 0xFF, 0, 0, 0, 0])
 
 
+def encode_reply(seq: int, cmd: int, tool: int, reason: str) -> bytes:
+    """The frame that tells the sender what became of its command: an acknowledgement (0x81) for ``applied`` and ``repeat``, a refusal (0x82) with the reason otherwise.
+
+    Payload: the command answered, the tool byte it carried (0xFF: none) and the reason code; the framing is the one of every frame of the link.
+    """
+    code = REPLY_CODES.index(reason)
+    return encode_frame(seq, CMD_ACK if reason in REPLY_ACKNOWLEDGEMENTS else CMD_NACK, bytes([cmd & 0xFF, tool & 0xFF, code]))
+
+
+def parse_reply(buf: bytes) -> dict | None:
+    """The reply a rack sent, or None when ``buf`` is not a well-formed one (right command, exact payload length, a code that exists and agrees with the command)."""
+    status, frame = parse_frame(buf)
+    if frame is None or frame["cmd"] not in (CMD_ACK, CMD_NACK) or len(frame["payload"]) != REPLY_PAYLOAD_LEN:
+        return None
+    code = frame["payload"][2]
+    if code >= len(REPLY_CODES):
+        return None
+    reason = REPLY_CODES[code]
+    ack = frame["cmd"] == CMD_ACK
+    if ack != (reason in REPLY_ACKNOWLEDGEMENTS):
+        return None
+    return {"ack": ack, "cmd": frame["payload"][0], "tool": frame["payload"][1], "code": code, "reason": reason, "seq": frame["seq"]}
+
+
 def validate_set_preheat(payload: bytes) -> tuple[str, int, int]:
     """(status, tool_id, target_c) of a SET_PREHEAT payload."""
     if len(payload) != 3:
@@ -228,6 +263,8 @@ class Reply:
     tool_id: int | None = None
     target_c: int | None = None
     detail: str = ""
+    reason: str = ""          # why it was applied or refused (REPLY_CODES); "" when nobody is told
+    frame: bytes = b""        # the reply frame of a serial command (acknowledgement or refusal); empty when nobody is told
 
 
 @dataclass
@@ -235,10 +272,12 @@ class SimulatedRack:
     """What a rack does with the frames it receives. Time is passed in; nothing here reads a clock."""
 
     preheat_max_ms: int | None = PREHEAT_MAX_MS
+    min_interval_ms: int = COMMAND_MIN_INTERVAL_MS  # the least time between two commands accepted for one tool; 0 = no limit
     slots: list[Slot] = field(default_factory=lambda: [Slot() for _ in range(SLOTS)])
     last_rx_ms: int | None = None
     last_seq: dict[int, int] = field(default_factory=dict)
     started_ms: dict[int, int] = field(default_factory=dict)
+    last_accept_ms: dict[int, int] = field(default_factory=dict)
     expired: set[int] = field(default_factory=set)
     log: list[str] = field(default_factory=list)
     deframer: StreamDeframer = field(default_factory=StreamDeframer)
@@ -278,6 +317,7 @@ class SimulatedRack:
         if self.last_rx_ms is not None and self.link_lost(now_ms):
             self.last_rx_ms = None
             self.last_seq.clear()
+            self.last_accept_ms.clear()
         lost = self.link_lost(now_ms)
         for i, s in enumerate(self.slots):
             if not s.occupied or s.target_c == 0:
@@ -298,8 +338,12 @@ class SimulatedRack:
         self.tick(now_ms)
         self.last_rx_ms = now_ms
         if frame["cmd"] != CMD_SET_PREHEAT:
-            return Reply("none", detail="command not acted on")
-        return self._set_preheat(frame["seq"], frame["payload"], now_ms)
+            return Reply("nack", "none", reason="unknown_command", detail="command not acted on",
+                         frame=encode_reply(frame["seq"], frame["cmd"], REPLY_TOOL_NONE, "unknown_command"))
+        if not frame["payload"]:
+            return Reply("nack", "none", reason="wrong_length", detail="wrong_payload_len",
+                         frame=encode_reply(frame["seq"], CMD_SET_PREHEAT, REPLY_TOOL_NONE, "wrong_length"))
+        return self._set_preheat(frame["seq"], frame["payload"], now_ms, True)
 
     def receive_stream(self, data: bytes, now_ms: int) -> list[Reply]:
         """The bytes that arrived on the serial line at ``now_ms``: the deframer finds the frames and each one is handled like ``receive``."""
@@ -310,34 +354,46 @@ class SimulatedRack:
             return Reply("none", detail="not a rack frame")
         self.tick(now_ms)
         self.last_rx_ms = now_ms
-        return self._set_preheat(data[3], bytes(data[:3]), now_ms)  # the same three bytes as the serial payload: tool, temperature big-endian
+        return self._set_preheat(data[3], bytes(data[:3]), now_ms, False)  # the same three bytes as the serial payload: tool, temperature big-endian
 
-    def _set_preheat(self, seq: int, payload: bytes, now_ms: int) -> Reply:
+    def _set_preheat(self, seq: int, payload: bytes, now_ms: int, serial: bool = True) -> Reply:
+        def told(reply: Reply, reason: str) -> Reply:
+            """The reply with its reason and, for a serial command, the frame that carries it."""
+            reply.reason = reason
+            if serial:
+                reply.frame = encode_reply(seq, CMD_SET_PREHEAT, payload[0], reason)
+            return reply
+
         status, tool, target = validate_set_preheat(payload)
         if status != OK:
             readable = len(payload) >= 1 and payload[0] <= TOOL_ID_LAST
+            reason = STATUS_TO_REPLY[status]
             if readable:
                 slot = self._find(payload[0])
                 if slot is not None:
                     self.slots[slot].target_c = 0
-                return Reply("nack", "safe_state", payload[0], 0, status)
-            return Reply("nack", "none", None, None, status)
+                return told(Reply("nack", "safe_state", payload[0], 0, status), reason)
+            return told(Reply("nack", "none", None, None, status), reason)
         prev = self.last_seq.get(tool)
         if prev is not None and (((seq - prev) & 0xFF) == 0 or ((seq - prev) & 0xFF) >= 128):
-            return Reply("ack", "none", tool, None, "retransmission already applied")
+            return told(Reply("ack", "none", tool, None, "retransmission already applied"), "repeat")
+        last = self.last_accept_ms.get(tool)
+        if self.min_interval_ms > 0 and last is not None and ((now_ms - last) & 0xFFFFFFFF) < self.min_interval_ms:
+            return told(Reply("nack", "none", tool, None, "held: too soon after the previous command for this tool"), "held_rate")
+        self.last_accept_ms[tool] = now_ms
         self.last_seq[tool] = seq
         slot = self._find(tool)
         if slot is None:
-            return Reply("ack", "none", tool, target, "tool not racked: target not applied")
+            return told(Reply("ack", "none", tool, target, "tool not racked: target not applied"), "applied")
         if slot in self.expired:
             if target == 0:
                 self.expired.discard(slot)
             else:
-                return Reply("ack", "none", tool, target, "pre-heat limit reached: send 0 or swap the tool")
+                return told(Reply("ack", "none", tool, target, "pre-heat limit reached: send 0 or swap the tool"), "applied")
         if target > 0 and self.slots[slot].target_c == 0:
             self.started_ms[slot] = now_ms
         self.slots[slot].target_c = target
-        return Reply("ack", "set_target", tool, target)
+        return told(Reply("ack", "set_target", tool, target), "applied")
 
     def status(self) -> dict:
         """The state a panel shows: one entry per slot."""

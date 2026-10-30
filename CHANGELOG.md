@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The rack bench reads the answer of the rack:** the simulated rack now answers every order with its reply frame (an acknowledgement, or a refusal with the reason: wrong length, no tool in the slot, temperature above the limit, invalid tool, no heater, held for coming too soon, unknown command), the bench reads that frame back and says the reason in the language of the window (eight languages), and a second order for one tool sent sooner than the minimum interval is held back as the firmware does. The shared simulator and the vectors are the current ones of the common code.
+
 ## [0.4.3] - The evidence of every test in the common format, its own mark and the universal README
 
 - **A run of the command line also leaves its result in the shape the other programs use:** next to the log and the result record, `urtc_evidence_<name>.json` holds the same result as a `urtc-evidence/1` record (tool, time, adapter, bus, bit rate, the log with its SHA-256, outcome and a digest of the record), the shape the flasher writes for an update and the updater can export for its install log. The log and the result record are unchanged, and a copy that cannot be written never fails a run.

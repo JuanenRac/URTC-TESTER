@@ -204,7 +204,8 @@
           "action": "set_target",
           "tool": 0,
           "temp": 200,
-          "ack": 1
+          "ack": 1,
+          "reply": "A5020A81030100008E"
         },
         {
           "time_ms": 20,
@@ -212,7 +213,8 @@
           "action": "none",
           "tool": 0,
           "temp": 0,
-          "ack": 1
+          "ack": 1,
+          "reply": "A5020A810301000189"
         },
         {
           "time_ms": 40,
@@ -220,7 +222,8 @@
           "action": "none",
           "tool": 0,
           "temp": 0,
-          "ack": 1
+          "ack": 1,
+          "reply": "A502098103010001F2"
         },
         {
           "time_ms": 60,
@@ -228,7 +231,8 @@
           "action": "set_target",
           "tool": 0,
           "temp": 250,
-          "ack": 1
+          "ack": 1,
+          "reply": "A5020B8103010000A7"
         }
       ]
     },
@@ -241,7 +245,8 @@
           "action": "set_target",
           "tool": 0,
           "temp": 200,
-          "ack": 1
+          "ack": 1,
+          "reply": "A502018103010000BA"
         },
         {
           "time_ms": 10,
@@ -249,7 +254,8 @@
           "action": "safe_state",
           "tool": 0,
           "temp": 0,
-          "ack": 0
+          "ack": 0,
+          "reply": "A5020282030100047B"
         },
         {
           "time_ms": 20,
@@ -257,7 +263,8 @@
           "action": "set_target",
           "tool": 0,
           "temp": 200,
-          "ack": 1
+          "ack": 1,
+          "reply": "A502028103010000C1"
         }
       ]
     },
@@ -270,7 +277,8 @@
           "action": "set_target",
           "tool": 19,
           "temp": 300,
-          "ack": 1
+          "ack": 1,
+          "reply": "A5023281030113000C"
         },
         {
           "time_ms": 100,
@@ -278,7 +286,8 @@
           "action": "none",
           "tool": 0,
           "temp": 0,
-          "ack": 1
+          "ack": 1,
+          "reply": "A5023281030113010B"
         },
         {
           "time_ms": 1000,
@@ -286,7 +295,8 @@
           "action": "set_target",
           "tool": 19,
           "temp": 300,
-          "ack": 1
+          "ack": 1,
+          "reply": "A5023281030113000C"
         }
       ]
     },
@@ -299,7 +309,8 @@
           "action": "set_target",
           "tool": 0,
           "temp": 200,
-          "ack": 1
+          "ack": 1,
+          "reply": "A502018103010000BA"
         },
         {
           "time_ms": 10,
@@ -307,7 +318,8 @@
           "action": "none",
           "tool": 0,
           "temp": 0,
-          "ack": 0
+          "ack": 0,
+          "reply": ""
         },
         {
           "time_ms": 20,
@@ -315,7 +327,8 @@
           "action": "none",
           "tool": 0,
           "temp": 0,
-          "ack": 0
+          "ack": 0,
+          "reply": "A5020282037EFF08A8"
         },
         {
           "time_ms": 30,
@@ -323,7 +336,126 @@
           "action": "safe_state",
           "tool": 6,
           "temp": 0,
-          "ack": 0
+          "ack": 0,
+          "reply": "A50201820301060670"
+        }
+      ]
+    },
+    {
+      "name": "every refusal says why",
+      "steps": [
+        {
+          "time_ms": 0,
+          "frame": "A5020101004C",
+          "action": "none",
+          "tool": 0,
+          "temp": 0,
+          "ack": 0,
+          "reply": "A50201820301FF02C5"
+        },
+        {
+          "time_ms": 10,
+          "frame": "A5020201020000D7",
+          "action": "safe_state",
+          "tool": 0,
+          "temp": 0,
+          "ack": 0,
+          "reply": "A50202820301000269"
+        },
+        {
+          "time_ms": 20,
+          "frame": "A5020301031F0000F1",
+          "action": "none",
+          "tool": 0,
+          "temp": 0,
+          "ack": 0,
+          "reply": "A502038203011F03D3"
+        },
+        {
+          "time_ms": 30,
+          "frame": "A50204010300019120",
+          "action": "safe_state",
+          "tool": 0,
+          "temp": 0,
+          "ack": 0,
+          "reply": "A5020482030100048D"
+        },
+        {
+          "time_ms": 40,
+          "frame": "A5020501031B0000AC",
+          "action": "none",
+          "tool": 0,
+          "temp": 0,
+          "ack": 0,
+          "reply": "A502058203011B0563"
+        },
+        {
+          "time_ms": 50,
+          "frame": "A502060103060064DF",
+          "action": "safe_state",
+          "tool": 6,
+          "temp": 0,
+          "ack": 0,
+          "reply": "A502068203010606AF"
+        },
+        {
+          "time_ms": 60,
+          "frame": "A5020740020102AC",
+          "action": "none",
+          "tool": 0,
+          "temp": 0,
+          "ack": 0,
+          "reply": "A50207820340FF08E8"
+        }
+      ]
+    },
+    {
+      "name": "a command that comes too soon is held and the next one is obeyed",
+      "steps": [
+        {
+          "time_ms": 0,
+          "frame": "A5020101030000C830",
+          "action": "set_target",
+          "tool": 0,
+          "temp": 200,
+          "ack": 1,
+          "reply": "A502018103010000BA"
+        },
+        {
+          "time_ms": 5,
+          "frame": "A5020201030000FAD5",
+          "action": "none",
+          "tool": 0,
+          "temp": 0,
+          "ack": 0,
+          "reply": "A50202820301000772"
+        },
+        {
+          "time_ms": 19,
+          "frame": "A5020201030000FAD5",
+          "action": "none",
+          "tool": 0,
+          "temp": 0,
+          "ack": 0,
+          "reply": "A50202820301000772"
+        },
+        {
+          "time_ms": 20,
+          "frame": "A5020201030000FAD5",
+          "action": "set_target",
+          "tool": 0,
+          "temp": 250,
+          "ack": 1,
+          "reply": "A502028103010000C1"
+        },
+        {
+          "time_ms": 25,
+          "frame": "A50201010313012C88",
+          "action": "set_target",
+          "tool": 19,
+          "temp": 300,
+          "ack": 1,
+          "reply": "A502018103011300D2"
         }
       ]
     }

@@ -105,7 +105,9 @@ def test_the_rack_bench_follows_the_rack_protocol_and_its_identity_rules(tmp_pat
     assert bench.send_preheat(0, 250).startswith("ACK set_target")
     assert bench.send_preheat(0, 500).startswith("NACK safe_state")
     assert "target 0 C" in bench.state_text().splitlines()[0]
-    bench.send_preheat(0, 200)
+    assert bench.send_preheat(0, 200).startswith("ACK set_target")
+    held = bench.send_preheat(0, 210, gap_ms=5)     # sooner than the rack accepts a second command for one tool
+    assert held.startswith("NACK") and bench.last_reply is not None and bench.last_reply["reason"] == "held_rate" and not bench.last_reply["ack"]
     assert "safe state" in bench.advance(5000) and "target 0 C" in bench.state_text().splitlines()[0]
     json_path, html_path = bench.status_page(str(tmp_path))
     snap = json.loads(Path(json_path).read_text(encoding="utf-8"))
