@@ -338,6 +338,75 @@ class Bus:
 # ---------------------------------------------------------------------------------------------------------------------
 # the runner
 # ---------------------------------------------------------------------------------------------------------------------
+# The text of every message a step gives, in English. A window shows the same message in the language of the program through its key
+# (``translate_message``); reports, logs and the command line keep this English text.
+MESSAGES = {
+    "QT_PM_NOT_RUN": "not run",
+    "QT_PM_NO_TOOL_ANSWER": "no answer to the active-tool query (0x110)",
+    "QT_PM_WRONG_TOOL": "the board runs tool {have}, the plan expects {want}",
+    "QT_PM_TOOL": "tool {have}",
+    "QT_PM_REPORTED": "reported: {faults}",
+    "QT_PM_FAULT_SYSTEM": "system_error",
+    "QT_PM_FAULT_CAN": "can_error",
+    "QT_PM_FAULT_THERMAL": "thermal fault {name}",
+    "QT_PM_FAULT_WATCHDOG": "the last reset was the watchdog",
+    "QT_PM_NO_FAULT": "no fault reported",
+    "QT_PM_NO_VERSION_ANSWER": "no answer to the version query (0x7F8)",
+    "QT_PM_BAD_VERSION": "the version answer is not a valid 0x7F9",
+    "QT_PM_BOOTLOADER": "the board answered from its boot-loader (version {version}), not from the application",
+    "QT_PM_WRONG_HARDWARE": "hardware id {have}, the plan expects {want}",
+    "QT_PM_OLD_FIRMWARE": "firmware {version} is older than {minimum}",
+    "QT_PM_VERSION_OK": "application {version}, hardware {hardware}",
+    "QT_PM_NOTHING_TO_TEST": "no answer to the active-tool query (0x110): nothing to test",
+    "QT_PM_SELFTEST_FAILED": "{failed} of the self-test checks failed for tool {tool}",
+    "QT_PM_SELFTEST_OK": "self-test of tool {tool} passed",
+    "QT_PM_NO_ACTUATION": "{id} is not a query and the operator did not allow actuation (--allow-actuation)",
+    "QT_PM_LISTEN_ONLY": "the bus was opened listen-only: nothing can be sent",
+    "QT_PM_SENT": "sent {id} {data}",
+    "QT_PM_SENT_REPEATED": "sent {id} {data}, repeated every {ms} ms",
+    "QT_PM_FRAME_OK": "{id} {data}",
+    "QT_PM_NO_FRAME": "no frame {id} within {ms} ms",
+    "QT_PM_FRAME_BAD": "{id} {data}: {problem}",
+    "QT_PM_LENGTH": "length {have}, expected {want}",
+    "QT_PM_TOO_SHORT": "too short ({have} bytes) for the field at offset {offset}",
+    "QT_PM_BELOW": "value {value} is below {limit}",
+    "QT_PM_ABOVE": "value {value} is above {limit}",
+    "QT_PM_WAITED": "waited {ms} ms",
+    "QT_PM_NEEDS_PERSON": "a person has to confirm this step and none is there (use --assume-yes only when someone has looked)",
+    "QT_PM_CONFIRMED": "the operator confirmed",
+    "QT_PM_NOT_CONFIRMED": "the operator did not confirm",
+    "QT_PM_ALL_OFF_LISTEN": "all-off not sent: the bus was opened listen-only",
+    "QT_PM_ALL_OFF": "all outputs switched off after the plan ({failed} frames could not be sent)",
+}
+
+
+class Msg(str):
+    """A message in English that remembers its key and values, so a window can say it in another language."""
+
+    key: str
+    params: dict
+
+    def __new__(cls, key: str, **params: Any) -> "Msg":
+        plain = {name: (", ".join(str(item) for item in value) if isinstance(value, (list, tuple)) else value) for name, value in params.items()}
+        text = super().__new__(cls, MESSAGES[key].format(**plain))
+        text.key = key
+        text.params = params
+        return text
+
+
+def translate_message(message: str, translate: Callable[..., str]) -> str:
+    """``message`` in the language of ``translate`` (the window's ``_``); a text that is not a ``Msg`` (an exception) is returned as it is."""
+    if not isinstance(message, Msg):
+        return str(message)
+    values: dict = {}
+    for name, value in message.params.items():
+        if isinstance(value, (list, tuple)):
+            values[name] = ", ".join(translate_message(item, translate) for item in value)
+        else:
+            values[name] = translate_message(value, translate) if isinstance(value, Msg) else value
+    return translate(message.key, **values)
+
+
 Confirm = Callable[[str], bool]
 
 
@@ -359,13 +428,13 @@ def run_plan(plan: dict, transport, *, allow_actuation: bool = False, confirm: C
             kind = step["do"]
             label = step.get("label", "")
             if ended or stop():
-                report.steps.append(StepResult(number, kind, label, SKIPPED, "not run"))
+                report.steps.append(StepResult(number, kind, label, SKIPPED, Msg("QT_PM_NOT_RUN")))
                 _tell(progress, report.steps[-1])
                 continue
             try:
                 outcome, message = _RUNNERS[kind](step, bus, state, plan, allow_actuation, confirm, listen_only)
             except _StepError as exc:
-                outcome, message = ERROR, str(exc)
+                outcome, message = ERROR, (exc.args[0] if exc.args and isinstance(exc.args[0], Msg) else str(exc))
             except Exception as exc:  # a transport that fails mid-plan is an error of that step, not a crash
                 outcome, message = ERROR, f"{type(exc).__name__}: {exc}"
             report.steps.append(StepResult(number, kind, label, outcome, message))
@@ -398,7 +467,7 @@ def _tell(progress: Callable[[StepResult], None] | None, result: StepResult) -> 
 
 def _all_off(bus: Bus, listen_only: bool) -> str:
     if listen_only:
-        return "all-off not sent: the bus was opened listen-only"
+        return Msg("QT_PM_ALL_OFF_LISTEN")
     failed = 0
     bus.keepalive.clear()
     for can_id, data in protocol.all_off_frames():
@@ -406,7 +475,7 @@ def _all_off(bus: Bus, listen_only: bool) -> str:
             bus.send(can_id, data, clear=False)
         except Exception:
             failed += 1
-    return f"all outputs switched off after the plan ({failed} frames could not be sent)"
+    return Msg("QT_PM_ALL_OFF", failed=failed)
 
 
 class _StepError(Exception):
@@ -430,70 +499,72 @@ def _quick_state(bus: Bus, state: dict) -> dict | None:
 def _run_expect_tool(step, bus, state, plan, allow_actuation, confirm, listen_only):
     quick = _quick_state(bus, state)
     if quick is None:
-        return FAIL, "no answer to the active-tool query (0x110)"
+        return FAIL, Msg("QT_PM_NO_TOOL_ANSWER")
     if quick["tool_id"] != step["tool"]:
-        return FAIL, f"the board runs tool {_tool_name(quick['tool_id'])}, the plan expects {_tool_name(step['tool'])}"
-    return PASS, f"tool {_tool_name(quick['tool_id'])}"
+        return FAIL, Msg("QT_PM_WRONG_TOOL", have=_tool_name(quick["tool_id"]), want=_tool_name(step["tool"]))
+    return PASS, Msg("QT_PM_TOOL", have=_tool_name(quick["tool_id"]))
 
 
 def _run_check_faults(step, bus, state, plan, allow_actuation, confirm, listen_only):
     quick = _quick_state(bus, state)
     if quick is None:
-        return FAIL, "no answer to the active-tool query (0x110)"
-    found = [name for name in ("system_error", "can_error") if quick[name]]
+        return FAIL, Msg("QT_PM_NO_TOOL_ANSWER")
+    found = [Msg(key) for name, key in (("system_error", "QT_PM_FAULT_SYSTEM"), ("can_error", "QT_PM_FAULT_CAN")) if quick[name]]
     if quick["thermal_fault"]:
-        found.append(f"thermal fault {quick['thermal_fault_name']}")
+        found.append(Msg("QT_PM_FAULT_THERMAL", name=quick["thermal_fault_name"]))
     if quick["watchdog_reset"]:
-        found.append("the last reset was the watchdog")
-    return (FAIL, "reported: " + ", ".join(found)) if found else (PASS, "no fault reported")
+        found.append(Msg("QT_PM_FAULT_WATCHDOG"))
+    return (FAIL, Msg("QT_PM_REPORTED", faults=found)) if found else (PASS, Msg("QT_PM_NO_FAULT"))
 
 
 def _run_query_version(step, bus, state, plan, allow_actuation, confirm, listen_only):
     bus.send(wire.CAN_ID_QUERY_VERSION, b"\x00")
     first = bus.wait_for(wire.CAN_ID_VERSION_RESPONSE, 1.0)
     if first is None:
-        return FAIL, "no answer to the version query (0x7F8)"
+        return FAIL, Msg("QT_PM_NO_VERSION_ANSWER")
     bus.drain(0.1)  # the patch frame follows right behind
     answer = parse_version_answer(bus.buffer)
     if answer is None:
-        return FAIL, "the version answer is not a valid 0x7F9"
+        return FAIL, Msg("QT_PM_BAD_VERSION")
     text = f"{answer['major']}.{answer['minor']}" + (f".{answer['patch']}" if answer["patch"] is not None else "")
     state["firmware"] = text
     if answer["responder"] != "application":
-        return FAIL, f"the board answered from its boot-loader (version {text}), not from the application"
+        return FAIL, Msg("QT_PM_BOOTLOADER", version=text)
     if "hardware_id" in step and int(answer["hardware_id"], 16) != int(step["hardware_id"], 16):
-        return FAIL, f"hardware id {answer['hardware_id']}, the plan expects {step['hardware_id']}"
+        return FAIL, Msg("QT_PM_WRONG_HARDWARE", have=answer["hardware_id"], want=step["hardware_id"])
     if "min_version" in step:
         have = (answer["major"], answer["minor"], answer["patch"] or 0)
         if have < _version_tuple(step["min_version"]):
-            return FAIL, f"firmware {text} is older than {step['min_version']}"
-    return PASS, f"application {text}, hardware {answer['hardware_id']}"
+            return FAIL, Msg("QT_PM_OLD_FIRMWARE", version=text, minimum=step["min_version"])
+    return PASS, Msg("QT_PM_VERSION_OK", version=text, hardware=answer["hardware_id"])
 
 
 def _run_selftest(step, bus, state, plan, allow_actuation, confirm, listen_only):
     if state.get("tool") is None:
         quick = _quick_state(bus, state)
         if quick is None:
-            return FAIL, "no answer to the active-tool query (0x110): nothing to test"
+            return FAIL, Msg("QT_PM_NOTHING_TO_TEST")
     result = tester_selftest.run_self_test(state["tool"], bus.exchange, timeout=1.0)
     for line in result.lines:
         bus.trace.append(f"           {line}")
     if result.failed:
-        return FAIL, f"{result.failed} of the self-test checks failed for tool {_tool_name(state['tool'])}"
-    return PASS, f"self-test of tool {_tool_name(state['tool'])} passed"
+        return FAIL, Msg("QT_PM_SELFTEST_FAILED", failed=result.failed, tool=_tool_name(state["tool"]))
+    return PASS, Msg("QT_PM_SELFTEST_OK", tool=_tool_name(state["tool"]))
 
 
 def _run_send(step, bus, state, plan, allow_actuation, confirm, listen_only):
     can_id, data = _parse_id(step["id"]), _parse_data(step["data"])
     if can_id not in READ_ONLY_IDS:
         if not allow_actuation:
-            raise _StepError(f"0x{can_id:03X} is not a query and the operator did not allow actuation (--allow-actuation)")
+            raise _StepError(Msg("QT_PM_NO_ACTUATION", id=f"0x{can_id:03X}"))
         if listen_only:
-            raise _StepError("the bus was opened listen-only: nothing can be sent")
+            raise _StepError(Msg("QT_PM_LISTEN_ONLY"))
     bus.send(can_id, data)
     if "keepalive_ms" in step:
         bus.set_keepalive(can_id, data, step["keepalive_ms"] / 1000.0)
-    return PASS, f"sent 0x{can_id:03X} {data.hex().upper()}" + (f", repeated every {step['keepalive_ms']} ms" if "keepalive_ms" in step and any(data) else "")
+    if "keepalive_ms" in step and any(data):
+        return PASS, Msg("QT_PM_SENT_REPEATED", id=f"0x{can_id:03X}", data=data.hex().upper(), ms=step["keepalive_ms"])
+    return PASS, Msg("QT_PM_SENT", id=f"0x{can_id:03X}", data=data.hex().upper())
 
 
 def _run_expect_frame(step, bus, state, plan, allow_actuation, confirm, listen_only):
@@ -506,41 +577,41 @@ def _run_expect_frame(step, bus, state, plan, allow_actuation, confirm, listen_o
             candidates_seen += 1
             problem = _frame_problem(step, data)
             if problem is None:
-                return PASS, f"0x{can_id:03X} {data.hex().upper()}"
+                return PASS, Msg("QT_PM_FRAME_OK", id=f"0x{can_id:03X}", data=data.hex().upper())
         if bus.clock() >= deadline:
             break
         if not bus._pump(deadline):
             break
     last = bus.frames(can_id)
     if not last:
-        return FAIL, f"no frame 0x{can_id:03X} within {step.get('within_ms', DEFAULT_WITHIN_MS)} ms"
-    return FAIL, f"0x{can_id:03X} {last[-1][1].hex().upper()}: {_frame_problem(step, last[-1][1])}"
+        return FAIL, Msg("QT_PM_NO_FRAME", id=f"0x{can_id:03X}", ms=step.get("within_ms", DEFAULT_WITHIN_MS))
+    return FAIL, Msg("QT_PM_FRAME_BAD", id=f"0x{can_id:03X}", data=last[-1][1].hex().upper(), problem=_frame_problem(step, last[-1][1]))
 
 
-def _frame_problem(step: dict, data: bytes) -> str | None:
+def _frame_problem(step: dict, data: bytes) -> Msg | None:
     if "length" in step and len(data) != step["length"]:
-        return f"length {len(data)}, expected {step['length']}"
+        return Msg("QT_PM_LENGTH", have=len(data), want=step["length"])
     value = step.get("value")
     if value:
         end = value["offset"] + value["width"]
         if len(data) < end:
-            return f"too short ({len(data)} bytes) for the field at offset {value['offset']}"
+            return Msg("QT_PM_TOO_SHORT", have=len(data), offset=value["offset"])
         number = int.from_bytes(data[value["offset"]:end], "big")
         if "min" in value and number < value["min"]:
-            return f"value {number} is below {value['min']}"
+            return Msg("QT_PM_BELOW", value=number, limit=value["min"])
         if "max" in value and number > value["max"]:
-            return f"value {number} is above {value['max']}"
+            return Msg("QT_PM_ABOVE", value=number, limit=value["max"])
     return None
 
 
 def _run_wait(step, bus, state, plan, allow_actuation, confirm, listen_only):
     bus.drain(step["ms"] / 1000.0)
-    return PASS, f"waited {step['ms']} ms"
+    return PASS, Msg("QT_PM_WAITED", ms=step["ms"])
 
 
 def _run_confirm(step, bus, state, plan, allow_actuation, confirm, listen_only):
     if confirm is None:
-        raise _StepError("a person has to confirm this step and none is there (use --assume-yes only when someone has looked)")
+        raise _StepError(Msg("QT_PM_NEEDS_PERSON"))
     box: dict = {}
 
     def ask() -> None:
@@ -558,7 +629,7 @@ def _run_confirm(step, bus, state, plan, allow_actuation, confirm, listen_only):
         raise box["error"]
     answer = box["answer"]
     bus.trace.append(f"           operator asked: {step['text']} -> {'yes' if answer else 'no'}")
-    return (PASS, "the operator confirmed") if answer else (FAIL, "the operator did not confirm")
+    return (PASS, Msg("QT_PM_CONFIRMED")) if answer else (FAIL, Msg("QT_PM_NOT_CONFIRMED"))
 
 
 _RUNNERS = {

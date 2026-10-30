@@ -1463,7 +1463,7 @@ class TesterQtBridge(QObject):
 
     def _plan_worker(self, plan: dict, transport, allow_actuation: bool) -> None:
         def progress(step) -> None:
-            self._planLine.emit(step.outcome.upper(), f"{step.index}. {step.kind}{' [' + step.label + ']' if step.label else ''}: {step.message}")
+            self._planLine.emit(step.outcome.upper(), f"{step.index}. {step.kind}{' [' + step.label + ']' if step.label else ''}: {tester_plan.translate_message(step.message, _)}")
 
         with self._io_lock:
             try:

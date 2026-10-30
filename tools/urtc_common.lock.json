@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "urtc_common_version": "0.0.7",
+  "urtc_common_version": "0.1.0",
   "files": {
     "make_update_package.py": {
       "from": "tools/make_update_package.py",
