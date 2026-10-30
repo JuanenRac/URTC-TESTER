@@ -112,17 +112,26 @@ Ce programme peut chercher une version plus récente de lui-même : le bouton «
 
 ## 🖼️ Captures d'écran
 
-<p align="center">
-  <img src="images/URTC_TESTER_V1_1.png" alt="Fenêtre URTC Tester" width="700">
-</p>
+<!-- urtc-shots -->
+Capturées en 1920×1080 sur un banc d'essai, avec des données d'exemple et sans installation réelle derrière.
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="La fenêtre à l'ouverture : la porte de transport, le mode sûr en écoute seule, les profils d'outil et les points de contrôle d'identité et de santé." width="100%"><br><sub>La fenêtre à l'ouverture : la porte de transport, le mode sûr en écoute seule, les profils d'outil et les points de contrôle d'identité et de santé.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Têtes d'outil sur le bus : un bus modélisé avec six têtes, une dans chaque état possible (sélectionnée, conflit d'adresse, défaut mémorisé, dans son bootloader, perdue et prête)." width="100%"><br><sub>Têtes d'outil sur le bus : un bus modélisé avec six têtes, une dans chaque état possible (sélectionnée, conflit d'adresse, défaut mémorisé, dans son bootloader, perdue et prête).</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="La fenêtre d'aide : les étapes d'utilisation du programme, dans la langue de la fenêtre." width="100%"><br><sub>La fenêtre d'aide : les étapes d'utilisation du programme, dans la langue de la fenêtre.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="La fenêtre de mise à jour : un paquet signé plus récent n'est installé qu'après votre confirmation." width="100%"><br><sub>La fenêtre de mise à jour : un paquet signé plus récent n'est installé qu'après votre confirmation.</sub></td>
+</tr>
+</table>
+<!-- /urtc-shots -->
 
 **Enregistreur de défauts, fonctions optionnelles, banc du rack et vue thermique (nouveau, vérifié avec des simulations seulement) :** le tableau lit la boîte noire de la carte (`0x1A8` / `0x1A9`) et l'enregistre en CSV et JSON, automatiquement une fois pour chaque erreur signalée par la carte quand cette option est activée ; il active les fonctions optionnelles du firmware (`0x1AE` / `0x1AF`, désactivées par défaut, effet au prochain démarrage) ; il propose un rack d'outils simulé avec le protocole série d'URTC-SMART-RACK, l'identité de chaque tête (type et numéro de série) et l'export d'une page d'état ; et il affiche l'image d'inspection thermique en fausses couleurs (une image simulée l'indique). Les noms et types d'outils viennent désormais des profils d'outil partagés d'URTC-COMMON. Rien de cela n'a été utilisé avec une vraie carte.
 
 **PID du chauffage (nouveau, vérifié avec des simulations seulement) :** le pupitre lit l'état du PID du chauffage du firmware (`0x1B9` / `0x1BA` : les gains en vigueur, l'état et la sortie du dernier cycle de régulation), enregistre des gains (de 0 à 600) et lance ou annule l'autoréglage par relais, qui chauffe la panne autour de la consigne actuelle du fer à souder (100 à 445 C) et enregistre les gains trouvés. Enregistrer des gains et lancer l'autoréglage demandent la confirmation habituelle ; annuler non. La tête simulée de la ligne de commande (`--transport simulate`) répond aussi à ces trames. La fonction doit d'abord être activée parmi les fonctions optionnelles ; rien de cela n'a été utilisé avec une vraie carte.
 
 Ces images montrent la vraie fenêtre, dessinée sans écran telle qu'elle s'ouvre (rien de connecté, rien d'envoyé). Le guide parcourt le panneau, la fenêtre d'aide et celle de mise à jour.
-
-![La fenêtre, pas à pas](docs/screenshots/tester-deck.png)
 
 [Guide avec images](docs/WINDOW_GUIDE.md)
 

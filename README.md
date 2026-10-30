@@ -108,17 +108,26 @@ This program can look for a newer version of itself: the "Check for updates" but
 
 ## 🖼️ Screenshots
 
-<p align="center">
-  <img src="images/URTC_TESTER_V1_1.png" alt="URTC Tester window" width="700">
-</p>
+<!-- urtc-shots -->
+Captured at 1920×1080 on a test bench, with sample data and no real installation behind them.
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="The window as it opens: the transport gate, the listen-only safety mode, the tool profiles and the identity and health checkpoints." width="100%"><br><sub>The window as it opens: the transport gate, the listen-only safety mode, the tool profiles and the identity and health checkpoints.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Tool heads on the bus: a modelled bus with six heads, one in each state a head can be in (selected, address conflict, fault latched, in its bootloader, lost and ready)." width="100%"><br><sub>Tool heads on the bus: a modelled bus with six heads, one in each state a head can be in (selected, address conflict, fault latched, in its bootloader, lost and ready).</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="The Help window: the steps for using the program, written in the language of the window." width="100%"><br><sub>The Help window: the steps for using the program, written in the language of the window.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="The update window: a newer signed package is installed only after you confirm it." width="100%"><br><sub>The update window: a newer signed package is installed only after you confirm it.</sub></td>
+</tr>
+</table>
+<!-- /urtc-shots -->
 
 **Fault recorder, optional functions, rack bench and thermal view (new, checked with fakes only):** the deck reads the black box of the board (`0x1A8` / `0x1A9`) and saves it as CSV and JSON, automatically once for each error the board reports when that option is on; it switches the optional firmware functions (`0x1AE` / `0x1AF`, off by default, acting after the next power-up); it has a simulated tool rack with the serial protocol of URTC-SMART-RACK, the identity of each head (type and serial number) and an export of a status page; and it shows the thermal inspection image in false colour (a simulated image says so). The tool names and kinds now come from the shared tool profiles of URTC-COMMON. None of it has been used with a real board.
 
 **Heater PID (new, checked with fakes only):** the deck reads the state of the heater PID of the firmware (`0x1B9` / `0x1BA`: the gains in force, the state and the output of the last control cycle), stores gains (0 to 600) and starts or aborts the relay autotune, which heats the tip around the current set-point of the soldering iron (100 to 445 C) and stores the gains it finds. Storing gains and starting the autotune ask for the usual confirmation; aborting does not. The simulated head of the command line (`--transport simulate`) answers these frames too. The function must be switched on first among the optional functions; none of it has been used with a real board.
 
 These pictures are the real window, drawn without a screen as it opens (nothing connected, nothing sent). The guide goes through the deck, the Help window and the update window.
-
-![The window, step by step](docs/screenshots/tester-deck.png)
 
 [Guide with pictures](docs/WINDOW_GUIDE.md)
 

@@ -110,17 +110,26 @@ Este programa puede buscar una versión más nueva de sí mismo: el botón «Bus
 
 ## 🖼️ Capturas de pantalla
 
-<p align="center">
-  <img src="images/URTC_TESTER_V1_1.png" alt="Ventana de URTC Tester" width="700">
-</p>
+<!-- urtc-shots -->
+Capturadas a 1920×1080 en un banco de pruebas, con datos de ejemplo y sin ninguna instalación real detrás.
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="La ventana al abrirse: la puerta de transporte, el modo seguro de solo escucha, los perfiles de herramienta y los puntos de control de identidad y salud." width="100%"><br><sub>La ventana al abrirse: la puerta de transporte, el modo seguro de solo escucha, los perfiles de herramienta y los puntos de control de identidad y salud.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Cabezales en el bus: un bus modelado con seis cabezales, uno en cada estado posible (seleccionado, conflicto de dirección, fallo retenido, en su bootloader, perdido y listo)." width="100%"><br><sub>Cabezales en el bus: un bus modelado con seis cabezales, uno en cada estado posible (seleccionado, conflicto de dirección, fallo retenido, en su bootloader, perdido y listo).</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="La ventana de Ayuda: los pasos para usar el programa, escritos en el idioma de la ventana." width="100%"><br><sub>La ventana de Ayuda: los pasos para usar el programa, escritos en el idioma de la ventana.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="La ventana de actualizaciones: un paquete firmado más reciente solo se instala después de que lo confirmes." width="100%"><br><sub>La ventana de actualizaciones: un paquete firmado más reciente solo se instala después de que lo confirmes.</sub></td>
+</tr>
+</table>
+<!-- /urtc-shots -->
 
 **Registrador de fallos, funciones opcionales, banco de rack y vista térmica (nuevo, comprobado solo con simulaciones):** el panel lee la caja negra de la placa (`0x1A8` / `0x1A9`) y la guarda como CSV y JSON, automáticamente una vez por cada error que la placa indica cuando esa opción está activada; activa las funciones opcionales del firmware (`0x1AE` / `0x1AF`, apagadas por defecto, con efecto tras el próximo arranque); tiene un rack de herramientas simulado con el protocolo serie de URTC-SMART-RACK, la identidad de cada cabezal (tipo y número de serie) y la exportación de una página de estado; y muestra la imagen de inspección térmica en falso color (una imagen simulada lo dice). Los nombres y tipos de herramienta ahora salen de los perfiles de herramienta compartidos de URTC-COMMON. Nada de esto se ha usado con una placa real.
 
 **PID del calentador (nuevo, comprobado solo con simulaciones):** el panel lee el estado del PID del calentador del firmware (`0x1B9` / `0x1BA`: las ganancias en vigor, el estado y la salida del último ciclo de control), guarda ganancias (de 0 a 600) y inicia o cancela el autoajuste por relé, que calienta la punta alrededor de la consigna actual del soldador (100 a 445 C) y guarda las ganancias que encuentra. Guardar ganancias e iniciar el autoajuste piden la confirmación habitual; cancelar no. La cabeza simulada de la línea de comandos (`--transport simulate`) también responde a estas tramas. Hay que activar antes la función entre las funciones opcionales; nada de esto se ha usado con una placa real.
 
 Estas imágenes son la ventana real, dibujada sin pantalla tal como se abre (nada conectado, nada enviado). La guía recorre el panel, la ventana de Ayuda y la de actualización.
-
-![La ventana, paso a paso](docs/screenshots/tester-deck.png)
 
 [Guía con imágenes](docs/WINDOW_GUIDE.md)
 

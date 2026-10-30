@@ -112,17 +112,26 @@ Dieses Programm kann nach einer neueren Version seiner selbst suchen: Die Schalt
 
 ## 🖼️ Screenshots
 
-<p align="center">
-  <img src="images/URTC_TESTER_V1_1.png" alt="URTC Tester Fenster" width="700">
-</p>
+<!-- urtc-shots -->
+Aufgenommen mit 1920×1080 auf einem Prüfstand, mit Beispieldaten und ohne eine echte Anlage dahinter.
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="Das Fenster beim Öffnen: das Transport-Tor, der Sicherheitsmodus „nur lauschen“, die Werkzeugprofile und die Kontrollpunkte für Identität und Zustand." width="100%"><br><sub>Das Fenster beim Öffnen: das Transport-Tor, der Sicherheitsmodus „nur lauschen“, die Werkzeugprofile und die Kontrollpunkte für Identität und Zustand.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Werkzeugköpfe am Bus: ein modellierter Bus mit sechs Köpfen, jeder in einem anderen möglichen Zustand (gewählt, Adresskonflikt, Fehler gehalten, im Bootloader, verloren und bereit)." width="100%"><br><sub>Werkzeugköpfe am Bus: ein modellierter Bus mit sechs Köpfen, jeder in einem anderen möglichen Zustand (gewählt, Adresskonflikt, Fehler gehalten, im Bootloader, verloren und bereit).</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="Das Hilfefenster: die Schritte zur Benutzung des Programms, in der Sprache des Fensters." width="100%"><br><sub>Das Hilfefenster: die Schritte zur Benutzung des Programms, in der Sprache des Fensters.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="Das Update-Fenster: ein neueres signiertes Paket wird erst nach deiner Bestätigung installiert." width="100%"><br><sub>Das Update-Fenster: ein neueres signiertes Paket wird erst nach deiner Bestätigung installiert.</sub></td>
+</tr>
+</table>
+<!-- /urtc-shots -->
 
 **Fehlerrekorder, optionale Funktionen, Rack-Prüfstand und Wärmebild (neu, nur mit Attrappen geprüft):** Das Deck liest die Blackbox der Platine (`0x1A8` / `0x1A9`) und speichert sie als CSV und JSON, bei eingeschalteter Option automatisch einmal für jeden gemeldeten Fehler; es schaltet die optionalen Firmware-Funktionen (`0x1AE` / `0x1AF`, standardmäßig aus, wirksam nach dem nächsten Einschalten); es hat ein simuliertes Werkzeug-Rack mit dem seriellen Protokoll von URTC-SMART-RACK, der Identität jedes Kopfes (Typ und Seriennummer) und dem Export einer Statusseite; und es zeigt das Wärmebild der thermischen Inspektion in Falschfarben (ein simuliertes Bild sagt das). Die Werkzeugnamen und -arten stammen jetzt aus den gemeinsamen Werkzeugprofilen von URTC-COMMON. Nichts davon wurde mit einer echten Platine benutzt.
 
 **Heizer-PID (neu, nur mit Attrappen geprüft):** das Deck liest den Zustand des Heizer-PID der Firmware (`0x1B9` / `0x1BA`: die gültigen Verstärkungen, den Zustand und den Ausgang des letzten Regelzyklus), speichert Verstärkungen (0 bis 600) und startet oder bricht den Relais-Autotune ab, der die Spitze um den aktuellen Sollwert des Lötkolbens (100 bis 445 C) heizt und die gefundenen Verstärkungen speichert. Verstärkungen speichern und den Autotune starten verlangen die übliche Bestätigung, das Abbrechen nicht. Der simulierte Kopf der Kommandozeile (`--transport simulate`) beantwortet diese Frames ebenfalls. Die Funktion muss vorher bei den optionalen Funktionen eingeschaltet werden; nichts davon wurde mit einer echten Platine benutzt.
 
 Diese Bilder zeigen das echte Fenster, ohne Bildschirm gezeichnet, so wie es sich öffnet (nichts verbunden, nichts gesendet). Die Anleitung führt durch das Deck, das Hilfefenster und das Update-Fenster.
-
-![Das Fenster, Schritt für Schritt](docs/screenshots/tester-deck.png)
 
 [Anleitung mit Bildern](docs/WINDOW_GUIDE.md)
 

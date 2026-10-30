@@ -62,7 +62,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   └── urtc_icon.png           Same, PNG form (Linux)
 ├── images/
 │   ├── URTC_TESTER_BANNER.svg  Logo banner shown at the top of this README
-│   └── URTC_TESTER_V1_1.png    Screenshot of the tool's main window (see Photos below)
+│   └── screenshots/            The pictures of the README (tools/capture_screens.py --readme)
 ├── language/
 │   ├── english.lng             Default language, plain-text KEY=Value strings
 │   ├── spanish.lng
