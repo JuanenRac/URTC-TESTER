@@ -8,6 +8,7 @@
 | `selftest` | The same checks and the same at-rest commands as the self-test of the deck, for the tool that answers. |
 | `run-plan FILE` | Runs a test plan (below). |
 | `validate-plan FILE` | Checks a plan without opening any bus. |
+| `history [FOLDER]` | Lists the evidence records (`urtc-evidence/1`) of a folder (by default the `--out` folder), newest first, and checks each one: a record edited after it was written is listed as not valid and the exit status is 1. `--json` prints the list with its summary. Opens no bus. |
 
 | Option | Meaning |
 |---|---|

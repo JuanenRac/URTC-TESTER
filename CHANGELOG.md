@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The evidence of the runs can be listed from the command line:** `urtc_tester.py --headless history [FOLDER]` reads the evidence records (`urtc-evidence/1`) of a folder, checks each one and lists them newest first (`--json` for the list with its summary); a record edited after it was written is listed as not valid and the exit status is 1. It opens no bus. The shared code is the history of the common evidence.
 - **The rack bench reads the answer of the rack:** the simulated rack now answers every order with its reply frame (an acknowledgement, or a refusal with the reason: wrong length, no tool in the slot, temperature above the limit, invalid tool, no heater, held for coming too soon, unknown command), the bench reads that frame back and says the reason in the language of the window (eight languages), and a second order for one tool sent sooner than the minimum interval is held back as the firmware does. The shared simulator and the vectors are the current ones of the common code.
 
 ## [0.4.3] - The evidence of every test in the common format, its own mark and the universal README

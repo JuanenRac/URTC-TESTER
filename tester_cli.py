@@ -11,6 +11,7 @@ For a production line, a bench script or a CI job that has no display. Commands:
     selftest       the at-rest communication check of the tool that answers
     run-plan FILE  a test plan (see tester_plan.py and docs/HEADLESS.md)
     validate-plan FILE   check a plan without touching a bus
+    history [FOLDER]     list the evidence records (urtc-evidence/1) of a folder (default: --out), checking each one; touches no bus
 
 Every command that touches a bus writes a log of the frames (<out>/<name>_<time>.log) and a result record next to it
 (<name>_<time>.json) that names the log by its SHA-256, like the record of the deck. The text it prints is English, as the
@@ -42,8 +43,8 @@ def _say(message: str) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="urtc_tester.py --headless", description="URTC Tester without a window: identify, self-test and run test plans against a tool head.")
-    parser.add_argument("command", choices=("info", "selftest", "run-plan", "validate-plan"))
-    parser.add_argument("plan", nargs="?", help="the plan file, for run-plan and validate-plan")
+    parser.add_argument("command", choices=("info", "selftest", "run-plan", "validate-plan", "history"))
+    parser.add_argument("plan", nargs="?", help="the plan file, for run-plan and validate-plan; the folder of the records, for history")
     parser.add_argument("--transport", choices=TRANSPORTS, default="serial",
                         help="serial (SLCAN adapter, default), socketcan (Linux), python-can (PCAN, Kvaser, gs_usb ...), simulate (an in-memory tool head, "
                              "nothing real is touched) or replay (the frames of a .trc/.asc trace)")
@@ -123,9 +124,23 @@ def write_report(report, plan_name: str, adapter: str, out_dir: Path) -> tuple[P
     return log_path, record_path
 
 
+def _history(args) -> int:
+    """The evidence records of a folder, listed and checked (the same view as the other programs); 1 when one of them fails its check."""
+    from urtc_can import evidence_history
+    try:
+        entries = evidence_history.select(evidence_history.load_folder(args.plan or args.out))
+    except FileNotFoundError as exc:
+        _say(f"ERROR: {exc}")
+        return EXIT_USAGE
+    _say(evidence_history.to_json(entries).rstrip("\n") if args.json else evidence_history.to_text(entries))
+    return EXIT_FAIL if any(not entry.valid for entry in entries) else EXIT_PASS
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.command == "history":
+        return _history(args)
     if args.command in ("run-plan", "validate-plan"):
         if not args.plan:
             _say(f"ERROR: {args.command} needs the plan file.")

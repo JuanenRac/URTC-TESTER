@@ -18,6 +18,10 @@
       "from": "src/urtc_common/evidence.py",
       "sha256": "d51277bc5cd67f975f09966d70e64280244a767b26c50d2a109d8b9156f8bb75"
     },
+    "evidence_history.py": {
+      "from": "src/urtc_common/evidence_history.py",
+      "sha256": "63abdaf9e43532e9124a3037a4c54cf9a5e48b8b40018cf7a9a15264feaedb25"
+    },
     "framing.py": {
       "from": "src/urtc_common/framing.py",
       "sha256": "b26b47e7fec0ed1eb04f560221f42dae1b0706952084fd0787440a35b153ce2f"

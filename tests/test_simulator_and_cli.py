@@ -265,3 +265,19 @@ def test_a_trace_replays_only_what_arrived_not_what_the_monitor_transmitted():
     asc = "   0.000000 1  110             Tx   d 0 \n   0.005000 1  111             Rx   d 2 0001\n"
     assert [(f[1], f[2]) for f in parse_trace(text)] == [(0x111, b"\x00\x01")]
     assert [(f[1], f[2]) for f in parse_trace(asc)] == [(0x111, b"\x00\x01")]
+
+
+def test_the_history_command_lists_the_evidence_records_and_fails_on_one_that_was_edited(tmp_path, capsys):
+    from urtc_can import evidence
+
+    good = evidence.build(kind="test", outcome="pass", timestamp_utc="2026-01-02T10:00:00Z", tool="URTC-TESTER", tool_version="0.4.3", subject={"name": "head-1"})
+    (tmp_path / "urtc_evidence_a.json").write_text(json.dumps(good), encoding="utf-8")
+    assert tester_cli.main(["history", str(tmp_path)]) == tester_cli.EXIT_PASS
+    assert "URTC-TESTER" in capsys.readouterr().out
+    assert tester_cli.main(["history", str(tmp_path), "--json"]) == tester_cli.EXIT_PASS
+    assert json.loads(capsys.readouterr().out)["summary"]["valid"] == 1
+    edited = dict(good, outcome="fail")                                  # changed after it was written: its digest no longer matches
+    (tmp_path / "urtc_evidence_b.json").write_text(json.dumps(edited), encoding="utf-8")
+    assert tester_cli.main(["history", str(tmp_path)]) == tester_cli.EXIT_FAIL
+    assert "NOT VALID" in capsys.readouterr().out
+    assert tester_cli.main(["history", str(tmp_path / "missing")]) == tester_cli.EXIT_USAGE
