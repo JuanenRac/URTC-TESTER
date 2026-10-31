@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.4.6] - The evidence record can be signed with Ed25519 with a switch that is off by default and a public key to check it, shown in the history and the report
 
 - **The evidence record can be signed with Ed25519:** with `"sign_evidence": true` in `config.json` (off by default) or `--sign-evidence` for one run, the evidence a run writes carries a signature made with the key of the user (file named by `"record_key_file"`, else the default of the family), so it shows who wrote it as well as that it was not edited; the key is made on first use and is never printed or put in a record, and a signature that cannot be made writes no evidence file. `history` and `report` check every signature and show its state and the id of its key in the eight languages (Portuguese of Portugal); `--public-key HEX` tells a signature by another key apart, and a signature that does not match fails the exit status. The shared copy carries the signing module and the new report texts. `docs/HEADLESS.md` says what the signature proves and what it does not.
 
