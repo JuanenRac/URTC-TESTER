@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.4.4] - A History window with the operations of the tester, the lines of a test plan in the language of the program, the evidence listed from the command line and a rack bench that reads the answer of the rack
 
 - **A History window with the operations of the tester:** a new button next to Help opens the history of operations, the same window as in the flasher and the updater (shared from URTC-COMMON, in the eight languages): it lists the evidence records the tester wrote in its logs folder, newest first, with the kind, result, tool, board and versions, and marks as not valid a record that was edited after it was written or a file that is not a record. It can be filtered by result and text, reads only, and changes nothing on disk. The tool that prints the notes of a release (`tools/changelog_section.py`, with `--compat` it adds the compatibility table of `docs/COMPATIBILITY.md`) travels with the program.
 - **The lines of a test plan appear in the language of the program:** each message a step gives (no answer, wrong tool, firmware too old, value out of range, operator confirmation...) is shown in the window in the chosen language; the log, the result record and the command line keep the English text. The copy of the shared CAN layer is refreshed to URTC-COMMON 0.1.0.
