@@ -117,6 +117,7 @@ from urtc_can.help_qt import HelpModel
 from urtc_can.multinode_host import MultinodeHost
 from urtc_can.node_picker import GatedTransport, NodePicker, config_reader_for, transport_io
 from urtc_can.node_picker_qt import NodePickerModel
+from urtc_can.evidence_history_qt import EvidenceHistoryModel
 from urtc_can.protocol import decode_error_counters_response, CAN_ID_ERROR_COUNTERS_RESPONSE, CAN_ID_QUERY_ERROR_COUNTERS, CAN_ID_SLAVE_APP_PATCH, CAN_ID_SLAVE_REG_READ
 from urtc_can.update_qt import UpdateModel
 from urtc_ui import LanguageModel, connection_badge, format_can_id, format_hex
@@ -181,6 +182,7 @@ class TesterQtBridge(QObject):
         self._busy = False
         self._update_model: UpdateModel | None = None
         self._help_model: HelpModel | None = None
+        self._history_model: EvidenceHistoryModel | None = None
         self._node_model: NodePickerModel | None = None
         self._slave_frames: list[tuple[int, bytes]] = []
         # Replay of a recorded trace: its own rows, apart from the monitor of the bus, and a timer that only moves the player.
@@ -345,6 +347,13 @@ class TesterQtBridge(QObject):
         if self._help_model is None:
             self._help_model = HelpModel("tester", lambda: tester_config._current_language, parent=self)
         return self._help_model
+
+    @Property(QObject, constant=True)
+    def history(self) -> QObject:
+        """The history of operations: the evidence records the tester wrote in its logs folder, each one checked (it only reads)."""
+        if self._history_model is None:
+            self._history_model = EvidenceHistoryModel(lambda: tester_config.LOGS_FOLDER, lambda: tester_config._current_language, parent=self)
+        return self._history_model
 
     @Property(str, constant=True)
     def title(self) -> str:
