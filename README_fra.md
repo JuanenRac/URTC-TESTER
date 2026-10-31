@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/Licence-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Langage-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-576-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-597-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocole-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.4.4` |
 | Maturité | Fonctionnel |
-| Tests | 576 (`python -m pytest -q`) |
+| Tests | 597 (`python -m pytest -q`) |
 | Technologie | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
@@ -400,6 +400,12 @@ remettre à quiconque déboguant un problème de tête d'outil.
 
 **Sans matériel :** une carte virtuelle remplace l'adaptateur et la carte. Lancez `python -m urtc_can.virtual_board`, puis donnez son URL série comme port (`--transport serial --port socket://127.0.0.1:7777`) ; la carte répond à la demande de version et à l'état rapide comme une application, si bien que `info` et les plans de requêtes s'exécutent de bout en bout sans rien de branché. C'est un modèle écrit d'après la description du protocole, pas une tête d'outil : l'autotest d'un outil signale ce qu'il ne peut pas lire.
 
+- **Historique des opérations.** Le bouton **Historique**, à côté d'Aide, ouvre les enregistrements de preuve (`urtc-evidence/1`) que URTC-TESTER a écrits dans son dossier de journaux. Chaque ligne indique le type, le résultat, l'outil, la carte et les versions, du plus récent au plus ancien ; un enregistrement modifié après son écriture, un fichier qui n'est pas du JSON ou un enregistrement d'un autre format est affiché comme non valide, avec ce qui ne va pas. La liste peut être filtrée par résultat et par texte ou réduite aux enregistrements en échec ; elle relit le dossier à chaque ouverture, affiche au plus 500 lignes (et indique combien il y en a) et ne modifie rien sur le disque. C'est la même fenêtre dans URTC-FLASHER, URTC-TESTER et URTC-UPDATER, partagée depuis URTC-COMMON, dans les huit langues. En ligne de commande, `python urtc_tester.py --headless history [FOLDER] [--json]` liste les enregistrements d'un dossier, vérifie chacun et se termine avec le statut 1 si l'un n'est pas valide ; il n'ouvre aucun bus.
+
+- **Fichier d'identifiants personnalisés.** `urtc_custom_ids.json` doit contenir un objet JSON (`{"0x199": "Mon capteur"}`) ; un fichier qui contient une liste, ou tout autre contenu non valide, est ignoré avec un avertissement et le programme démarre avec les noms intégrés.
+
+- **Lignes du plan de test et banc du rack.** Chaque message qu'une étape d'un plan de test donne (pas de réponse, mauvais outil, firmware trop ancien, valeur hors limites, confirmation de l'opérateur...) s'affiche dans la langue de la fenêtre ; le journal, l'enregistrement du résultat et la ligne de commande gardent le texte anglais. Le banc simulé du rack répond à chaque ordre par sa trame de réponse (un acquittement, ou un refus avec le motif : longueur incorrecte, aucun outil dans l'emplacement, température au-dessus de la limite, outil invalide, pas de chauffage, retenu pour être arrivé trop tôt, commande inconnue), la relit et dit le motif dans la langue de la fenêtre ; un second ordre pour un outil avant l'intervalle minimal est retenu comme le fait le firmware.
+
 ## 🚀 Démarrage rapide
 
 Même schéma que le flasher :
@@ -470,12 +476,12 @@ sections 1 et 2 plutôt que de la dupliquer ici.
 <!-- urtc-section:compatibility -->
 ### Prérequis et compatibilité
 
-Les versions des programmes URTC qui fonctionnent ensemble, et la version du protocole que parle chacune, figurent dans le tableau de compatibilité que génère URTC-COMMON : [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
+Les versions des programmes URTC qui fonctionnent ensemble, et la version du protocole que parle chacune, figurent dans le tableau de compatibilité que génère URTC-COMMON : [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md). Les notes d'une version des dépôts qui portent `tools/changelog_section.py` (le firmware, le flasher, le tester et l'updater) sont la section du CHANGELOG de cette version suivie de ce tableau : `python tools/changelog_section.py VERSION --compat`.
 <!-- /urtc-section:compatibility -->
 
 ## 🧪 Tests
 
-La suite compte 576 tests (`python -m pytest -q` ; avec Qt sur une machine sans écran, `QT_QPA_PLATFORM=offscreen` ; ceux qui ont besoin de PySide6 sont ignorés sans lui) : les encodeurs et décodeurs de charge CAN de chaque famille d'outils, les transports SLCAN et SocketCAN face à des faux, la sonde d'identité, l'autotest, les renvois de surveillance, le contrôle de santé du bus, les plans de test et le mode sans fenêtre, l'export de session avec son hachage, les fichiers de langue et les panneaux Qt Quick. Quatre scripts à la racine (`verify_qt_*.py`) pilotent les panneaux Qt Quick de bout en bout avec une vraie boucle d'événements Qt. La CI exécute aussi `ruff check`, `python -m mypy` et `tools/ci_validate.py`. Rien de tout cela n'a tourné contre une vraie carte.
+La suite compte 597 tests (`python -m pytest -q` ; avec Qt sur une machine sans écran, `QT_QPA_PLATFORM=offscreen` ; ceux qui ont besoin de PySide6 sont ignorés sans lui) : les encodeurs et décodeurs de charge CAN de chaque famille d'outils, les transports SLCAN et SocketCAN face à des faux, la sonde d'identité, l'autotest, les renvois de surveillance, le contrôle de santé du bus, les plans de test et le mode sans fenêtre, l'export de session avec son hachage, les fichiers de langue et les panneaux Qt Quick. Quatre scripts à la racine (`verify_qt_*.py`) pilotent les panneaux Qt Quick de bout en bout avec une vraie boucle d'événements Qt. La CI exécute aussi `ruff check`, `python -m mypy` et `tools/ci_validate.py`. Rien de tout cela n'a tourné contre une vraie carte.
 
 ## 🏗️ Compilation et publication
 

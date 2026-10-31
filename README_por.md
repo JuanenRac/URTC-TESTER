@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-576-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-597-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Versão | `0.4.4` |
 | Maturidade | Funcional |
-| Testes | 576 (`python -m pytest -q`) |
+| Testes | 597 (`python -m pytest -q`) |
 | Tecnologia | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destino | O PC de quem o usa |
 | Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |
@@ -363,6 +363,12 @@ detetada) para entregar a quem estiver a depurar um problema numa cabeça de fer
 
 **Sem hardware:** uma placa virtual faz as vezes do adaptador e da placa. Execute `python -m urtc_can.virtual_board` e indique o seu URL série como porta (`--transport serial --port socket://127.0.0.1:7777`); a placa responde à consulta de versão e ao estado rápido como uma aplicação, pelo que `info` e os planos de consultas correm de ponta a ponta sem nada ligado. É um modelo escrito a partir da descrição do protocolo, não uma cabeça de ferramenta: o autoteste de uma ferramenta informa o que não consegue ler.
 
+- **Histórico das operações.** O botão **Histórico**, junto de Ajuda, abre os registos de evidência (`urtc-evidence/1`) que o URTC-TESTER escreveu na sua pasta de registos. Cada linha mostra o tipo, o resultado, a ferramenta, a placa e as versões, da mais recente para a mais antiga; um registo editado depois de escrito, um ficheiro que não é JSON ou um registo de outro formato é apresentado como não válido, com o que está errado. A lista pode ser filtrada por resultado e por texto ou reduzida aos registos que falham; lê a pasta de cada vez que abre, mostra no máximo 500 linhas (e indica quantas há) e não altera nada no disco. É a mesma janela no URTC-FLASHER, no URTC-TESTER e no URTC-UPDATER, partilhada a partir do URTC-COMMON, nos oito idiomas. Na linha de comandos, `python urtc_tester.py --headless history [FOLDER] [--json]` lista os registos de uma pasta, verifica cada um e termina com o estado 1 se algum não for válido; não abre nenhum bus.
+
+- **Ficheiro de identificadores próprios.** O `urtc_custom_ids.json` tem de conter um objeto JSON (`{"0x199": "O meu sensor"}`); um ficheiro que contenha uma lista, ou qualquer outro conteúdo inválido, é ignorado com um aviso e o programa arranca com os nomes incorporados.
+
+- **Linhas do plano de testes e bancada do rack.** Cada mensagem que um passo de um plano de testes dá (sem resposta, ferramenta errada, firmware demasiado antigo, valor fora do intervalo, confirmação do operador...) é mostrada na língua da janela; o registo, o registo de resultado e a linha de comandos mantêm o texto em inglês. A bancada simulada do rack responde a cada ordem com a sua trama de resposta (uma confirmação, ou uma recusa com o motivo: comprimento errado, sem ferramenta na ranhura, temperatura acima do limite, ferramenta inválida, sem aquecedor, retida por chegar cedo demais, comando desconhecido), lê-a e diz o motivo na língua da janela; uma segunda ordem para uma ferramenta antes do intervalo mínimo é retida como faz o firmware.
+
 ## 🚀 Início rápido
 
 O mesmo padrão do flasher:
@@ -433,12 +439,12 @@ secções 1 e 2, em vez de a duplicar aqui.
 <!-- urtc-section:compatibility -->
 ### Requisitos e compatibilidade
 
-As versões dos programas URTC que funcionam em conjunto, e a versão do protocolo que cada uma fala, constam da tabela de compatibilidade que o URTC-COMMON gera: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
+As versões dos programas URTC que funcionam em conjunto, e a versão do protocolo que cada uma fala, constam da tabela de compatibilidade que o URTC-COMMON gera: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md). As notas de uma versão dos repositórios que incluem `tools/changelog_section.py` (o firmware, o flasher, o tester e o updater) são a secção do CHANGELOG dessa versão seguida desta tabela: `python tools/changelog_section.py VERSION --compat`.
 <!-- /urtc-section:compatibility -->
 
 ## 🧪 Testes
 
-O conjunto tem 576 testes (`python -m pytest -q`; com Qt numa máquina sem ecrã, `QT_QPA_PLATFORM=offscreen`; os que precisam do PySide6 são ignorados sem ele): os codificadores e descodificadores de carga CAN de cada família de ferramentas, os transportes SLCAN e SocketCAN contra simulações, a sonda de identidade, o autoteste, os reenvios de vigilância, a verificação de saúde do barramento, os planos de teste e o modo sem janela, a exportação da sessão com o seu hash, os ficheiros de idioma e os painéis Qt Quick. Quatro scripts na raiz (`verify_qt_*.py`) comandam os painéis Qt Quick de ponta a ponta com um ciclo de eventos Qt real. A CI executa também `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Nada disto correu contra uma placa real.
+O conjunto tem 597 testes (`python -m pytest -q`; com Qt numa máquina sem ecrã, `QT_QPA_PLATFORM=offscreen`; os que precisam do PySide6 são ignorados sem ele): os codificadores e descodificadores de carga CAN de cada família de ferramentas, os transportes SLCAN e SocketCAN contra simulações, a sonda de identidade, o autoteste, os reenvios de vigilância, a verificação de saúde do barramento, os planos de teste e o modo sem janela, a exportação da sessão com o seu hash, os ficheiros de idioma e os painéis Qt Quick. Quatro scripts na raiz (`verify_qt_*.py`) comandam os painéis Qt Quick de ponta a ponta com um ciclo de eventos Qt real. A CI executa também `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Nada disto correu contra uma placa real.
 
 ## 🏗️ Compilação e publicação
 

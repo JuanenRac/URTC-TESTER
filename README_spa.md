@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Lenguaje-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-576-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-597-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocolo-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Versión | `0.4.4` |
 | Madurez | Funcional |
-| Tests | 576 (`python -m pytest -q`) |
+| Tests | 597 (`python -m pytest -q`) |
 | Tecnología | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destino | El PC de quien lo usa |
 | En hardware real | Solo simulado: probado con emuladores, dobles de prueba o simuladores; no consta ninguna ejecución en hardware real para esta versión |
@@ -395,6 +395,12 @@ entregar a quien esté depurando un problema de cabezal de herramienta.
 
 **Sin hardware:** una placa virtual hace el papel del adaptador y de la placa. Ejecuta `python -m urtc_can.virtual_board` y pasa su URL serie como puerto (`--transport serial --port socket://127.0.0.1:7777`); la placa responde a la consulta de versión y al estado rápido como una aplicación, de modo que `info` y los planes de consultas se ejecutan de principio a fin sin nada conectado. Es un modelo escrito a partir de la descripción del protocolo, no un cabezal de herramienta: el autotest de una herramienta informa de lo que no puede leer.
 
+- **Historial de operaciones.** El botón **Historial**, junto a Ayuda, abre los registros de evidencia (`urtc-evidence/1`) que URTC-TESTER escribió en su carpeta de registros. Cada fila muestra el tipo, el resultado, la herramienta, la placa y las versiones, de la más reciente a la más antigua; un registro editado después de escribirse, un archivo que no es JSON o un registro de otro formato se muestra como no válido, con lo que falla. La lista se puede filtrar por resultado y por texto o reducir a los registros que fallan; lee la carpeta cada vez que se abre, muestra como máximo 500 filas (e indica cuántas hay) y no cambia nada en el disco. Es la misma ventana en URTC-FLASHER, URTC-TESTER y URTC-UPDATER, compartida desde URTC-COMMON, en los ocho idiomas. Por línea de comandos, `python urtc_tester.py --headless history [FOLDER] [--json]` lista los registros de una carpeta, comprueba cada uno y sale con estado 1 si alguno no es válido; no abre ningún bus.
+
+- **Archivo de identificadores propios.** `urtc_custom_ids.json` debe contener un objeto JSON (`{"0x199": "Mi sensor"}`); un archivo con una lista, o con cualquier otro contenido no válido, se ignora con un aviso y el programa arranca con los nombres incorporados.
+
+- **Líneas del plan de pruebas y banco del rack.** Cada mensaje que da un paso de un plan de pruebas (sin respuesta, herramienta equivocada, firmware demasiado antiguo, valor fuera de rango, confirmación del operario...) se muestra en el idioma de la ventana; el registro, el registro de resultado y la línea de comandos conservan el texto en inglés. El banco simulado del rack responde a cada orden con su trama de respuesta (un acuse, o un rechazo con el motivo: longitud incorrecta, sin herramienta en la ranura, temperatura por encima del límite, herramienta no válida, sin calefactor, retenida por llegar demasiado pronto, orden desconocida), la lee y dice el motivo en el idioma de la ventana, y una segunda orden para una herramienta antes del intervalo mínimo se retiene como hace el firmware.
+
 ## 🚀 Inicio rápido
 
 Mismo patrón que el flasher:
@@ -464,12 +470,12 @@ secciones 1 y 2 en vez de duplicarlo aquí.
 <!-- urtc-section:compatibility -->
 ### Requisitos y compatibilidad
 
-Qué versiones de los programas de URTC funcionan juntas, y qué versión del protocolo habla cada una, figura en la tabla de compatibilidad que genera URTC-COMMON: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
+Qué versiones de los programas de URTC funcionan juntas, y qué versión del protocolo habla cada una, figura en la tabla de compatibilidad que genera URTC-COMMON: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md). Las notas de una versión de los repositorios que llevan `tools/changelog_section.py` (el firmware, el flasher, el tester y el updater) son la sección del CHANGELOG de esa versión seguida de esta tabla: `python tools/changelog_section.py VERSION --compat`.
 <!-- /urtc-section:compatibility -->
 
 ## 🧪 Pruebas
 
-La suite tiene 576 pruebas (`python -m pytest -q`; con Qt en un equipo sin pantalla, `QT_QPA_PLATFORM=offscreen`; las que necesitan PySide6 se omiten sin él): los codificadores y decodificadores de carga CAN de cada familia de herramientas, los transportes SLCAN y SocketCAN contra simulados, la sonda de identidad, el autotest, los reenvíos de vigilancia, la comprobación de salud del bus, los planes de prueba y el modo sin ventana, la exportación de sesión con su hash, los archivos de idioma y los paneles Qt Quick. Cuatro scripts en la raíz (`verify_qt_*.py`) manejan los paneles Qt Quick de extremo a extremo con un bucle de eventos Qt real. La CI ejecuta además `ruff check`, `python -m mypy` y `tools/ci_validate.py`. Nada de esto se ha ejecutado contra una placa real.
+La suite tiene 597 pruebas (`python -m pytest -q`; con Qt en un equipo sin pantalla, `QT_QPA_PLATFORM=offscreen`; las que necesitan PySide6 se omiten sin él): los codificadores y decodificadores de carga CAN de cada familia de herramientas, los transportes SLCAN y SocketCAN contra simulados, la sonda de identidad, el autotest, los reenvíos de vigilancia, la comprobación de salud del bus, los planes de prueba y el modo sin ventana, la exportación de sesión con su hash, los archivos de idioma y los paneles Qt Quick. Cuatro scripts en la raíz (`verify_qt_*.py`) manejan los paneles Qt Quick de extremo a extremo con un bucle de eventos Qt real. La CI ejecuta además `ruff check`, `python -m mypy` y `tools/ci_validate.py`. Nada de esto se ha ejecutado contra una placa real.
 
 ## 🏗️ Compilación y publicación
 

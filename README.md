@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-576-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-597-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.4.4` |
 | Maturity | Functional |
-| Tests | 576 (`python -m pytest -q`) |
+| Tests | 597 (`python -m pytest -q`) |
 | Stack | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |
@@ -363,6 +363,12 @@ tool) for handing to whoever's debugging a tool head issue.
 
 **Without hardware:** a virtual board stands in for the adapter and the board. Start `python -m urtc_can.virtual_board`, then give its serial URL to the port (`--transport serial --port socket://127.0.0.1:7777`); the board answers the version query and the quick state like an application, so `info` and plans of queries run end to end with nothing connected. It is a model written from the protocol description, not a tool head: the self-test of a tool reports what it cannot read.
 
+- **History of the operations.** The **History** button next to Help opens the evidence records (`urtc-evidence/1`) that URTC-TESTER wrote in its logs folder. Each row shows the kind, the result, the tool, the board and the versions, newest first; a record edited after it was written, a file that is not JSON or a record of another format is shown as not valid, with what is wrong. The list can be filtered by result and by text or reduced to the records that fail; it reads the folder each time it opens, shows at most 500 rows (and says how many there are) and changes nothing on disk. It is the same window in URTC-FLASHER, URTC-TESTER and URTC-UPDATER, shared from URTC-COMMON, in the eight languages. From the command line, `python urtc_tester.py --headless history [FOLDER] [--json]` lists the records of a folder, checks each one and exits with status 1 when any is not valid; it opens no bus.
+
+- **Custom identifier file.** `urtc_custom_ids.json` must hold a JSON object (`{"0x199": "My Sensor"}`); a file that holds a list, or any other invalid content, is ignored with a warning and the program starts with the built-in names.
+
+- **Test plan lines and the rack bench.** Each message a step of a test plan gives (no answer, wrong tool, firmware too old, value out of range, operator confirmation...) is shown in the language of the window; the log, the result record and the command line keep the English text. The simulated rack bench answers every order with its reply frame (an acknowledgement, or a refusal with the reason: wrong length, no tool in the slot, temperature above the limit, invalid tool, no heater, held back for coming too soon, unknown command), reads it back and says the reason in the language of the window, and a second order for one tool sooner than the minimum interval is held back as the firmware does.
+
 ## 🚀 Quick start
 
 Same pattern as the flasher:
@@ -433,12 +439,12 @@ sections 1 and 2 rather than duplicating it here.
 <!-- urtc-section:compatibility -->
 ### Requirements & compatibility
 
-Which versions of the URTC programs work together, and which protocol version each one speaks, is listed in the compatibility table that URTC-COMMON generates: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
+Which versions of the URTC programs work together, and which protocol version each one speaks, is listed in the compatibility table that URTC-COMMON generates: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md). The notes of a release of the repositories that carry `tools/changelog_section.py` (the firmware, the flasher, the tester and the updater) are the section of the CHANGELOG of that version followed by this table: `python tools/changelog_section.py VERSION --compat`.
 <!-- /urtc-section:compatibility -->
 
 ## 🧪 Testing
 
-The suite has 576 tests (`python -m pytest -q`; with Qt on a machine with no screen, `QT_QPA_PLATFORM=offscreen`; the ones that need PySide6 skip without it): the CAN payload encoders and decoders of every tool family, the SLCAN and SocketCAN transports against fakes, the identity probe, the self-test, the watchdog keepalives, the bus-health check, the test plans and the headless mode, the session export with its hash, the language files and the Qt Quick panels. Four scripts at the root (`verify_qt_*.py`) drive the Qt Quick panels end to end with a real Qt event loop. CI also runs `ruff check`, `python -m mypy` and `tools/ci_validate.py`. None of it has run against a real board.
+The suite has 597 tests (`python -m pytest -q`; with Qt on a machine with no screen, `QT_QPA_PLATFORM=offscreen`; the ones that need PySide6 skip without it): the CAN payload encoders and decoders of every tool family, the SLCAN and SocketCAN transports against fakes, the identity probe, the self-test, the watchdog keepalives, the bus-health check, the test plans and the headless mode, the session export with its hash, the language files and the Qt Quick panels. Four scripts at the root (`verify_qt_*.py`) drive the Qt Quick panels end to end with a real Qt event loop. CI also runs `ruff check`, `python -m mypy` and `tools/ci_validate.py`. None of it has run against a real board.
 
 ## 🏗️ Build & Release
 

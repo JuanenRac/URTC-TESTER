@@ -38,7 +38,7 @@
 |---|---|
 | Version | `0.4.4` |
 | Reifegrad | Funktionsfähig |
-| Tests | 576 (`python -m pytest -q`) |
+| Tests | 597 (`python -m pytest -q`) |
 | Technik | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
@@ -404,6 +404,12 @@ Werkzeugkopfproblem debuggt.
 
 **Ohne Hardware:** Eine virtuelle Platine ersetzt Adapter und Platine. Starte `python -m urtc_can.virtual_board` und gib ihre serielle URL als Port an (`--transport serial --port socket://127.0.0.1:7777`); die Platine beantwortet die Versionsabfrage und den Schnellstatus wie eine Anwendung, sodass `info` und Pläne aus Abfragen ohne angeschlossene Geräte vollständig durchlaufen. Sie ist ein Modell nach der Protokollbeschreibung, kein Werkzeugkopf: Der Selbsttest eines Werkzeugs meldet, was er nicht lesen kann.
 
+- **Verlauf der Vorgänge.** Die Schaltfläche **Verlauf** neben Hilfe öffnet die Nachweisdatensätze (`urtc-evidence/1`), die URTC-TESTER in seinem Protokollordner geschrieben hat. Jede Zeile zeigt die Art, das Ergebnis, das Werkzeug, die Platine und die Versionen, die neuesten zuerst; ein nach dem Schreiben bearbeiteter Eintrag, eine Datei, die kein JSON ist, oder ein Eintrag eines anderen Formats wird als ungültig angezeigt, mit dem, was nicht stimmt. Die Liste lässt sich nach Ergebnis und Text filtern oder auf die fehlgeschlagenen Einträge beschränken; sie liest den Ordner bei jedem Öffnen neu, zeigt höchstens 500 Zeilen (und nennt die Gesamtzahl) und ändert nichts auf dem Datenträger. Es ist dasselbe Fenster in URTC-FLASHER, URTC-TESTER und URTC-UPDATER, aus URTC-COMMON geteilt, in den acht Sprachen. Auf der Kommandozeile listet `python urtc_tester.py --headless history [FOLDER] [--json]` die Einträge eines Ordners auf, prüft jeden und endet mit Status 1, wenn einer ungültig ist; es öffnet keinen Bus.
+
+- **Datei mit eigenen Kennungen.** `urtc_custom_ids.json` muss ein JSON-Objekt enthalten (`{"0x199": "Mein Sensor"}`); eine Datei mit einer Liste oder einem anderen ungültigen Inhalt wird mit einer Warnung ignoriert, und das Programm startet mit den eingebauten Namen.
+
+- **Zeilen des Testplans und die Rack-Werkbank.** Jede Meldung, die ein Schritt eines Testplans liefert (keine Antwort, falsches Werkzeug, Firmware zu alt, Wert außerhalb des Bereichs, Bestätigung durch den Bediener ...), erscheint in der Sprache des Fensters; das Protokoll, der Ergebnisdatensatz und die Kommandozeile behalten den englischen Text. Die simulierte Rack-Werkbank beantwortet jeden Befehl mit seinem Antwortframe (eine Quittung oder eine Ablehnung mit Grund: falsche Länge, kein Werkzeug im Steckplatz, Temperatur über dem Grenzwert, ungültiges Werkzeug, keine Heizung, zu früh zurückgehalten, unbekannter Befehl), liest ihn zurück und nennt den Grund in der Sprache des Fensters; ein zweiter Befehl für ein Werkzeug vor dem Mindestabstand wird wie in der Firmware zurückgehalten.
+
 ## 🚀 Schnellstart
 
 Dasselbe Schema wie der Flasher:
@@ -473,12 +479,12 @@ Abschnitte 1 und 2, statt es hier zu duplizieren.
 <!-- urtc-section:compatibility -->
 ### Voraussetzungen und Kompatibilität
 
-Welche Versionen der URTC-Programme zusammenarbeiten und welche Protokollversion jede spricht, steht in der Kompatibilitätstabelle, die URTC-COMMON erzeugt: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
+Welche Versionen der URTC-Programme zusammenarbeiten und welche Protokollversion jede spricht, steht in der Kompatibilitätstabelle, die URTC-COMMON erzeugt: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md). Die Notizen einer Version der Repositories, die `tools/changelog_section.py` mitführen (die Firmware, der Flasher, der Tester und der Updater), sind der Abschnitt des CHANGELOG dieser Version, gefolgt von dieser Tabelle: `python tools/changelog_section.py VERSION --compat`.
 <!-- /urtc-section:compatibility -->
 
 ## 🧪 Tests
 
-Die Suite hat 576 Tests (`python -m pytest -q`; mit Qt auf einem Rechner ohne Bildschirm `QT_QPA_PLATFORM=offscreen`; die, die PySide6 brauchen, werden ohne übersprungen): die CAN-Nutzdaten-Kodierer und -Dekodierer jeder Werkzeugfamilie, die SLCAN- und SocketCAN-Transporte gegen Attrappen, die Identitätsabfrage, der Selbsttest, die Watchdog-Keepalives, die Busgesundheitsprüfung, die Testpläne und der Modus ohne Fenster, der Sitzungsexport mit seinem Hash, die Sprachdateien und die Qt-Quick-Panels. Vier Skripte im Wurzelverzeichnis (`verify_qt_*.py`) steuern die Qt-Quick-Panels mit einer echten Qt-Ereignisschleife durchgängig an. Die CI führt außerdem `ruff check`, `python -m mypy` und `tools/ci_validate.py` aus. Nichts davon lief gegen eine echte Platine.
+Die Suite hat 597 Tests (`python -m pytest -q`; mit Qt auf einem Rechner ohne Bildschirm `QT_QPA_PLATFORM=offscreen`; die, die PySide6 brauchen, werden ohne übersprungen): die CAN-Nutzdaten-Kodierer und -Dekodierer jeder Werkzeugfamilie, die SLCAN- und SocketCAN-Transporte gegen Attrappen, die Identitätsabfrage, der Selbsttest, die Watchdog-Keepalives, die Busgesundheitsprüfung, die Testpläne und der Modus ohne Fenster, der Sitzungsexport mit seinem Hash, die Sprachdateien und die Qt-Quick-Panels. Vier Skripte im Wurzelverzeichnis (`verify_qt_*.py`) steuern die Qt-Quick-Panels mit einer echten Qt-Ereignisschleife durchgängig an. Die CI führt außerdem `ruff check`, `python -m mypy` und `tools/ci_validate.py` aus. Nichts davon lief gegen eine echte Platine.
 
 ## 🏗️ Build und Veröffentlichung
 

@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The Help window has a History step and the README describes the History window:** the quick guide (eight languages) says what the History button shows, the Interfaces section of the README in the eight languages describes the window and its command line form, and `docs/WINDOW_GUIDE.md` has a History section.
 - **A custom identifier file that holds a list no longer stops the program:** `urtc_custom_ids.json` with a JSON list instead of an object made the program fail on start; it is now ignored with a warning, like any other invalid file.
 
 ## [0.4.4] - A History window with the operations of the tester, the lines of a test plan in the language of the program, the evidence listed from the command line and a rack bench that reads the answer of the rack

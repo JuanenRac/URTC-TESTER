@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-576-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-597-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | バージョン | `0.4.4` |
 | 成熟度 | 機能する |
-| テスト | 576 (`python -m pytest -q`) |
+| テスト | 597 (`python -m pytest -q`) |
 | 技術 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 対象 | 利用者の PC |
 | 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
@@ -374,6 +374,12 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 
 **ハードウェアなしで:** 仮想ボードがアダプターとボードの代わりを務めます。`python -m urtc_can.virtual_board` を起動し、そのシリアル URL をポートとして指定します（`--transport serial --port socket://127.0.0.1:7777`）。ボードはバージョン問い合わせとクイック状態にアプリケーションとして応答するので、何も接続しなくても `info` や問い合わせだけのプランを最後まで実行できます。これはプロトコルの記述から作ったモデルであり、ツールヘッドではありません。ツールのセルフテストは読み取れないものを報告します。
 
+- **操作履歴。** ヘルプの隣の**履歴**ボタンで、URTC-TESTER がログフォルダーに書き込んだ証跡レコード（`urtc-evidence/1`）を開きます。各行に、種類、結果、ツール、ボード、バージョンが新しい順に表示されます。書き込み後に編集された記録、JSON ではないファイル、別の形式の記録は、問題点とともに「無効」と表示されます。結果やテキストで絞り込んだり、失敗した記録だけに絞ったりでき、開くたびにフォルダーを読み直し、最大 500 行（と総数）を表示し、ディスクには何も書き込みません。URTC-FLASHER、URTC-TESTER、URTC-UPDATER で同じウィンドウを使い、URTC-COMMON から共有され、8 言語に対応しています。コマンドラインでは、`python urtc_tester.py --headless history [FOLDER] [--json]` がフォルダー内のレコードを一覧にして一つずつ検査し、無効なものがあれば終了ステータス 1 で終わります。バスは開きません。
+
+- **独自 ID ファイル。** `urtc_custom_ids.json` には JSON オブジェクト（`{"0x199": "My Sensor"}`）を入れます。リストなど無効な内容のファイルは警告を出して無視され、プログラムは組み込みの名前で起動します。
+
+- **テストプランの行とラック試験台。** テストプランの各ステップが出すメッセージ（応答なし、ツール違い、ファームウェアが古い、値が範囲外、オペレーターの確認など）はウィンドウの言語で表示され、ログ、結果レコード、コマンドラインは英語の文面のままです。シミュレートされたラック試験台はすべての命令に応答フレーム（確認応答、または理由付きの拒否：長さ違い、スロットにツールなし、温度が上限超え、無効なツール、ヒーターなし、早すぎて保留、未知のコマンド）で答え、それを読み返して理由をウィンドウの言語で伝えます。最小間隔より早い同じツールへの二度目の命令は、ファームウェアと同じく保留されます。
+
 ## 🚀 クイックスタート
 
 フラッシャーと同じパターンです：
@@ -445,12 +451,12 @@ README](https://github.com/JuanenRac/URTC-FLASHER) の第 1 節と第 2 節
 <!-- urtc-section:compatibility -->
 ### 要件と互換性
 
-どのバージョンの URTC プログラムが連携して動作し、それぞれがどのプロトコルバージョンを話すかは、URTC-COMMON が生成する互換性表に載っています：[docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md)。
+どのバージョンの URTC プログラムが連携して動作し、それぞれがどのプロトコルバージョンを話すかは、URTC-COMMON が生成する互換性表に載っています：[docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md)。`tools/changelog_section.py` を持つリポジトリ（ファームウェア、フラッシャー、テスター、アップデーター）のリリースノートは、そのバージョンの CHANGELOG の節にこの表を続けたものです：`python tools/changelog_section.py VERSION --compat`。
 <!-- /urtc-section:compatibility -->
 
 ## 🧪 テスト
 
-テストスイートは 576 件です（`python -m pytest -q`。画面のない環境で Qt を使う場合は `QT_QPA_PLATFORM=offscreen`。PySide6 が必要なものは、なければスキップされます）：各ツール系統の CAN ペイロードのエンコーダーとデコーダー、模擬に対する SLCAN と SocketCAN のトランスポート、識別プローブ、セルフテスト、ウォッチドッグのキープアライブ、バスの健全性チェック、テストプランとウィンドウなしのモード、ハッシュ付きのセッションエクスポート、言語ファイル、Qt Quick のパネルを扱います。ルートにある 4 つのスクリプト（`verify_qt_*.py`）は、実際の Qt イベントループで Qt Quick のパネルをエンドツーエンドで動かします。CI は `ruff check`、`python -m mypy`、`tools/ci_validate.py` も実行します。実際のボードでは一度も動かしていません。
+テストスイートは 597 件です（`python -m pytest -q`。画面のない環境で Qt を使う場合は `QT_QPA_PLATFORM=offscreen`。PySide6 が必要なものは、なければスキップされます）：各ツール系統の CAN ペイロードのエンコーダーとデコーダー、模擬に対する SLCAN と SocketCAN のトランスポート、識別プローブ、セルフテスト、ウォッチドッグのキープアライブ、バスの健全性チェック、テストプランとウィンドウなしのモード、ハッシュ付きのセッションエクスポート、言語ファイル、Qt Quick のパネルを扱います。ルートにある 4 つのスクリプト（`verify_qt_*.py`）は、実際の Qt イベントループで Qt Quick のパネルをエンドツーエンドで動かします。CI は `ruff check`、`python -m mypy`、`tools/ci_validate.py` も実行します。実際のボードでは一度も動かしていません。
 
 ## 🏗️ ビルドとリリース
 

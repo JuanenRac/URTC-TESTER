@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-576-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-597-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | 版本 | `0.4.4` |
 | 成熟度 | 可用 |
-| 测试 | 576 (`python -m pytest -q`) |
+| 测试 | 597 (`python -m pytest -q`) |
 | 技术栈 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
@@ -323,6 +323,12 @@ MAXTEMP、HEATING_NO_RISE 或 DROPPED_AT_TARGET）显示在板卡状态中，由
 
 **无需硬件：** 虚拟板可代替适配器和板子。运行 `python -m urtc_can.virtual_board`，再把它的串口 URL 作为端口（`--transport serial --port socket://127.0.0.1:7777`）；该板会像应用程序一样响应版本查询和快速状态，因此即使什么都没连接，`info` 和只含查询的计划也能完整运行。它是根据协议描述编写的模型，不是工具头：工具的自检会报告它读不到的内容。
 
+- **操作历史。** 帮助旁边的**历史**按钮会打开 URTC-TESTER 写入其日志文件夹的证据记录（`urtc-evidence/1`）。每一行显示类型、结果、工具、开发板和版本，最新的在前；写入后被编辑的记录、不是 JSON 的文件或其他格式的记录会显示为无效，并说明问题所在。列表可按结果和文本筛选，也可只显示失败的记录；每次打开都会重新读取文件夹，最多显示 500 行（并告知总数），不会更改磁盘上的任何内容。URTC-FLASHER、URTC-TESTER 和 URTC-UPDATER 使用同一个窗口，由 URTC-COMMON 共享，支持八种语言。命令行中，`python urtc_tester.py --headless history [FOLDER] [--json]` 列出文件夹中的记录并逐条检查，只要有无效记录就以状态 1 退出；它不会打开任何总线。
+
+- **自定义标识符文件。** `urtc_custom_ids.json` 必须是 JSON 对象（`{"0x199": "My Sensor"}`）；内容为列表或其他无效内容的文件会被忽略并给出警告，程序以内置名称启动。
+
+- **测试计划的行与机架试验台。** 测试计划每一步给出的消息（无应答、工具错误、固件过旧、数值超出范围、操作员确认等）以窗口的语言显示；日志、结果记录和命令行保留英文文本。模拟机架试验台用应答帧回答每条命令（确认，或带原因的拒绝：长度错误、插槽中没有工具、温度超过上限、无效工具、没有加热器、因来得太早而被暂缓、未知命令），读回应答并用窗口的语言说明原因；同一工具在最小间隔之前的第二条命令会像固件一样被暂缓。
+
 ## 🚀 快速开始
 
 与刷写工具相同的模式：
@@ -385,12 +391,12 @@ README](https://github.com/JuanenRac/URTC-FLASHER) 第 1 和第 2 节，
 <!-- urtc-section:compatibility -->
 ### 要求与兼容性
 
-哪些版本的 URTC 程序可以配合使用、各自使用哪个协议版本，列在 URTC-COMMON 生成的兼容性表中：[docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md)。
+哪些版本的 URTC 程序可以配合使用、各自使用哪个协议版本，列在 URTC-COMMON 生成的兼容性表中：[docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md)。带有 `tools/changelog_section.py` 的仓库（固件、刷写器、测试器和更新器）的发布说明，就是该版本的 CHANGELOG 小节后面接上这张表：`python tools/changelog_section.py VERSION --compat`。
 <!-- /urtc-section:compatibility -->
 
 ## 🧪 测试
 
-测试套件共有 576 个测试（`python -m pytest -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；需要 PySide6 的测试在没有它时会被跳过）：每个工具系列的 CAN 载荷编码器和解码器、针对模拟对象的 SLCAN 和 SocketCAN 传输层、身份探测、自检、看门狗保活、总线健康检查、测试计划和无窗口模式、带哈希的会话导出、语言文件以及 Qt Quick 面板。根目录下的四个脚本（`verify_qt_*.py`）用真实的 Qt 事件循环对 Qt Quick 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。这一切都没有针对真实的板子运行过。
+测试套件共有 597 个测试（`python -m pytest -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；需要 PySide6 的测试在没有它时会被跳过）：每个工具系列的 CAN 载荷编码器和解码器、针对模拟对象的 SLCAN 和 SocketCAN 传输层、身份探测、自检、看门狗保活、总线健康检查、测试计划和无窗口模式、带哈希的会话导出、语言文件以及 Qt Quick 面板。根目录下的四个脚本（`verify_qt_*.py`）用真实的 Qt 事件循环对 Qt Quick 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。这一切都没有针对真实的板子运行过。
 
 ## 🏗️ 构建与发布
 
