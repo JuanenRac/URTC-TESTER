@@ -352,7 +352,8 @@ class TesterQtBridge(QObject):
     def history(self) -> QObject:
         """The history of operations: the evidence records the tester wrote in its logs folder, each one checked (it only reads)."""
         if self._history_model is None:
-            self._history_model = EvidenceHistoryModel(lambda: tester_config.LOGS_FOLDER, lambda: tester_config._current_language, parent=self)
+            self._history_model = EvidenceHistoryModel(lambda: tester_config.LOGS_FOLDER, lambda: tester_config._current_language, parent=self,
+                                                  trusted=lambda: tester_config.trusted_keys_store()[0] or None)
         return self._history_model
 
     @Property(str, constant=True)
@@ -1562,6 +1563,19 @@ class TesterQtBridge(QObject):
     @Property(str, notify=changed)
     def blackBoxText(self) -> str:
         return self._query_texts["black_box"]
+
+    @Property(bool, notify=changed)
+    def signEvidence(self) -> bool:
+        """Whether the evidence records of this tester are signed with the Ed25519 key of the user (the ``sign_evidence`` setting of config.json, off by default)."""
+        return tester_config.evidence_signing_settings()[0]
+
+    @Slot(bool)
+    def setSignEvidence(self, enabled: bool) -> None:
+        if save_config({"sign_evidence": bool(enabled)}):
+            self._log(f"SIGN_EVIDENCE {'on' if enabled else 'off'}")
+        else:
+            self._log("SIGN_EVIDENCE_NOT_SAVED")
+        self.changed.emit()
 
     @Property(bool, notify=changed)
     def autoBlackBox(self) -> bool:

@@ -1609,6 +1609,15 @@ ApplicationWindow {
                 GameButton { text: testerBackend.uiText("MENU_SAVE_LOGS"); accent: "#24465e"; Layout.preferredWidth: 260; onClicked: saveLogDialog.open() }
                 GameButton { text: testerBackend.nodes.t("NP_TITLE"); objectName: "nodesButton"; accent: "#24465e"; Layout.preferredWidth: 260; onClicked: nodeDialog.open() }
                 GameButton { text: testerBackend.history.text("EH_BTN_OPEN"); objectName: "historyButton"; accent: "#24465e"; Layout.preferredWidth: 260; onClicked: historyDialog.open() }
+                CheckBox {
+                    id: signEvidenceBox
+                    objectName: "signEvidenceCheck"
+                    Layout.preferredWidth: 260
+                    text: testerBackend.uiText("LBL_SIGN_EVIDENCE")
+                    checked: testerBackend.signEvidence
+                    onToggled: testerBackend.setSignEvidence(checked)
+                    contentItem: Text { text: signEvidenceBox.text; color: muted; wrapMode: Text.WordWrap; leftPadding: signEvidenceBox.indicator.width + 4; verticalAlignment: Text.AlignVCenter; font.pixelSize: 11 }
+                }
                 GameButton { text: testerBackend.updates.t("UPD_BTN_CHECK"); accent: "#24465e"; Layout.preferredWidth: 260; onClicked: updateDialog.open() }
                 GameButton { text: testerBackend.help.title; accent: "#24465e"; Layout.preferredWidth: 260; onClicked: helpDialog.open() }
                 GameButton { text: testerBackend.uiText("TITLE_ABOUT"); accent: "#24465e"; Layout.preferredWidth: 260; onClicked: aboutDialog.open() }

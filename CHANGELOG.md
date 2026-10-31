@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The deck can turn on the signature of the evidence:** a check box in the menu of the deck, "Sign the evidence records of this tester with my Ed25519 key", turns the `sign_evidence` setting on and off (off by default; it is saved in `config.json`), in the eight languages (Portuguese of Portugal).
+- **The History window shows the state of each signature** in a new column, and the history and the report say who signed: a `trusted_keys` object in `config.json` lists public keys by alias (public keys only, never a seed), and a good signature by one of them is "Signed by <alias>", one by another key is "Valid signature, unknown key" (shown, it does not fail the status) and one that fails stays "SIGNATURE NOT VALID". `--public-key` still works and wins over the store. The shared copy and its lock files are synchronized.
+
 ## [0.4.6] - The evidence record can be signed with Ed25519 with a switch that is off by default and a public key to check it, shown in the history and the report
 
 - **The evidence record can be signed with Ed25519:** with `"sign_evidence": true` in `config.json` (off by default) or `--sign-evidence` for one run, the evidence a run writes carries a signature made with the key of the user (file named by `"record_key_file"`, else the default of the family), so it shows who wrote it as well as that it was not edited; the key is made on first use and is never printed or put in a record, and a signature that cannot be made writes no evidence file. `history` and `report` check every signature and show its state and the id of its key in the eight languages (Portuguese of Portugal); `--public-key HEX` tells a signature by another key apart, and a signature that does not match fails the exit status. The shared copy carries the signing module and the new report texts. `docs/HEADLESS.md` says what the signature proves and what it does not.

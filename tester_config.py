@@ -77,11 +77,19 @@ def evidence_signing_settings(config=None):
     ``sign_evidence`` is off unless it is exactly ``true`` (a text, a number or anything else keeps it off: a switch that is not clearly on is off).
     ``record_key_file`` names the file that holds the key seed; empty means the default of the signing module (``~/.urtc-keys/records_ed25519.key``,
     or the file of ``URTC_RECORD_KEY_FILE``). The key itself is never read here, logged or printed."""
-    if config is None:
-        config = load_config()
-    enabled = config.get("sign_evidence") is True
-    key_file = config.get("record_key_file")
-    return enabled, key_file if isinstance(key_file, str) and key_file.strip() else ""
+    from urtc_can import record_signing
+
+    return record_signing.signing_settings(load_config() if config is None else config)
+
+
+def trusted_keys_store(config=None):
+    """(trust store, problems) from config.json: ``"trusted_keys": {"alias": "<public key, 64 hexadecimal digits>"}``.
+
+    Only public keys, never a seed. The history and the report say "signed by <alias>" for a good signature by one of these keys, and "unknown key" for a good
+    signature by any other. An entry that is not a public key is left out (so it is not trusted) and named in the problems, without its value."""
+    from urtc_can import record_signing
+
+    return record_signing.trust_store_from_config(load_config() if config is None else config)
 
 
 def save_config(updates):

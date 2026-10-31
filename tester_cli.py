@@ -34,7 +34,7 @@ import time
 from pathlib import Path
 
 import tester_plan
-from tester_config import TESTER_VERSION, evidence_signing_settings
+from tester_config import TESTER_VERSION, evidence_signing_settings, trusted_keys_store
 from tester_result_record import make_record, save_evidence, save_record
 
 EXIT_PASS, EXIT_FAIL, EXIT_USAGE, EXIT_ERROR, EXIT_CANCELLED = 0, 1, 2, 3, 130
@@ -180,6 +180,17 @@ def _public_key(args):
         raise ValueError(f"--public-key: {exc}") from exc
 
 
+def _trust(args, public):
+    """The trust store of config.json for the history and the report, or None when a public key was given (that key wins) or the store is empty.
+    The entries that are not public keys are named on the way out (a key left out is simply not trusted)."""
+    if public is not None:
+        return None
+    store, problems = trusted_keys_store()
+    for problem in problems:
+        _say(f"WARNING: {problem}")
+    return store or None
+
+
 def _history(args) -> int:
     """The evidence records of a folder, listed and checked (the same view as the other programs); 1 when one of them fails its check."""
     from urtc_can import evidence_history
@@ -191,7 +202,12 @@ def _history(args) -> int:
         return EXIT_USAGE
     entries, others = evidence_history.select(loaded), evidence_history.others_of(loaded)    # the result records of the tester are not evidence: listed apart, never as not valid
     _say(evidence_history.to_json(entries, others).rstrip("\n") if args.json else evidence_history.to_text(entries, others))
-    states = [evidence_history.signature_state(entry, public) for entry in entries]
+    trusted = _trust(args, public)
+    states = [evidence_history.signature_state(entry, public, trusted) for entry in entries]
+    if trusted and not args.json:
+        names = sorted({evidence_history.signature_alias(e, trusted) for e, s in zip(entries, states) if s == "trusted"})
+        _say(f"Signatures against the trust store: {states.count('trusted')} signed by a trusted key ({', '.join(names) or '-'}), {states.count('unknown_key')} by an unknown key, "
+             f"{states.count('invalid')} not valid, {states.count('unsigned')} unsigned.")
     if public is not None and not args.json:
         _say(f"Signatures against the public key given: {states.count('valid')} match, {states.count('other_key')} by another key, {states.count('invalid')} not valid, {states.count('unsigned')} unsigned.")
     # a signature that does not match is a failure like a record that fails its check; one by another key, when a key was given, is too
@@ -220,7 +236,7 @@ def _report(args, out: str | None) -> int:
         return EXIT_USAGE
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(evidence_report.render(entries, fmt, args.language, public))
+        target.write_bytes(evidence_report.render(entries, fmt, args.language, public, _trust(args, public)))
     except OSError as exc:
         _say(f"ERROR: cannot write the report: {exc}")
         return EXIT_ERROR
