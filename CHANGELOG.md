@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.4.5] - The reply of the tool rack has a fixed CAN identifier, the PDF of the evidence report prints Chinese and Japanese, the history no longer lists other files as not valid and a plan can run against a faulty simulated bus
 
 - **The reply of the tool rack has a fixed CAN identifier, `0x261`:** the shared protocol copy has the rack frames (the pre-heat order `0x260` and the reply `0x261`, three bytes: the command answered, the tool byte and the reason), the simulated rack answers a CAN order with that reply, and the bus scenario `reject` no longer needs `reply_id` (it sends the reply on `0x261`; another identifier can still be named). The conformance fixtures cover both frames and the nine reasons.
 - **The PDF of the evidence report prints Chinese and Japanese:** the file embeds a subset of Noto Sans CJK (SIL Open Font License 1.1, see `NOTICE`) as a Type0 / CIDFontType2 font, so the text can be selected and searched; Western reports still use Courier. A character the subset lacks is printed as a hollow square and the report says how many were replaced (no more silent `?`). Copies of the shared report module and its font data are synchronized.
