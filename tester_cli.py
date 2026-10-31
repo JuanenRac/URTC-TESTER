@@ -34,7 +34,7 @@ import time
 from pathlib import Path
 
 import tester_plan
-from tester_config import TESTER_VERSION
+from tester_config import TESTER_VERSION, evidence_signing_settings
 from tester_result_record import make_record, save_evidence, save_record
 
 EXIT_PASS, EXIT_FAIL, EXIT_USAGE, EXIT_ERROR, EXIT_CANCELLED = 0, 1, 2, 3, 130
@@ -65,6 +65,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--format", choices=("html", "pdf"), default=None, help="with report: html or pdf (default: by the extension of --out, else html)")
     parser.add_argument("--language", default="english", metavar="NAME",
                         help="with report: the language of the texts (english, spanish, italian, french, german, chinese, japanese, portuguese; the PDF embeds a Chinese and Japanese font subset)")
+    parser.add_argument("--sign-evidence", action="store_true", dest="sign_evidence",
+                        help="sign the evidence record this run writes with the Ed25519 key of this user (also on with \"sign_evidence\": true in config.json; off by default). The key is made on first use and never printed")
+    parser.add_argument("--public-key", default=None, metavar="HEX",
+                        help="with history and report: the public key (64 hexadecimal digits) you trust; a signature by another key is told apart and fails the status")
     parser.add_argument("--json", action="store_true", help="print the result as one JSON object instead of text")
     parser.add_argument("--allow-actuation", action="store_true", help="let a plan that says \"actuation\": true send commands that are not queries (heaters, motors, laser ...)")
     parser.add_argument("--assume-yes", action="store_true", help="answer yes to the confirm steps of a plan (only when a person has looked at what the step asks)")
@@ -131,11 +135,18 @@ def _write_results(report, plan_name: str, args, out_dir: Path, transport=None) 
     adapter, note = f"{args.transport}:{args.port or 'in-memory'}", ""
     if args.scenario and hasattr(transport, "summary"):
         adapter, note = f"{args.transport}:scenario:{transport.scenario.name}", "SIMULATED bus with a scenario; " + transport.summary()
-    return write_report(report, plan_name, adapter, out_dir, note)
+    return write_report(report, plan_name, adapter, out_dir, note, sign=True if getattr(args, "sign_evidence", False) else None)
 
 
-def write_report(report, plan_name: str, adapter: str, out_dir: Path, note: str = "") -> tuple[Path, Path]:
-    """The log of a plan and its result record (naming the log by its SHA-256), side by side in `out_dir`: (log path, record path)."""
+def write_report(report, plan_name: str, adapter: str, out_dir: Path, note: str = "", sign: bool | None = None) -> tuple[Path, Path]:
+    """The log of a plan and its result record (naming the log by its SHA-256), side by side in `out_dir`: (log path, record path).
+
+    The evidence copy is signed with Ed25519 when ``sign`` is true, or, when it is None, when ``sign_evidence`` is true in config.json (off by default). If signing
+    was asked for and fails, the evidence file is NOT written and the reason is printed (never the key), so the lack of a file shows it; the log and the result
+    record are written all the same."""
+    enabled, key_file = evidence_signing_settings()
+    if sign is not None:
+        enabled = sign
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d_%H%M%S")
     log_path = out_dir / f"{plan_name}_{stamp}.log"
@@ -148,23 +159,43 @@ def write_report(report, plan_name: str, adapter: str, out_dir: Path, note: str 
     record_path = log_path.with_suffix(".json")
     save_record(record, record_path)
     try:
-        save_evidence(record, out_dir / f"urtc_evidence_{log_path.stem}.json", tool_version=TESTER_VERSION)
-    except (OSError, ValueError):
-        pass  # the common-shape copy is an extra: the log and the result record above are what a run leaves, and they are written
+        save_evidence(record, out_dir / f"urtc_evidence_{log_path.stem}.json", tool_version=TESTER_VERSION, sign=enabled, key_file=key_file)
+    except (OSError, ValueError) as exc:
+        if enabled:
+            _say(f"WARNING: the evidence record was not written because it could not be signed: {exc}")
+        # the common-shape copy is an extra: the log and the result record above are what a run leaves, and they are written
     return log_path, record_path
+
+
+def _public_key(args):
+    """The public key the reader trusts (``--public-key``, 64 hexadecimal digits), None when not given; ``ValueError`` when it is not a key."""
+    text = getattr(args, "public_key", None)
+    if not text:
+        return None
+    from urtc_can import record_signing
+
+    try:
+        return record_signing.parse_public_key(text)
+    except record_signing.SigningError as exc:
+        raise ValueError(f"--public-key: {exc}") from exc
 
 
 def _history(args) -> int:
     """The evidence records of a folder, listed and checked (the same view as the other programs); 1 when one of them fails its check."""
     from urtc_can import evidence_history
     try:
+        public = _public_key(args)
         loaded = evidence_history.load_folder(args.plan or args.out)
-    except FileNotFoundError as exc:
+    except (FileNotFoundError, ValueError) as exc:
         _say(f"ERROR: {exc}")
         return EXIT_USAGE
     entries, others = evidence_history.select(loaded), evidence_history.others_of(loaded)    # the result records of the tester are not evidence: listed apart, never as not valid
     _say(evidence_history.to_json(entries, others).rstrip("\n") if args.json else evidence_history.to_text(entries, others))
-    return EXIT_FAIL if any(not entry.valid for entry in entries) else EXIT_PASS
+    states = [evidence_history.signature_state(entry, public) for entry in entries]
+    if public is not None and not args.json:
+        _say(f"Signatures against the public key given: {states.count('valid')} match, {states.count('other_key')} by another key, {states.count('invalid')} not valid, {states.count('unsigned')} unsigned.")
+    # a signature that does not match is a failure like a record that fails its check; one by another key, when a key was given, is too
+    return EXIT_FAIL if any(not entry.valid for entry in entries) or "invalid" in states or (public is not None and "other_key" in states) else EXIT_PASS
 
 
 def _report(args, out: str | None) -> int:
@@ -179,8 +210,9 @@ def _report(args, out: str | None) -> int:
     target = Path(out)
     fmt = args.format or ("pdf" if target.suffix.lower() == ".pdf" else "html")
     try:
+        public = _public_key(args)
         entries = evidence_history.load_folder(args.evidence_dir)
-    except FileNotFoundError as exc:
+    except (FileNotFoundError, ValueError) as exc:
         _say(f"ERROR: {exc}")
         return EXIT_USAGE
     if target.is_dir():
@@ -188,14 +220,17 @@ def _report(args, out: str | None) -> int:
         return EXIT_USAGE
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(evidence_report.render(entries, fmt, args.language))
+        target.write_bytes(evidence_report.render(entries, fmt, args.language, public))
     except OSError as exc:
         _say(f"ERROR: cannot write the report: {exc}")
         return EXIT_ERROR
     counts = evidence_history.summary(entries)
-    invalid = counts["invalid"]
+    invalid = counts["invalid"] + counts["signature_invalid"]
+    if public is not None:    # a signature by another key than the one the reader trusts fails the status, like one that does not match
+        invalid += sum(1 for entry in entries if evidence_history.signature_state(entry, public) == "other_key")
     other = f", {counts['others']} other record(s), not evidence" if counts["others"] else ""
-    _say(f"Report ({fmt}): {target} - {counts['records']} record(s), {counts['valid']} valid, {invalid} not valid{other}")
+    signed = f", {counts['signed']} signed ({counts['signature_invalid']} with a signature that does not match)" if counts["signed"] else ""
+    _say(f"Report ({fmt}): {target} - {counts['records']} record(s), {counts['valid']} valid, {counts['invalid']} not valid{signed}{other}")
     return EXIT_FAIL if invalid else EXIT_PASS
 
 

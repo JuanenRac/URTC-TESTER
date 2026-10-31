@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The evidence record can be signed with Ed25519:** with `"sign_evidence": true` in `config.json` (off by default) or `--sign-evidence` for one run, the evidence a run writes carries a signature made with the key of the user (file named by `"record_key_file"`, else the default of the family), so it shows who wrote it as well as that it was not edited; the key is made on first use and is never printed or put in a record, and a signature that cannot be made writes no evidence file. `history` and `report` check every signature and show its state and the id of its key in the eight languages (Portuguese of Portugal); `--public-key HEX` tells a signature by another key apart, and a signature that does not match fails the exit status. The shared copy carries the signing module and the new report texts. `docs/HEADLESS.md` says what the signature proves and what it does not.
+
 ## [0.4.5] - The reply of the tool rack has a fixed CAN identifier, the PDF of the evidence report prints Chinese and Japanese, the history no longer lists other files as not valid and a plan can run against a faulty simulated bus
 
 - **The reply of the tool rack has a fixed CAN identifier, `0x261`:** the shared protocol copy has the rack frames (the pre-heat order `0x260` and the reply `0x261`, three bytes: the command answered, the tool byte and the reason), the simulated rack answers a CAN order with that reply, and the bus scenario `reject` no longer needs `reply_id` (it sends the reply on `0x261`; another identifier can still be named). The conformance fixtures cover both frames and the nine reasons.

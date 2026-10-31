@@ -71,6 +71,19 @@ def load_config():
         return {}
 
 
+def evidence_signing_settings(config=None):
+    """(enabled, key file) for the Ed25519 signature of the evidence records, from config.json.
+
+    ``sign_evidence`` is off unless it is exactly ``true`` (a text, a number or anything else keeps it off: a switch that is not clearly on is off).
+    ``record_key_file`` names the file that holds the key seed; empty means the default of the signing module (``~/.urtc-keys/records_ed25519.key``,
+    or the file of ``URTC_RECORD_KEY_FILE``). The key itself is never read here, logged or printed."""
+    if config is None:
+        config = load_config()
+    enabled = config.get("sign_evidence") is True
+    key_file = config.get("record_key_file")
+    return enabled, key_file if isinstance(key_file, str) and key_file.strip() else ""
+
+
 def save_config(updates):
     """Merges updates into whatever's already in config.json and writes
     the result back - merges rather than overwrites wholesale, so saving

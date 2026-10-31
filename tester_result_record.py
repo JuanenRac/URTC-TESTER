@@ -92,8 +92,27 @@ def evidence_record(record: ResultRecord, *, tool_version: str, timestamp_utc: s
     return evidence.from_result_record(asdict(record), tool_version=tool_version, timestamp_utc=stamp, operator=operator)
 
 
-def save_evidence(record: ResultRecord, path: Path, *, tool_version: str, timestamp_utc: str | None = None, operator: str = "") -> None:
-    path.write_text(json.dumps(evidence_record(record, tool_version=tool_version, timestamp_utc=timestamp_utc, operator=operator), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+def sign_evidence_record(evidence_dict: dict, key_file: str = "") -> dict:
+    """The evidence record with its Ed25519 ``signature`` block, made with the key of this user (made on first use; ``key_file`` or the default).
+
+    The signature shows who holds the key wrote the record and that it was not edited afterwards (the digest alone shows only the second). The key is never
+    printed; a key file that cannot be read or is not a key raises ``ValueError`` with the file NAME only."""
+    from urtc_can import record_signing
+
+    try:
+        return record_signing.sign_evidence(evidence_dict, record_signing.load_seed(key_file or None))
+    except (record_signing.SigningError, OSError) as exc:
+        raise ValueError(str(exc)) from exc
+
+
+def save_evidence(record: ResultRecord, path: Path, *, tool_version: str, timestamp_utc: str | None = None, operator: str = "",
+                  sign: bool = False, key_file: str = "") -> None:
+    """Writes the evidence record of a result; with ``sign`` it carries the Ed25519 signature (off by default: see ``tester_config.evidence_signing_settings``).
+    When signing is asked for and fails nothing is written, so an unsigned file never passes for a signed one."""
+    body = evidence_record(record, tool_version=tool_version, timestamp_utc=timestamp_utc, operator=operator)
+    if sign:
+        body = sign_evidence_record(body, key_file)
+    path.write_text(json.dumps(body, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def load_record(path: Path, log_directory: Path | None = None) -> ResultRecord:
