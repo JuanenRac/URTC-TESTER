@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Run a plan against a faulty simulated bus:** `--scenario FILE` (and `--seed N`) with `--transport simulate` puts the bus scenario of `urtc_can/bus_scenario.py` between the plan and the simulated head, on a clock of its own, so a lost, repeated, reordered, delayed or cut frame, a silent head or a refusal is felt by the plan the same way every time. It is off unless given and is refused with a real adapter or a recorded trace; a scenario that is not valid runs nothing. The result record and the `urtc-evidence/1` record say that the bus was a simulation, with the scenario, its seed and what it did. The quick guide says so in the eight languages.
+
 - **The Help window has a History step and the README describes the History window:** the quick guide (eight languages) says what the History button shows, the Interfaces section of the README in the eight languages describes the window and its command line form, and `docs/WINDOW_GUIDE.md` has a History section.
 - **A custom identifier file that holds a list no longer stops the program:** `urtc_custom_ids.json` with a JSON list instead of an object made the program fail on start; it is now ignored with a warning, like any other invalid file.
 

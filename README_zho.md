@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-597-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-633-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | 版本 | `0.4.4` |
 | 成熟度 | 可用 |
-| 测试 | 597 (`python -m pytest -q`) |
+| 测试 | 633 (`python -m pytest -q`) |
 | 技术栈 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
@@ -291,6 +291,12 @@ MAXTEMP、HEATING_NO_RISE 或 DROPPED_AT_TARGET）显示在板卡状态中，由
 固件可以让多个工具头共用一条 CAN 总线（多节点扩展）。它**默认关闭**，只有一个工具头的总线与以前完全一样地工作。**工具头**窗口会查找工具头，列出每个工具头的地址、工具和序列号，并显示其状态：就绪、已选择、地址冲突、故障已锁定、处于引导程序或已丢失。您选择一个后，程序会先请您确认，之后才向该工具头发送任何内容；只要总线上有多个工具头，在选中一个并得到它的确认之前，命令都会被拒绝。如果所选工具头丢失，所有工具头都会进入安全状态（窗口中的复选框可关闭此行为）。目前只针对总线模型测试过，没有在电路板上试过。参见 URTC-COMMON 中的 `docs/MULTINODE.md`。
 <!-- /urtc-section:heads -->
 
+<!-- urtc-section:bus_scenarios -->
+### 模拟总线故障
+
+计划或更新可以在无需硬件的情况下，针对像真实总线一样表现不佳的模拟总线运行。场景是一个 JSON 文件（`urtc-scenario/1`），列出各种故障：帧丢失、重复、乱序、延迟、成串丢失或被截短，节点保持沉默或拒绝命令并说明原因，以及处于自由配置（`0x1F`）的刀头以不同方式回应 `0x1A3` 和 `0x1A2`。除非您要求，否则什么都不会改变：选项是 `--scenario 文件`（配合测试器的模拟刀头或烧录器的 mock 传输），文件会被严格检查，其中有任何无法理解之处即被拒绝，真实适配器永远不会接受场景。相同的场景和相同的种子会按相同顺序给出相同的帧，`bus_scenario.py generate --seed N` 会写出组合各种故障的测试场景。运行会留下通常的证据记录（`urtc-evidence/1`），说明总线是模拟的，以及使用了哪个场景和种子。场景可以拿走帧、重复帧或移动帧，但无法让节点声称某件事成功了。格式与规则：[总线场景](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/BUS_SCENARIOS.md)。
+<!-- /urtc-section:bus_scenarios -->
+
 ## 🔒 安全与防护
 
 | 风险 | 防御 |
@@ -396,7 +402,7 @@ README](https://github.com/JuanenRac/URTC-FLASHER) 第 1 和第 2 节，
 
 ## 🧪 测试
 
-测试套件共有 597 个测试（`python -m pytest -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；需要 PySide6 的测试在没有它时会被跳过）：每个工具系列的 CAN 载荷编码器和解码器、针对模拟对象的 SLCAN 和 SocketCAN 传输层、身份探测、自检、看门狗保活、总线健康检查、测试计划和无窗口模式、带哈希的会话导出、语言文件以及 Qt Quick 面板。根目录下的四个脚本（`verify_qt_*.py`）用真实的 Qt 事件循环对 Qt Quick 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。这一切都没有针对真实的板子运行过。
+测试套件共有 633 个测试（`python -m pytest -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；需要 PySide6 的测试在没有它时会被跳过）：每个工具系列的 CAN 载荷编码器和解码器、针对模拟对象的 SLCAN 和 SocketCAN 传输层、身份探测、自检、看门狗保活、总线健康检查、测试计划和无窗口模式、带哈希的会话导出、语言文件以及 Qt Quick 面板。根目录下的四个脚本（`verify_qt_*.py`）用真实的 Qt 事件循环对 Qt Quick 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。这一切都没有针对真实的板子运行过。
 
 ## 🏗️ 构建与发布
 

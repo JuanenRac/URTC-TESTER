@@ -38,7 +38,7 @@
 |---|---|
 | Version | `0.4.4` |
 | Reifegrad | Funktionsfähig |
-| Tests | 597 (`python -m pytest -q`) |
+| Tests | 633 (`python -m pytest -q`) |
 | Technik | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
@@ -369,6 +369,12 @@ Schritt-für-Schritt-Anleitung zur Prüfung an einer echten Platine steht in
 Die Firmware kann mehrere Werkzeugköpfe an einem CAN-Bus betreiben (die Multinode-Erweiterung). Sie ist **standardmäßig aus**, und ein Bus mit einem Kopf arbeitet genau wie bisher. Das Fenster **Köpfe** findet die Köpfe, listet jeden mit Adresse, Werkzeug und Seriennummer und zeigt seinen Zustand: bereit, ausgewählt, Adresskonflikt, Fehler gespeichert, im Bootloader oder verloren. Sie wählen einen aus, das Programm fragt nach einer Bestätigung und sendet erst danach etwas an diesen Kopf; solange mehrere Köpfe am Bus hängen, wird ein Befehl abgelehnt, bis einer ausgewählt ist und es bestätigt hat. Geht der ausgewählte Kopf verloren, wechseln alle Köpfe in ihren sicheren Zustand (ein Kontrollkästchen des Fensters schaltet das ab). Getestet wurde nur gegen ein Modell des Busses, nicht mit Platinen. Siehe `docs/MULTINODE.md` in URTC-COMMON.
 <!-- /urtc-section:heads -->
 
+<!-- urtc-section:bus_scenarios -->
+### Fehler des simulierten Busses
+
+Ein Plan oder eine Aktualisierung kann ohne Hardware gegen einen simulierten Bus laufen, der sich so schlecht benimmt wie ein echter. Ein Szenario ist eine JSON-Datei (`urtc-scenario/1`), die die Fehler aufzählt: Frames gehen verloren, werden wiederholt, vertauscht, verzögert, in Bursts verloren oder verkürzt, ein Knoten schweigt oder lehnt einen Befehl ab und nennt den Grund, und ein Kopf in freier Konfiguration (`0x1F`) antwortet auf `0x1A3` und `0x1A2` auf unterschiedliche Weise. Nichts ändert sich, wenn Sie es nicht verlangen: Die Option ist `--scenario DATEI` (mit dem simulierten Kopf des Testers oder dem Mock-Transport des Flashers); die Datei wird streng geprüft und abgelehnt, wenn etwas darin nicht verstanden wird, und ein echter Adapter nimmt nie eines an. Dasselbe Szenario mit demselben Seed ergibt dieselben Frames in derselben Reihenfolge, und `bus_scenario.py generate --seed N` schreibt Testszenarien, die die Fehler kombinieren. Der Lauf hinterlässt den üblichen Nachweis (`urtc-evidence/1`), der festhält, dass der Bus eine Simulation war und mit welchem Szenario und Seed. Ein Szenario kann Frames wegnehmen, wiederholen oder verschieben, aber es kann einen Knoten nicht sagen lassen, dass etwas funktioniert hat. Format und Regeln: [Bus-Szenarien](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/BUS_SCENARIOS.md).
+<!-- /urtc-section:bus_scenarios -->
+
 ## 🔒 Sicherheit und Schutz
 
 | Risiko | Abwehr |
@@ -484,7 +490,7 @@ Welche Versionen der URTC-Programme zusammenarbeiten und welche Protokollversion
 
 ## 🧪 Tests
 
-Die Suite hat 597 Tests (`python -m pytest -q`; mit Qt auf einem Rechner ohne Bildschirm `QT_QPA_PLATFORM=offscreen`; die, die PySide6 brauchen, werden ohne übersprungen): die CAN-Nutzdaten-Kodierer und -Dekodierer jeder Werkzeugfamilie, die SLCAN- und SocketCAN-Transporte gegen Attrappen, die Identitätsabfrage, der Selbsttest, die Watchdog-Keepalives, die Busgesundheitsprüfung, die Testpläne und der Modus ohne Fenster, der Sitzungsexport mit seinem Hash, die Sprachdateien und die Qt-Quick-Panels. Vier Skripte im Wurzelverzeichnis (`verify_qt_*.py`) steuern die Qt-Quick-Panels mit einer echten Qt-Ereignisschleife durchgängig an. Die CI führt außerdem `ruff check`, `python -m mypy` und `tools/ci_validate.py` aus. Nichts davon lief gegen eine echte Platine.
+Die Suite hat 633 Tests (`python -m pytest -q`; mit Qt auf einem Rechner ohne Bildschirm `QT_QPA_PLATFORM=offscreen`; die, die PySide6 brauchen, werden ohne übersprungen): die CAN-Nutzdaten-Kodierer und -Dekodierer jeder Werkzeugfamilie, die SLCAN- und SocketCAN-Transporte gegen Attrappen, die Identitätsabfrage, der Selbsttest, die Watchdog-Keepalives, die Busgesundheitsprüfung, die Testpläne und der Modus ohne Fenster, der Sitzungsexport mit seinem Hash, die Sprachdateien und die Qt-Quick-Panels. Vier Skripte im Wurzelverzeichnis (`verify_qt_*.py`) steuern die Qt-Quick-Panels mit einer echten Qt-Ereignisschleife durchgängig an. Die CI führt außerdem `ruff check`, `python -m mypy` und `tools/ci_validate.py` aus. Nichts davon lief gegen eine echte Platine.
 
 ## 🏗️ Build und Veröffentlichung
 

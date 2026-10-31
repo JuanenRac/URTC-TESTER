@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-597-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-633-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | バージョン | `0.4.4` |
 | 成熟度 | 機能する |
-| テスト | 597 (`python -m pytest -q`) |
+| テスト | 633 (`python -m pytest -q`) |
 | 技術 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 対象 | 利用者の PC |
 | 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
@@ -340,6 +340,12 @@ Detect は、ボードがエラーをラッチした*理由*を表示するよ�
 ファームウェアは複数のツールヘッドを1本のCANバスで共有できます（マルチノード拡張）。これは**初期状態でオフ**で、ヘッドが1つのバスはこれまでとまったく同じに動作します。**ヘッド**ウィンドウはヘッドを検索し、それぞれをアドレス・ツール・シリアル番号とともに一覧し、準備完了・選択中・アドレスの競合・異常を保持・ブートローダー中・喪失のいずれかの状態を示します。1つを選ぶと確認が求められ、それからはじめてそのヘッドに何かが送信されます。バス上に複数のヘッドがある間は、1つが選択されて確認応答するまでコマンドは拒否されます。選択中のヘッドを見失うと、すべてのヘッドが安全状態になります（ウィンドウのチェックボックスでオフにできます）。バスのモデルに対してのみ試験しており、実機では未試験です。URTC-COMMON の `docs/MULTINODE.md` を参照してください。
 <!-- /urtc-section:heads -->
 
+<!-- urtc-section:bus_scenarios -->
+### シミュレートされたバスの障害
+
+プランやアップデートを、実機と同じように不調になるシミュレートされたバスに対して、ハードウェアなしで実行できます。シナリオは JSON ファイル（`urtc-scenario/1`）で、障害を列挙します。フレームの欠落・重複・順序入れ替え・遅延・バースト欠落・短縮、無応答のノードや理由付きでコマンドを拒否するノード、そして自由構成（`0x1F`）のヘッドが `0x1A3` と `0x1A2` にさまざまな形で応答する場合です。求めない限り何も変わりません。オプションは `--scenario ファイル` で（テスターのシミュレートヘッドまたはフラッシャーのモック転送と併用）、ファイルは厳密に検査され、理解できない内容があれば拒否され、実機のアダプターには適用されません。同じシナリオと同じシードなら同じフレームが同じ順序で得られ、`bus_scenario.py generate --seed N` は障害を組み合わせたテスト用シナリオを書き出します。実行後は通常のエビデンス記録（`urtc-evidence/1`）が残り、バスがシミュレーションだったこと、使ったシナリオとシードが記されます。シナリオはフレームを取り除いたり、繰り返したり、動かしたりできますが、ノードに「うまくいった」と言わせることはできません。形式とルール: [バスシナリオ](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/BUS_SCENARIOS.md)。
+<!-- /urtc-section:bus_scenarios -->
+
 ## 🔒 セキュリティと安全
 
 | リスク | 防御 |
@@ -456,7 +462,7 @@ README](https://github.com/JuanenRac/URTC-FLASHER) の第 1 節と第 2 節
 
 ## 🧪 テスト
 
-テストスイートは 597 件です（`python -m pytest -q`。画面のない環境で Qt を使う場合は `QT_QPA_PLATFORM=offscreen`。PySide6 が必要なものは、なければスキップされます）：各ツール系統の CAN ペイロードのエンコーダーとデコーダー、模擬に対する SLCAN と SocketCAN のトランスポート、識別プローブ、セルフテスト、ウォッチドッグのキープアライブ、バスの健全性チェック、テストプランとウィンドウなしのモード、ハッシュ付きのセッションエクスポート、言語ファイル、Qt Quick のパネルを扱います。ルートにある 4 つのスクリプト（`verify_qt_*.py`）は、実際の Qt イベントループで Qt Quick のパネルをエンドツーエンドで動かします。CI は `ruff check`、`python -m mypy`、`tools/ci_validate.py` も実行します。実際のボードでは一度も動かしていません。
+テストスイートは 633 件です（`python -m pytest -q`。画面のない環境で Qt を使う場合は `QT_QPA_PLATFORM=offscreen`。PySide6 が必要なものは、なければスキップされます）：各ツール系統の CAN ペイロードのエンコーダーとデコーダー、模擬に対する SLCAN と SocketCAN のトランスポート、識別プローブ、セルフテスト、ウォッチドッグのキープアライブ、バスの健全性チェック、テストプランとウィンドウなしのモード、ハッシュ付きのセッションエクスポート、言語ファイル、Qt Quick のパネルを扱います。ルートにある 4 つのスクリプト（`verify_qt_*.py`）は、実際の Qt イベントループで Qt Quick のパネルをエンドツーエンドで動かします。CI は `ruff check`、`python -m mypy`、`tools/ci_validate.py` も実行します。実際のボードでは一度も動かしていません。
 
 ## 🏗️ ビルドとリリース
 

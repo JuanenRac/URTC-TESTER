@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Lenguaje-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-597-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-633-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocolo-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Versión | `0.4.4` |
 | Madurez | Funcional |
-| Tests | 597 (`python -m pytest -q`) |
+| Tests | 633 (`python -m pytest -q`) |
 | Tecnología | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destino | El PC de quien lo usa |
 | En hardware real | Solo simulado: probado con emuladores, dobles de prueba o simuladores; no consta ninguna ejecución en hardware real para esta versión |
@@ -361,6 +361,12 @@ paso a paso para confirmar la protección en una placa real está en
 El firmware puede hacer que varios cabezales compartan un bus CAN (la extensión multinodo). Viene **desactivada por defecto**, y un bus con un solo cabezal funciona exactamente como antes. La ventana **Cabezales** encuentra los cabezales, lista cada uno con su dirección, herramienta y número de serie, y muestra su estado: listo, seleccionado, conflicto de dirección, fallo retenido, en su bootloader o perdido. Seleccionas uno, el programa pide confirmación y solo entonces le envía algo; mientras haya varios cabezales en el bus, un comando se rechaza hasta que uno esté seleccionado y lo haya confirmado. Si se pierde el cabezal seleccionado, todos los cabezales pasan a su estado seguro (una casilla de la ventana lo desactiva). Se ha probado solo contra un modelo del bus, no con placas. Véase `docs/MULTINODE.md` en URTC-COMMON.
 <!-- /urtc-section:heads -->
 
+<!-- urtc-section:bus_scenarios -->
+### Fallos del bus simulado
+
+Un plan o una actualización se puede ejecutar contra un bus simulado que se porta mal como uno real, sin hardware. Un escenario es un archivo JSON (`urtc-scenario/1`) que lista los fallos: tramas perdidas, repetidas, desordenadas, retrasadas, perdidas en ráfagas o recortadas, un nodo que calla o rechaza una orden y dice por qué, y un cabezal en configuración libre (`0x1F`) que responde a `0x1A3` y `0x1A2` de distintas maneras. Nada cambia si no lo pides: la opción es `--scenario ARCHIVO` (con el cabezal simulado del tester o el transporte mock del flasher), el archivo se comprueba con rigor y se rechaza si algo no se entiende, y un adaptador real nunca lo admite. El mismo escenario y la misma semilla dan las mismas tramas en el mismo orden, y `bus_scenario.py generate --seed N` escribe escenarios de prueba que combinan los fallos. La ejecución deja el registro de evidencia habitual (`urtc-evidence/1`), que dice que el bus era una simulación y con qué escenario y semilla. Un escenario puede quitar tramas, repetirlas o moverlas, pero no puede hacer que un nodo diga que algo funcionó. Formato y reglas: [Escenarios del bus](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/BUS_SCENARIOS.md).
+<!-- /urtc-section:bus_scenarios -->
+
 ## 🔒 Seguridad y protección
 
 | Riesgo | Defensa |
@@ -475,7 +481,7 @@ Qué versiones de los programas de URTC funcionan juntas, y qué versión del pr
 
 ## 🧪 Pruebas
 
-La suite tiene 597 pruebas (`python -m pytest -q`; con Qt en un equipo sin pantalla, `QT_QPA_PLATFORM=offscreen`; las que necesitan PySide6 se omiten sin él): los codificadores y decodificadores de carga CAN de cada familia de herramientas, los transportes SLCAN y SocketCAN contra simulados, la sonda de identidad, el autotest, los reenvíos de vigilancia, la comprobación de salud del bus, los planes de prueba y el modo sin ventana, la exportación de sesión con su hash, los archivos de idioma y los paneles Qt Quick. Cuatro scripts en la raíz (`verify_qt_*.py`) manejan los paneles Qt Quick de extremo a extremo con un bucle de eventos Qt real. La CI ejecuta además `ruff check`, `python -m mypy` y `tools/ci_validate.py`. Nada de esto se ha ejecutado contra una placa real.
+La suite tiene 633 pruebas (`python -m pytest -q`; con Qt en un equipo sin pantalla, `QT_QPA_PLATFORM=offscreen`; las que necesitan PySide6 se omiten sin él): los codificadores y decodificadores de carga CAN de cada familia de herramientas, los transportes SLCAN y SocketCAN contra simulados, la sonda de identidad, el autotest, los reenvíos de vigilancia, la comprobación de salud del bus, los planes de prueba y el modo sin ventana, la exportación de sesión con su hash, los archivos de idioma y los paneles Qt Quick. Cuatro scripts en la raíz (`verify_qt_*.py`) manejan los paneles Qt Quick de extremo a extremo con un bucle de eventos Qt real. La CI ejecuta además `ruff check`, `python -m mypy` y `tools/ci_validate.py`. Nada de esto se ha ejecutado contra una placa real.
 
 ## 🏗️ Compilación y publicación
 

@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/Licence-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Langage-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-597-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-633-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocole-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.4.4` |
 | Maturité | Fonctionnel |
-| Tests | 597 (`python -m pytest -q`) |
+| Tests | 633 (`python -m pytest -q`) |
 | Technologie | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
@@ -366,6 +366,12 @@ carte est dans [`docs/THERMAL_RUNAWAY_BENCH_TEST.md`](docs/THERMAL_RUNAWAY_BENCH
 Le firmware peut faire partager un bus CAN à plusieurs têtes d'outil (l'extension multinœud). Elle est **désactivée par défaut**, et un bus avec une seule tête fonctionne exactement comme avant. La fenêtre **Têtes** trouve les têtes, liste chacune avec son adresse, son outil et son numéro de série, et affiche son état : prête, sélectionnée, conflit d'adresse, défaut mémorisé, dans son bootloader ou perdue. Vous en sélectionnez une, le programme demande confirmation et ne lui envoie rien avant ; tant que plusieurs têtes sont sur le bus, une commande est refusée jusqu'à ce qu'une soit sélectionnée et l'ait confirmé. Si la tête sélectionnée est perdue, toutes les têtes passent à leur état sûr (une case de la fenêtre le désactive). Testé seulement contre un modèle du bus, pas avec des cartes. Voir `docs/MULTINODE.md` dans URTC-COMMON.
 <!-- /urtc-section:heads -->
 
+<!-- urtc-section:bus_scenarios -->
+### Défauts du bus simulé
+
+Un plan ou une mise à jour peut être exécuté contre un bus simulé qui se comporte mal comme un vrai, sans matériel. Un scénario est un fichier JSON (`urtc-scenario/1`) qui liste les défauts : trames perdues, répétées, réordonnées, retardées, perdues en rafales ou tronquées, un nœud qui reste silencieux ou refuse une commande en disant pourquoi, et une tête en configuration libre (`0x1F`) qui répond de différentes façons à `0x1A3` et `0x1A2`. Rien ne change si vous ne le demandez pas : l'option est `--scenario FICHIER` (avec la tête simulée du testeur ou le transport mock du programmeur), le fichier est vérifié strictement et refusé si quelque chose n'y est pas compris, et un vrai adaptateur n'en accepte jamais. Le même scénario avec la même graine donne les mêmes trames dans le même ordre, et `bus_scenario.py generate --seed N` écrit des scénarios de test qui combinent les défauts. L'exécution laisse l'enregistrement de preuve habituel (`urtc-evidence/1`), qui indique que le bus était une simulation et avec quel scénario et quelle graine. Un scénario peut retirer des trames, les répéter ou les déplacer, mais il ne peut pas faire dire à un nœud que quelque chose a fonctionné. Format et règles : [Scénarios du bus](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/BUS_SCENARIOS.md).
+<!-- /urtc-section:bus_scenarios -->
+
 ## 🔒 Sécurité et protection
 
 | Risque | Défense |
@@ -481,7 +487,7 @@ Les versions des programmes URTC qui fonctionnent ensemble, et la version du pro
 
 ## 🧪 Tests
 
-La suite compte 597 tests (`python -m pytest -q` ; avec Qt sur une machine sans écran, `QT_QPA_PLATFORM=offscreen` ; ceux qui ont besoin de PySide6 sont ignorés sans lui) : les encodeurs et décodeurs de charge CAN de chaque famille d'outils, les transports SLCAN et SocketCAN face à des faux, la sonde d'identité, l'autotest, les renvois de surveillance, le contrôle de santé du bus, les plans de test et le mode sans fenêtre, l'export de session avec son hachage, les fichiers de langue et les panneaux Qt Quick. Quatre scripts à la racine (`verify_qt_*.py`) pilotent les panneaux Qt Quick de bout en bout avec une vraie boucle d'événements Qt. La CI exécute aussi `ruff check`, `python -m mypy` et `tools/ci_validate.py`. Rien de tout cela n'a tourné contre une vraie carte.
+La suite compte 633 tests (`python -m pytest -q` ; avec Qt sur une machine sans écran, `QT_QPA_PLATFORM=offscreen` ; ceux qui ont besoin de PySide6 sont ignorés sans lui) : les encodeurs et décodeurs de charge CAN de chaque famille d'outils, les transports SLCAN et SocketCAN face à des faux, la sonde d'identité, l'autotest, les renvois de surveillance, le contrôle de santé du bus, les plans de test et le mode sans fenêtre, l'export de session avec son hachage, les fichiers de langue et les panneaux Qt Quick. Quatre scripts à la racine (`verify_qt_*.py`) pilotent les panneaux Qt Quick de bout en bout avec une vraie boucle d'événements Qt. La CI exécute aussi `ruff check`, `python -m mypy` et `tools/ci_validate.py`. Rien de tout cela n'a tourné contre une vraie carte.
 
 ## 🏗️ Compilation et publication
 

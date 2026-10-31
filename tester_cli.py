@@ -13,6 +13,9 @@ For a production line, a bench script or a CI job that has no display. Commands:
     validate-plan FILE   check a plan without touching a bus
     history [FOLDER]     list the evidence records (urtc-evidence/1) of a folder (default: --out), checking each one; touches no bus
 
+With ``--transport simulate`` a bus scenario (``--scenario FILE``, urtc-scenario/1, see urtc_can/bus_scenario.py) makes the simulated bus lose, repeat, reorder,
+delay or cut frames, or the head stay silent or refuse, the same way for the same seed; the records then say they come from a simulation with that scenario.
+
 Every command that touches a bus writes a log of the frames (<out>/<name>_<time>.log) and a result record next to it
 (<name>_<time>.json) that names the log by its SHA-256, like the record of the deck. The text it prints is English, as the
 command line of the flasher.
@@ -51,6 +54,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--port", help="serial port (COM3, /dev/ttyACM0), SocketCAN interface (can0), <interface>:<channel> for python-can, or the trace file for replay")
     parser.add_argument("--tool", type=int, default=0, help="with --transport simulate: the tool id the simulated head plays (default 0)")
     parser.add_argument("--fault", choices=("system", "can", "thermal"), default=None, help="with --transport simulate: make the simulated head report this fault")
+    parser.add_argument("--scenario", default=None, metavar="FILE",
+                        help="with --transport simulate: a bus scenario (urtc-scenario/1) that makes the simulated bus lose, repeat, reorder, delay or cut frames, or the head stay silent or refuse; "
+                             "off unless given; never accepted with a real adapter")
+    parser.add_argument("--seed", type=int, default=None, help="with --scenario: the seed of the scenario for this run (default: the one in the file)")
     parser.add_argument("--out", default="logs", help="folder for the log and the result record (default: logs)")
     parser.add_argument("--json", action="store_true", help="print the result as one JSON object instead of text")
     parser.add_argument("--allow-actuation", action="store_true", help="let a plan that says \"actuation\": true send commands that are not queries (heaters, motors, laser ...)")
@@ -59,10 +66,12 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _open_transport(args):
+def _open_transport(args, virtual=None):
     kind = args.transport
     if kind == "simulate":
         from tester_simulator import make_board
+        if virtual is not None:   # a scenario run lives on a clock of its own: no real waiting, the same timing every time
+            return make_board(args.tool, fault=args.fault, delay=0.0, clock=virtual.clock)
         return make_board(args.tool, fault=args.fault, delay=0.001)
     if kind == "replay":
         from tester_simulator import ReplayCAN
@@ -79,6 +88,18 @@ def _open_transport(args):
     if kind == "socketcan":
         return tr.SocketCAN(args.port, log=_say)
     return tr.PythonCAN(args.port, log=_say)
+
+
+SCENARIO_READ_COST_S = 0.001   # the time one read of the simulated bus takes on the clock of a scenario run
+
+
+def _scenario_bus(args, transport, virtual=None):
+    """The simulated head behind the bus of the scenario named by ``--scenario``, or the head itself when none was asked for."""
+    if not args.scenario:
+        return transport
+    from urtc_can import bus_scenario
+    return bus_scenario.FaultyBus(transport, bus_scenario.load(args.scenario), seed=args.seed, clock=virtual.clock, sleep=virtual.sleep,
+                                  read_cost_s=SCENARIO_READ_COST_S)
 
 
 def _synthetic_plan(command: str) -> dict:
@@ -100,11 +121,14 @@ def _exit_code(outcome: str) -> int:
     return {tester_plan.PASS: EXIT_PASS, tester_plan.FAIL: EXIT_FAIL}.get(outcome, EXIT_ERROR)
 
 
-def _write_results(report, plan_name: str, args, out_dir: Path) -> tuple[Path, Path]:
-    return write_report(report, plan_name, f"{args.transport}:{args.port or 'in-memory'}", out_dir)
+def _write_results(report, plan_name: str, args, out_dir: Path, transport=None) -> tuple[Path, Path]:
+    adapter, note = f"{args.transport}:{args.port or 'in-memory'}", ""
+    if args.scenario and hasattr(transport, "summary"):
+        adapter, note = f"{args.transport}:scenario:{transport.scenario.name}", "SIMULATED bus with a scenario; " + transport.summary()
+    return write_report(report, plan_name, adapter, out_dir, note)
 
 
-def write_report(report, plan_name: str, adapter: str, out_dir: Path) -> tuple[Path, Path]:
+def write_report(report, plan_name: str, adapter: str, out_dir: Path, note: str = "") -> tuple[Path, Path]:
     """The log of a plan and its result record (naming the log by its SHA-256), side by side in `out_dir`: (log path, record path)."""
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d_%H%M%S")
@@ -113,7 +137,7 @@ def write_report(report, plan_name: str, adapter: str, out_dir: Path) -> tuple[P
     record = make_record(
         test_name=plan_name, outcome=report.outcome, adapter=adapter,
         firmware_version=report.firmware_version or "unknown", bus="can", bitrate=BITRATE, log_path=log_path,
-        detail=f"tool {report.tool_id if report.tool_id is not None else 'unknown'}; {report.summary()}",
+        detail=f"tool {report.tool_id if report.tool_id is not None else 'unknown'}; {report.summary()}" + (f"; {note}" if note else ""),
     )
     record_path = log_path.with_suffix(".json")
     save_record(record, record_path)
@@ -155,8 +179,18 @@ def main(argv: list[str] | None = None) -> int:
             return EXIT_PASS
     else:
         plan = _synthetic_plan(args.command)
+    if args.scenario and args.transport != "simulate":
+        _say("ERROR: --scenario is only for --transport simulate; a scenario is never applied to a real adapter or a recorded trace.")
+        return EXIT_USAGE
+    if args.seed is not None and not args.scenario:
+        _say("ERROR: --seed goes with --scenario.")
+        return EXIT_USAGE
+    virtual = None
+    if args.scenario:
+        from urtc_can import bus_scenario
+        virtual = bus_scenario.VirtualTime()
     try:
-        transport = _open_transport(args)
+        transport = _scenario_bus(args, _open_transport(args, virtual), virtual)
     except ValueError as exc:
         _say(f"ERROR: {exc}")
         return EXIT_USAGE
@@ -166,7 +200,8 @@ def main(argv: list[str] | None = None) -> int:
     deadline = None if args.timeout is None else time.monotonic() + args.timeout
     try:
         transport.open_channel()
-        report = tester_plan.run_plan(plan, transport, allow_actuation=args.allow_actuation, confirm=_confirm_for(args),
+        clock, sleep = (virtual.clock, virtual.sleep) if virtual is not None else (time.monotonic, time.sleep)
+        report = tester_plan.run_plan(plan, transport, allow_actuation=args.allow_actuation, confirm=_confirm_for(args), clock=clock, sleep=sleep,
                                       stop=lambda: deadline is not None and time.monotonic() > deadline)
     except KeyboardInterrupt:
         _say("Cancelled.")
@@ -179,7 +214,7 @@ def main(argv: list[str] | None = None) -> int:
             transport.close()
         except Exception:
             pass
-    log_path, record_path = _write_results(report, plan["name"], args, Path(args.out))
+    log_path, record_path = _write_results(report, plan["name"], args, Path(args.out), transport)
     if args.json:
         _say(json.dumps({
             "name": report.name, "outcome": report.outcome, "tool_id": report.tool_id, "firmware_version": report.firmware_version,

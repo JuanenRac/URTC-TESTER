@@ -15,6 +15,7 @@
 | `--transport serial\|socketcan\|python-can\|simulate\|replay` | `serial` is an SLCAN adapter (the default), `socketcan` Linux, `python-can` PCAN, Kvaser, gs_usb and the like; `simulate` plays a simulated tool head in memory; `replay` plays the frames of a recorded `.trc` or `.asc` trace. |
 | `--port` | The serial port, the SocketCAN interface, `interface:channel` for python-can, or the trace file for `replay`. |
 | `--tool N`, `--fault system\|can\|thermal` | With `simulate`: the tool the head plays and a fault it reports. |
+| `--scenario FILE`, `--seed N` | With `simulate` only: a bus scenario (`urtc-scenario/1`, see below) that makes the simulated bus lose, repeat, reorder, delay or cut frames, or the head stay silent or refuse. `--seed` replaces the seed of the file. Refused with a real adapter or a trace; a scenario that is not valid is a usage error (2) and runs nothing. |
 | `--out DIR` | Where the log and the result record go (default `logs`). |
 | `--json` | One JSON object with every step instead of text. |
 | `--allow-actuation` | Lets a plan that says `"actuation": true` send commands that are not queries. |
