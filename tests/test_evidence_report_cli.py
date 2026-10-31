@@ -117,3 +117,39 @@ def test_the_evidence_of_a_scenario_run_is_reported_as_simulated(tmp_path, capsy
     assert code == tester_cli.EXIT_PASS and "1 record(s), 1 valid" in out
     page = (tmp_path / "sim.html").read_text(encoding="utf-8")
     assert '<td class="flag">SIMULATED</td>' in page and '<td class="flag">REAL ADAPTER</td>' not in page
+
+
+# -- the result record of the tester shares the folder with its evidence: it is not evidence ---------------------------------------------
+def real_run_folder(tmp_path: Path) -> Path:
+    """A folder as a run of the tester leaves it: the log, the result record ``<name>_<time>.json`` and the evidence ``urtc_evidence_<name>_<time>.json``."""
+    import tester_result_record as trr
+
+    base = tmp_path / "run"
+    base.mkdir()
+    log = base / "ping_20260106_090000.log"
+    log.write_text("ok\n", encoding="utf-8")
+    record = trr.make_record(test_name="ping", outcome="pass", adapter="simulate", firmware_version="0.4.1", bus="can", bitrate=500000, log_path=log)
+    trr.save_record(record, base / "ping_20260106_090000.json")
+    trr.save_evidence(record, base / "urtc_evidence_ping_20260106_090000.json", tool_version="0.4.4", timestamp_utc="2026-01-06T09:00:00Z")
+    return base
+
+
+def test_the_result_record_is_listed_apart_and_never_makes_the_history_fail(tmp_path, capsys):
+    base = real_run_folder(tmp_path)
+    code, out = cli(capsys, "history", base)
+    assert code == tester_cli.EXIT_PASS and "NOT VALID" not in out and "1 other record(s)" in out and "ping_20260106_090000.json  [result_record]" in out
+    code, out = cli(capsys, "history", base, "--json")
+    document = json.loads(out)
+    assert code == tester_cli.EXIT_PASS and document["summary"]["records"] == 1 and document["summary"]["others"] == 1
+    assert document["others"] == [{"file": "ping_20260106_090000.json", "type": "result_record"}]
+
+
+def test_the_report_counts_the_result_record_apart_and_lists_it(tmp_path, capsys):
+    base = real_run_folder(tmp_path)
+    code, out = cli(capsys, "report", "--evidence-dir", base, "--out", tmp_path / "r.html")
+    assert code == tester_cli.EXIT_PASS and "1 record(s), 1 valid, 0 not valid, 1 other record(s), not evidence" in out
+    page = (tmp_path / "r.html").read_text(encoding="utf-8")
+    assert "ping_20260106_090000.json" in page and "test result record" in page and "NOT VALID" not in page
+    for language in ("japanese", "chinese", "portuguese"):
+        code, _ = cli(capsys, "report", "--evidence-dir", base, "--out", tmp_path / f"{language}.html", "--language", language)
+        assert code == tester_cli.EXIT_PASS and "ping_20260106_090000.json" in (tmp_path / f"{language}.html").read_text(encoding="utf-8")

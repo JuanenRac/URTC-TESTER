@@ -59,6 +59,9 @@ STRINGS: dict[str, dict[str, str]] = {
         "ER_DONE": "Report written: {path}",
         "ER_FAILED": "The report could not be written: {text}",
         "ER_NONE": "none",
+        "ER_OTHERS": "Other records, not evidence",
+        "ER_OTHERS_NOTE": "These files sit in the same folder as the evidence but are not evidence: they are not checked as evidence and are not counted in the numbers above. They are listed here so that nothing in the folder is left out.",
+        "ER_COL_TYPE": "Type",
     },
     "spanish": {
         "ER_TITLE": "Informe de evidencias",
@@ -101,6 +104,9 @@ STRINGS: dict[str, dict[str, str]] = {
         "ER_DONE": "Informe escrito: {path}",
         "ER_FAILED": "No se pudo escribir el informe: {text}",
         "ER_NONE": "ninguno",
+        "ER_OTHERS": "Otros registros, no evidencias",
+        "ER_OTHERS_NOTE": "Estos ficheros están en la misma carpeta que las evidencias pero no son evidencias: no se comprueban como evidencia y no se cuentan en los números de arriba. Se listan aquí para que no quede nada de la carpeta sin mostrar.",
+        "ER_COL_TYPE": "Tipo",
     },
     "italian": {
         "ER_TITLE": "Rapporto delle evidenze",
@@ -143,6 +149,9 @@ STRINGS: dict[str, dict[str, str]] = {
         "ER_DONE": "Rapporto scritto: {path}",
         "ER_FAILED": "Impossibile scrivere il rapporto: {text}",
         "ER_NONE": "nessuno",
+        "ER_OTHERS": "Altri registri, non evidenze",
+        "ER_OTHERS_NOTE": "Questi file sono nella stessa cartella delle evidenze ma non sono evidenze: non vengono controllati come evidenza e non sono contati nei numeri sopra. Sono elencati qui perché nulla della cartella resti escluso.",
+        "ER_COL_TYPE": "Tipo",
     },
     "french": {
         "ER_TITLE": "Rapport des preuves",
@@ -185,6 +194,9 @@ STRINGS: dict[str, dict[str, str]] = {
         "ER_DONE": "Rapport écrit : {path}",
         "ER_FAILED": "Le rapport n'a pas pu être écrit : {text}",
         "ER_NONE": "aucun",
+        "ER_OTHERS": "Autres enregistrements, pas des preuves",
+        "ER_OTHERS_NOTE": "Ces fichiers sont dans le même dossier que les preuves mais ne sont pas des preuves : ils ne sont pas vérifiés comme preuve et ne sont pas comptés dans les nombres ci-dessus. Ils sont listés ici pour que rien du dossier ne soit omis.",
+        "ER_COL_TYPE": "Type",
     },
     "german": {
         "ER_TITLE": "Nachweisbericht",
@@ -227,6 +239,9 @@ STRINGS: dict[str, dict[str, str]] = {
         "ER_DONE": "Bericht geschrieben: {path}",
         "ER_FAILED": "Der Bericht konnte nicht geschrieben werden: {text}",
         "ER_NONE": "keine",
+        "ER_OTHERS": "Weitere Protokolle, keine Nachweise",
+        "ER_OTHERS_NOTE": "Diese Dateien liegen im selben Ordner wie die Nachweise, sind aber keine Nachweise: Sie werden nicht als Nachweis geprüft und in den obigen Zahlen nicht mitgezählt. Sie sind hier aufgeführt, damit nichts aus dem Ordner fehlt.",
+        "ER_COL_TYPE": "Art",
     },
     "chinese": {
         "ER_TITLE": "证据报告",
@@ -269,6 +284,9 @@ STRINGS: dict[str, dict[str, str]] = {
         "ER_DONE": "报告已写入：{path}",
         "ER_FAILED": "无法写入报告：{text}",
         "ER_NONE": "无",
+        "ER_OTHERS": "其他记录（非凭证）",
+        "ER_OTHERS_NOTE": "这些文件与凭证位于同一文件夹，但不是凭证：不按凭证校验，也不计入上面的数字。列在这里是为了不遗漏文件夹中的任何内容。",
+        "ER_COL_TYPE": "类型",
     },
     "japanese": {
         "ER_TITLE": "証跡レポート",
@@ -311,6 +329,9 @@ STRINGS: dict[str, dict[str, str]] = {
         "ER_DONE": "レポートを書き込みました: {path}",
         "ER_FAILED": "レポートを書き込めませんでした: {text}",
         "ER_NONE": "なし",
+        "ER_OTHERS": "その他の記録（証跡ではない）",
+        "ER_OTHERS_NOTE": "これらのファイルは証跡と同じフォルダーにありますが証跡ではありません。証跡としては検証されず、上の数にも含まれません。フォルダー内のものが漏れないようここに一覧します。",
+        "ER_COL_TYPE": "種類",
     },
     "portuguese": {
         "ER_TITLE": "Relatório de evidências",
@@ -353,6 +374,9 @@ STRINGS: dict[str, dict[str, str]] = {
         "ER_DONE": "Relatório escrito: {path}",
         "ER_FAILED": "Não foi possível escrever o relatório: {text}",
         "ER_NONE": "nenhum",
+        "ER_OTHERS": "Outros registos, não evidências",
+        "ER_OTHERS_NOTE": "Estes ficheiros estão na mesma pasta que as evidências mas não são evidências: não são verificados como evidência e não entram nos números acima. Ficam listados aqui para que nada da pasta fique por mostrar.",
+        "ER_COL_TYPE": "Tipo",
     },
 }
 

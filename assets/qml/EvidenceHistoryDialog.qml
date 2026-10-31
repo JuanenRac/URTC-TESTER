@@ -155,6 +155,15 @@ Dialog {
                         }
                     }
                 }
+                Text {
+                    objectName: "historyOthers"
+                    Layout.fillWidth: true
+                    visible: text !== ""
+                    text: dialog.model ? dialog.model.othersText : ""
+                    color: dialog.mutedColor
+                    wrapMode: Text.WrapAnywhere
+                    font.pixelSize: 11
+                }
             }
         }
         RowLayout {

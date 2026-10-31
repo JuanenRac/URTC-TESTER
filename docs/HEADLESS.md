@@ -8,7 +8,7 @@
 | `selftest` | The same checks and the same at-rest commands as the self-test of the deck, for the tool that answers. |
 | `run-plan FILE` | Runs a test plan (below). |
 | `validate-plan FILE` | Checks a plan without opening any bus. |
-| `history [FOLDER]` | Lists the evidence records (`urtc-evidence/1`) of a folder (by default the `--out` folder), newest first, and checks each one: a record edited after it was written is listed as not valid and the exit status is 1. `--json` prints the list with its summary. Opens no bus. |
+| `history [FOLDER]` | Lists the evidence records (`urtc-evidence/1`) of a folder (by default the `--out` folder), newest first, and checks each one: a record edited after it was written is listed as not valid and the exit status is 1. The result records the tester writes next to its evidence (`<name>_<time>.json`) and the update reports of the flasher are not evidence: they are recognized by their shape, counted apart as other records and listed by name and type, never as not valid. `--json` prints the list with its summary and the `others`. Opens no bus. |
 | `report --evidence-dir DIR --out FILE` | Writes a report of the evidence records of `DIR` as one HTML page or a PDF (below). Opens no bus. |
 
 | Option | Meaning |
@@ -37,6 +37,7 @@ Every run that touches a bus writes `<name>_<time>.log` (every frame sent and re
 * Each record says where it came from: SIMULATED (the adapter is `simulate...` or the detail says the bus was simulated, as in a run with `--scenario`), REPLAY OF A TRACE, REAL ADAPTER (another adapter is named; it only means that no simulation is stated, not that a board was validated) or NOT STATED. A matching digest shows that a record was not changed after it was written, not who wrote it.
 * The HTML is one file with no script and no external resource (a content policy forbids both), with plain tables that have captions and header cells; every text that comes from a record is escaped and control and direction characters are replaced. The PDF is written by the tool itself (A4, Courier, no compression, no date) and holds Western text only: other characters show as `?`, and Chinese and Japanese use the English texts. The HTML keeps every character and can be printed from a browser.
 * The same records give the same bytes; nothing reads the clock, only the times the records carry are printed.
+* Other records: the result records and the update reports of the folder are not evidence; the report counts them on their own line and lists them by name and type in a section of their own, and the command prints how many there are. They never make it fail.
 * Exit status: `0` all the records are valid (also for an empty folder, whose report says so), `1` some record is not valid (the report is written all the same), `2` wrong arguments (a missing `--evidence-dir` or `--out`, a folder that does not exist, a language that is not one of the eight, `--out` a folder; nothing is written), `3` the file could not be written.
 
 The History window of the deck has a **Report** button that writes `evidence_report.html` and `evidence_report.pdf` in the logs folder, with every record of it, and shows where. It changes no record.

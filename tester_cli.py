@@ -158,11 +158,12 @@ def _history(args) -> int:
     """The evidence records of a folder, listed and checked (the same view as the other programs); 1 when one of them fails its check."""
     from urtc_can import evidence_history
     try:
-        entries = evidence_history.select(evidence_history.load_folder(args.plan or args.out))
+        loaded = evidence_history.load_folder(args.plan or args.out)
     except FileNotFoundError as exc:
         _say(f"ERROR: {exc}")
         return EXIT_USAGE
-    _say(evidence_history.to_json(entries).rstrip("\n") if args.json else evidence_history.to_text(entries))
+    entries, others = evidence_history.select(loaded), evidence_history.others_of(loaded)    # the result records of the tester are not evidence: listed apart, never as not valid
+    _say(evidence_history.to_json(entries, others).rstrip("\n") if args.json else evidence_history.to_text(entries, others))
     return EXIT_FAIL if any(not entry.valid for entry in entries) else EXIT_PASS
 
 
@@ -191,8 +192,10 @@ def _report(args, out: str | None) -> int:
     except OSError as exc:
         _say(f"ERROR: cannot write the report: {exc}")
         return EXIT_ERROR
-    invalid = sum(1 for entry in entries if not entry.valid)
-    _say(f"Report ({fmt}): {target} - {len(entries)} record(s), {len(entries) - invalid} valid, {invalid} not valid")
+    counts = evidence_history.summary(entries)
+    invalid = counts["invalid"]
+    other = f", {counts['others']} other record(s), not evidence" if counts["others"] else ""
+    _say(f"Report ({fmt}): {target} - {counts['records']} record(s), {counts['valid']} valid, {invalid} not valid{other}")
     return EXIT_FAIL if invalid else EXIT_PASS
 
 

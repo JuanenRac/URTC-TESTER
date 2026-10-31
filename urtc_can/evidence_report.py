@@ -6,7 +6,8 @@
 """A report of the evidence records of a folder, as one HTML page or one PDF file.
 
 The records are those of ``evidence_history`` (``urtc-evidence/1``, each one checked with ``evidence.verify``). The report lists every record: a record that
-fails its check is shown as NOT VALID with what is wrong, never left out, and a record that says it came from a simulated bus is marked SIMULATED.
+fails its check is shown as NOT VALID with what is wrong, never left out, and a record that says it came from a simulated bus is marked SIMULATED. The files that
+are not evidence but a known shape (the update report of the flasher, the result record of the tester) are counted and listed apart, by name and type, never as NOT VALID.
 
 * the HTML is one self-contained file: no script, no external resource, a policy that forbids both, plain tables with captions and header cells, and every
   text that comes from a record is escaped (control characters and direction marks are replaced), so a hostile record cannot inject markup;
@@ -144,6 +145,11 @@ def _items(entries: Sequence[evidence_history.Entry], language: str) -> list[_It
     return [_Item(number, entry, language) for number, entry in enumerate(ordered, 1)]
 
 
+def _others(entries: Sequence[evidence_history.Entry], language: str) -> list[tuple[str, str]]:
+    """The records that are not evidence, as (file, type) already clean and in the language, by file name: they are listed, never left out."""
+    return [(clean(r["file"]), _hist.text(language, "EH_OTHER_" + r["type"].upper())) for r in map(evidence_history.other_row, evidence_history.others_of(entries))]
+
+
 def _summary(items: Sequence[_Item], entries: Sequence[evidence_history.Entry]) -> dict[str, Any]:
     base = evidence_history.summary(entries)
     origins = {name: sum(1 for item in items if item.origin == name) for name in ORIGINS}
@@ -198,6 +204,9 @@ def to_html(entries: Sequence[evidence_history.Entry], language: str = "english"
         (t("ER_BY_ORIGIN"), ", ".join(f"{t('ER_ORIGIN_' + k.upper())}: {v}" for k, v in info["origins"].items())),
         (t("ER_FIRST"), info["first"] or "-"), (t("ER_LAST"), info["last"] or "-"),
     ]
+    others = _others(entries, language)
+    if others:
+        rows.append((t("ER_OTHERS"), ", ".join(f"{_hist.text(language, 'EH_OTHER_' + k.upper())}: {v}" for k, v in info["other_kinds"].items() if v)))
     for label, value in rows:
         add(f'<tr><th scope="row">{_e(label)}</th><td>{_e(value)}</td></tr>')
     add("</tbody></table>")
@@ -238,6 +247,13 @@ def to_html(entries: Sequence[evidence_history.Entry], language: str = "english"
                 add(f'<tr><th scope="row">{_e(label)}</th><td>{_e(value)}</td></tr>')
             add("</tbody></table></section>")
         add("</section>")
+    if others:
+        add('<section aria-labelledby="others"><h2 id="others">' + _e(t("ER_OTHERS")) + "</h2>")
+        add(f'<p class="note">{_e(t("ER_OTHERS_NOTE"))}</p>')
+        add("<table><caption>" + _e(t("ER_OTHERS")) + '</caption><thead><tr><th scope="col">' + _e(t("ER_COL_FILE")) + '</th><th scope="col">' + _e(t("ER_COL_TYPE")) + "</th></tr></thead><tbody>")
+        for name, kind_text in others:
+            add(f'<tr><th scope="row">{_e(name)}</th><td>{_e(kind_text)}</td></tr>')
+        add("</tbody></table></section>")
     add("</main>")
     add("</body>")
     add("</html>")
@@ -255,7 +271,9 @@ def to_text(entries: Sequence[evidence_history.Entry], language: str = "english"
              f"{t('ER_BY_OUTCOME')}: " + ", ".join(f"{_hist.text(language, _hist.outcome_key(k))} {v}" for k, v in info["outcomes"].items()),
              f"{t('ER_BY_KIND')}: " + ", ".join(f"{_hist.text(language, _hist.kind_key(k))} {v}" for k, v in info["kinds"].items()),
              f"{t('ER_BY_ORIGIN')}: " + ", ".join(f"{t('ER_ORIGIN_' + k.upper())} {v}" for k, v in info["origins"].items()),
-             f"{t('ER_FIRST')}: {info['first'] or '-'}", f"{t('ER_LAST')}: {info['last'] or '-'}", "", t("ER_NOTE"), ""]
+             f"{t('ER_FIRST')}: {info['first'] or '-'}", f"{t('ER_LAST')}: {info['last'] or '-'}",
+             *([f"{t('ER_OTHERS')}: " + ", ".join(f"{_hist.text(language, 'EH_OTHER_' + k.upper())} {v}" for k, v in info["other_kinds"].items() if v)] if info["others"] else []),
+             "", t("ER_NOTE"), ""]
     lines += [_st.text(language if language in _LATIN else "english", "ER_PDF_NOTE"), ""]
     if not items:
         lines.append(t("ER_EMPTY"))
@@ -265,6 +283,10 @@ def to_text(entries: Sequence[evidence_history.Entry], language: str = "english"
             lines += ["    *** " + t("ER_BANNER_INVALID"), "    " + t("ER_PROBLEMS") + ":"] + [f"      - {p}" for p in item.problems]
         lines += [f"    {_hist.text(language, 'EH_COL_TIME')}: {item.time}", f"    {t('ER_COL_FILE')}: {item.file}"]
         lines += [f"    {label}: {value}" for label, value in item.fields]
+    others = _others(entries, language)
+    if others:
+        lines += ["", t("ER_OTHERS").upper(), "-" * len(t("ER_OTHERS")), t("ER_OTHERS_NOTE")]
+        lines += [f"    {name} | {kind_text}" for name, kind_text in others]
     return "\n".join(lines) + "\n"
 
 
