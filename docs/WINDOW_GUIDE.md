@@ -37,23 +37,27 @@ The **Tool heads** button opens the window that finds the heads when more than o
 ## 5. History
 
 The **History** button next to **Help** opens the history of operations: the evidence records (`urtc-evidence/1`) that the tester wrote, newest first, with the kind, the result, the tool, the board and the versions. Each record is checked when the window opens; one that was edited after it was written, a file that is not JSON or a record of another format is shown as **NOT VALID** with what is wrong. You can filter by result and by text, or reduce the list to the records that fail. The window reads the folder again each time it opens (or when you press **Read again**), shows at most 500 rows and says how many there are, and never changes anything on disk. It is the same window, in the eight languages, in the flasher, the tester and the updater.
+
+![The History window of the tester, with the Signature column](screenshots/tester-history.png)
+
+The **Signature** column says whether a record is signed: **Signed by <alias>** when its key is one of the `trusted_keys` of the configuration, **Valid signature, unknown key** when the signature is good but the key is not listed, **SIGNATURE NOT VALID** when it fails, and **Not signed**. The picture is taken over four sample records and one trusted key.
 From the command line, `python urtc_tester.py --headless history [FOLDER] [--json]` gives the same list for a folder (see [HEADLESS.md](HEADLESS.md)).
 The **Report** button writes `evidence_report.html` and `evidence_report.pdf` in the same folder: every record, the result of checking it and a mark that says whether it came from a simulation; it changes no record. `python urtc_tester.py --headless report --evidence-dir DIR --out FILE` does the same without a window.
 
 ## The same pictures in the other languages
 
-The program has eight interface languages. These are the same four pictures of the tester taken with each of them (`python tools/capture_screens.py --all-languages` writes them again; `--language german` writes one language). The texts are those of the program, not of this page, so a picture shows exactly what a person who chose that language sees.
+The program has eight interface languages. These are the same five pictures of the tester taken with each of them (`python tools/capture_screens.py --all-languages` writes them again; `--language german` writes one language). The texts are those of the program, not of this page, so a picture shows exactly what a person who chose that language sees.
 
-| Language | Window | Help | Updates | Tool heads |
-|---|---|---|---|---|
-| English | [window](screenshots/tester-deck.png) | [help](screenshots/tester-help.png) | [updates](screenshots/tester-updates.png) | [heads](screenshots/tester-heads.png) |
-| Español | [window](screenshots/tester-deck-es.png) | [help](screenshots/tester-help-es.png) | [updates](screenshots/tester-updates-es.png) | [heads](screenshots/tester-heads-es.png) |
-| Deutsch | [window](screenshots/tester-deck-de.png) | [help](screenshots/tester-help-de.png) | [updates](screenshots/tester-updates-de.png) | [heads](screenshots/tester-heads-de.png) |
-| Français | [window](screenshots/tester-deck-fr.png) | [help](screenshots/tester-help-fr.png) | [updates](screenshots/tester-updates-fr.png) | [heads](screenshots/tester-heads-fr.png) |
-| Italiano | [window](screenshots/tester-deck-it.png) | [help](screenshots/tester-help-it.png) | [updates](screenshots/tester-updates-it.png) | [heads](screenshots/tester-heads-it.png) |
-| 日本語 | [window](screenshots/tester-deck-ja.png) | [help](screenshots/tester-help-ja.png) | [updates](screenshots/tester-updates-ja.png) | [heads](screenshots/tester-heads-ja.png) |
-| 简体中文 | [window](screenshots/tester-deck-zh.png) | [help](screenshots/tester-help-zh.png) | [updates](screenshots/tester-updates-zh.png) | [heads](screenshots/tester-heads-zh.png) |
-| Português | [window](screenshots/tester-deck-pt.png) | [help](screenshots/tester-help-pt.png) | [updates](screenshots/tester-updates-pt.png) | [heads](screenshots/tester-heads-pt.png) |
+| Language | Window | Help | Updates | Tool heads | History |
+|---|---|---|---|---|---|
+| English | [window](screenshots/tester-deck.png) | [help](screenshots/tester-help.png) | [updates](screenshots/tester-updates.png) | [heads](screenshots/tester-heads.png) | [history](screenshots/tester-history.png) |
+| Español | [window](screenshots/tester-deck-es.png) | [help](screenshots/tester-help-es.png) | [updates](screenshots/tester-updates-es.png) | [heads](screenshots/tester-heads-es.png) | [history](screenshots/tester-history-es.png) |
+| Deutsch | [window](screenshots/tester-deck-de.png) | [help](screenshots/tester-help-de.png) | [updates](screenshots/tester-updates-de.png) | [heads](screenshots/tester-heads-de.png) | [history](screenshots/tester-history-de.png) |
+| Français | [window](screenshots/tester-deck-fr.png) | [help](screenshots/tester-help-fr.png) | [updates](screenshots/tester-updates-fr.png) | [heads](screenshots/tester-heads-fr.png) | [history](screenshots/tester-history-fr.png) |
+| Italiano | [window](screenshots/tester-deck-it.png) | [help](screenshots/tester-help-it.png) | [updates](screenshots/tester-updates-it.png) | [heads](screenshots/tester-heads-it.png) | [history](screenshots/tester-history-it.png) |
+| 日本語 | [window](screenshots/tester-deck-ja.png) | [help](screenshots/tester-help-ja.png) | [updates](screenshots/tester-updates-ja.png) | [heads](screenshots/tester-heads-ja.png) | [history](screenshots/tester-history-ja.png) |
+| 简体中文 | [window](screenshots/tester-deck-zh.png) | [help](screenshots/tester-help-zh.png) | [updates](screenshots/tester-updates-zh.png) | [heads](screenshots/tester-heads-zh.png) | [history](screenshots/tester-history-zh.png) |
+| Português | [window](screenshots/tester-deck-pt.png) | [help](screenshots/tester-help-pt.png) | [updates](screenshots/tester-updates-pt.png) | [heads](screenshots/tester-heads-pt.png) | [history](screenshots/tester-history-pt.png) |
 
 ## What the pictures do not show
 
