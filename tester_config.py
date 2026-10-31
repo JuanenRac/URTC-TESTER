@@ -224,6 +224,9 @@ def _load_custom_id_names():
     try:
         with open(CUSTOM_IDS_PATH, encoding="utf-8") as f:
             raw = json.load(f)
+        if not isinstance(raw, dict):
+            print(f"WARNING: {CUSTOM_IDS_PATH} must hold a JSON object of IDs and names - ignoring it.", file=sys.stderr)
+            return {}
         result = {}
         for key, name in raw.items():
             try:

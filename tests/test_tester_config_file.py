@@ -156,7 +156,6 @@ def test_the_thermal_summary_says_when_there_was_no_answer_and_when_nothing_is_s
     assert config.format_thermal_stats(stats).endswith("\nnot stored")
 
 
-@pytest.mark.xfail(strict=True, raises=AttributeError, reason="a custom identifier file that holds a JSON list instead of an object raises while the module is imported")
 def test_a_custom_identifier_file_that_is_a_list_is_ignored(tmp_path, monkeypatch):
     path = tmp_path / "urtc_custom_ids.json"
     monkeypatch.setattr(config, "CUSTOM_IDS_PATH", str(path))
