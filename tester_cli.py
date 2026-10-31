@@ -64,7 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--evidence-dir", default=None, metavar="DIR", help="with report: the folder of the evidence records to report on")
     parser.add_argument("--format", choices=("html", "pdf"), default=None, help="with report: html or pdf (default: by the extension of --out, else html)")
     parser.add_argument("--language", default="english", metavar="NAME",
-                        help="with report: the language of the texts (english, spanish, italian, french, german, chinese, japanese, portuguese; the PDF holds Western text only)")
+                        help="with report: the language of the texts (english, spanish, italian, french, german, chinese, japanese, portuguese; the PDF embeds a Chinese and Japanese font subset)")
     parser.add_argument("--json", action="store_true", help="print the result as one JSON object instead of text")
     parser.add_argument("--allow-actuation", action="store_true", help="let a plan that says \"actuation\": true send commands that are not queries (heaters, motors, laser ...)")
     parser.add_argument("--assume-yes", action="store_true", help="answer yes to the confirm steps of a plan (only when a person has looked at what the step asks)")

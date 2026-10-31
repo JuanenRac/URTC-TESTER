@@ -300,7 +300,7 @@ MAXTEMP、HEATING_NO_RISE 或 DROPPED_AT_TARGET）显示在板卡状态中，由
 <!-- urtc-section:evidence_report -->
 ### 证据报告
 
-文件夹中的证据记录（`urtc-evidence/1`）可以生成报告，附在构建或验证资料中：`python urtc_tester.py --headless report --evidence-dir 文件夹 --out 文件 [--format html|pdf] [--language 名称]`（未指定格式时按文件扩展名决定），或使用历史窗口的**报告**按钮，它会在该文件夹中写入 `evidence_report.html` 和 `evidence_report.pdf`。报告包含摘要、每条记录的一行和一节、每条记录的检查结果，以及一个清晰的标记，说明该记录是模拟、轨迹回放、来自真实适配器，还是未说明。未通过检查的记录会标为无效并给出原因，绝不会被省略；只要有无效记录，退出状态就是 1，但报告照常写出。HTML 是不含脚本和外部资源的单个文件，记录中的所有文本都会转义，PDF 由程序自己写出（仅限西文文本；HTML 保留全部字符）。相同的记录得到相同的字节。摘要一致只说明记录在写入后未被改动，而不说明是谁写的；“真实适配器”标记只表示未声明模拟，这些都没有在真实板子上运行过。详情：[证据记录](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/EVIDENCE.md)。
+文件夹中的证据记录（`urtc-evidence/1`）可以生成报告，附在构建或验证资料中：`python urtc_tester.py --headless report --evidence-dir 文件夹 --out 文件 [--format html|pdf] [--language 名称]`（未指定格式时按文件扩展名决定），或使用历史窗口的**报告**按钮，它会在该文件夹中写入 `evidence_report.html` 和 `evidence_report.pdf`。报告包含摘要、每条记录的一行和一节、每条记录的检查结果，以及一个清晰的标记，说明该记录是模拟、轨迹回放、来自真实适配器，还是未说明。未通过检查的记录会标为无效并给出原因，绝不会被省略；只要有无效记录，退出状态就是 1，但报告照常写出。HTML 是不含脚本和外部资源的单个文件，记录中的所有文本都会转义，PDF 由程序自己写出（西文文本使用标准字体，中文和日文使用内嵌的 Noto Sans CJK 子集，遵循 SIL Open Font License 1.1；HTML 保留全部字符）。相同的记录得到相同的字节。摘要一致只说明记录在写入后未被改动，而不说明是谁写的；“真实适配器”标记只表示未声明模拟，这些都没有在真实板子上运行过。详情：[证据记录](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/EVIDENCE.md)。
 <!-- /urtc-section:evidence_report -->
 
 ## 🔒 安全与防护
