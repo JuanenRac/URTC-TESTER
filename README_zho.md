@@ -297,6 +297,12 @@ MAXTEMP、HEATING_NO_RISE 或 DROPPED_AT_TARGET）显示在板卡状态中，由
 计划或更新可以在无需硬件的情况下，针对像真实总线一样表现不佳的模拟总线运行。场景是一个 JSON 文件（`urtc-scenario/1`），列出各种故障：帧丢失、重复、乱序、延迟、成串丢失或被截短，节点保持沉默或拒绝命令并说明原因，以及处于自由配置（`0x1F`）的刀头以不同方式回应 `0x1A3` 和 `0x1A2`。除非您要求，否则什么都不会改变：选项是 `--scenario 文件`（配合测试器的模拟刀头或烧录器的 mock 传输），文件会被严格检查，其中有任何无法理解之处即被拒绝，真实适配器永远不会接受场景。相同的场景和相同的种子会按相同顺序给出相同的帧，`bus_scenario.py generate --seed N` 会写出组合各种故障的测试场景。运行会留下通常的证据记录（`urtc-evidence/1`），说明总线是模拟的，以及使用了哪个场景和种子。场景可以拿走帧、重复帧或移动帧，但无法让节点声称某件事成功了。格式与规则：[总线场景](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/BUS_SCENARIOS.md)。
 <!-- /urtc-section:bus_scenarios -->
 
+<!-- urtc-section:evidence_report -->
+### 证据报告
+
+文件夹中的证据记录（`urtc-evidence/1`）可以生成报告，附在构建或验证资料中：`python urtc_tester.py --headless report --evidence-dir 文件夹 --out 文件 [--format html|pdf] [--language 名称]`（未指定格式时按文件扩展名决定），或使用历史窗口的**报告**按钮，它会在该文件夹中写入 `evidence_report.html` 和 `evidence_report.pdf`。报告包含摘要、每条记录的一行和一节、每条记录的检查结果，以及一个清晰的标记，说明该记录是模拟、轨迹回放、来自真实适配器，还是未说明。未通过检查的记录会标为无效并给出原因，绝不会被省略；只要有无效记录，退出状态就是 1，但报告照常写出。HTML 是不含脚本和外部资源的单个文件，记录中的所有文本都会转义，PDF 由程序自己写出（仅限西文文本；HTML 保留全部字符）。相同的记录得到相同的字节。摘要一致只说明记录在写入后未被改动，而不说明是谁写的；“真实适配器”标记只表示未声明模拟，这些都没有在真实板子上运行过。详情：[证据记录](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/EVIDENCE.md)。
+<!-- /urtc-section:evidence_report -->
+
 ## 🔒 安全与防护
 
 | 风险 | 防御 |

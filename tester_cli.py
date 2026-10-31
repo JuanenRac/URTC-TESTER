@@ -12,6 +12,8 @@ For a production line, a bench script or a CI job that has no display. Commands:
     run-plan FILE  a test plan (see tester_plan.py and docs/HEADLESS.md)
     validate-plan FILE   check a plan without touching a bus
     history [FOLDER]     list the evidence records (urtc-evidence/1) of a folder (default: --out), checking each one; touches no bus
+    report               write a report of the evidence records of --evidence-dir as one HTML page or a PDF (--out FILE, --format html|pdf);
+                         every record is listed, one that fails its check as NOT VALID (exit 1, the report is written all the same); touches no bus
 
 With ``--transport simulate`` a bus scenario (``--scenario FILE``, urtc-scenario/1, see urtc_can/bus_scenario.py) makes the simulated bus lose, repeat, reorder,
 delay or cut frames, or the head stay silent or refuse, the same way for the same seed; the records then say they come from a simulation with that scenario.
@@ -46,7 +48,7 @@ def _say(message: str) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="urtc_tester.py --headless", description="URTC Tester without a window: identify, self-test and run test plans against a tool head.")
-    parser.add_argument("command", choices=("info", "selftest", "run-plan", "validate-plan", "history"))
+    parser.add_argument("command", choices=("info", "selftest", "run-plan", "validate-plan", "history", "report"))
     parser.add_argument("plan", nargs="?", help="the plan file, for run-plan and validate-plan; the folder of the records, for history")
     parser.add_argument("--transport", choices=TRANSPORTS, default="serial",
                         help="serial (SLCAN adapter, default), socketcan (Linux), python-can (PCAN, Kvaser, gs_usb ...), simulate (an in-memory tool head, "
@@ -58,7 +60,11 @@ def build_parser() -> argparse.ArgumentParser:
                         help="with --transport simulate: a bus scenario (urtc-scenario/1) that makes the simulated bus lose, repeat, reorder, delay or cut frames, or the head stay silent or refuse; "
                              "off unless given; never accepted with a real adapter")
     parser.add_argument("--seed", type=int, default=None, help="with --scenario: the seed of the scenario for this run (default: the one in the file)")
-    parser.add_argument("--out", default="logs", help="folder for the log and the result record (default: logs)")
+    parser.add_argument("--out", default=None, help="folder for the log and the result record (default: logs); for report, the file of the report")
+    parser.add_argument("--evidence-dir", default=None, metavar="DIR", help="with report: the folder of the evidence records to report on")
+    parser.add_argument("--format", choices=("html", "pdf"), default=None, help="with report: html or pdf (default: by the extension of --out, else html)")
+    parser.add_argument("--language", default="english", metavar="NAME",
+                        help="with report: the language of the texts (english, spanish, italian, french, german, chinese, japanese, portuguese; the PDF holds Western text only)")
     parser.add_argument("--json", action="store_true", help="print the result as one JSON object instead of text")
     parser.add_argument("--allow-actuation", action="store_true", help="let a plan that says \"actuation\": true send commands that are not queries (heaters, motors, laser ...)")
     parser.add_argument("--assume-yes", action="store_true", help="answer yes to the confirm steps of a plan (only when a person has looked at what the step asks)")
@@ -160,9 +166,43 @@ def _history(args) -> int:
     return EXIT_FAIL if any(not entry.valid for entry in entries) else EXIT_PASS
 
 
+def _report(args, out: str | None) -> int:
+    """The report of the evidence records of a folder written to a file; 1 when a record is not valid (the report is written all the same), 2 for wrong arguments."""
+    from urtc_can import evidence_history, evidence_report, evidence_report_strings
+    if not args.evidence_dir or not out:
+        _say("ERROR: report needs --evidence-dir DIR and --out FILE.")
+        return EXIT_USAGE
+    if args.language not in evidence_report_strings.LANGUAGES:
+        _say(f"ERROR: --language must be one of {', '.join(evidence_report_strings.LANGUAGES)}.")
+        return EXIT_USAGE
+    target = Path(out)
+    fmt = args.format or ("pdf" if target.suffix.lower() == ".pdf" else "html")
+    try:
+        entries = evidence_history.load_folder(args.evidence_dir)
+    except FileNotFoundError as exc:
+        _say(f"ERROR: {exc}")
+        return EXIT_USAGE
+    if target.is_dir():
+        _say(f"ERROR: {target} is a folder; --out is the file of the report.")
+        return EXIT_USAGE
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(evidence_report.render(entries, fmt, args.language))
+    except OSError as exc:
+        _say(f"ERROR: cannot write the report: {exc}")
+        return EXIT_ERROR
+    invalid = sum(1 for entry in entries if not entry.valid)
+    _say(f"Report ({fmt}): {target} - {len(entries)} record(s), {len(entries) - invalid} valid, {invalid} not valid")
+    return EXIT_FAIL if invalid else EXIT_PASS
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    report_out = args.out
+    args.out = args.out or "logs"
+    if args.command == "report":
+        return _report(args, report_out)
     if args.command == "history":
         return _history(args)
     if args.command in ("run-plan", "validate-plan"):

@@ -9,6 +9,7 @@
 | `run-plan FILE` | Runs a test plan (below). |
 | `validate-plan FILE` | Checks a plan without opening any bus. |
 | `history [FOLDER]` | Lists the evidence records (`urtc-evidence/1`) of a folder (by default the `--out` folder), newest first, and checks each one: a record edited after it was written is listed as not valid and the exit status is 1. `--json` prints the list with its summary. Opens no bus. |
+| `report --evidence-dir DIR --out FILE` | Writes a report of the evidence records of `DIR` as one HTML page or a PDF (below). Opens no bus. |
 
 | Option | Meaning |
 |---|---|
@@ -27,6 +28,18 @@ Exit status: `0` everything passed, `1` a check failed, `2` the plan or the argu
 ## Result files
 
 Every run that touches a bus writes `<name>_<time>.log` (every frame sent and received with its time, the answer of each step) and `<name>_<time>.json`, a result record like the one of the deck: the outcome, the adapter, the firmware version found, the bus settings and the SHA-256 of the log, so that a log edited afterwards no longer matches its result (`tester_result_record.load_record` checks it).
+
+## The evidence report
+
+`python urtc_tester.py --headless report --evidence-dir DIR --out FILE [--format html|pdf] [--language NAME]` turns the `urtc-evidence/1` records of `DIR` (the same ones `history` lists) into a report to attach to a build or a validation file. The format is `--format`, else `pdf` when `FILE` ends in `.pdf`, else `html`. `--language` is `english` (default), `spanish`, `italian`, `french`, `german`, `chinese`, `japanese` or `portuguese`.
+
+* It lists every record: a summary, a table with one row per record and a section per record. A record that fails its check (edited after it was written, a file that is not JSON, another format) is shown as NOT VALID with what is wrong, never left out. The result record that a run writes next to its evidence (`<name>_<time>.json`) is not an evidence record and is listed as not valid too, so point `--evidence-dir` at a folder of `urtc_evidence_*.json` files when that is not wanted.
+* Each record says where it came from: SIMULATED (the adapter is `simulate...` or the detail says the bus was simulated, as in a run with `--scenario`), REPLAY OF A TRACE, REAL ADAPTER (another adapter is named; it only means that no simulation is stated, not that a board was validated) or NOT STATED. A matching digest shows that a record was not changed after it was written, not who wrote it.
+* The HTML is one file with no script and no external resource (a content policy forbids both), with plain tables that have captions and header cells; every text that comes from a record is escaped and control and direction characters are replaced. The PDF is written by the tool itself (A4, Courier, no compression, no date) and holds Western text only: other characters show as `?`, and Chinese and Japanese use the English texts. The HTML keeps every character and can be printed from a browser.
+* The same records give the same bytes; nothing reads the clock, only the times the records carry are printed.
+* Exit status: `0` all the records are valid (also for an empty folder, whose report says so), `1` some record is not valid (the report is written all the same), `2` wrong arguments (a missing `--evidence-dir` or `--out`, a folder that does not exist, a language that is not one of the eight, `--out` a folder; nothing is written), `3` the file could not be written.
+
+The History window of the deck has a **Report** button that writes `evidence_report.html` and `evidence_report.pdf` in the logs folder, with every record of it, and shows where. It changes no record.
 
 ## A test plan
 

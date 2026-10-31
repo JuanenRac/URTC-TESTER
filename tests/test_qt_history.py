@@ -51,3 +51,17 @@ def test_the_window_is_in_the_deck_with_a_button_that_opens_it():
     deck = (ROOT / "assets" / "qml" / "TesterDeck.qml").read_text(encoding="utf-8")
     assert "EvidenceHistoryDialog {" in deck and "model: testerBackend.history" in deck and "historyDialog.open()" in deck
     assert (ROOT / "assets" / "qml" / "EvidenceHistoryDialog.qml").is_file()
+
+
+def test_the_report_button_writes_the_report_of_the_logs_folder_and_shows_where(qt_app, tmp_path, monkeypatch):
+    monkeypatch.setattr(tester_config, "LOGS_FOLDER", str(tmp_path))
+    write_record(tmp_path, "urtc_evidence_a.json", "2026-01-01T10:00:00Z", "main-board")
+    write_record(tmp_path, "urtc_evidence_b.json", "2026-01-02T10:00:00Z", "other-board", edited=True)
+    bridge = qt_tester.TesterQtBridge()
+    history = bridge.history
+    assert history.reportStatus == ""
+    history.writeReport()
+    page = (tmp_path / "evidence_report.html").read_text(encoding="utf-8")
+    assert page.count('<section class="record') == 2 and "NOT VALID" in page and (tmp_path / "evidence_report.pdf").read_bytes().startswith(b"%PDF-")
+    assert history.reportStatus.startswith("Report written: ") and str(tmp_path) in history.reportStatus
+    assert "historyReport" in (ROOT / "assets" / "qml" / "EvidenceHistoryDialog.qml").read_text(encoding="utf-8")

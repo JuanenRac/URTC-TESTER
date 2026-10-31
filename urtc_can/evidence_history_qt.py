@@ -15,8 +15,9 @@ from pathlib import Path
 
 from PySide6.QtCore import Property, QObject, Signal, Slot
 
-from . import evidence, evidence_history
+from . import evidence, evidence_history, evidence_report
 from . import evidence_history_strings as strings
+from . import evidence_report_strings as report_strings
 
 ROW_LIMIT = 500
 
@@ -33,6 +34,7 @@ class EvidenceHistoryModel(QObject):
         self._outcome = ""
         self._query = ""
         self._only_invalid = False
+        self._report_status = ""
 
     # -- reading -------------------------------------------------------------------------------------------------
     def _folder_path(self) -> Path | None:
@@ -175,6 +177,32 @@ class EvidenceHistoryModel(QObject):
     def setOnlyInvalid(self, value: bool) -> None:
         self._only_invalid = bool(value)
         self.changed.emit()
+
+    @Slot()
+    def writeReport(self) -> None:
+        """Write ``evidence_report.html`` and ``evidence_report.pdf`` in the folder, with every record of it (the filters of the window do not apply). Only these two
+        files are written; the records are not touched."""
+        folder = self._folder_path()
+        language = self._language()
+        try:
+            if folder is None or not folder.is_dir():
+                raise OSError(self.t("EH_NO_FOLDER"))
+            entries = evidence_history.load_folder(folder)
+            for fmt in evidence_report.FORMATS:
+                (folder / f"evidence_report.{fmt}").write_bytes(evidence_report.render(entries, fmt, language))
+            self._report_status = report_strings.text(language, "ER_DONE", path=str(folder / "evidence_report.html"))
+        except OSError as error:
+            self._report_status = report_strings.text(language, "ER_FAILED", text=str(error))
+        self._entries = None
+        self.changed.emit()
+
+    @Property(str, notify=changed)
+    def reportText(self) -> str:
+        return report_strings.text(self._language(), "ER_BTN")
+
+    @Property(str, notify=changed)
+    def reportStatus(self) -> str:
+        return self._report_status
 
     @Slot()
     def languageChanged(self) -> None:

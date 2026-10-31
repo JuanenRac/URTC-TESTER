@@ -38,6 +38,7 @@ The **Tool heads** button opens the window that finds the heads when more than o
 
 The **History** button next to **Help** opens the history of operations: the evidence records (`urtc-evidence/1`) that the tester wrote, newest first, with the kind, the result, the tool, the board and the versions. Each record is checked when the window opens; one that was edited after it was written, a file that is not JSON or a record of another format is shown as **NOT VALID** with what is wrong. You can filter by result and by text, or reduce the list to the records that fail. The window reads the folder again each time it opens (or when you press **Read again**), shows at most 500 rows and says how many there are, and never changes anything on disk. It is the same window, in the eight languages, in the flasher, the tester and the updater.
 From the command line, `python urtc_tester.py --headless history [FOLDER] [--json]` gives the same list for a folder (see [HEADLESS.md](HEADLESS.md)).
+The **Report** button writes `evidence_report.html` and `evidence_report.pdf` in the same folder: every record, the result of checking it and a mark that says whether it came from a simulation; it changes no record. `python urtc_tester.py --headless report --evidence-dir DIR --out FILE` does the same without a window.
 
 ## The same pictures in the other languages
 
