@@ -18,6 +18,7 @@ VERSION = 2
 MAX_PAYLOAD = 16
 CMD_SET_PREHEAT = 0x01
 CAN_ID_SET_PREHEAT = 0x260
+CAN_ID_REPLY = 0x261  # rack -> host: the reply to a command, an acknowledgement or a refusal, three bytes (command, tool, reason)
 TOOL_ID_NONE = 31
 TOOL_ID_LAST = 24
 RACK_CEILING_C = 400
@@ -206,6 +207,22 @@ def encode_reply(seq: int, cmd: int, tool: int, reason: str) -> bytes:
     return encode_frame(seq, CMD_ACK if reason in REPLY_ACKNOWLEDGEMENTS else CMD_NACK, bytes([cmd & 0xFF, tool & 0xFF, code]))
 
 
+def encode_reply_can(cmd: int, tool: int, reason: str) -> bytes:
+    """The three data bytes of the CAN reply (identifier 0x261): the command answered, the tool byte it carried (0xFF: none) and the reason code.
+
+    The same three bytes as the payload of the serial acknowledgement and refusal; on CAN the kind is told by the reason, there is no sequence number.
+    """
+    return bytes([cmd & 0xFF, tool & 0xFF, REPLY_CODES.index(reason)])
+
+
+def parse_reply_can(can_id: int, data: bytes) -> dict | None:
+    """The reply a rack sent on CAN, or None when the frame is not a well-formed one (identifier 0x261, exactly three bytes, a code that exists)."""
+    if can_id != CAN_ID_REPLY or len(data) != REPLY_PAYLOAD_LEN or data[2] >= len(REPLY_CODES):
+        return None
+    reason = REPLY_CODES[data[2]]
+    return {"ack": reason in REPLY_ACKNOWLEDGEMENTS, "cmd": data[0], "tool": data[1], "code": data[2], "reason": reason}
+
+
 def parse_reply(buf: bytes) -> dict | None:
     """The reply a rack sent, or None when ``buf`` is not a well-formed one (right command, exact payload length, a code that exists and agrees with the command)."""
     status, frame = parse_frame(buf)
@@ -376,6 +393,7 @@ class Reply:
     detail: str = ""
     reason: str = ""          # why it was applied or refused (REPLY_CODES); "" when nobody is told
     frame: bytes = b""        # the reply frame of a serial command (acknowledgement or refusal); empty when nobody is told
+    can_frame: tuple[int, bytes] | None = None  # the reply (identifier 0x261, three bytes) of a command that came on CAN; None when nobody is told
 
 
 @dataclass
@@ -513,10 +531,12 @@ class SimulatedRack:
 
     def _set_preheat(self, seq: int, payload: bytes, now_ms: int, serial: bool = True) -> Reply:
         def told(reply: Reply, reason: str) -> Reply:
-            """The reply with its reason and, for a serial command, the frame that carries it."""
+            """The reply with its reason and the frame that carries it: serial for a serial command, 0x261 for a command that came on CAN."""
             reply.reason = reason
             if serial:
                 reply.frame = encode_reply(seq, CMD_SET_PREHEAT, payload[0], reason)
+            else:
+                reply.can_frame = (CAN_ID_REPLY, encode_reply_can(CMD_SET_PREHEAT, payload[0], reason))
             return reply
 
         status, tool, target = validate_set_preheat(payload)
