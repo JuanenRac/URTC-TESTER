@@ -10,6 +10,7 @@
 # What every repository did first, in the same words, written once: set up Python, validate the manifest, the version, the documentation and the secret policy
 # (tools/ci_validate.py), and compile every Python source without running the build scripts (those change versions). The workflow of the repository checks the
 # repository out first (a local action needs the files) and keeps what is its own after this step: its linting, its type checks, its tests.
+# The action it uses is pinned to a commit, like the ones of the workflows that pin theirs.
 name: Repository baseline
 description: Set up Python, validate the project baseline and compile the Python sources of the repository
 
@@ -23,7 +24,7 @@ runs:
   using: composite
   steps:
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
       with:
         python-version: ${{ inputs.python-version }}
     - name: Validate manifest, version, documentation and secret policy

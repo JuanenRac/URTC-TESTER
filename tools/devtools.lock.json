@@ -3,7 +3,7 @@
   "source": "URTC-DEVTOOLS",
   "version": "0.0.1",
   "files": {
-    ".github/actions/urtc-baseline/action.yml": "5e5ec4712c75a74b3af26804621afba9877ed5081f71791c6897560c4c67af3c",
+    ".github/actions/urtc-baseline/action.yml": "21e9e19bd284b4d2585277a41cf8d40b876f1c679c92b85195d5a3a6b35ef934",
     ".github/workflows/dashboard-dispatch.yml": "d0fcb644615c52528d9f4fb3f62752541be91e7b2ccee03c4e8bbadc8b8fd8bf",
     "bump_manifest_version.py": "c753720831b5aa55dc44c484fd63ba9166360500c895de09651a8b485bfc0317",
     "tools/_doc_policy.py": "0c5f59da8326b5a4efd60cc89ed26a7ec4542479b52983abdf78c5ee942a0c17",
