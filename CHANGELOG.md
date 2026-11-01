@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The self-test says pass, fail or unknown by what each answer means:** it no longer passes because a frame arrived. A pass needs an answer that can be read and says what a healthy tool at rest says (the right tool, the application running and not the boot-loader, no fault flag, every field inside the range of the protocol, a temperature under its limit and cold after the order to switch the heater off, a drill that is stopped). No answer, another tool, a fault flag, the boot-loader or a value out of range fails. An answer too short to read, a board that is still starting, a heater that is still warm, a drill that is still turning and the tools that have nothing to measure (plain motion, the scan probe) are unknown, never a pass. The run takes the worst result and ends with a line that names it and the counts; the limits are in `config.json` under `selftest_limits`.
+- **A plan, its result record and its evidence record can be unknown:** a plan whose self-test cannot decide ends as `unknown` when nothing failed (a failure still wins, an error wins over both), the command line exits with status 4, and the result record, the evidence record, the history and the report know the outcome in the eight languages (Portuguese of Portugal). The deck shows the lines of an undecided check in amber.
+- **The judging of the answers lives in one place:** the deck, the plans and the command line use the same checks of `tester_selftest.py`, one per kind of answer, and the tests run them over a fake bus, over every simulated head and in every language.
+
 ## [0.4.8] - The History window is in the pictures of the README in the eight languages
 
 - **The History window is in the pictures of the README:** the Screenshots section also shows the window of the history of operations (every record checked on its own, with the Signature column that says whether it is signed, by which of your keys, or not valid), in the eight languages of the README. The picture is taken over sample records, on a bench, with no real installation behind.

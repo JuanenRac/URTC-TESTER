@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-633-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-723-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.4.8` |
 | Maturity | Functional |
-| Tests | 633 (`python -m pytest -q`) |
+| Tests | 723 (`python -m pytest -q`) |
 | Stack | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |
@@ -241,9 +241,7 @@ expected telemetry arrives. Deliberately never sends anything that would
 actually heat, fire, or spin at meaningful power - this verifies the
 communication round-trip works, not that an actuator physically responds,
 since confirming that needs a human watching anyway. Asks for
-confirmation before sending anything. Tools with no telemetry (plain
-motion) or that are purely event-driven (scan probe) get an info-only
-note instead of a real pass/fail. **Coverage is partial**: only 7 of
+confirmation before sending anything. Each check ends in pass, fail or unknown: a pass needs an answer that can be read and says what a healthy tool at rest says (right tool, application running, no fault flag, every field inside its range, a temperature under its limit and cold when the heater was told to switch off, a drill that is stopped); no answer or a wrong one fails; an answer that cannot be read, a heater that is still warm, a drill that is still turning and the tools with no telemetry (plain motion) or only event-driven ones (scan probe) are unknown, never a pass. The whole run takes the worst result (fail, then unknown, then pass); the limits are in config.json under selftest_limits. **Coverage is partial**: only 7 of
 the 25 tools have a defined self-test step (soldering iron, drill,
 laser, 3D printer, AOI, vacuum, scan probe) - the other 18 tools don't
 run any check when this button is pressed.
@@ -367,7 +365,7 @@ tool) for handing to whoever's debugging a tool head issue.
 
 ### 🤖 Without a window: test plans
 
-`python urtc_tester.py --headless COMMAND` runs the tester without a window, for a production line, a bench script or a CI job: `info` (who answers: tool, firmware, quick state), `selftest`, `run-plan FILE` and `validate-plan FILE`. A plan is a short JSON file of steps kept in `plans/` (expect a tool, no faults, a minimum firmware version, the self-test, a frame whose value lies in a range, a wait, a question for the person at the bench). The command writes a log of every frame and a result record that names the log by its SHA-256, the same record as the deck. A plan sends only queries unless it says `"actuation": true` and the operator adds `--allow-actuation`; the boot-loader, update, configuration and erase frames are never sent, a command that the firmware drops unless it is refreshed (a heater, a drill, a laser) can be repeated while the plan waits (`keepalive_ms`), and every output is switched off again after a plan that commanded something. `--transport simulate` plays a simulated tool head and `--transport replay --port FILE` a recorded `.trc` or `.asc` trace, so a plan can be tried without a board. Exit status: 0 passed, 1 a check failed, 2 the plan or the arguments are wrong, 3 the test could not be carried out. The text it prints is English, like the command line of the flasher. Details in [`docs/HEADLESS.md`](docs/HEADLESS.md). Nothing here has run against a real board.
+`python urtc_tester.py --headless COMMAND` runs the tester without a window, for a production line, a bench script or a CI job: `info` (who answers: tool, firmware, quick state), `selftest`, `run-plan FILE` and `validate-plan FILE`. A plan is a short JSON file of steps kept in `plans/` (expect a tool, no faults, a minimum firmware version, the self-test, a frame whose value lies in a range, a wait, a question for the person at the bench). The command writes a log of every frame and a result record that names the log by its SHA-256, the same record as the deck. A plan sends only queries unless it says `"actuation": true` and the operator adds `--allow-actuation`; the boot-loader, update, configuration and erase frames are never sent, a command that the firmware drops unless it is refreshed (a heater, a drill, a laser) can be repeated while the plan waits (`keepalive_ms`), and every output is switched off again after a plan that commanded something. `--transport simulate` plays a simulated tool head and `--transport replay --port FILE` a recorded `.trc` or `.asc` trace, so a plan can be tried without a board. Exit status: 0 passed, 1 a check failed, 2 the plan or the arguments are wrong, 3 the test could not be carried out, 4 nothing failed but the evidence could not decide (unknown). The text it prints is English, like the command line of the flasher. Details in [`docs/HEADLESS.md`](docs/HEADLESS.md). Nothing here has run against a real board.
 
 **Plans in the window (new, checked with tests and the simulated head only):** the section TEST PLANS at the bottom of the right column of the deck lists the plans of `plans/`, runs the one you choose against the connected board with the same engine (not in listen-only mode, and only while nothing else reads the bus), shows each step as soon as it ends, asks the questions of a confirm step in a dialog and saves the log and the result record. A plan that commands outputs asks for a confirmation first and every output is switched off at the end; Cancel stops it after the step that is running.
 
@@ -460,7 +458,7 @@ Which versions of the URTC programs work together, and which protocol version ea
 
 ## 🧪 Testing
 
-The suite has 633 tests (`python -m pytest -q`; with Qt on a machine with no screen, `QT_QPA_PLATFORM=offscreen`; the ones that need PySide6 skip without it): the CAN payload encoders and decoders of every tool family, the SLCAN and SocketCAN transports against fakes, the identity probe, the self-test, the watchdog keepalives, the bus-health check, the test plans and the headless mode, the session export with its hash, the language files and the Qt Quick panels. Four scripts at the root (`verify_qt_*.py`) drive the Qt Quick panels end to end with a real Qt event loop. CI also runs `ruff check`, `python -m mypy` and `tools/ci_validate.py`. None of it has run against a real board.
+The suite has 723 tests (`python -m pytest -q`; with Qt on a machine with no screen, `QT_QPA_PLATFORM=offscreen`; the ones that need PySide6 skip without it): the CAN payload encoders and decoders of every tool family, the SLCAN and SocketCAN transports against fakes, the identity probe, the self-test, the watchdog keepalives, the bus-health check, the test plans and the headless mode, the session export with its hash, the language files and the Qt Quick panels. Four scripts at the root (`verify_qt_*.py`) drive the Qt Quick panels end to end with a real Qt event loop. CI also runs `ruff check`, `python -m mypy` and `tools/ci_validate.py`. None of it has run against a real board.
 
 ## 🏗️ Build & Release
 

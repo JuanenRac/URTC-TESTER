@@ -20,7 +20,7 @@ import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-OUTCOMES = ("pass", "fail", "error", "skipped")
+OUTCOMES = ("pass", "fail", "error", "skipped", "unknown")
 
 
 class RecordError(ValueError):

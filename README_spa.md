@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Lenguaje-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-633-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-723-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocolo-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Versión | `0.4.8` |
 | Madurez | Funcional |
-| Tests | 633 (`python -m pytest -q`) |
+| Tests | 723 (`python -m pytest -q`) |
 | Tecnología | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destino | El PC de quien lo usa |
 | En hardware real | Solo simulado: probado con emuladores, dobles de prueba o simuladores; no consta ninguna ejecución en hardware real para esta versión |
@@ -262,10 +262,7 @@ Deliberadamente nunca envía nada que realmente caliente, dispare, o
 gire a potencia significativa - esto verifica que el ida y vuelta de
 comunicación funciona, no que un actuador responda físicamente, ya que
 confirmar eso necesita a un humano observando de todas formas. Pide
-confirmación antes de enviar nada. Las herramientas sin telemetría
-(movimiento simple) o que son puramente dirigidas por eventos (sonda de
-escaneo) reciben una nota solo informativa en vez de un aprobado/fallido
-real. **La cobertura es parcial**: solo 7 de las 25 herramientas tienen
+confirmación antes de enviar nada. Cada comprobación termina en correcto, fallido o sin determinar: un correcto exige una respuesta legible que diga lo que dice una herramienta sana en reposo (herramienta correcta, aplicación en marcha, ningún indicador de fallo, cada campo dentro de su rango, una temperatura por debajo de su límite y fría cuando se ordenó apagar el calentador, un taladro parado); ninguna respuesta o una equivocada es fallido; una respuesta ilegible, un calentador aún caliente, un taladro aún girando y las herramientas sin telemetría (movimiento simple) o puramente dirigidas por eventos (sonda de escaneo) quedan sin determinar, nunca como correcto. La ejecución entera toma el peor resultado (fallido, luego sin determinar, luego correcto); los límites están en config.json bajo selftest_limits. **La cobertura es parcial**: solo 7 de las 25 herramientas tienen
 un paso de autoprueba definido (soldador, taladro, láser, impresora 3D,
 AOI, vacío, sonda de escaneo) - las otras 18 herramientas no ejecutan
 ninguna comprobación al pulsar este botón.
@@ -399,7 +396,7 @@ entregar a quien esté depurando un problema de cabezal de herramienta.
 
 ### 🤖 Sin ventana: planes de prueba
 
-`python urtc_tester.py --headless COMANDO` ejecuta el tester sin ventana, para una línea de producción, un script de banco o un trabajo de CI: `info` (quién responde: herramienta, firmware, estado rápido), `selftest`, `run-plan ARCHIVO` y `validate-plan ARCHIVO`. Un plan es un archivo JSON corto de pasos que vive en `plans/` (esperar una herramienta, sin fallos, una versión mínima de firmware, el autotest, una trama cuyo valor esté en un rango, una espera, una pregunta a la persona del banco). El comando escribe un registro de cada trama y un registro de resultado que nombra el registro por su SHA-256, el mismo que el del panel. Un plan solo envía consultas salvo que diga `"actuation": true` y el operador añada `--allow-actuation`; las tramas del bootloader, de actualización, de configuración y de borrado no se envían nunca, un comando que el firmware abandona si no se refresca (un calentador, un taladro, un láser) puede repetirse mientras el plan espera (`keepalive_ms`), y tras un plan que ordenó algo se apagan de nuevo todas las salidas. `--transport simulate` reproduce una cabeza simulada y `--transport replay --port ARCHIVO` una traza `.trc` o `.asc` grabada, de modo que un plan se puede probar sin placa. Código de salida: 0 correcto, 1 una comprobación falló, 2 el plan o los argumentos son erróneos, 3 la prueba no pudo realizarse. El texto que imprime está en inglés, como la línea de comandos del flasher. Detalles en [`docs/HEADLESS.md`](docs/HEADLESS.md). Nada de esto se ha ejecutado contra una placa real.
+`python urtc_tester.py --headless COMANDO` ejecuta el tester sin ventana, para una línea de producción, un script de banco o un trabajo de CI: `info` (quién responde: herramienta, firmware, estado rápido), `selftest`, `run-plan ARCHIVO` y `validate-plan ARCHIVO`. Un plan es un archivo JSON corto de pasos que vive en `plans/` (esperar una herramienta, sin fallos, una versión mínima de firmware, el autotest, una trama cuyo valor esté en un rango, una espera, una pregunta a la persona del banco). El comando escribe un registro de cada trama y un registro de resultado que nombra el registro por su SHA-256, el mismo que el del panel. Un plan solo envía consultas salvo que diga `"actuation": true` y el operador añada `--allow-actuation`; las tramas del bootloader, de actualización, de configuración y de borrado no se envían nunca, un comando que el firmware abandona si no se refresca (un calentador, un taladro, un láser) puede repetirse mientras el plan espera (`keepalive_ms`), y tras un plan que ordenó algo se apagan de nuevo todas las salidas. `--transport simulate` reproduce una cabeza simulada y `--transport replay --port ARCHIVO` una traza `.trc` o `.asc` grabada, de modo que un plan se puede probar sin placa. Código de salida: 0 correcto, 1 una comprobación falló, 2 el plan o los argumentos son erróneos, 3 la prueba no pudo realizarse, 4 nada falló pero las pruebas no bastan para decidir (sin determinar). El texto que imprime está en inglés, como la línea de comandos del flasher. Detalles en [`docs/HEADLESS.md`](docs/HEADLESS.md). Nada de esto se ha ejecutado contra una placa real.
 
 **Planes en la ventana (nuevo, comprobado solo con tests y la cabeza simulada):** la sección PLANES DE PRUEBA, al final de la columna derecha de la ventana, lista los planes de `plans/`, ejecuta el que elijas contra la placa conectada con el mismo motor (no en modo solo escucha y solo mientras nada más lea el bus), muestra cada paso en cuanto termina, hace en un diálogo las preguntas de un paso de confirmación y guarda el log y el registro de resultado. Un plan que ordena salidas pide antes una confirmación y al final se apagan todas las salidas; Cancelar lo detiene tras el paso en curso.
 
@@ -491,7 +488,7 @@ Qué versiones de los programas de URTC funcionan juntas, y qué versión del pr
 
 ## 🧪 Pruebas
 
-La suite tiene 633 pruebas (`python -m pytest -q`; con Qt en un equipo sin pantalla, `QT_QPA_PLATFORM=offscreen`; las que necesitan PySide6 se omiten sin él): los codificadores y decodificadores de carga CAN de cada familia de herramientas, los transportes SLCAN y SocketCAN contra simulados, la sonda de identidad, el autotest, los reenvíos de vigilancia, la comprobación de salud del bus, los planes de prueba y el modo sin ventana, la exportación de sesión con su hash, los archivos de idioma y los paneles Qt Quick. Cuatro scripts en la raíz (`verify_qt_*.py`) manejan los paneles Qt Quick de extremo a extremo con un bucle de eventos Qt real. La CI ejecuta además `ruff check`, `python -m mypy` y `tools/ci_validate.py`. Nada de esto se ha ejecutado contra una placa real.
+La suite tiene 723 pruebas (`python -m pytest -q`; con Qt en un equipo sin pantalla, `QT_QPA_PLATFORM=offscreen`; las que necesitan PySide6 se omiten sin él): los codificadores y decodificadores de carga CAN de cada familia de herramientas, los transportes SLCAN y SocketCAN contra simulados, la sonda de identidad, el autotest, los reenvíos de vigilancia, la comprobación de salud del bus, los planes de prueba y el modo sin ventana, la exportación de sesión con su hash, los archivos de idioma y los paneles Qt Quick. Cuatro scripts en la raíz (`verify_qt_*.py`) manejan los paneles Qt Quick de extremo a extremo con un bucle de eventos Qt real. La CI ejecuta además `ruff check`, `python -m mypy` y `tools/ci_validate.py`. Nada de esto se ha ejecutado contra una placa real.
 
 ## 🏗️ Compilación y publicación
 

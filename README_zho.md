@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-633-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-723-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | 版本 | `0.4.8` |
 | 成熟度 | 可用 |
-| 测试 | 633 (`python -m pytest -q`) |
+| 测试 | 723 (`python -m pytest -q`) |
 | 技术栈 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
@@ -214,9 +214,7 @@ FM24CL64B 共享 OLED 自身的硬件 I2C2 总线——这是一个核心板卡�
 （对于有遥测的工具）发送一个安全的设定值/速度/功率 0，并检查预期的
 遥测是否到达。刻意从不发送任何会真正加热、点火或以有意义功率旋转的
 内容——这验证的是通信往返是否正常，而非某个执行器是否物理响应，因为
-确认那一点终究需要一个人在旁观察。发送任何内容之前会要求确认。没有
-遥测的工具（纯运动）或纯粹事件驱动的工具（扫描探针）会得到一条仅供
-参考的信息，而非真正的通过/失败结果。**覆盖范围是部分的**：25 种工具
+确认那一点终究需要一个人在旁观察。发送任何内容之前会要求确认。每项检查的结果是通过、失败或无法判定：通过要求收到一条可读的应答，其内容符合静止状态下健康工具应有的样子（工具正确、应用程序运行、无故障标志、每个字段都在范围内、温度低于上限且在已下令关闭加热后处于低温、钻头已停止）；无应答或应答错误为失败；无法解读的应答、仍然温热的加热器、仍在转动的钻头，以及没有遥测的工具（纯运动）或纯粹事件驱动的工具（扫描探针）为无法判定，绝不算通过。整次运行取最差的结果（失败，其次无法判定，再次通过）；阈值在 config.json 的 selftest_limits 中。**覆盖范围是部分的**：25 种工具
 中只有 7 种定义了自检步骤（电烙铁、钻头、激光器、3D 打印机、AOI、真空、
 扫描探针）——按下此按钮时，其他 18 种工具不会运行任何检查。
 
@@ -327,7 +325,7 @@ MAXTEMP、HEATING_NO_RISE 或 DROPPED_AT_TARGET）显示在板卡状态中，由
 
 ### 🤖 无窗口模式: 测试计划
 
-`python urtc_tester.py --headless 命令` 以无窗口方式运行测试器，适用于生产线、台架脚本或 CI 任务: `info`（谁在应答: 工具、固件、快速状态）、`selftest`、`run-plan 文件` 和 `validate-plan 文件`。计划是放在 `plans/` 里的简短 JSON 步骤文件（确认工具、无故障、最低固件版本、自检、数值落在范围内的帧、等待、向台架旁的人提问）。命令会写出每一帧的日志，以及一份用 SHA-256 指明该日志的结果记录，与控制台使用的记录相同。计划只发送查询，除非它写明 `"actuation": true` 且操作员加上 `--allow-actuation`；引导程序、更新、配置和擦除帧永远不会发送，固件在不刷新时会丢弃的指令（加热器、钻头、激光）可在计划等待期间重复发送（`keepalive_ms`），凡是下达过指令的计划结束后会再次关闭所有输出。`--transport simulate` 播放模拟的工具头，`--transport replay --port 文件` 播放录制的 `.trc` 或 `.asc` 轨迹，因此无需电路板即可试跑计划。退出状态: 0 通过，1 有检查失败，2 计划或参数有误，3 测试无法进行。输出的文字为英文，与烧录器的命令行一致。详见 [`docs/HEADLESS.md`](docs/HEADLESS.md)。这些内容尚未在真实电路板上运行过。
+`python urtc_tester.py --headless 命令` 以无窗口方式运行测试器，适用于生产线、台架脚本或 CI 任务: `info`（谁在应答: 工具、固件、快速状态）、`selftest`、`run-plan 文件` 和 `validate-plan 文件`。计划是放在 `plans/` 里的简短 JSON 步骤文件（确认工具、无故障、最低固件版本、自检、数值落在范围内的帧、等待、向台架旁的人提问）。命令会写出每一帧的日志，以及一份用 SHA-256 指明该日志的结果记录，与控制台使用的记录相同。计划只发送查询，除非它写明 `"actuation": true` 且操作员加上 `--allow-actuation`；引导程序、更新、配置和擦除帧永远不会发送，固件在不刷新时会丢弃的指令（加热器、钻头、激光）可在计划等待期间重复发送（`keepalive_ms`），凡是下达过指令的计划结束后会再次关闭所有输出。`--transport simulate` 播放模拟的工具头，`--transport replay --port 文件` 播放录制的 `.trc` 或 `.asc` 轨迹，因此无需电路板即可试跑计划。退出状态: 0 通过，1 有检查失败，2 计划或参数有误，3 测试无法进行，4 没有失败但证据不足以判定（无法判定）。输出的文字为英文，与烧录器的命令行一致。详见 [`docs/HEADLESS.md`](docs/HEADLESS.md)。这些内容尚未在真实电路板上运行过。
 
 **窗口中的计划（新增，仅用测试和模拟头验证）：** 控制台右栏底部的“测试计划”部分会列出 `plans/` 中的计划，用同一引擎对已连接的板子运行您选择的计划（不能在仅监听模式下运行，且仅在没有其他程序读取总线时），每个步骤一结束就显示，确认步骤的问题以对话框提出，并保存日志和结果记录。会控制输出的计划会先请求确认，结束时关闭所有输出；“取消”会在当前步骤之后停止。
 
@@ -412,7 +410,7 @@ README](https://github.com/JuanenRac/URTC-FLASHER) 第 1 和第 2 节，
 
 ## 🧪 测试
 
-测试套件共有 633 个测试（`python -m pytest -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；需要 PySide6 的测试在没有它时会被跳过）：每个工具系列的 CAN 载荷编码器和解码器、针对模拟对象的 SLCAN 和 SocketCAN 传输层、身份探测、自检、看门狗保活、总线健康检查、测试计划和无窗口模式、带哈希的会话导出、语言文件以及 Qt Quick 面板。根目录下的四个脚本（`verify_qt_*.py`）用真实的 Qt 事件循环对 Qt Quick 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。这一切都没有针对真实的板子运行过。
+测试套件共有 723 个测试（`python -m pytest -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；需要 PySide6 的测试在没有它时会被跳过）：每个工具系列的 CAN 载荷编码器和解码器、针对模拟对象的 SLCAN 和 SocketCAN 传输层、身份探测、自检、看门狗保活、总线健康检查、测试计划和无窗口模式、带哈希的会话导出、语言文件以及 Qt Quick 面板。根目录下的四个脚本（`verify_qt_*.py`）用真实的 Qt 事件循环对 Qt Quick 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。这一切都没有针对真实的板子运行过。
 
 ## 🏗️ 构建与发布
 

@@ -23,7 +23,7 @@
 | `--assume-yes` | Answers yes to the `confirm` steps. Use it only when a person has looked at what the step asks. |
 | `--timeout SECONDS` | Stops starting new steps after this time. |
 
-Exit status: `0` everything passed, `1` a check failed, `2` the plan or the arguments are wrong (nothing was sent), `3` the test could not be carried out (no transport, a step that had to be refused or could not be answered, nobody to confirm), `130` cancelled with Ctrl+C. The text it prints is English, like the command line of the flasher.
+Exit status: `0` everything passed, `1` a check failed, `2` the plan or the arguments are wrong (nothing was sent), `4` nothing failed but the evidence could not decide (the outcome is `unknown`), `3` the test could not be carried out (no transport, a step that had to be refused or could not be answered, nobody to confirm), `130` cancelled with Ctrl+C. The text it prints is English, like the command line of the flasher.
 
 ## Result files
 
@@ -82,11 +82,13 @@ A plan is a JSON file (see `plans/`):
 | `expect_tool` | `tool` | the active-tool answer (0x111) names that tool |
 | `check_faults` | | the quick state reports no system error, no CAN error, no thermal fault and no watchdog reset |
 | `query_version` | `min_version`, `hardware_id` (both optional) | the application (not the boot-loader) answers 0x7F8, with at least that version and that hardware id |
-| `selftest` | | the self-test of the tool that answers has no failed check |
+| `selftest` | | the self-test of the tool that answers passes every check; a check that fails fails the step, and one that cannot decide (an answer that cannot be read, a heater still warm, a drill still turning, a tool with no telemetry) makes the step `unknown`, never a pass |
 | `send` | `id`, `data`, `keepalive_ms` (optional, 20 to 200) | the frame was sent (see the rules below); with `keepalive_ms` a command is repeated while the plan waits |
 | `expect_frame` | `id`, `within_ms` (default 500), `length`, `value` | a frame with that identifier arrives after the last `send`, with that length and, for `value`, an unsigned big-endian field of `width` 1 to 4 bytes at `offset` between `min` and `max` |
 | `wait` | `ms` (up to 60000) | always; the frames that arrive meanwhile are kept for the next `expect_frame` |
 | `confirm` | `text` | a person answers yes at the terminal (or `--assume-yes`) |
+
+A step that is `unknown` does not stop the plan either; when nothing failed and no step was an error, the plan is `unknown` (exit status 4), and its result record and evidence record say `unknown`. The limits the self-test judges by are in `config.json` under `selftest_limits` (`cold_c` 60, `solder_max_c` 450, `printer_max_c` 300, `idle_rpm` 300; a value that is not a whole number inside its bounds keeps the default).
 
 A failed step does not stop the plan. An error does (a transport that breaks, a refused actuation, a `confirm` with nobody there): the steps after it are reported as skipped and the plan as an error, never as a pass.
 

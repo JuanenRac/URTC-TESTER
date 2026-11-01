@@ -23,7 +23,8 @@ Every command that touches a bus writes a log of the frames (<out>/<name>_<time>
 command line of the flasher.
 
 Exit status: 0 everything passed, 1 a check failed, 2 the plan or the arguments are wrong, 3 the test could not be carried
-out (no transport, a board that did not answer at all, nobody to confirm), 130 cancelled with Ctrl+C.
+out (no transport, a board that did not answer at all, nobody to confirm), 4 nothing failed but the evidence could not decide
+(the outcome is unknown), 130 cancelled with Ctrl+C.
 """
 from __future__ import annotations
 
@@ -37,7 +38,7 @@ import tester_plan
 from tester_config import TESTER_VERSION, evidence_signing_settings, trusted_keys_store
 from tester_result_record import make_record, save_evidence, save_record
 
-EXIT_PASS, EXIT_FAIL, EXIT_USAGE, EXIT_ERROR, EXIT_CANCELLED = 0, 1, 2, 3, 130
+EXIT_PASS, EXIT_FAIL, EXIT_USAGE, EXIT_ERROR, EXIT_UNKNOWN, EXIT_CANCELLED = 0, 1, 2, 3, 4, 130
 TRANSPORTS = ("serial", "socketcan", "python-can", "simulate", "replay")
 BITRATE = 500000
 
@@ -128,7 +129,7 @@ def _confirm_for(args):
 
 
 def _exit_code(outcome: str) -> int:
-    return {tester_plan.PASS: EXIT_PASS, tester_plan.FAIL: EXIT_FAIL}.get(outcome, EXIT_ERROR)
+    return {tester_plan.PASS: EXIT_PASS, tester_plan.FAIL: EXIT_FAIL, tester_plan.UNKNOWN: EXIT_UNKNOWN}.get(outcome, EXIT_ERROR)
 
 
 def _write_results(report, plan_name: str, args, out_dir: Path, transport=None) -> tuple[Path, Path]:

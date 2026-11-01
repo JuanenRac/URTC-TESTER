@@ -51,6 +51,8 @@ LOGS_FOLDER = os.path.normpath(os.path.join(base_dir, "logs"))
 CUSTOM_IDS_PATH = os.path.normpath(os.path.join(base_dir, "urtc_custom_ids.json"))
 LANGUAGE_FOLDER = os.path.normpath(os.path.join(base_dir, "language"))
 CONFIG_PATH = os.path.normpath(os.path.join(base_dir, "config.json"))
+SELFTEST_LIMIT_DEFAULTS = {"cold_c": 60, "solder_max_c": 450, "printer_max_c": 300, "idle_rpm": 300}
+SELFTEST_LIMIT_BOUNDS = {"cold_c": (20, 100), "solder_max_c": (100, 600), "printer_max_c": (100, 500), "idle_rpm": (0, 5000)}
 AVAILABLE_LANGUAGES = list(LANGUAGES)  # the list every URTC program shares (urtc_ui)
 
 
@@ -69,6 +71,22 @@ def load_config():
         return data if isinstance(data, dict) else {}
     except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return {}
+
+
+def selftest_limits(config=None):
+    """The thresholds the self-test judges the telemetry by, from ``selftest_limits`` in config.json (a number that is not a whole number inside its bounds keeps the default).
+
+    ``cold_c`` is the tip or nozzle temperature up to which a heater that was told to switch off counts as off (above it the self-test says unknown, not pass);
+    ``solder_max_c`` and ``printer_max_c`` are the highest temperatures a reading may have before it counts as a fault; ``idle_rpm`` is the speed up to which a
+    drill that was told to stop counts as stopped."""
+    limits = dict(SELFTEST_LIMIT_DEFAULTS)
+    given = (load_config() if config is None else config).get("selftest_limits")
+    if isinstance(given, dict):
+        for name, (low, high) in SELFTEST_LIMIT_BOUNDS.items():
+            value = given.get(name)
+            if isinstance(value, int) and not isinstance(value, bool) and low <= value <= high:
+                limits[name] = value
+    return limits
 
 
 def evidence_signing_settings(config=None):

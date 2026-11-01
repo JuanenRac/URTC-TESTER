@@ -69,7 +69,7 @@ def main() -> int:
     _pump_until(app, lambda: not bridge.selfTestRunning)
     assert not bridge.selfTestRunning and not bridge.busy, "the deck must be released when the run ends"
     statuses = [line["status"] for line in bridge.selfTestLines]
-    assert statuses.count("PASS") == 3 and "FAIL" not in statuses, statuses
+    assert statuses.count("PASS") == 4 and statuses[-1] == "PASS" and "FAIL" not in statuses, statuses  # three checks and the closing verdict line
     assert [can_id for can_id, _data in transport.sent] == [
         qt_tester.CAN_ID_QUERY_ACTIVE_TOOL, qt_tester.CAN_ID_QUERY_VERSION, qt_tester.CAN_ID_SOLDER_SETPOINT,
     ], "the self-test must send only the two queries and the zero setpoint"

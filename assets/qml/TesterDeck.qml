@@ -1002,7 +1002,7 @@ ApplicationWindow {
                         required property var modelData
                         Layout.fillWidth: true
                         text: "[" + modelData.status + "] " + modelData.text
-                        color: modelData.status === "PASS" ? "#43db9b" : (modelData.status === "FAIL" ? "#ee6b80" : muted)
+                        color: modelData.status === "PASS" ? "#43db9b" : (modelData.status === "FAIL" ? "#ee6b80" : (modelData.status === "UNKNOWN" ? "#e0b34a" : muted))
                         font.family: "Cascadia Mono"
                         font.pixelSize: 10
                         wrapMode: Text.WordWrap
@@ -1071,7 +1071,7 @@ ApplicationWindow {
                         required property var modelData
                         Layout.fillWidth: true
                         text: "[" + modelData.status + "] " + modelData.text
-                        color: modelData.status === "PASS" ? "#43db9b" : (modelData.status === "FAIL" || modelData.status === "ERROR" ? "#ee6b80" : muted)
+                        color: modelData.status === "PASS" ? "#43db9b" : (modelData.status === "FAIL" || modelData.status === "ERROR" ? "#ee6b80" : (modelData.status === "UNKNOWN" ? "#e0b34a" : muted))
                         font.family: "Cascadia Mono"
                         font.pixelSize: 10
                         wrapMode: Text.WordWrap

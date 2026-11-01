@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-633-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-723-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Versão | `0.4.8` |
 | Maturidade | Funcional |
-| Testes | 633 (`python -m pytest -q`) |
+| Testes | 723 (`python -m pytest -q`) |
 | Tecnologia | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destino | O PC de quem o usa |
 | Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |
@@ -241,9 +241,7 @@ telemetria esperada chega. Deliberadamente nunca envia nada que
 aqueça, dispare ou rode realmente com potência significativa - isto verifica que
 o ciclo de comunicação funciona, não que um atuador responda fisicamente,
 já que confirmar isso exige de qualquer forma uma pessoa a observar. Pede
-confirmação antes de enviar o que quer que seja. As ferramentas sem telemetria (movimento
-simples) ou puramente orientadas a eventos (scan probe) recebem uma
-nota meramente informativa em vez de um verdadeiro aprovado/reprovado. **A cobertura é parcial**: apenas 7 das
+confirmação antes de enviar o que quer que seja. Cada verificação termina em aprovado, reprovado ou indeterminado: um aprovado exige uma resposta legível que diga o que diz uma ferramenta saudável em repouso (ferramenta certa, aplicação em execução, nenhum indicador de falha, cada campo dentro do intervalo, uma temperatura abaixo do limite e fria quando o aquecedor recebeu ordem de desligar, uma broca parada); sem resposta ou com uma resposta errada é reprovado; uma resposta ilegível, um aquecedor ainda quente, uma broca ainda a rodar e as ferramentas sem telemetria (movimento simples) ou puramente orientadas a eventos (scan probe) ficam indeterminadas, nunca aprovadas. A execução completa assume o pior resultado (reprovado, depois indeterminado, depois aprovado); os limites estão em config.json em selftest_limits. **A cobertura é parcial**: apenas 7 das
 25 ferramentas têm um passo de self-test definido (ferro de soldar, broca,
 laser, impressora 3D, AOI, vácuo, scan probe) - as outras 18 ferramentas não
 executam qualquer verificação quando este botão é premido.
@@ -367,7 +365,7 @@ detetada) para entregar a quem estiver a depurar um problema numa cabeça de fer
 
 ### 🤖 Sem janela: planos de teste
 
-`python urtc_tester.py --headless COMANDO` executa o tester sem janela, para uma linha de produção, um script de bancada ou uma tarefa de CI: `info` (quem responde: ferramenta, firmware, estado rápido), `selftest`, `run-plan FICHEIRO` e `validate-plan FICHEIRO`. Um plano é um pequeno ficheiro JSON de passos guardado em `plans/` (esperar uma ferramenta, sem falhas, uma versão mínima de firmware, o autoteste, uma trama cujo valor esteja num intervalo, uma espera, uma pergunta à pessoa na bancada). O comando escreve um registo de cada trama e um registo de resultado que nomeia o registo pelo seu SHA-256, o mesmo do painel. Um plano só envia consultas, a menos que diga `"actuation": true` e o operador acrescente `--allow-actuation`; as tramas do bootloader, de atualização, de configuração e de apagamento nunca são enviadas, um comando que o firmware abandona se não for refrescado (um aquecedor, um berbequim, um laser) pode ser repetido enquanto o plano espera (`keepalive_ms`), e depois de um plano que ordenou algo todas as saídas são desligadas de novo. `--transport simulate` reproduz uma cabeça simulada e `--transport replay --port FICHEIRO` um traço `.trc` ou `.asc` gravado, para que um plano possa ser experimentado sem placa. Código de saída: 0 passou, 1 uma verificação falhou, 2 o plano ou os argumentos estão errados, 3 o teste não pôde ser realizado. O texto que imprime está em inglês, como a linha de comandos do flasher. Pormenores em [`docs/HEADLESS.md`](docs/HEADLESS.md). Nada disto foi executado contra uma placa real.
+`python urtc_tester.py --headless COMANDO` executa o tester sem janela, para uma linha de produção, um script de bancada ou uma tarefa de CI: `info` (quem responde: ferramenta, firmware, estado rápido), `selftest`, `run-plan FICHEIRO` e `validate-plan FICHEIRO`. Um plano é um pequeno ficheiro JSON de passos guardado em `plans/` (esperar uma ferramenta, sem falhas, uma versão mínima de firmware, o autoteste, uma trama cujo valor esteja num intervalo, uma espera, uma pergunta à pessoa na bancada). O comando escreve um registo de cada trama e um registo de resultado que nomeia o registo pelo seu SHA-256, o mesmo do painel. Um plano só envia consultas, a menos que diga `"actuation": true` e o operador acrescente `--allow-actuation`; as tramas do bootloader, de atualização, de configuração e de apagamento nunca são enviadas, um comando que o firmware abandona se não for refrescado (um aquecedor, um berbequim, um laser) pode ser repetido enquanto o plano espera (`keepalive_ms`), e depois de um plano que ordenou algo todas as saídas são desligadas de novo. `--transport simulate` reproduz uma cabeça simulada e `--transport replay --port FICHEIRO` um traço `.trc` ou `.asc` gravado, para que um plano possa ser experimentado sem placa. Código de saída: 0 passou, 1 uma verificação falhou, 2 o plano ou os argumentos estão errados, 3 o teste não pôde ser realizado, 4 nada falhou mas as provas não chegam para decidir (indeterminado). O texto que imprime está em inglês, como a linha de comandos do flasher. Pormenores em [`docs/HEADLESS.md`](docs/HEADLESS.md). Nada disto foi executado contra uma placa real.
 
 **Planos na janela (novo, verificado só com testes e a cabeça simulada):** a secção PLANOS DE TESTE, no fim da coluna direita do deck, lista os planos de `plans/`, executa o que escolher contra a placa ligada com o mesmo motor (não no modo só escuta e só enquanto nada mais ler o barramento), mostra cada passo assim que termina, faz numa caixa de diálogo as perguntas de um passo de confirmação e guarda o log e o registo do resultado. Um plano que comanda saídas pede antes uma confirmação e no fim todas as saídas são desligadas; Cancelar pára-o depois do passo em curso.
 
@@ -460,7 +458,7 @@ As versões dos programas URTC que funcionam em conjunto, e a versão do protoco
 
 ## 🧪 Testes
 
-O conjunto tem 633 testes (`python -m pytest -q`; com Qt numa máquina sem ecrã, `QT_QPA_PLATFORM=offscreen`; os que precisam do PySide6 são ignorados sem ele): os codificadores e descodificadores de carga CAN de cada família de ferramentas, os transportes SLCAN e SocketCAN contra simulações, a sonda de identidade, o autoteste, os reenvios de vigilância, a verificação de saúde do barramento, os planos de teste e o modo sem janela, a exportação da sessão com o seu hash, os ficheiros de idioma e os painéis Qt Quick. Quatro scripts na raiz (`verify_qt_*.py`) comandam os painéis Qt Quick de ponta a ponta com um ciclo de eventos Qt real. A CI executa também `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Nada disto correu contra uma placa real.
+O conjunto tem 723 testes (`python -m pytest -q`; com Qt numa máquina sem ecrã, `QT_QPA_PLATFORM=offscreen`; os que precisam do PySide6 são ignorados sem ele): os codificadores e descodificadores de carga CAN de cada família de ferramentas, os transportes SLCAN e SocketCAN contra simulações, a sonda de identidade, o autoteste, os reenvios de vigilância, a verificação de saúde do barramento, os planos de teste e o modo sem janela, a exportação da sessão com o seu hash, os ficheiros de idioma e os painéis Qt Quick. Quatro scripts na raiz (`verify_qt_*.py`) comandam os painéis Qt Quick de ponta a ponta com um ciclo de eventos Qt real. A CI executa também `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Nada disto correu contra uma placa real.
 
 ## 🏗️ Compilação e publicação
 

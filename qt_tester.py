@@ -278,6 +278,7 @@ class TesterQtBridge(QObject):
         # and the CheckBox's checked binding both read.
         self._custom_periodic_active = False
         self._self_test_lines: list[dict[str, str]] = []
+        self._self_test_verdict = ""  # PASS, FAIL or UNKNOWN of the last run
         self._readout_values: dict[str, str] = {}
         self._readout_series = tele.Series()
         self._bus_health_text = ""
@@ -1373,6 +1374,7 @@ class TesterQtBridge(QObject):
                     emit=lambda line: self._selfTestLine.emit(line.status, line.text),
                     stop=lambda: self._transport is None,
                 )
+                self._self_test_verdict = result.verdict
                 self._selfTestDone.emit(result.failed, "")
             except Exception as exc:
                 self._selfTestDone.emit(-1, str(exc))
@@ -1390,7 +1392,7 @@ class TesterQtBridge(QObject):
             self._log(f"SELFTEST_FAILED {error}")
         else:
             self._set_state(status="ACTIVE CHECKS ARMED", busy=False)
-            self._log(f"SELFTEST_COMPLETE failed={failed}")
+            self._log(f"SELFTEST_COMPLETE verdict={self._self_test_verdict} failed={failed}")
 
 
     # -- test plans -------------------------------------------------------
@@ -1481,9 +1483,10 @@ class TesterQtBridge(QObject):
                     plan, transport, allow_actuation=allow_actuation, confirm=self._plan_confirm,
                     stop=lambda: self._plan_cancel.is_set() or self._transport is None, progress=progress,
                 )
-                counts = {key: sum(1 for s in report.steps if s.outcome == key) for key in (tester_plan.PASS, tester_plan.FAIL, tester_plan.ERROR, tester_plan.SKIPPED)}
+                counts = {key: sum(1 for s in report.steps if s.outcome == key) for key in (tester_plan.PASS, tester_plan.FAIL, tester_plan.UNKNOWN, tester_plan.ERROR, tester_plan.SKIPPED)}
                 summary = _("QT_PLAN_SUMMARY", outcome=_(f"QT_PLAN_OUTCOME_{report.outcome.upper()}"), passed=counts[tester_plan.PASS],
-                            failed=counts[tester_plan.FAIL], errors=counts[tester_plan.ERROR], skipped=counts[tester_plan.SKIPPED])
+                            failed=counts[tester_plan.FAIL], unknown=counts[tester_plan.UNKNOWN], errors=counts[tester_plan.ERROR],
+                            skipped=counts[tester_plan.SKIPPED])
                 try:
                     log_path, _record = tester_cli.write_report(report, plan["name"], f"deck:{self._selected_port or 'in-memory'}", Path(LOGS_FOLDER))
                     summary += "\n" + _("QT_PLAN_SAVED", log=str(log_path))

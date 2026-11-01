@@ -110,17 +110,18 @@ class QtSelfTestTests(unittest.TestCase):
     def test_a_passing_run_lists_pass_lines_and_frees_the_deck(self):
         self._run_worker()
         statuses = [line["status"] for line in self.bridge.selfTestLines]
-        self.assertEqual(statuses.count("PASS"), 3)
+        self.assertEqual(statuses.count("PASS"), 4)  # three checks and the closing line with the verdict
+        self.assertEqual(statuses[-1], "PASS")
         self.assertNotIn("FAIL", statuses)
         self.assertFalse(self.bridge.selfTestRunning)
         self.assertFalse(self.bridge.busy)
-        self.assertTrue(any(line.startswith("SELFTEST_COMPLETE failed=0") for line in self.logs))
+        self.assertTrue(any(line.startswith("SELFTEST_COMPLETE verdict=PASS failed=0") for line in self.logs))
 
     def test_missing_telemetry_shows_a_fail_line(self):
         self.transport.silent = {tester_config.CAN_ID_SOLDER_TELEMETRY}
         self._run_worker()
         self.assertIn("FAIL", [line["status"] for line in self.bridge.selfTestLines])
-        self.assertTrue(any(line.startswith("SELFTEST_COMPLETE failed=1") for line in self.logs))
+        self.assertTrue(any(line.startswith("SELFTEST_COMPLETE verdict=FAIL failed=1") for line in self.logs))
 
     def test_a_bus_error_ends_the_run_and_frees_the_deck(self):
         def boom(can_id, data):

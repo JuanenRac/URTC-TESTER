@@ -51,7 +51,7 @@ DEFAULT_WITHIN_MS = 500
 NAME_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}")
 VERSION_PATTERN = re.compile(r"\d{1,5}\.\d{1,3}(\.\d{1,3})?")
 
-PASS, FAIL, ERROR, SKIPPED = "pass", "fail", "error", "skipped"
+PASS, FAIL, ERROR, SKIPPED, UNKNOWN = "pass", "fail", "error", "skipped", "unknown"
 
 # Queries: the board answers and nothing changes. A plan may send these without any switch.
 READ_ONLY_IDS = frozenset({
@@ -102,8 +102,9 @@ class PlanReport:
     notes: list[str] = field(default_factory=list)
 
     def summary(self) -> str:
-        counts = {key: sum(1 for s in self.steps if s.outcome == key) for key in (PASS, FAIL, ERROR, SKIPPED)}
-        return f"{self.outcome.upper()}: {counts[PASS]} passed, {counts[FAIL]} failed, {counts[ERROR]} errors, {counts[SKIPPED]} skipped"
+        counts = {key: sum(1 for s in self.steps if s.outcome == key) for key in (PASS, FAIL, UNKNOWN, ERROR, SKIPPED)}
+        return (f"{self.outcome.upper()}: {counts[PASS]} passed, {counts[FAIL]} failed, {counts[UNKNOWN]} unknown, "
+                f"{counts[ERROR]} errors, {counts[SKIPPED]} skipped")
 
     def log_text(self, plan_name: str | None = None) -> str:
         lines = [f"URTC Tester plan log - {plan_name or self.name}"]
@@ -360,6 +361,7 @@ MESSAGES = {
     "QT_PM_NOTHING_TO_TEST": "no answer to the active-tool query (0x110): nothing to test",
     "QT_PM_SELFTEST_FAILED": "{failed} of the self-test checks failed for tool {tool}",
     "QT_PM_SELFTEST_OK": "self-test of tool {tool} passed",
+    "QT_PM_SELFTEST_UNKNOWN": "self-test of tool {tool} could not decide: {unknown} check(s) have no evidence either way",
     "QT_PM_NO_ACTUATION": "{id} is not a query and the operator did not allow actuation (--allow-actuation)",
     "QT_PM_LISTEN_ONLY": "the bus was opened listen-only: nothing can be sent",
     "QT_PM_SENT": "sent {id} {data}",
@@ -452,6 +454,8 @@ def run_plan(plan: dict, transport, *, allow_actuation: bool = False, confirm: C
         report.outcome = FAIL
     elif any(s.outcome == SKIPPED for s in report.steps):
         report.outcome = ERROR
+    elif any(s.outcome == UNKNOWN for s in report.steps):
+        report.outcome = UNKNOWN  # nothing failed, but the evidence does not say pass either
     return report
 
 
@@ -549,6 +553,8 @@ def _run_selftest(step, bus, state, plan, allow_actuation, confirm, listen_only)
         bus.trace.append(f"           {line}")
     if result.failed:
         return FAIL, Msg("QT_PM_SELFTEST_FAILED", failed=result.failed, tool=_tool_name(state["tool"]))
+    if result.verdict != tester_selftest.PASS:
+        return UNKNOWN, Msg("QT_PM_SELFTEST_UNKNOWN", unknown=result.unknown, tool=_tool_name(state["tool"]))
     return PASS, Msg("QT_PM_SELFTEST_OK", tool=_tool_name(state["tool"]))
 
 
