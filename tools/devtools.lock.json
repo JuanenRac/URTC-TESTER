@@ -5,7 +5,9 @@
   "files": {
     ".github/actions/urtc-baseline/action.yml": "21e9e19bd284b4d2585277a41cf8d40b876f1c679c92b85195d5a3a6b35ef934",
     ".github/workflows/dashboard-dispatch.yml": "d0fcb644615c52528d9f4fb3f62752541be91e7b2ccee03c4e8bbadc8b8fd8bf",
-    "bump_manifest_version.py": "c753720831b5aa55dc44c484fd63ba9166360500c895de09651a8b485bfc0317",
+    "bump_manifest_version.py": "fbd3433f100e701457c2053495e2ba86771f9cb25f8d396eba2d173ef5462bda",
+    "test.bat": "25d6d7dc99c078eef21479ec0c996a01d166053f14be14b6516625573ce4ddb9",
+    "test.sh": "cce59fa651ad95c7a025f4a5a5a5a1daf755a25230a2a1f875ad875981b44202",
     "tools/_doc_policy.py": "0c5f59da8326b5a4efd60cc89ed26a7ec4542479b52983abdf78c5ee942a0c17",
     "tools/_readme_parity.py": "98d9e83adcd9f3662bfdee5b88836ddccc5c40f4340c55542e06520143e66c4c",
     "tools/_readme_svg.py": "7bb8388deb11c15dfbc202c8da1b808540853ec2c263260795d3cb2664d6f94d",
@@ -13,6 +15,7 @@
     "tools/make_architecture.py": "9df7d6c00af0f1178c44eae8e849c31218bae196984ec718a7fdc63daa2e2fa9",
     "tools/make_structure.py": "27615e9b6374cbb6cc21b52d52bad4e9db1c9307319a8910b4b75c4ecb9fe5c8",
     "tools/pretty_run.py": "1698bfec531568afaf5319f0a220e9bf7c0087f39cbf5e6e88e7035bfc1327c5",
-    "tools/status_lights.py": "7e71dd24c828a07a3b842446dbab7921784df1e5538a463e88a1f33181550019"
+    "tools/status_lights.py": "7e71dd24c828a07a3b842446dbab7921784df1e5538a463e88a1f33181550019",
+    "tools/universal_readme_check.py": "ddb5f9986119a8b16800cba627d8a13af8b39ff1e044adc992fd06defea301e5"
   }
 }
