@@ -6,7 +6,7 @@ These pictures are the real window, loaded without a screen and drawn to a file 
 
 ![The deck of the tester as it opens](screenshots/tester-deck.png)
 
-* **Transport gate** (left): choose the serial port of the SLCAN adapter (or a SocketCAN interface on Linux) and the bit rate, then press **Connect**. **Auto-detect** only listens to the bus, sends nothing and finds the bit rate. With no hardware, run `python -m urtc_can.virtual_board`, set `URTC_VIRTUAL_PORT=socket://127.0.0.1:7777` and the virtual board appears in the list of ports.
+* **Transport gate** (left): choose the serial port of the SLCAN adapter (or a SocketCAN interface on Linux) and the bit rate, then press **Connect**. **Auto-detect** only listens to the bus, sends nothing and finds the bit rate. With no hardware, run `python -m urtc_can.virtual_board`, set `URTC_VIRTUAL_PORT=socket://127.0.0.1:7777` and the virtual board appears in the list of ports. To try the window against the real receive path of the firmware, start it with `python -m urtc_can.virtual_board --firmware-repo ../URTC` (a checkout of the URTC repository and a host C compiler, or WSL on Windows).
 * **Safety mode**: the program starts listen-only. Everything that sends something needs the active mode, the profile of the tool and a second confirmation; heaters and motors switch off when the program stops talking to them.
 * **Tool profile**: the commands of a tool unlock only when the tool that answers is the one selected.
 * **Identity and health checkpoints** (right): the four steps of a first connection, the passive bus window, the advanced profile control and the active tool read-out.

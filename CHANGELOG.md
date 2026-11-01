@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The virtual board can be the firmware's own receive path:** the copy of the virtual board from URTC-COMMON 0.1.6 takes `--firmware-repo DIR` (`python -m urtc_can.virtual_board --firmware-repo ../URTC`, with a checkout of the URTC repository and a host C compiler, or WSL on Windows), builds the firmware's `tests/virtual_board.c` and bridges the SLCAN port to it; the port URL it prints goes in `URTC_VIRTUAL_PORT` or `--port` as before.
+
 ## [0.4.9] - The self-test says pass, fail or unknown by what each answer means, with its limits in the configuration file, and a plan, its result and its evidence can be unknown
 
 - **The self-test says pass, fail or unknown by what each answer means:** it no longer passes because a frame arrived. A pass needs an answer that can be read and says what a healthy tool at rest says (the right tool, the application running and not the boot-loader, no fault flag, every field inside the range of the protocol, a temperature under its limit and cold after the order to switch the heater off, a drill that is stopped). No answer, another tool, a fault flag, the boot-loader or a value out of range fails. An answer too short to read, a board that is still starting, a heater that is still warm, a drill that is still turning and the tools that have nothing to measure (plain motion, the scan probe) are unknown, never a pass. The run takes the worst result and ends with a line that names it and the counts; the limits are in `config.json` under `selftest_limits`.
