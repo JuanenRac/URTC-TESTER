@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.4.7] - A switch in the window to sign the evidence records, a Signature column in the history, the store of trusted keys and a screenshot of the history in the eight languages
 
 - **The deck can turn on the signature of the evidence:** a check box in the menu of the deck, "Sign the evidence records of this tester with my Ed25519 key", turns the `sign_evidence` setting on and off (off by default; it is saved in `config.json`), in the eight languages (Portuguese of Portugal).
 - **The History window shows the state of each signature** in a new column, and the history and the report say who signed: a `trusted_keys` object in `config.json` lists public keys by alias (public keys only, never a seed), and a good signature by one of them is "Signed by <alias>", one by another key is "Valid signature, unknown key" (shown, it does not fail the status) and one that fails stays "SIGNATURE NOT VALID". `--public-key` still works and wins over the store. The shared copy and its lock files are synchronized.
