@@ -37,7 +37,7 @@
 
 | | |
 |---|---|
-| Versión | `0.4.9` |
+| Versión | `0.5.0` |
 | Madurez | Funcional |
 | Tests | 723 (`python -m pytest -q`) |
 | Tecnología | Python / PySide6 / Qt Quick / live CAN bus diagnostics |

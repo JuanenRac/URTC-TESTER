@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.5.0] - The raw bus monitor follows the nodes of a bus with several tool heads and the virtual board can be the receive path of the firmware itself
 
 - **The raw bus monitor follows the nodes of a bus with several tool heads:** every row carries the node it belongs to (`N03`; the node is in the identifier of the frames of the extension, and a single-head frame belongs to the node whose status says it is selected), the filter takes node addresses (`n3 n12`) next to the identifiers, and a summary under the table gives the frames per second, the share of the bus and the kinds of frame of each node (it appears only when a frame of the extension was seen). Every frame counts for its node whatever the filter hides. The helpers are the copy of `node_monitor` from URTC-COMMON; tried against the model of the bus only.
 - **The virtual board can be the firmware's own receive path:** the copy of the virtual board from URTC-COMMON 0.1.6 takes `--firmware-repo DIR` (`python -m urtc_can.virtual_board --firmware-repo ../URTC`, with a checkout of the URTC repository and a host C compiler, or WSL on Windows), builds the firmware's `tests/virtual_board.c` and bridges the SLCAN port to it; the port URL it prints goes in `URTC_VIRTUAL_PORT` or `--port` as before.
