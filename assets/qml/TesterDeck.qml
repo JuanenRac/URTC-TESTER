@@ -1495,7 +1495,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     spacing: 8
                     Text { text: testerBackend.uiText("LBL_FILTER_IDS"); color: muted; font.pixelSize: 11 }
-                    TextField { id: monitorIds; Layout.fillWidth: true; placeholderText: "1A0 110 7F8"; font.pixelSize: 11; onTextEdited: testerBackend.setMonitorIds(text) }
+                    TextField { id: monitorIds; Layout.fillWidth: true; placeholderText: "1A0 110 7F8 n3"; font.pixelSize: 11; onTextEdited: testerBackend.setMonitorIds(text) }
                     CheckBox { text: testerBackend.uiText("BTN_ONLY_CHANGES"); font.pixelSize: 11; onToggled: testerBackend.setMonitorOnlyChanges(checked) }
                 }
                 Rectangle {
@@ -1507,6 +1507,10 @@ ApplicationWindow {
                         model: testerBackend.monitorLines
                         delegate: Text { width: ListView.view.width; text: modelData; color: textPrimary; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideRight }
                     }
+                }
+                Repeater {
+                    model: testerBackend.monitorNodeLines
+                    delegate: Text { Layout.fillWidth: true; text: modelData; color: cyan; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideRight }
                 }
                 RowLayout {
                     Layout.fillWidth: true

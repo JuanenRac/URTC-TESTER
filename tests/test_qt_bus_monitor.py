@@ -102,6 +102,42 @@ class QtBusMonitorTests(unittest.TestCase):
         self.bridge.startBusMonitor()
         self.assertFalse(self.bridge.isMonitoring)
 
+    # ---- a bus with several tool heads: the monitor follows each node --------------------------------------------
+    STATUS = 0x440  # NODE_STATUS of node 0; the node address is added to it
+
+    def test_a_row_of_a_node_frame_carries_the_node_and_a_single_head_frame_has_none_until_one_is_selected(self):
+        self._record((0x110, b""), (self.STATUS + 3, bytes([0x01, 0, 0, 5])), (0x110, b""))
+        lines = self.bridge.monitorLines
+        self.assertIn("N03", lines[1])
+        self.assertIn("N03", lines[0])              # the single-head frame after the status of the selected node is its own
+        self.assertNotIn("N0", lines[2])            # the one before it was nobody's
+
+    def test_the_summary_appears_only_when_a_node_frame_was_seen_and_counts_every_frame_whatever_the_filter(self):
+        self.assertEqual(self.bridge.monitorNodeLines, [])
+        self._record((0x1A0, b""))
+        self.assertEqual(self.bridge.monitorNodeLines, [])          # one head per bus: nothing to separate
+        self.bridge.setMonitorIds("n9")                             # hides every row, but the counters keep counting
+        self._record((self.STATUS + 5, bytes([0, 0, 0, 1])), (self.STATUS + 5, bytes([0, 0, 0, 2])))
+        self.assertEqual(self.bridge.monitorCount, 1)
+        summary = self.bridge.monitorNodeLines
+        self.assertTrue(any(line.startswith("N05") and "NODE_STATUS 2" in line for line in summary))
+
+    def test_the_node_filter_keeps_only_the_frames_of_that_node(self):
+        self.bridge.setMonitorIds("n3")
+        self._record((self.STATUS + 3, bytes(4)), (self.STATUS + 4, bytes(4)), (0x1A0, b""))
+        self.assertEqual(self.bridge.monitorCount, 1)
+        self.assertIn("N03", self.bridge.monitorLines[0])
+        self.bridge.setMonitorIds("n3 1A0")                         # an identifier and a node together: both conditions must hold
+        self.bridge.clearBusMonitor()
+        self._record((self.STATUS + 3, bytes(4)), (0x1A0, b""))
+        self.assertEqual(self.bridge.monitorCount, 0)
+
+    def test_clearing_the_table_starts_the_counters_again(self):
+        self._record((self.STATUS + 2, bytes(4)))
+        self.assertTrue(self.bridge.monitorNodeLines)
+        self.bridge.clearBusMonitor()
+        self.assertEqual(self.bridge.monitorNodeLines, [])
+
 
 if __name__ == "__main__":
     unittest.main()

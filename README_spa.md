@@ -341,7 +341,7 @@ que es un envío simple de una vez.
 - Los pulsos de soldadura de un solo disparo, el pulso de pasta y el crimpado piden confirmación también en la ventana clásica, como siempre hace el deck de Qt Quick.
 - El taladro y la lámpara UV se refrescan igual que el láser y los calefactores. Mientras se mantiene el calefactor de la impresora 3D, su refresco de 150 ms lleva 0 pasos de extrusor, que el firmware lee como orden de parada: un movimiento del extrusor iniciado en ese estado se cancela en 150 ms, así que mueve el extrusor con el calefactor apagado hasta que el firmware ofrezca un modo que lo deje en paz.
 - El puerto y la velocidad se recuerdan para la próxima sesión (`config.json`) y el deck de Qt Quick tiene su propio selector de velocidad. La **autodetección** primero solo escucha a cada velocidad (no se transmite nada en un bus vivo) y solo pregunta a cada velocidad cuando el bus está completamente en silencio.
-- El Monitor de bus en bruto se puede limitar a algunos ID CAN (**Filtro de ID**) y a las tramas cuyos datos cambiaron (**Solo cambios**).
+- El Monitor de bus en bruto se puede limitar a algunos ID CAN (**Filtro de ID**) y a las tramas cuyos datos cambiaron (**Solo cambios**). En un bus con varios cabezales (la extensión multinodo) cada fila lleva su nodo (`N03`), `n3 n12` en el filtro deja solo las tramas de esos nodos y un resumen bajo la tabla da las tramas por segundo y la parte del bus de cada nodo.
 
 #### 🔥 Prueba de banco de embalamiento térmico (firmware URTC 0.3.2+ / 0.3.3+)
 

@@ -313,7 +313,7 @@ pára. A ventoinha do hotend não tem watchdog (tem antes um detetor de bloqueio
 - Os impulsos de soldadura únicos, o impulso de pasta e a crimpagem pedem confirmação também na janela clássica, como o deck Qt Quick faz sempre.
 - O berbequim e a lâmpada UV são refrescados como o laser e os aquecedores. Enquanto o aquecedor da impressora 3D é mantido, o seu refrescamento de 150 ms leva 0 passos de extrusor, que o firmware lê como ordem de paragem: um movimento do extrusor iniciado nesse estado é cancelado em 150 ms, pelo que deve mover o extrusor com o aquecedor desligado até o firmware oferecer um modo que o deixe em paz.
 - A porta e o débito são lembrados para a próxima sessão (`config.json`) e o deck Qt Quick tem o seu próprio seletor de débito. A **autodeteção** começa por apenas escutar a cada débito (nada é transmitido num barramento ativo) e só pergunta a cada débito quando o barramento está completamente silencioso.
-- O Monitor de barramento em bruto pode ser limitado a alguns IDs CAN (**Filtro de ID**) e às tramas cujos dados mudaram (**Só alterações**).
+- O Monitor de barramento em bruto pode ser limitado a alguns IDs CAN (**Filtro de ID**) e às tramas cujos dados mudaram (**Só alterações**). Num barramento com várias cabeças de ferramenta (a extensão multinó) cada linha traz o seu nó (`N03`), `n3 n12` no filtro mantém só as tramas desses nós e um resumo por baixo da tabela dá as tramas por segundo e a parte do barramento de cada nó.
 
 #### 🔥 Teste de bancada de thermal runaway (firmware URTC 0.3.2+ / 0.3.3+)
 

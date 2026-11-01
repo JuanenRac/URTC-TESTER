@@ -341,7 +341,7 @@ semplice invio singolo.
 - Gli impulsi di saldatura singoli, l'impulso di pasta e la crimpatura chiedono conferma anche nella finestra classica, come fa sempre il deck Qt Quick.
 - Il trapano e la lampada UV vengono rinfrescati come il laser e i riscaldatori. Finché il riscaldatore della stampante 3D è mantenuto, il suo refresh di 150 ms porta 0 passi di estrusore, che il firmware legge come ordine di arresto: un movimento dell'estrusore avviato in quello stato viene annullato entro 150 ms, quindi muovi l'estrusore con il riscaldatore spento finché il firmware non offrirà una modalità che lo lasci in pace.
 - La porta e la velocità vengono ricordate per la sessione successiva (`config.json`) e il deck Qt Quick ha un proprio selettore di velocità. Il **rilevamento automatico** prima ascolta soltanto a ogni velocità (su un bus attivo non si trasmette nulla) e interroga a ogni velocità solo quando il bus è completamente silenzioso.
-- Il Monitor del bus grezzo può essere limitato ad alcuni ID CAN (**Filtro ID**) e ai frame i cui dati sono cambiati (**Solo variazioni**).
+- Il Monitor del bus grezzo può essere limitato ad alcuni ID CAN (**Filtro ID**) e ai frame i cui dati sono cambiati (**Solo variazioni**). Su un bus con più teste utensile (l'estensione multinodo) ogni riga porta il suo nodo (`N03`), `n3 n12` nel filtro tiene solo i frame di quei nodi e un riepilogo sotto la tabella dà i frame al secondo e la quota di bus di ogni nodo.
 
 #### 🔥 Test al banco della fuga termica (firmware URTC 0.3.2+ / 0.3.3+)
 

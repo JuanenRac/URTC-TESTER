@@ -313,7 +313,7 @@ stops. The hotend fan has no watchdog (a stall detector instead - see
 - The one-shot weld pulses, the paste pulse and the crimp ask for a confirmation in the classic window too, as the Qt Quick deck always does.
 - The drill and the UV lamp are refreshed like the laser and the heaters. While the 3D-printer heater is held, its 150 ms refresh carries 0 extruder steps, which the firmware reads as a stop order: an extruder move started in that state is cancelled within 150 ms, so move the extruder with the heater off until the firmware offers a mode that leaves the extruder alone.
 - The port and the bit rate are remembered for the next session (`config.json`) and the Qt Quick deck has its own bit rate selector. **Auto-detect** first only listens at each rate (nothing is transmitted on a live bus) and asks at each rate only when the bus is completely silent.
-- The Raw Bus Monitor can be limited to some CAN IDs (**ID filter**) and to frames whose data changed (**Only changes**).
+- The Raw Bus Monitor can be limited to some CAN IDs (**ID filter**) and to frames whose data changed (**Only changes**). On a bus with several tool heads (the multinode extension) every row carries its node (`N03`), `n3 n12` in the filter keeps only the frames of those nodes, and a summary below the table gives the frames per second and the share of the bus of each node.
 
 #### 🔥 Thermal runaway bench test (URTC firmware 0.3.2+ / 0.3.3+)
 

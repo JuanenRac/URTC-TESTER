@@ -346,7 +346,7 @@ n'a pas de watchdog (un détecteur de blocage à la place - voir
 - Les impulsions de soudure ponctuelles, l'impulsion de pâte et le sertissage demandent aussi une confirmation dans la fenêtre classique, comme le fait toujours le deck Qt Quick.
 - La perceuse et la lampe UV sont rafraîchies comme le laser et les chauffages. Tant que le chauffage de l'imprimante 3D est maintenu, son rafraîchissement de 150 ms porte 0 pas d'extrudeur, que le firmware lit comme un ordre d'arrêt : un mouvement d'extrudeur lancé dans cet état est annulé en 150 ms, donc déplacez l'extrudeur chauffage éteint jusqu'à ce que le firmware offre un mode qui le laisse tranquille.
 - Le port et le débit sont mémorisés pour la prochaine session (`config.json`) et le deck Qt Quick a son propre sélecteur de débit. La **détection automatique** commence par écouter à chaque débit (rien n'est émis sur un bus actif) et n'interroge à chaque débit que si le bus est complètement silencieux.
-- Le Moniteur de bus brut peut être limité à certains ID CAN (**Filtre d'ID**) et aux trames dont les données ont changé (**Changements seulement**).
+- Le Moniteur de bus brut peut être limité à certains ID CAN (**Filtre d'ID**) et aux trames dont les données ont changé (**Changements seulement**). Sur un bus avec plusieurs têtes d'outil (l'extension multinœud), chaque ligne porte son nœud (`N03`), `n3 n12` dans le filtre ne garde que les trames de ces nœuds, et un résumé sous le tableau donne les trames par seconde et la part du bus de chaque nœud.
 
 #### 🔥 Test de banc d'emballement thermique (firmware URTC 0.3.2+ / 0.3.3+)
 

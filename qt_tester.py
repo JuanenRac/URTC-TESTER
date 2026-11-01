@@ -115,6 +115,7 @@ from tester_transports import SLCAN, SocketCAN, list_socketcan_interfaces, virtu
 from urtc_can import tools_catalog, update_service, versioning
 from urtc_can.help_qt import HelpModel
 from urtc_can.multinode_host import MultinodeHost
+from urtc_can.node_monitor import NodeBusStats, label as node_label
 from urtc_can.node_picker import GatedTransport, NodePicker, config_reader_for, transport_io
 from urtc_can.node_picker_qt import NodePickerModel
 from urtc_can.evidence_history_qt import EvidenceHistoryModel
@@ -239,6 +240,8 @@ class TesterQtBridge(QObject):
         self._monitor_rows: collections.deque = collections.deque(maxlen=self.MONITOR_MAX_ROWS)
         self._monitor_lock = threading.Lock()
         self._monitor_filter = FrameFilter()
+        self._monitor_nodes: collections.deque = collections.deque(maxlen=self.MONITOR_MAX_ROWS)   # the node of each row of the table, same order
+        self._node_stats = NodeBusStats()
         self._monitor_last_seen: dict[int, float] = {}
         self._vacuum_adc = 0
         self._vacuum_detected = False
@@ -680,7 +683,17 @@ class TesterQtBridge(QObject):
     def monitorLines(self) -> list[str]:
         with self._monitor_lock:
             newest = list(self._monitor_rows)[-self.MONITOR_SHOWN_ROWS:]
-        return [f"{ts}  {can_id:<6} [{dlc}]  {data}  +{dt:.1f} ms" for ts, can_id, dlc, data, dt in reversed(newest)]
+            nodes = list(self._monitor_nodes)[-self.MONITOR_SHOWN_ROWS:]
+        nodes = [None] * (len(newest) - len(nodes)) + nodes
+        return [f"{ts}  {node_label(node) or '   ':<3} {can_id:<6} [{dlc}]  {data}  +{dt:.1f} ms" for (ts, can_id, dlc, data, dt), node in reversed(list(zip(newest, nodes)))]
+
+    @Property("QVariantList", notify=monitorChanged)
+    def monitorNodeLines(self) -> list[str]:
+        """One line per node seen in the last seconds: frames per second, its share of the bus and the kinds of frame (language-neutral text). A bus with one head shows none."""
+        rows = self._node_stats.snapshot(bitrate_bps_for_label(self._bitrate_label))
+        if not any(row["node"] is not None and row["kinds"].keys() - {"SINGLE"} for row in rows):
+            return []
+        return self._node_stats.summary_lines(bitrate_bps_for_label(self._bitrate_label))
 
     @Property(int, notify=monitorChanged)
     def monitorCount(self) -> int:
@@ -697,6 +710,7 @@ class TesterQtBridge(QObject):
         self._monitor_stop = stop
         self._monitor_filter.reset()
         self._monitor_last_seen.clear()
+        self._node_stats = NodeBusStats()
         self._set_state(status="MONITORING THE BUS", busy=True)
         self._log("BUS_MONITOR_STARTED")
 
@@ -724,7 +738,8 @@ class TesterQtBridge(QObject):
         self.monitorChanged.emit()
 
     def _record_monitor_frame(self, can_id: int, data: bytes) -> None:
-        if not self._monitor_filter.accept(can_id, data):
+        node = self._node_stats.note(can_id, data)   # every frame counts for its node, the rows shown are chosen after
+        if not self._monitor_filter.accept(can_id, data, node):
             return
         now = time.time()
         stamp = time.strftime("%H:%M:%S", time.localtime(now)) + f".{int((now % 1) * 1000):03d}"
@@ -733,6 +748,7 @@ class TesterQtBridge(QObject):
         self._monitor_last_seen[can_id] = now
         with self._monitor_lock:
             self._monitor_rows.append((stamp, format_can_id(can_id, extended=can_id > 0x7FF), len(data), format_hex(data, ""), round(delta_ms, 1)))
+            self._monitor_nodes.append(node)
 
     @Slot()
     def stopBusMonitor(self) -> None:
@@ -744,8 +760,10 @@ class TesterQtBridge(QObject):
     def clearBusMonitor(self) -> None:
         with self._monitor_lock:
             self._monitor_rows.clear()
+            self._monitor_nodes.clear()
         self._monitor_filter.reset()
         self._monitor_last_seen.clear()
+        self._node_stats = NodeBusStats()
         self.monitorChanged.emit()
 
     @Slot(str)

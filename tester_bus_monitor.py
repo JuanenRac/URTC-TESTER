@@ -9,6 +9,7 @@ import threading
 import time
 
 from tester_config import _
+from urtc_can import node_monitor
 
 class CANBusMonitor:
     """Owns the one and only background thread reading frames off the
@@ -265,11 +266,13 @@ class FrameFilter:
 
     def __init__(self):
         self.ids = None  # None shows every ID
+        self.nodes = None  # None shows every node (and the frames of nobody)
         self.only_changes = False
         self._last = {}
 
     def set_ids(self, text):
-        """Accepts hex IDs separated by spaces or commas ("1A0 0x110, 7F8"). Unreadable tokens are ignored; nothing readable means no filter."""
+        """Accepts hex IDs separated by spaces or commas ("1A0 0x110, 7F8") and node addresses written n0 to n31 ("n3 n12"), which keep only the frames of those
+        nodes of a bus with several tool heads. Unreadable tokens are ignored; nothing readable means no filter."""
         ids = set()
         for token in str(text).replace(",", " ").split():
             try:
@@ -279,12 +282,16 @@ class FrameFilter:
             if 0 <= value <= 0x7FF:
                 ids.add(value)
         self.ids = ids or None
+        self.nodes = node_monitor.parse_nodes(text) or None
 
     def reset(self):
         self._last.clear()
 
-    def accept(self, can_id, data):
+    def accept(self, can_id, data, node=None):
+        """``node`` is the node the frame belongs to (see urtc_can.node_monitor), None when it belongs to nobody."""
         if self.ids is not None and can_id not in self.ids:
+            return False
+        if self.nodes is not None and node not in self.nodes:
             return False
         if self.only_changes:
             data = bytes(data)

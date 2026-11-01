@@ -349,7 +349,7 @@ keinen Watchdog (stattdessen einen Stillstandsdetektor - siehe
 - Die einmaligen Schweißimpulse, der Pasteimpuls und das Crimpen verlangen auch im klassischen Fenster eine Bestätigung, wie es das Qt-Quick-Deck immer tut.
 - Die Bohrmaschine und die UV-Lampe werden wie der Laser und die Heizungen aufgefrischt. Solange die Heizung des 3D-Druckers gehalten wird, enthält ihre 150-ms-Auffrischung 0 Extruderschritte, die die Firmware als Stoppbefehl liest: Eine in diesem Zustand gestartete Extruderbewegung wird innerhalb von 150 ms abgebrochen. Den Extruder daher bei ausgeschalteter Heizung bewegen, bis die Firmware einen Modus bietet, der den Extruder in Ruhe lässt.
 - Port und Bitrate werden für die nächste Sitzung gemerkt (`config.json`), und das Qt-Quick-Deck hat eine eigene Bitraten-Auswahl. Die **automatische Erkennung** hört zuerst nur bei jeder Bitrate zu (auf einem aktiven Bus wird nichts gesendet) und fragt nur dann bei jeder Bitrate nach, wenn der Bus völlig still ist.
-- Der Rohdaten-Busmonitor lässt sich auf einige CAN-IDs (**ID-Filter**) und auf Frames mit geänderten Daten (**Nur Änderungen**) beschränken.
+- Der Rohdaten-Busmonitor lässt sich auf einige CAN-IDs (**ID-Filter**) und auf Frames mit geänderten Daten (**Nur Änderungen**) beschränken. An einem Bus mit mehreren Werkzeugköpfen (der Multinode-Erweiterung) trägt jede Zeile ihren Knoten (`N03`), `n3 n12` im Filter behält nur die Frames dieser Knoten, und eine Zusammenfassung unter der Tabelle nennt die Frames pro Sekunde und den Busanteil jedes Knotens.
 
 #### 🔥 Prüfstandstest für thermisches Durchgehen (URTC-Firmware 0.3.2+ / 0.3.3+)
 

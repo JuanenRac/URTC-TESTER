@@ -78,6 +78,10 @@
       "from": "src/urtc_common/multinode_sim.py",
       "sha256": "d71e2b02a3996b85ca01e70737fec3baae55ba4596cea71f4fca335fac4bbe12"
     },
+    "node_monitor.py": {
+      "from": "src/urtc_common/node_monitor.py",
+      "sha256": "f2999d9458990f3834ef4780e04bc6f02426a7b340447fc32d520213044bf06f"
+    },
     "node_picker.py": {
       "from": "src/urtc_common/node_picker.py",
       "sha256": "5c6b64d13b4c026223c9893d090817f4d29bc44c8b2e00ffba2827a7ecf856c0"
@@ -152,7 +156,7 @@
     },
     "virtual_board.py": {
       "from": "src/urtc_common/virtual_board.py",
-      "sha256": "e8f036f0ba0ace3ab0fc7f56fa388601de1a02ff1843f8b396627bc24bdc9191"
+      "sha256": "b0980b2cb8b2000db82c64d9adeeab14a103ebb99a2cc08b5b3d25b351834785"
     }
   }
 }
