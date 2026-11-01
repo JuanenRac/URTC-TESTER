@@ -57,6 +57,7 @@
 | Interfaccia | 🟡 | La finestra funziona ed è verificata con una scheda simulata; non provata con un adattatore reale. |
 | Test | 🟢 | La suite di test passa nella CI a ogni push. |
 | Hardware reale | 🟠 | Nessuna esecuzione su una scheda reale: la prova al banco è ancora da fare. |
+| Lingue e accessibilità | 🟡 | L'interfaccia e la sua guida sono in otto lingue; l'uso con tastiera e screen reader non è stato provato |
 | Documentazione | 🟡 | README in otto lingue e documenti di riferimento; le traduzioni non sono state riviste da madrelingua. |
 
 <!-- /urtc-section:status_tester -->

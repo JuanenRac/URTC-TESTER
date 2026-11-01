@@ -57,6 +57,7 @@
 | Interface | 🟡 | A janela funciona e é verificada contra uma placa simulada; não foi experimentada com um adaptador real. |
 | Testes | 🟢 | A bateria de testes passa na CI em cada envio. |
 | Hardware real | 🟠 | Ainda não correu numa placa real: o ensaio de bancada continua pendente. |
+| Idiomas e acessibilidade | 🟡 | A interface e a sua ajuda estão em oito idiomas; a utilização com teclado e leitor de ecrã não foi testada |
 | Documentação | 🟡 | README em oito línguas e documentos de referência; as traduções não foram revistas por falantes nativos. |
 
 <!-- /urtc-section:status_tester -->

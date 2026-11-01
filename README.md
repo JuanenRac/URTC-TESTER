@@ -57,6 +57,7 @@
 | Interface | 🟡 | The window runs and is checked against a simulated board; not tried with a real adapter. |
 | Tests | 🟢 | The test suite passes in the CI on every push. |
 | Real hardware | 🟠 | No run on a real board yet: the bench test is still pending. |
+| Languages and accessibility | 🟡 | The interface and its help are in eight languages; keyboard and screen-reader use has not been tested |
 | Documentation | 🟡 | README in eight languages and reference documents; the translations were not reviewed by native speakers. |
 
 <!-- /urtc-section:status_tester -->

@@ -56,6 +56,7 @@
 | Oberfläche | 🟡 | Das Fenster läuft und wird gegen eine simulierte Platine geprüft; nicht mit einem echten Adapter probiert. |
 | Tests | 🟢 | Die Testsuite besteht bei jedem Push in der CI. |
 | Echte Hardware | 🟠 | Noch kein Lauf an einer echten Platine: der Bankversuch steht noch aus. |
+| Sprachen und Barrierefreiheit | 🟡 | Oberfläche und Hilfe gibt es in acht Sprachen; die Bedienung per Tastatur und Screenreader wurde nicht getestet |
 | Dokumentation | 🟡 | README in acht Sprachen und Referenzdokumente; die Übersetzungen wurden nicht von Muttersprachlern geprüft. |
 
 <!-- /urtc-section:status_tester -->
