@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The screenshots of the README are listed in `docs/screenshots.json`:** each picture has a short name and a caption in the eight languages, the README section is written from that file, and `tools/capture_screenshots.py` takes the pictures again without opening a window on the desktop.
+
 ## [0.5.0] - The raw bus monitor follows the nodes of a bus with several tool heads and the virtual board can be the receive path of the firmware itself
 
 - **The raw bus monitor follows the nodes of a bus with several tool heads:** every row carries the node it belongs to (`N03`; the node is in the identifier of the frames of the extension, and a single-head frame belongs to the node whose status says it is selected), the filter takes node addresses (`n3 n12`) next to the identifiers, and a summary under the table gives the frames per second, the share of the bus and the kinds of frame of each node (it appears only when a frame of the extension was seen). Every frame counts for its node whatever the filter hides. The helpers are the copy of `node_monitor` from URTC-COMMON; tried against the model of the bus only.

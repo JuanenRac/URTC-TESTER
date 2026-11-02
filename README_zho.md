@@ -103,36 +103,41 @@ URTC-TESTER 是检查 URTC 工具头在运行其应用程序时实际行为的�
 本程序可以查找自身的较新版本：“检查更新”按钮只向 GitHub 查询一次，只有当包适用于您的系统且更新时才会提供已签名的包。除非您打开检查，否则不会自行检查或安装，更新需要您的确认。包必须与其 SHA-256 以及程序中固定的发布密钥签名一致；上一版本会保留，新版本无法启动时会自动恢复。`urtc-updater --cli package list|check|install|rollback` 可在命令行中为刷写器和测试器完成同样的操作，`install --file` 无需网络即可使用。
 <!-- /urtc-section:updates -->
 
+<!-- urtc-section:screenshots -->
 ## 🖼️ 屏幕截图
 
-<!-- urtc-shots -->
-在测试台上以 1920×1080 截取，使用示例数据，背后没有真实的安装。
+在测试台上使用虚构的示例数据截取，背后没有真实的安装。
 
-<table>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="刚打开时的窗口：传输入口、仅监听的安全模式、工具配置文件以及身份与健康检查点。" width="100%"><br><sub>刚打开时的窗口：传输入口、仅监听的安全模式、工具配置文件以及身份与健康检查点。</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="总线上的工具头：一条模拟总线上的六个工具头，每个处于一种可能的状态（已选择、地址冲突、故障锁定、处于引导程序、丢失和就绪）。" width="100%"><br><sub>总线上的工具头：一条模拟总线上的六个工具头，每个处于一种可能的状态（已选择、地址冲突、故障锁定、处于引导程序、丢失和就绪）。</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/history.png" alt="历史窗口：程序为每块板子写下的所有记录，最新的在前，每条单独校验；“签名”列显示它是否已签名、由您的哪把密钥签名，或是否无效。" width="100%"><br><sub>历史窗口：程序为每块板子写下的所有记录，最新的在前，每条单独校验；“签名”列显示它是否已签名、由您的哪把密钥签名，或是否无效。</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="帮助窗口：使用该程序的各个步骤，使用窗口的语言显示。" width="100%"><br><sub>帮助窗口：使用该程序的各个步骤，使用窗口的语言显示。</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="更新窗口：只有在你确认之后，才会安装较新的已签名软件包。" width="100%"><br><sub>更新窗口：只有在你确认之后，才会安装较新的已签名软件包。</sub></td>
-<td width="50%"></td>
-</tr>
-</table>
-<!-- /urtc-shots -->
+<p align="center">
+  <img src="images/screenshots/deck.png" alt="主窗口" width="100%">
+</p>
+
+<p align="center"><em>刚打开时的窗口：传输入口、仅监听的安全模式、工具配置文件以及身份与健康检查点。</em></p>
+
+<p align="center">
+  <img src="images/screenshots/heads.png" alt="总线上的工具头" width="100%">
+</p>
+
+<p align="center"><em>总线上的工具头：一条模拟总线上的六个工具头，每个处于一种可能的状态（已选择、地址冲突、故障锁定、处于引导程序、丢失和就绪）。</em></p>
+
+<p align="center">
+  <img src="images/screenshots/history.png" alt="历史记录" width="100%">
+</p>
+
+<p align="center"><em>历史窗口：程序为每块板子写下的所有记录，最新的在前，每条单独校验；“签名”列显示它是否已签名、由您的哪把密钥签名，或是否无效。</em></p>
+
+<p align="center">
+  <img src="images/screenshots/updates.png" alt="检查更新" width="100%">
+</p>
+
+<p align="center"><em>更新窗口：只有在你确认之后，才会安装较新的已签名软件包。</em></p>
+<!-- /urtc-section:screenshots -->
+
+## ✨ 功能
 
 **故障记录器、可选功能、机架试验台和热像(新增,仅用模拟对象检查):** 面板读取板卡的黑匣子(`0x1A8` / `0x1A9`)并保存为 CSV 和 JSON,该选项开启时,板卡每报告一次错误就自动读取一次;可切换固件的可选功能(`0x1AE` / `0x1AF`,默认关闭,下次上电后生效);提供一个模拟的工具机架,使用 URTC-SMART-RACK 的串行协议、每个工具头的身份(类型和序列号)以及状态页导出;并以伪彩色显示热检测图像(模拟图像会明确标注)。工具名称和类别现在来自 URTC-COMMON 的共享工具配置。这些都没有在真实板卡上使用过。
 
 **加热器 PID（新增，仅用模拟验证）:** 控制台读取固件加热器 PID 的状态（`0x1B9` / `0x1BA`: 当前生效的增益、状态和上一个控制周期的输出），保存增益（0 到 600），并启动或取消继电器式自整定；自整定会在烙铁当前设定温度（100 到 445 C）附近加热烙铁头，并保存找到的增益。保存增益和启动自整定需要通常的确认，取消则不需要。命令行的模拟工具头（`--transport simulate`）也会应答这些帧。须先在可选功能中打开该功能；以上内容都没有在真实电路板上使用过。
-
-这些图片是真实的窗口，在没有屏幕的情况下按打开时的样子绘制（未连接任何设备，未发送任何内容）。指南依次介绍面板、帮助窗口和更新窗口。
-
-[图文指南](docs/WINDOW_GUIDE.md)
-
-## ✨ 功能
 
 ### 工作原理
 

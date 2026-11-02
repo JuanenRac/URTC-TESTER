@@ -107,36 +107,41 @@ Como as partes deste repositório se encaixam: quem o usa, o que contém e de qu
 Este programa pode procurar uma versão mais recente de si próprio: o botão «Procurar atualizações» pergunta uma vez ao GitHub e só propõe um pacote assinado se for para o seu sistema e mais recente. Nada é verificado nem instalado por si só, a não ser que ative a verificação, e uma atualização precisa da sua confirmação. O pacote tem de coincidir com o seu SHA-256 e com a assinatura da chave das versões fixada no programa; a versão anterior é guardada e reposta sozinha se a nova não arrancar. `urtc-updater --cli package list|check|install|rollback` faz o mesmo na linha de comandos para o flasher e o tester, e `install --file` funciona sem rede.
 <!-- /urtc-section:updates -->
 
+<!-- urtc-section:screenshots -->
 ## 🖼️ Capturas de ecrã
 
-<!-- urtc-shots -->
-Capturadas a 1920×1080 numa bancada de testes, com dados de exemplo e sem qualquer instalação real por trás.
+Capturadas numa bancada de testes com dados de exemplo inventados e sem qualquer instalação real por trás.
 
-<table>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="A janela ao abrir: a porta de transporte, o modo seguro só de escuta, os perfis de ferramenta e os pontos de controlo de identidade e saúde." width="100%"><br><sub>A janela ao abrir: a porta de transporte, o modo seguro só de escuta, os perfis de ferramenta e os pontos de controlo de identidade e saúde.</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Cabeças de ferramenta no barramento: um barramento modelado com seis cabeças, cada uma num estado possível (selecionada, conflito de endereço, falha retida, no bootloader, perdida e pronta)." width="100%"><br><sub>Cabeças de ferramenta no barramento: um barramento modelado com seis cabeças, cada uma num estado possível (selecionada, conflito de endereço, falha retida, no bootloader, perdida e pronta).</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/history.png" alt="A janela do histórico: todos os registos que os programas escreveram sobre cada placa, o mais recente primeiro, cada um verificado por si, com uma coluna Assinatura que diz se está assinado, com qual das suas chaves, ou se não é válido." width="100%"><br><sub>A janela do histórico: todos os registos que os programas escreveram sobre cada placa, o mais recente primeiro, cada um verificado por si, com uma coluna Assinatura que diz se está assinado, com qual das suas chaves, ou se não é válido.</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="A janela de Ajuda: os passos para utilizar o programa, escritos no idioma da janela." width="100%"><br><sub>A janela de Ajuda: os passos para utilizar o programa, escritos no idioma da janela.</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="A janela de atualizações: um pacote assinado mais recente só é instalado depois de o confirmar." width="100%"><br><sub>A janela de atualizações: um pacote assinado mais recente só é instalado depois de o confirmar.</sub></td>
-<td width="50%"></td>
-</tr>
-</table>
-<!-- /urtc-shots -->
+<p align="center">
+  <img src="images/screenshots/deck.png" alt="Janela principal" width="100%">
+</p>
+
+<p align="center"><em>A janela ao abrir: a porta de transporte, o modo seguro só de escuta, os perfis de ferramenta e os pontos de controlo de identidade e saúde.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/heads.png" alt="Cabeças de ferramenta no barramento" width="100%">
+</p>
+
+<p align="center"><em>Cabeças de ferramenta no barramento: um barramento modelado com seis cabeças, cada uma num estado possível (selecionada, conflito de endereço, falha retida, no bootloader, perdida e pronta).</em></p>
+
+<p align="center">
+  <img src="images/screenshots/history.png" alt="Histórico" width="100%">
+</p>
+
+<p align="center"><em>A janela do histórico: todos os registos que os programas escreveram sobre cada placa, o mais recente primeiro, cada um verificado por si, com uma coluna Assinatura que diz se está assinado, com qual das suas chaves, ou se não é válido.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/updates.png" alt="Procurar atualizações" width="100%">
+</p>
+
+<p align="center"><em>A janela de atualizações: um pacote assinado mais recente só é instalado depois de o confirmar.</em></p>
+<!-- /urtc-section:screenshots -->
+
+## ✨ Funcionalidades
 
 **Registador de falhas, funções opcionais, bancada do rack e vista térmica (novo, verificado apenas com simulações):** o painel lê a caixa negra da placa (`0x1A8` / `0x1A9`) e guarda-a em CSV e JSON, automaticamente uma vez por cada erro indicado pela placa quando essa opção está ativa; liga as funções opcionais do firmware (`0x1AE` / `0x1AF`, desligadas por predefinição, com efeito após o próximo arranque); tem um rack de ferramentas simulado com o protocolo série do URTC-SMART-RACK, a identidade de cada cabeça (tipo e número de série) e a exportação de uma página de estado; e mostra a imagem de inspeção térmica em falsa cor (uma imagem simulada di-lo). Os nomes e tipos das ferramentas vêm agora dos perfis de ferramenta partilhados do URTC-COMMON. Nada disto foi usado com uma placa real.
 
 **PID do aquecedor (novo, verificado só com simulações):** o painel lê o estado do PID do aquecedor do firmware (`0x1B9` / `0x1BA`: os ganhos em vigor, o estado e a saída do último ciclo de controlo), guarda ganhos (de 0 a 600) e inicia ou cancela o autoajuste por relé, que aquece a ponta em torno do ponto de regulação atual do ferro de soldar (100 a 445 C) e guarda os ganhos encontrados. Guardar ganhos e iniciar o autoajuste pedem a confirmação habitual; cancelar não. A cabeça simulada da linha de comandos (`--transport simulate`) também responde a estas tramas. A função tem de ser ativada antes, entre as funções opcionais; nada disto foi usado com uma placa real.
-
-Estas imagens são a janela real, desenhada sem ecrã tal como abre (nada ligado, nada enviado). O guia percorre o painel, a janela de Ajuda e a de atualização.
-
-[Guia com imagens](docs/WINDOW_GUIDE.md)
-
-## ✨ Funcionalidades
 
 ### Como funciona
 
