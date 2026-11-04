@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The panel of every tool is available as a model without a screen:** the copy of `tool_panel_model.py` and `tool_panels.py` from URTC-COMMON gives the program the frame builders of the panels, the first value and the range of every control, the readings of telemetry frames, the answer of a query and the thermal picture, with three tests of its own on this program's bus view. The window that draws it from the data is not part of this change. The conformance vectors and the protocol copy are refreshed (the digest register of the expansion slave and the new `0x1BB` frame of the board).
 - **The copy of the shared protocol knows the new expansion slave and bootloader frames:** URTC-COMMON's tables are refreshed (the Ed25519 record frames `0x7EC` and `0x21A`, the slave bootloader registers `COUNTER_FLOOR` and `RECORD_COUNTER`, and the confirmation that now includes the signed rollback counter). The tester does not send those frames.
 - **The test count in the "At a glance" table of the README is the real one:** the number was counted by collecting the tests of the suite and written into the eight READMEs.
 - **The screenshots of the README are listed in `docs/screenshots.json`:** each picture has a short name and a caption in the eight languages, the README section is written from that file, and `tools/capture_screenshots.py` takes the pictures again without opening a window on the desktop.

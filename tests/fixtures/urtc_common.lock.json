@@ -8,7 +8,7 @@
     },
     "can_conformance_vectors.json": {
       "from": "conformance/can_vectors.json",
-      "sha256": "6cd254c10f028ec9b9dfc128808c91ba768cc54929218be0db6b25a3e2011029"
+      "sha256": "b91c9588e93f6110d5fed82c347a1cc91f02b1d57a847e54f27d4b8530917e33"
     },
     "node_picker_vectors.json": {
       "from": "conformance/node_picker_vectors.json",

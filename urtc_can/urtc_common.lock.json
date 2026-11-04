@@ -104,7 +104,7 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "c19964189921d22176a3433878f61dac766edfcbe1c606165789b7d89dece089"
+      "sha256": "2164537131060a7e4de7cd004cca20356eb7db1fc3b3e010c69d90ecaefbacc6"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",
@@ -133,6 +133,14 @@
     "thermal_view.py": {
       "from": "src/urtc_common/thermal_view.py",
       "sha256": "2750f780433507a6bf560e8ddb6f2289093d54cf32402b4ce41e5711848a7bdc"
+    },
+    "tool_panel_model.py": {
+      "from": "src/urtc_common/tool_panel_model.py",
+      "sha256": "8f50886cc64773bdacee89b37ed85ffdf07d748c78c41c98ad3b038e577d9a11"
+    },
+    "tool_panels.py": {
+      "from": "src/urtc_common/tool_panels.py",
+      "sha256": "9bdf993103a4133b855ee8b286517e4b3069b411c24db9e0a6660a3f167a098a"
     },
     "tools_catalog.py": {
       "from": "src/urtc_common/tools_catalog.py",

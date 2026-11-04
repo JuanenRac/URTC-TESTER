@@ -102,6 +102,7 @@ CAN_ID_ELECTROMAGNET_CMD = 0x1B0  # Electromagnet coil
 CAN_ID_HEALTH_PROFILE = 0x1B8  # Periodic health frame of the board (only while the health feature runs)
 CAN_ID_PID_CONFIG = 0x1B9  # Gains of the heater PID and start of its relay autotune
 CAN_ID_PID_STATE_RESP = 0x1BA  # The heater PID: gains in force, state and output
+CAN_ID_HEALTH_INFO = 0x1BB  # Identity and life of the board: protocol byte, last reset cause, firmware version and uptime (sent with the health frame)
 CAN_ID_SPOT_WELD_CMD = 0x1C0  # Spot welder timed pulse
 CAN_ID_UV_CURING_CMD = 0x1D0  # UV curing LED duty
 CAN_ID_HOTAIR_CMD = 0x1E0  # Hot-air nozzle setpoint and blower duty
@@ -109,7 +110,7 @@ CAN_ID_CRIMPING_CMD = 0x1F0  # Crimping actuator motor
 CAN_ID_ULTRASONIC_WELD_CMD = 0x200  # Ultrasonic welder timed pulse
 CAN_ID_SLAVE_ENTER_BOOTLOADER = 0x210  # Enter the expansion slave's bootloader
 CAN_ID_SLAVE_START_UPDATE = 0x211  # Start the slave firmware update
-CAN_ID_SLAVE_HMAC_CHUNK = 0x212  # Slave image digest chunk (SHA-256; the name is historic)
+CAN_ID_SLAVE_DIGEST_CHUNK = 0x212  # Slave image digest chunk (SHA-256, no key)
 CAN_ID_SLAVE_DATA = 0x213  # Slave firmware data
 CAN_ID_SLAVE_END_UPDATE = 0x214  # End the slave update and verify
 CAN_ID_SLAVE_STATUS = 0x215  # Slave bootloader status
@@ -463,7 +464,7 @@ MAGIC_PAYLOADS = {'enter_bootloader': {'id': 2032, 'data': 'B0071D5A'},
 # --- registers of the expansion slave over the I2C link bus ---
 SLAVE_BOOT_REG_STATUS = 0x00
 SLAVE_BOOT_REG_START_UPDATE = 0x01
-SLAVE_BOOT_REG_HMAC_EXPECTED = 0x02
+SLAVE_BOOT_REG_DIGEST_EXPECTED = 0x02
 SLAVE_BOOT_REG_DATA = 0x03
 SLAVE_BOOT_REG_END_UPDATE = 0x04
 SLAVE_BOOT_REG_PROGRESS = 0x05
@@ -488,6 +489,10 @@ SLAVE_APP_REG_ADS_READ = 0x22
 SLAVE_APP_REG_PWM_CONFIGURE = 0x30
 SLAVE_APP_REG_PWM_PULSE = 0x31
 SLAVE_APP_REG_PWM_STOP = 0x32
+
+# --- old names kept as aliases of the renamed ones (see legacy_aliases of the specification) ---
+CAN_ID_SLAVE_HMAC_CHUNK = CAN_ID_SLAVE_DIGEST_CHUNK
+SLAVE_BOOT_REG_HMAC_EXPECTED = SLAVE_BOOT_REG_DIGEST_EXPECTED
 
 # --- SLCAN ---
 SLCAN_BITRATES = [('10 kbit/s', '0'),
@@ -553,6 +558,7 @@ MESSAGES = {
     440: {'name': 'HEALTH_PROFILE', 'group': 'diagnostics', 'direction': 'board_to_host', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': False}, 'timing': {'period_ms': 1000}},
     441: {'name': 'PID_CONFIG', 'group': 'configuration', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     442: {'name': 'PID_STATE_RESP', 'group': 'configuration', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
+    443: {'name': 'HEALTH_INFO', 'group': 'diagnostics', 'direction': 'board_to_host', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': False}, 'timing': {'period_ms': 10000}},
     448: {'name': 'SPOT_WELD_CMD', 'group': 'welding', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [14], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}},
     464: {'name': 'UV_CURING_CMD', 'group': 'uv', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [18], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}, 'timing': {'watchdog_ms': 250}},
     480: {'name': 'HOTAIR_CMD', 'group': 'hotair', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [19], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}, 'timing': {'watchdog_ms': 250}},
@@ -560,7 +566,7 @@ MESSAGES = {
     512: {'name': 'ULTRASONIC_WELD_CMD', 'group': 'welding', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [24], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}},
     528: {'name': 'SLAVE_ENTER_BOOTLOADER', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True, 'needs_magic': 'enter_bootloader'}},
     529: {'name': 'SLAVE_START_UPDATE', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
-    530: {'name': 'SLAVE_HMAC_CHUNK', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
+    530: {'name': 'SLAVE_DIGEST_CHUNK', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     531: {'name': 'SLAVE_DATA', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     532: {'name': 'SLAVE_END_UPDATE', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     533: {'name': 'SLAVE_STATUS', 'group': 'slave_bridge', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
@@ -666,6 +672,7 @@ LAYOUTS = {
     'pid_config': {'id': 441, 'role': 'request', 'dlc': {'exact': 7}, 'fields': [{'name': 'kp_x100', 'type': 'u16', 'offset': 0, 'width': 2}, {'name': 'ki_x100', 'type': 'u16', 'offset': 2, 'width': 2}, {'name': 'kd_x100', 'type': 'u16', 'offset': 4, 'width': 2}, {'name': 'action', 'type': 'u8', 'offset': 6, 'width': 1, 'allowed': [0, 1, 2, 3]}]},
     'pid_state_resp_request': {'id': 442, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
     'pid_state_resp_response': {'id': 442, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'kp_x100', 'type': 'u16', 'offset': 0, 'width': 2}, {'name': 'ki_x100', 'type': 'u16', 'offset': 2, 'width': 2}, {'name': 'kd_x100', 'type': 'u16', 'offset': 4, 'width': 2}, {'name': 'state', 'type': 'u8', 'offset': 6, 'width': 1}, {'name': 'duty_percent', 'type': 'u8', 'offset': 7, 'width': 1, 'range': [0, 100]}]},
+    'health_info': {'id': 443, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'protocol_version', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'reset_cause', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'fw_minor', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'fw_patch', 'type': 'u8', 'offset': 3, 'width': 1}, {'name': 'fw_build', 'type': 'u8', 'offset': 4, 'width': 1}, {'name': 'uptime_s', 'type': 'u24', 'offset': 5, 'width': 3}]},
     'spot_weld_cmd': {'id': 448, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'fire', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [1, 1]}, {'name': 'duration_ms', 'type': 'u16', 'offset': 1, 'width': 2, 'range': [1, 2000]}]},
     'uv_curing_cmd': {'id': 464, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'duty', 'type': 'u8', 'offset': 0, 'width': 1}]},
     'hotair_cmd': {'id': 480, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'setpoint_c', 'type': 'u16', 'offset': 0, 'width': 2, 'range': [0, 445]}, {'name': 'blower_duty', 'type': 'u8', 'offset': 2, 'width': 1}]},
@@ -673,7 +680,7 @@ LAYOUTS = {
     'ultrasonic_weld_cmd': {'id': 512, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'fire', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [1, 1]}, {'name': 'duration_ms', 'type': 'u16', 'offset': 1, 'width': 2, 'range': [1, 2000]}]},
     'slave_enter_bootloader': {'id': 528, 'role': 'request', 'dlc': {'exact': 4}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': 'B0071D5A', 'length': 4}]},
     'slave_start_update': {'id': 529, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'total_size', 'type': 'u32', 'offset': 0, 'width': 4}, {'name': 'hardware_id', 'type': 'u32', 'offset': 4, 'width': 4}]},
-    'slave_hmac_chunk': {'id': 530, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'hmac_part', 'type': 'bytes', 'offset': 0, 'length': 8}]},
+    'slave_digest_chunk': {'id': 530, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'digest_part', 'type': 'bytes', 'offset': 0, 'length': 8}]},
     'slave_data': {'id': 531, 'role': 'request', 'dlc': {'min': 1, 'max': 8}, 'fields': [{'name': 'data', 'type': 'bytes', 'offset': 0, 'rest': True}]},
     'slave_end_update': {'id': 532, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'crc32', 'type': 'u32', 'offset': 0, 'width': 4}, {'name': 'version_major', 'type': 'u16', 'offset': 4, 'width': 2}, {'name': 'version_minor_field', 'type': 'u16', 'offset': 6, 'width': 2}]},
     'slave_status_request': {'id': 533, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
@@ -1506,6 +1513,16 @@ def decode_pid_state_resp_response(data: bytes, strict: bool = False) -> dict | 
     return decode("pid_state_resp_response", data, strict)
 
 
+def encode_health_info(protocol_version: int, reset_cause: int, fw_minor: int, fw_patch: int, fw_build: int, uptime_s: int) -> tuple[int, bytes]:
+    """Identity and life of the board: protocol byte, last reset cause, firmware version and uptime (sent with the health frame) (0x1BB, response)."""
+    return encode("health_info", protocol_version=protocol_version, reset_cause=reset_cause, fw_minor=fw_minor, fw_patch=fw_patch, fw_build=fw_build, uptime_s=uptime_s)
+
+
+def decode_health_info(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1BB (response), or None when the payload is too short."""
+    return decode("health_info", data, strict)
+
+
 def encode_spot_weld_cmd(fire: int, duration_ms: int) -> tuple[int, bytes]:
     """Spot welder timed pulse (0x1C0, request)."""
     return encode("spot_weld_cmd", fire=fire, duration_ms=duration_ms)
@@ -1577,14 +1594,14 @@ def decode_slave_start_update(data: bytes, strict: bool = False) -> dict | None:
     return decode("slave_start_update", data, strict)
 
 
-def encode_slave_hmac_chunk(hmac_part: bytes) -> tuple[int, bytes]:
-    """Slave image digest chunk (SHA-256; the name is historic) (0x212, request)."""
-    return encode("slave_hmac_chunk", hmac_part=hmac_part)
+def encode_slave_digest_chunk(digest_part: bytes) -> tuple[int, bytes]:
+    """Slave image digest chunk (SHA-256, no key) (0x212, request)."""
+    return encode("slave_digest_chunk", digest_part=digest_part)
 
 
-def decode_slave_hmac_chunk(data: bytes, strict: bool = False) -> dict | None:
+def decode_slave_digest_chunk(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x212 (request), or None when the payload is too short."""
-    return decode("slave_hmac_chunk", data, strict)
+    return decode("slave_digest_chunk", data, strict)
 
 
 def encode_slave_data(data: bytes) -> tuple[int, bytes]:

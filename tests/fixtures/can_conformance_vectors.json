@@ -327,8 +327,8 @@
     {
       "id": "0x212",
       "names": {
-        "flasher": "CAN_ID_SLAVE_HMAC_CHUNK",
-        "web": "CAN_ID_SLAVE_HMAC_CHUNK"
+        "flasher": "CAN_ID_SLAVE_DIGEST_CHUNK",
+        "web": "CAN_ID_SLAVE_DIGEST_CHUNK"
       }
     },
     {
@@ -1360,6 +1360,10 @@
       "name": "PID_STATE_RESP"
     },
     {
+      "id": "0x1BB",
+      "name": "HEALTH_INFO"
+    },
+    {
       "id": "0x1C0",
       "name": "SPOT_WELD_CMD"
     },
@@ -1389,7 +1393,7 @@
     },
     {
       "id": "0x212",
-      "name": "SLAVE_HMAC_CHUNK"
+      "name": "SLAVE_DIGEST_CHUNK"
     },
     {
       "id": "0x213",
@@ -2410,6 +2414,23 @@
       }
     },
     {
+      "name": "HEALTH_INFO response: board running 0.4.4 for one hour after a power-on",
+      "message": "HEALTH_INFO",
+      "layout": "health_info",
+      "fields": {
+        "protocol_version": 1,
+        "reset_cause": 8,
+        "fw_minor": 4,
+        "fw_patch": 4,
+        "fw_build": 0,
+        "uptime_s": 3600
+      },
+      "frame": {
+        "id": "0x1BB",
+        "data": "0108040400000E10"
+      }
+    },
+    {
       "name": "SPOT_WELD_CMD request: 100 ms pulse",
       "message": "SPOT_WELD_CMD",
       "layout": "spot_weld_cmd",
@@ -2499,11 +2520,11 @@
       }
     },
     {
-      "name": "SLAVE_HMAC_CHUNK request: first of four",
-      "message": "SLAVE_HMAC_CHUNK",
-      "layout": "slave_hmac_chunk",
+      "name": "SLAVE_DIGEST_CHUNK request: first of four",
+      "message": "SLAVE_DIGEST_CHUNK",
+      "layout": "slave_digest_chunk",
       "fields": {
-        "hmac_part": "0001020304050607"
+        "digest_part": "0001020304050607"
       },
       "frame": {
         "id": "0x212",
@@ -5024,6 +5045,33 @@
       "fields": null
     },
     {
+      "name": "HEALTH_INFO response: board running 0.4.4 for one hour after a power-on",
+      "message": "HEALTH_INFO",
+      "layout": "health_info",
+      "frame": {
+        "id": "0x1BB",
+        "data": "0108040400000E10"
+      },
+      "fields": {
+        "protocol_version": 1,
+        "reset_cause": 8,
+        "fw_minor": 4,
+        "fw_patch": 4,
+        "fw_build": 0,
+        "uptime_s": 3600
+      }
+    },
+    {
+      "name": "HEALTH_INFO response: 7 bytes is too short",
+      "message": "HEALTH_INFO",
+      "layout": "health_info",
+      "frame": {
+        "id": "0x1BB",
+        "data": "0108040400000E"
+      },
+      "fields": null
+    },
+    {
       "name": "SPOT_WELD_CMD request: 100 ms pulse",
       "message": "SPOT_WELD_CMD",
       "layout": "spot_weld_cmd",
@@ -5249,21 +5297,21 @@
       "fields": null
     },
     {
-      "name": "SLAVE_HMAC_CHUNK request: first of four",
-      "message": "SLAVE_HMAC_CHUNK",
-      "layout": "slave_hmac_chunk",
+      "name": "SLAVE_DIGEST_CHUNK request: first of four",
+      "message": "SLAVE_DIGEST_CHUNK",
+      "layout": "slave_digest_chunk",
       "frame": {
         "id": "0x212",
         "data": "0001020304050607"
       },
       "fields": {
-        "hmac_part": "0001020304050607"
+        "digest_part": "0001020304050607"
       }
     },
     {
-      "name": "SLAVE_HMAC_CHUNK request: 7 bytes is too short",
-      "message": "SLAVE_HMAC_CHUNK",
-      "layout": "slave_hmac_chunk",
+      "name": "SLAVE_DIGEST_CHUNK request: 7 bytes is too short",
+      "message": "SLAVE_DIGEST_CHUNK",
+      "layout": "slave_digest_chunk",
       "frame": {
         "id": "0x212",
         "data": "00010203040506"
