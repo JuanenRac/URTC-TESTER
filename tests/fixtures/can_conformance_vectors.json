@@ -1508,6 +1508,14 @@
       "name": "BOOTLOADER_KEY_ID"
     },
     {
+      "id": "0x7EE",
+      "name": "BOOTLOADER_SERIAL_CHUNK"
+    },
+    {
+      "id": "0x7EF",
+      "name": "BOOTLOADER_SERIAL_RESULT"
+    },
+    {
       "id": "0x7F0",
       "name": "ENTER_BOOTLOADER"
     },
@@ -3063,6 +3071,32 @@
       "frame": {
         "id": "0x7ED",
         "data": "0102030405060708"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_CHUNK request: first chunk",
+      "message": "BOOTLOADER_SERIAL_CHUNK",
+      "layout": "bootloader_serial_chunk",
+      "fields": {
+        "index": 0,
+        "data": "00000000000000"
+      },
+      "frame": {
+        "id": "0x7EE",
+        "data": "0000000000000000"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_RESULT response: written",
+      "message": "BOOTLOADER_SERIAL_RESULT",
+      "layout": "bootloader_serial_result",
+      "fields": {
+        "status": 0,
+        "serial": 12648430
+      },
+      "frame": {
+        "id": "0x7EF",
+        "data": "0000C0FFEE"
       }
     },
     {
@@ -6386,6 +6420,63 @@
       "fields": null
     },
     {
+      "name": "BOOTLOADER_SERIAL_CHUNK request: first chunk",
+      "message": "BOOTLOADER_SERIAL_CHUNK",
+      "layout": "bootloader_serial_chunk",
+      "frame": {
+        "id": "0x7EE",
+        "data": "0000000000000000"
+      },
+      "fields": {
+        "index": 0,
+        "data": "00000000000000"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_CHUNK request: 7 bytes is too short",
+      "message": "BOOTLOADER_SERIAL_CHUNK",
+      "layout": "bootloader_serial_chunk",
+      "frame": {
+        "id": "0x7EE",
+        "data": "00000000000000"
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_RESULT response: written",
+      "message": "BOOTLOADER_SERIAL_RESULT",
+      "layout": "bootloader_serial_result",
+      "frame": {
+        "id": "0x7EF",
+        "data": "0000C0FFEE"
+      },
+      "fields": {
+        "status": 0,
+        "serial": 12648430
+      }
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_RESULT response: 4 bytes is too short",
+      "message": "BOOTLOADER_SERIAL_RESULT",
+      "layout": "bootloader_serial_result",
+      "frame": {
+        "id": "0x7EF",
+        "data": "0000C0FF"
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_RESULT response: one byte too many is refused when strict",
+      "message": "BOOTLOADER_SERIAL_RESULT",
+      "layout": "bootloader_serial_result",
+      "frame": {
+        "id": "0x7EF",
+        "data": "0000C0FFEE00"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
       "name": "ENTER_BOOTLOADER request: enter",
       "message": "ENTER_BOOTLOADER",
       "layout": "enter_bootloader",
@@ -7753,6 +7844,15 @@
       "layout": "bootloader_signature_chunk",
       "fields": {
         "index": 11,
+        "data": "00000000000000"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_CHUNK: index above its maximum",
+      "message": "BOOTLOADER_SERIAL_CHUNK",
+      "layout": "bootloader_serial_chunk",
+      "fields": {
+        "index": 12,
         "data": "00000000000000"
       }
     },

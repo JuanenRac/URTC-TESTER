@@ -139,6 +139,8 @@ CAN_ID_BOOTLOADER_SELECT = 0x7EA  # Address one bootloader by its serial number
 CAN_ID_BOOTLOADER_SELECT_RESPONSE = 0x7EB  # Answer to the addressing of a bootloader
 CAN_ID_BOOTLOADER_SIGNATURE_CHUNK = 0x7EC  # One chunk of the Ed25519 signature record
 CAN_ID_BOOTLOADER_KEY_ID = 0x7ED  # Identifier of the signing key a bootloader trusts
+CAN_ID_BOOTLOADER_SERIAL_CHUNK = 0x7EE  # One chunk of the signed command that programs the serial number
+CAN_ID_BOOTLOADER_SERIAL_RESULT = 0x7EF  # Result of the command that programs the serial number
 CAN_ID_ENTER_BOOTLOADER = 0x7F0  # Enter the bootloader
 CAN_ID_START_UPDATE = 0x7F1  # Start the firmware update
 CAN_ID_DATA = 0x7F2  # Firmware data
@@ -595,6 +597,8 @@ MESSAGES = {
     2027: {'name': 'BOOTLOADER_SELECT_RESPONSE', 'group': 'bootloader', 'direction': 'board_to_host', 'handled_by': 'bootloader', 'tools': None},
     2028: {'name': 'BOOTLOADER_SIGNATURE_CHUNK', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'bootloader', 'tools': None},
     2029: {'name': 'BOOTLOADER_KEY_ID', 'group': 'bootloader', 'direction': 'board_to_host', 'handled_by': 'bootloader', 'tools': None},
+    2030: {'name': 'BOOTLOADER_SERIAL_CHUNK', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'bootloader', 'tools': None},
+    2031: {'name': 'BOOTLOADER_SERIAL_RESULT', 'group': 'bootloader', 'direction': 'board_to_host', 'handled_by': 'bootloader', 'tools': None},
     2032: {'name': 'ENTER_BOOTLOADER', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': False, 'needs_magic': 'enter_bootloader'}},
     2033: {'name': 'START_UPDATE', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'bootloader', 'tools': None},
     2034: {'name': 'DATA', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'bootloader', 'tools': None},
@@ -721,6 +725,8 @@ LAYOUTS = {
     'bootloader_select_response_response_uid': {'id': 2027, 'role': 'response', 'dlc': {'exact': 6}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '04', 'length': 1}, {'name': 'part', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 2]}, {'name': 'word', 'type': 'u32', 'offset': 2, 'width': 4}]},
     'bootloader_signature_chunk': {'id': 2028, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'index', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 10]}, {'name': 'data', 'type': 'bytes', 'offset': 1, 'length': 7}]},
     'bootloader_key_id': {'id': 2029, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'key_id', 'type': 'bytes', 'offset': 0, 'length': 8}]},
+    'bootloader_serial_chunk': {'id': 2030, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'index', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 11]}, {'name': 'data', 'type': 'bytes', 'offset': 1, 'length': 7}]},
+    'bootloader_serial_result': {'id': 2031, 'role': 'response', 'dlc': {'exact': 5}, 'fields': [{'name': 'status', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'serial', 'type': 'u32', 'offset': 1, 'width': 4}]},
     'enter_bootloader': {'id': 2032, 'role': 'request', 'dlc': {'exact': 4}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': 'B0071D5A', 'length': 4}]},
     'start_update': {'id': 2033, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'total_size', 'type': 'u32', 'offset': 0, 'width': 4}, {'name': 'hardware_id', 'type': 'u32', 'offset': 4, 'width': 4}]},
     'data': {'id': 2034, 'role': 'request', 'dlc': {'min': 1, 'max': 8}, 'fields': [{'name': 'data', 'type': 'bytes', 'offset': 0, 'rest': True}]},
@@ -2011,6 +2017,26 @@ def encode_bootloader_key_id(key_id: bytes) -> tuple[int, bytes]:
 def decode_bootloader_key_id(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x7ED (response), or None when the payload is too short."""
     return decode("bootloader_key_id", data, strict)
+
+
+def encode_bootloader_serial_chunk(index: int, data: bytes) -> tuple[int, bytes]:
+    """One chunk of the signed command that programs the serial number (0x7EE, request)."""
+    return encode("bootloader_serial_chunk", index=index, data=data)
+
+
+def decode_bootloader_serial_chunk(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7EE (request), or None when the payload is too short."""
+    return decode("bootloader_serial_chunk", data, strict)
+
+
+def encode_bootloader_serial_result(status: int, serial: int) -> tuple[int, bytes]:
+    """Result of the command that programs the serial number (0x7EF, response)."""
+    return encode("bootloader_serial_result", status=status, serial=serial)
+
+
+def decode_bootloader_serial_result(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7EF (response), or None when the payload is too short."""
+    return decode("bootloader_serial_result", data, strict)
 
 
 def encode_enter_bootloader(magic: bytes | None = None) -> tuple[int, bytes]:
