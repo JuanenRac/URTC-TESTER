@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The virtual board refuses to compile on a plain PC:** the copy of the shared virtual board carries the lock on local builds (a CI runner, or `ALLOW_LOCAL_BUILD=1`, may build).
+
 - **The copy of the shared protocol and vectors is refreshed again:** the identifiers follow the new frames of the bootloader (`0x7EE`, `0x7EF`), so the comparison of the copies passes.
 - **The build check of the repository is one text for the whole family, with a light mode that CI runs:** `tools/build_test.py` is the same file in every repository of the family (taken from the shared set); what used to differ between its seven variants is data in an optional `tools/build_test.json`. `python tools/build_test.py --check` looks at the manifest, the stack and the files the full check needs and compiles the Python sources, builds and runs nothing, and the baseline step of the workflow now runs it.
 - **The panel of every tool is available as a model without a screen:** the copy of `tool_panel_model.py` and `tool_panels.py` from URTC-COMMON gives the program the frame builders of the panels, the first value and the range of every control, the readings of telemetry frames, the answer of a query and the thermal picture, with three tests of its own on this program's bus view. The window that draws it from the data is not part of this change. The conformance vectors and the protocol copy are refreshed (the digest register of the expansion slave and the new `0x1BB` frame of the board).
