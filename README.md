@@ -37,7 +37,7 @@
 
 | | |
 |---|---|
-| Version | `0.5.0` |
+| Version | `0.5.1` |
 | Maturity | Functional |
 | Tests | 730 (`python -m pytest -q`) |
 | Stack | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
