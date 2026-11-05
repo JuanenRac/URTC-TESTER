@@ -36,6 +36,19 @@
           }
         },
         {
+          "name": "qt_tool_panel.py",
+          "desc": {
+            "en": "the panel of a tool drawn from its profile",
+            "es": "el panel de una herramienta dibujado desde su perfil",
+            "de": "das aus dem Profil gezeichnete Werkzeug-Panel",
+            "fr": "le panneau d'un outil dessiné depuis son profil",
+            "it": "il pannello di uno strumento disegnato dal profilo",
+            "zh": "由配置文件生成的工具面板",
+            "ja": "プロファイルから描画するツールパネル",
+            "pt": "o painel de uma ferramenta desenhado a partir do perfil"
+          }
+        },
+        {
           "name": "tester_*.py",
           "desc": {
             "en": "transports, monitor, self-test, plans, telemetry",

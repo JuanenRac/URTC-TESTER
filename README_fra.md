@@ -528,6 +528,7 @@ eux-mêmes, puisqu'il s'applique identiquement ici.
 URTC-TESTER/
 ├── urtc_tester.py                                     point d'entrée
 ├── qt_tester.py                                       le tableau Qt Quick
+├── qt_tool_panel.py                                   le panneau d'un outil dessiné depuis son profil
 ├── tester_*.py                                        transports, moniteur, autotest, plans, télémétrie
 ├── advanced_protocol.py                               encodeurs purs de charges CAN
 ├── verify_qt_*.py                                     contrôles de bout en bout des panneaux Qt

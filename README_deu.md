@@ -532,6 +532,7 @@ gilt.
 URTC-TESTER/
 ├── urtc_tester.py                                     Einstiegspunkt
 ├── qt_tester.py                                       das Qt-Quick-Deck
+├── qt_tool_panel.py                                   das aus dem Profil gezeichnete Werkzeug-Panel
 ├── tester_*.py                                        Transporte, Monitor, Selbsttest, Pläne, Telemetrie
 ├── advanced_protocol.py                               reine CAN-Nutzdaten-Kodierer
 ├── verify_qt_*.py                                     End-to-End-Prüfungen der Qt-Panels

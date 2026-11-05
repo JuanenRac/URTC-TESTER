@@ -491,6 +491,7 @@ the packaging scripts themselves, since it applies identically here.
 URTC-TESTER/
 ├── urtc_tester.py                                     entry point
 ├── qt_tester.py                                       the Qt Quick deck
+├── qt_tool_panel.py                                   the panel of a tool drawn from its profile
 ├── tester_*.py                                        transports, monitor, self-test, plans, telemetry
 ├── advanced_protocol.py                               pure CAN payload encoders
 ├── verify_qt_*.py                                     end-to-end checks of the Qt panels

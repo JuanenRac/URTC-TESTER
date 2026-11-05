@@ -491,6 +491,7 @@ dos próprios scripts de empacotamento, uma vez que se aplica aqui de forma idê
 URTC-TESTER/
 ├── urtc_tester.py                                     ponto de entrada
 ├── qt_tester.py                                       o painel Qt Quick
+├── qt_tool_panel.py                                   o painel de uma ferramenta desenhado a partir do perfil
 ├── tester_*.py                                        transportes, monitor, autoteste, planos, telemetria
 ├── advanced_protocol.py                               codificadores puros de cargas CAN
 ├── verify_qt_*.py                                     verificações de ponta a ponta dos painéis Qt

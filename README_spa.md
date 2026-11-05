@@ -522,6 +522,7 @@ empaquetado en sí, ya que se aplica idénticamente aquí.
 URTC-TESTER/
 ├── urtc_tester.py                                     punto de entrada
 ├── qt_tester.py                                       el panel Qt Quick
+├── qt_tool_panel.py                                   el panel de una herramienta dibujado desde su perfil
 ├── tester_*.py                                        transportes, monitor, autotest, planes, telemetría
 ├── advanced_protocol.py                               codificadores puros de cargas CAN
 ├── verify_qt_*.py                                     comprobaciones de extremo a extremo de los paneles Qt

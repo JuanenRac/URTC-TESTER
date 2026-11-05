@@ -504,6 +504,7 @@ Linux では `./build_exe.sh`。どちらも最初に `build/`/`dist/` をクリ
 URTC-TESTER/
 ├── urtc_tester.py                                     エントリーポイント
 ├── qt_tester.py                                       Qt Quick デッキ
+├── qt_tool_panel.py                                   プロファイルから描画するツールパネル
 ├── tester_*.py                                        トランスポート、モニター、セルフテスト、プラン、テレメトリ
 ├── advanced_protocol.py                               純粋な CAN ペイロードのエンコーダー
 ├── verify_qt_*.py                                     Qt パネルのエンドツーエンド検査

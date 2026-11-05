@@ -442,6 +442,7 @@ README](https://github.com/JuanenRac/URTC-FLASHER) 第 1 和第 2 节，
 URTC-TESTER/
 ├── urtc_tester.py                                     入口
 ├── qt_tester.py                                       Qt Quick 面板
+├── qt_tool_panel.py                                   由配置文件生成的工具面板
 ├── tester_*.py                                        传输、监视、自检、计划、遥测
 ├── advanced_protocol.py                               纯 CAN 载荷编码器
 ├── verify_qt_*.py                                     Qt 面板的端到端检查

@@ -522,6 +522,7 @@ script di pacchettizzazione stessi, poiché si applica identicamente qui.
 URTC-TESTER/
 ├── urtc_tester.py                                     punto di ingresso
 ├── qt_tester.py                                       il pannello Qt Quick
+├── qt_tool_panel.py                                   il pannello di uno strumento disegnato dal profilo
 ├── tester_*.py                                        trasporti, monitor, autotest, piani, telemetria
 ├── advanced_protocol.py                               codificatori puri di payload CAN
 ├── verify_qt_*.py                                     controlli end-to-end dei pannelli Qt
