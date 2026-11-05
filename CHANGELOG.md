@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The full build check compiles only on CI or when allowed:** `tools/build_test.py` prints `BUILD_TEST=SKIPPED` (exit status 2) for the stacks that compile unless it runs on a CI runner or `ALLOW_LOCAL_BUILD=1` says so; the light check is not locked.
+
 - **The virtual board refuses to compile on a plain PC:** the copy of the shared virtual board carries the lock on local builds (a CI runner, or `ALLOW_LOCAL_BUILD=1`, may build).
 
 - **The copy of the shared protocol and vectors is refreshed again:** the identifiers follow the new frames of the bootloader (`0x7EE`, `0x7EF`), so the comparison of the copies passes.
