@@ -121,6 +121,7 @@ from urtc_can.node_picker_qt import NodePickerModel
 from urtc_can.evidence_history_qt import EvidenceHistoryModel
 from urtc_can.protocol import decode_error_counters_response, CAN_ID_ERROR_COUNTERS_RESPONSE, CAN_ID_QUERY_ERROR_COUNTERS, CAN_ID_SLAVE_APP_PATCH, CAN_ID_SLAVE_REG_READ
 from urtc_can.update_qt import UpdateModel
+from qt_tool_panel import ToolPanelController
 from urtc_ui import LanguageModel, connection_badge, format_can_id, format_hex
 
 
@@ -182,6 +183,7 @@ class TesterQtBridge(QObject):
         self._listen_only = True
         self._busy = False
         self._update_model: UpdateModel | None = None
+        self._tool_panel: ToolPanelController | None = None
         self._help_model: HelpModel | None = None
         self._history_model: EvidenceHistoryModel | None = None
         self._node_model: NodePickerModel | None = None
@@ -306,6 +308,13 @@ class TesterQtBridge(QObject):
         self._planLine.connect(self._on_plan_line)
         self._planDone.connect(self._on_plan_done)
         self.scanPorts()
+
+    @Property(QObject, constant=True)
+    def toolPanel(self) -> QObject:
+        """The panel of the selected tool drawn from its profile (controls, commands, readings, queries): the generic view that does not need a screen written for each tool."""
+        if self._tool_panel is None:
+            self._tool_panel = ToolPanelController(self, self)
+        return self._tool_panel
 
     @Property(QObject, constant=True)
     def updates(self) -> QObject:

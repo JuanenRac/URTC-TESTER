@@ -1123,6 +1123,26 @@ ApplicationWindow {
                         onClicked: testerBackend.stopMotion()
                     }
                 }
+                // The panel of the selected tool drawn from its profile (one generic view); off until the person asks for it, because the tools above have a screen of their own.
+                CheckBox {
+                    id: profilePanelSwitch
+                    objectName: "profilePanelSwitch"
+                    visible: testerBackend.toolPanel.available
+                    text: testerBackend.toolPanel.uiShow
+                    palette.windowText: window.muted
+                }
+                ToolPanelView {
+                    objectName: "toolPanelView"
+                    Layout.fillWidth: true
+                    visible: testerBackend.toolPanel.available && profilePanelSwitch.checked
+                    model: testerBackend.toolPanel
+                    ask: window.requestAdvanced
+                    canAct: testerBackend.canActuateSelectedProfile
+                    panelColor: window.panelAlt
+                    borderColor: window.panelBorder
+                    textColor: window.textPrimary
+                    mutedColor: window.muted
+                }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
 
                 // -- Global Controls / Expansion Board / F-RAM - real,
