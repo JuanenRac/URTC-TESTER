@@ -36,7 +36,7 @@ jobs:
       - name: Run the tests (protocol encoders, safety paths and the Qt Quick deck, headless)
         env:
           QT_QPA_PLATFORM: offscreen
-        run: python -m pytest -q --cov --cov-config=.coveragerc --cov-fail-under=65
+        run: python -m pytest -q --cov --cov-config=.coveragerc --cov-fail-under=73
       - name: Check the Qt Quick deck against a mock board
         env:
           QT_QPA_PLATFORM: offscreen
