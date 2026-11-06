@@ -26,6 +26,10 @@ def snapshot(rack_status: dict[str, Any], units: dict[str, dict[str, Any]] | Non
     verdicts = verdicts or {}
     slots = []
     alarms: list[str] = []
+    read = rack_status is not None
+    if not read:
+        rack_status = {"occupied": 0, "slots": []}
+        alarms.append("the rack was not read: no slot data")
     for item in rack_status["slots"]:
         slot = dict(item)
         unit = units.get(item["unit"]) if item.get("unit") else None
@@ -40,7 +44,7 @@ def snapshot(rack_status: dict[str, Any], units: dict[str, dict[str, Any]] | Non
             alarms.append(f"slot {item['slot']}: thermal check says {slot['thermal']}")
         slots.append(slot)
     return {
-        "schema": SCHEMA, "name": name, "source": source, "occupied": rack_status["occupied"], "slot_count": len(slots),
+        "schema": SCHEMA, "name": name, "source": source, "read": read, "occupied": rack_status["occupied"], "slot_count": len(slots),
         "heating": sum(1 for s in slots if s["occupied"] and s["target_c"] > 0),
         "maintenance_due": sum(1 for s in slots if s["maintenance_due"]), "alarms": alarms, "slots": slots,
     }
@@ -48,7 +52,7 @@ def snapshot(rack_status: dict[str, Any], units: dict[str, dict[str, Any]] | Non
 
 def card(snap: dict[str, Any]) -> dict[str, Any]:
     """The overview entry of a dashboard: a title, a state and a few counters."""
-    state = "alarm" if snap["alarms"] else "ok"
+    state = "unknown" if not snap.get("read", True) else ("alarm" if snap["alarms"] else "ok")
     return {
         "title": snap["name"], "state": state, "source": snap["source"],
         "items": [

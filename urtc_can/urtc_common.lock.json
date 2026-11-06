@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.2.0",
+  "urtc_common_version": "0.2.3",
   "files": {
     "__init__.py": {
       "from": "src/urtc_common/__init__.py",
-      "sha256": "44a0fa25255623ff914c35a5ef41f50d722325e6f54ff9a1efdf2790f71a8ed0"
+      "sha256": "bb9ff98142f302db24c1ab84bf8bd96ee45a930e861d0a03a940dafba80f1a54"
     },
     "blackbox.py": {
       "from": "src/urtc_common/blackbox.py",
@@ -120,7 +120,7 @@
     },
     "rack_status.py": {
       "from": "src/urtc_common/rack_status.py",
-      "sha256": "97839ac9a4862c5f80a46ff84cf9b1fa4ded5af158593b1a5592f8614585247e"
+      "sha256": "48f1d780607f0de3d9fab9908060e7fd7da22135151d0977a22be77cd051d93f"
     },
     "record_signing.py": {
       "from": "src/urtc_common/record_signing.py",
