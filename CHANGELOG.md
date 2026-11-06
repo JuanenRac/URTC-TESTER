@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The repository check compares the manifest with what can be computed:** `tools/ci_validate.py` now also runs the shared `tools/sync_manifests.py` offline, which compares the shipped version, the newest released heading of this changelog, the presence of tests and the claimed level of evidence with the manifest. It is part of the shared set of tools, so the copy is pinned by the lock.
+
 ## [0.5.2] - The deck can draw the panel of the selected tool from its profile: a switch under the advanced controls shows ToolPanelView.qml, one generic view for the controls (number, range, list, check box, hexadecimal word), the... (and 3 more changes)
 
 - **The deck can draw the panel of the selected tool from its profile:** a switch under the advanced controls shows `ToolPanelView.qml`, one generic view for the controls (number, range, list, check box, hexadecimal word), the buttons, the commands that repeat while they are on (through the same watchdog that sends the stop frame), the latched outputs, the questions to the board, the picture pulled in chunks and the live readings. `qt_tool_panel.py` holds the values and the gates (the profile gate for a command, a free bus for a question) on top of the model without a screen that was already tested. The confirmation of the deck stands in front of every command that asks for one.
