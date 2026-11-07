@@ -157,29 +157,29 @@ em 2 subcolunas internamente, pela mesma razão. Consulte
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) para a arquitetura ao nível dos módulos
 que esta secção percorre.
 
-**Connect** (secção 1, idêntica à do flasher): escolha Serial/SLCAN ou
+**Ligar** (secção 1, idêntica à do flasher): escolha Serial/SLCAN ou
 SocketCAN, a porta/interface, opcionalmente deteta automaticamente o bitrate, depois
-Connect.
+Ligar.
 
-**A deteção acontece automaticamente ao ligar** (ou clique em **Detect** para
+**A deteção acontece automaticamente ao ligar** (ou clique em **Detetar** para
 a repetir): a ferramenta envia `0x110` (consultar ferramenta ativa) e `0x7F8` (consultar
 versão), e usa a resposta para:
 - Mostrar qual dos 25 perfis de ferramenta está ativo, e o estado global da
   placa (qualquer erro declarado, falha do barramento CAN, ainda no splash de arranque).
 - Mostrar o HardwareID e a versão de firmware reportados, assinalando uma divergência
   se não corresponderem ao `THIS_HARDWARE_ID` deste projeto.
-- Construir o painel **Tool Controls** à direita para essa ferramenta específica -
+- Construir o painel **Controlos da ferramenta** à direita para essa ferramenta específica -
   e apenas essa ferramenta. Mudar a ferramenta configurada com jumpers e detetar
   novamente desmonta o painel antigo e constrói o novo de raiz.
 
-**Global Controls** (secção 2, sempre visível independentemente da ferramenta
+**Controlos globais** (secção 2, sempre visível independentemente da ferramenta
 ativa): a substituição da cor do LED de estado, a cor e o
 ligar/desligar do LED em anel, e o modo do ecrã OLED (`0x100`) - estes aplicam-se a todas as ferramentas, pelo que
 não passam para o painel dinâmico. Especificamente no modo AOI Inspection,
 o ligar/desligar do anel aqui é ignorado em favor do controlo de estroboscópio
 próprio dessa ferramenta (segundo [docs/CANBUS.md](docs/CANBUS.md)) - a cor aplica-se em qualquer caso.
 
-**Expansion Board** (secção 3, sempre visível): o barramento SPI genérico
+**Placa de expansão** (secção 3, sempre visível): o barramento SPI genérico
 e a linha DIAG0 de `CONN_EXPANSION` - a passagem direta em bruto que todas as variantes
 de placa de expansão com driver partilham. Os sensores ADS1115 e MLX9064x,
 e o driver do atuador de crimpagem, não são controlados
@@ -188,58 +188,58 @@ Probe, Thermal Inspection, Crimping Actuator - consulte a secção 4
 abaixo), uma vez que qual deles se aplica depende de qual perfil de ferramenta
 está configurado com jumpers.
 
-**Persistence F-RAM** (secção 4, também sempre visível, mas deliberadamente
+**F-RAM de persistência** (secção 4, também sempre visível, mas deliberadamente
 separada da Expansion Board acima): a FM24CL64B partilha o barramento I2C2
 de hardware do OLED - um componente central da placa, não algo ligado
 a `CONN_EXPANSION` de todo. Agrupar as duas implicaria uma ligação entre elas
 que não é real - o próprio conector de expansão não tem F-RAM, nem EEPROM,
 nada não volátil.
-- **SPI passthrough**: escreva bytes hexadecimais separados por espaços (1-7 deles, p. ex.
+- **Passagem SPI**: escreva bytes hexadecimais separados por espaços (1-7 deles, p. ex.
   `01 02 03`), prima Send e veja exatamente o que voltou em MISO durante
   essa mesma transferência (`0x180`/`0x181`) - um transporte de bytes em bruto, sem conhecimento
   dos registos do TMC5160, em linha com a abordagem do próprio firmware. Útil
   para exercitar o próprio barramento antes de compensar construir um painel dedicado
   para o protocolo de registos de uma placa de expansão específica.
-- **DIAG0 level**: **Query DIAG0** lê o estado atual da linha de diagnóstico
+- **Nível de DIAG0**: **Consultar DIAG0** lê o estado atual da linha de diagnóstico
   de stall/falha de um TMC5160 (`0x182`/`0x183`) - HIGH (inativa) ou LOW
   (ativa). Uma simples leitura por sondagem, não um valor em direto/enviado - prima
   o botão novamente para a atualizar.
-- **Persistence F-RAM**: **Query State** lê de volta o que a placa
+- **F-RAM de persistência**: **Consultar estado** lê de volta o que a placa
   guardou pela última vez antes de uma perda de energia (`0x190`/`0x191`) - qual era a ferramenta,
   o setpoint, se um erro crítico estava ativo nessa altura.
-  **Erase F-RAM...** apaga-a (`0x192`, com uma caixa de diálogo de confirmação primeiro
+  **Apagar F-RAM...** apaga-a (`0x192`, com uma caixa de diálogo de confirmação primeiro
   - isto não pode ser desfeito).
-- **Expansion board type**: **Query** mostra qual das 7 possíveis
+- **Tipo de placa de expansão**: **Consultar** mostra qual das 7 possíveis
   configurações de `CONN_EXPANSION` está atualmente definida (`0x1A1` - consulte
   `EXPANSION.TXT`). Só de leitura aqui - defina-a antes a partir da secção CAN
   OTA do próprio `URTC Flasher`, uma vez que é um passo de configuração de hardware único,
   não algo a alterar descuidadamente a partir de uma ferramenta de diagnóstico em direto.
-- **MLX9064x sensor variant**: **Query** mostra qual dos 3 membros da família
+- **Variante do sensor MLX9064x**: **Consultar** mostra qual dos 3 membros da família
   MLX9064x (ou nenhum) está atualmente configurado (`0x1A7` -
   consulte `CANBUS.md`) - só tem significado quando o tipo de placa de expansão
   acima é uma variante Advanced ou Basic+MLX9064x. Só de leitura aqui, pela mesma
   razão que o tipo de placa de expansão acima.
-- **Free tool configuration**: **Query** mostra a leitura em bruto dos jumpers de ID
+- **Configuração da ferramenta livre**: **Consultar** mostra a leitura em bruto dos jumpers de ID
   (0-31) juntamente com o que o registo `free_tool_selection` da F-RAM
   indica atualmente (`0x1A3` - consulte `EEPROM.TXT` secção 5) - só é realmente
   consultado por uma placa cujos jumpers leiam 0x1F/11111b. Só de leitura aqui,
   pela mesma razão que o tipo de placa de expansão acima - o `URTC Flasher` é a
   única ferramenta que o escreve.
-- **Peripheral type & serial number**: **Query** mostra o tipo de periférico
+- **Tipo de periférico e número de série**: **Consultar** mostra o tipo de periférico
   fixo (sempre URTC/0x03) juntamente com o número de série do dispositivo atualmente definido
   (`0x1A5` - consulte `EEPROM.TXT` secção 6), uma
   etiqueta atribuída pelo anfitrião para distinguir várias placas de outro modo idênticas no
   mesmo barramento CAN. Também só de leitura aqui - o `URTC Flasher` escreve o número de
   série, esta ferramenta limita-se a lê-lo de volta.
 
-**Custom CAN Frame** (secção 6, também sempre visível): uma entrada de ID em bruto + bytes
+**Trama CAN personalizada** (secção 6, também sempre visível): uma entrada de ID em bruto + bytes
 hexadecimais com envio único e periódico - para um comando que ainda não
 tem um controlo próprio aqui, ou para testar algo não (ou ainda não)
 documentado em `docs/CANBUS.md`. Sem validação além do intervalo de ID e DLC≤8;
 o que isto enviar é exatamente o que vai para o barramento. A mesma secção também
-abre o **Raw Bus Monitor** (ver abaixo).
+abre o **Monitor de barramento em bruto** (ver abaixo).
 
-**Run Self-Test** (junto a Detect): executa um pequeno conjunto de verificações de comunicação
+**Executar autoteste** (junto a Detect): executa um pequeno conjunto de verificações de comunicação
 seguras e em repouso para a ferramenta atualmente detetada - confirma
 que a consulta da ferramenta ativa e a consulta da versão respondem, depois (para ferramentas
 com telemetria) envia um setpoint/velocidade/potência seguro de 0 e verifica se a
@@ -260,13 +260,13 @@ para além de pyserial). Escala fixa do eixo Y (de 0 até ao teto de setpoint
 da própria ferramenta) em vez de escala automática, para que a tendência seja fácil de ler
 de relance, em vez de a escala mudar por baixo dela.
 
-**Raw Bus Monitor** (aberto a partir da secção Custom CAN Frame): uma
+**Monitor de barramento em bruto** (aberto a partir da secção Trama CAN personalizada): uma
 janela separada que mostra todas as tramas vistas, qualquer ID, independentemente do
 painel da ferramenta ativa - uma tabela com deslocamento em direto (Time/ID/DLC/Data/Δt),
 Pause/Clear, e uma leitura aproximada da carga do barramento/taxa de tramas (atualizada
 uma vez por segundo; o valor da carga não modela o overhead de bit-stuffing, por isso
 trate-o como um valor de diagnóstico aproximado, não como uma medição certificada).
-**Export .trc...**/**Export .asc...** guardam a tabela atualmente apresentada como um
+**Exportar .trc...**/**Exportar .asc...** guardam a tabela atualmente apresentada como um
 ficheiro de rastreio simplificado ao estilo PEAK PCAN-View / Vector CANalyzer,
 respetivamente - suficientemente próximo para ser legível pela maioria das ferramentas que esperam
 esses formatos, sem garantia de ser idêntico byte a byte ao que as aplicações
@@ -326,7 +326,7 @@ pára. A ventoinha do hotend não tem watchdog (tem antes um detetor de bloqueio
 O Detect mostra agora *porquê* uma placa travou num erro: o byte 4 de `0x111` (proteção
 contra thermal runaway: MAXTEMP, HEATING_NO_RISE ou DROPPED_AT_TARGET) é apresentado no
 estado da placa, e um reset causado pelo watchdog de hardware (byte 5 de `0x111`) é
-registado. **Thermal counters** (painel F-RAM em ambas as interfaces) lê `0x1AA`/`0x1AB`:
+registado. **Contadores térmicos** (painel F-RAM em ambas as interfaces) lê `0x1AA`/`0x1AB`:
 falhas térmicas ao longo da vida, total de horas de aquecedor ligado e a última falha. As respostas
 de firmware mais antigo (`0x111` de 4 bytes, sem `0x1AB`) são reportadas como "not
 reported", nunca como zero. O procedimento passo a passo para confirmar a proteção numa
@@ -364,7 +364,7 @@ Nada disto foi experimentado numa placa real e nada é uma função de seguranç
 ## 🔌 Interfaces
 
 Tal como no flasher: um registo de sessão com marca temporal é escrito automaticamente
-em `logs/` (pode ser apagado com segurança), e **Export Debug Bundle**
+em `logs/` (pode ser apagado com segurança), e **Exportar pacote de depuração**
 guarda um `.zip` com o registo atual apresentado no ecrã mais diagnósticos básicos do sistema
 (SO, versão do Python, transporte/porta/bitrate atuais, ferramenta
 detetada) para entregar a quem estiver a depurar um problema numa cabeça de ferramenta.
