@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The copy of the CAN protocol (generated module and conformance vectors) is refreshed:** it now includes the key rotation status frames (operation `05` of `0x7EA` and its seven-byte answer on `0x7EB`). Nothing in this program sends or needs them yet.
+
 - **The repository check compares the manifest with what can be computed:** `tools/ci_validate.py` now also runs the shared `tools/sync_manifests.py` offline, which compares the shipped version, the newest released heading of this changelog, the presence of tests and the claimed level of evidence with the manifest. It is part of the shared set of tools, so the copy is pinned by the lock.
 
 ## [0.5.2] - The deck can draw the panel of the selected tool from its profile: a switch under the advanced controls shows ToolPanelView.qml, one generic view for the controls (number, range, list, check box, hexadecimal word), the... (and 3 more changes)
