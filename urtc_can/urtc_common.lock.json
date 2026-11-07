@@ -18,6 +18,10 @@
       "from": "src/urtc_common/conformance.py",
       "sha256": "ac21e8b66c3c7f0865d67cebf75b0347aee227efb51fed0c22a5fb133dfeae10"
     },
+    "ed25519.py": {
+      "from": "src/urtc_common/ed25519.py",
+      "sha256": "c32eae555fee5c8d5061aeffcb44be1c116c628bc28aff3f62897fa925cbda6f"
+    },
     "evidence.py": {
       "from": "src/urtc_common/evidence.py",
       "sha256": "094ed0aaf0efc9aa32ee6cfecef1a09d57a3e09e14e6ae56877093d02839f971"
@@ -69,6 +73,14 @@
     "help_text.py": {
       "from": "src/urtc_common/help_text.py",
       "sha256": "19278017e10bb03aad8083f8203aa65b7466c4cc47e75092f667aa3669a00427"
+    },
+    "key_rotation.py": {
+      "from": "src/urtc_common/key_rotation.py",
+      "sha256": "c43d769595490772c7e59a9e034d9da58e3f5f3e475dc6fd3bfc8edb6713387e"
+    },
+    "key_rotation_command.py": {
+      "from": "src/urtc_common/key_rotation_command.py",
+      "sha256": "b707909f1738aded0dea2f29c2753c7879f4f9152bd4adaca2dd1977d0adaed0"
     },
     "launcher.py": {
       "from": "src/urtc_common/launcher.py",
@@ -176,7 +188,7 @@
     },
     "virtual_board.py": {
       "from": "src/urtc_common/virtual_board.py",
-      "sha256": "1cf165ba9e198d3ac6c9f49e3c934cd355ece99810f4dd4f70ca541764ad45c1"
+      "sha256": "3541afacc4b32df6f6134ec68420ca84e5744a732206fe3633222dcdd8bc98ff"
     }
   }
 }
