@@ -436,7 +436,7 @@ El panel de comandos **Qt Quick** es ahora el predeterminado real:
 ~~~
 python urtc_tester.py
 ~~~
-Usa los transportes SLCAN/SocketCAN y arranca en modo sólo
+Usa los transportes SLCAN/SocketCAN y arranca en modo solo
 escucha, por lo que no puede transmitir hasta que armes deliberadamente las
 comprobaciones activas. Cada uno de los comandos propios de los 25 perfiles de
 herramienta tiene aquí cobertura real y confirmada (movimiento, taladro, AOI,
