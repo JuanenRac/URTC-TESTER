@@ -306,7 +306,7 @@ Cada um dos 25 perfis tem o seu próprio painel, construído diretamente a parti
 o Hot Air Rework (partilha o mesmo ciclo térmico e watchdog que o
 ferro de soldar), o laser e o bico da impressora 3D têm cada um um watchdog de 250 ms
 no firmware; a ventoinha de camada tem um de 1000 ms. Marcar a caixa
-"Active" relevante não envia o comando apenas uma vez - reenvia-o
+"Ativo" relevante não envia o comando apenas uma vez - reenvia-o
 automaticamente (150 ms para as ferramentas com watchdog de 250 ms, 400 ms para a ventoinha
 de camada) enquanto a caixa permanecer marcada, tal como um verdadeiro controlador
 mestre tem de fazer. Desmarcá-la envia uma única frame de zero/desligado e
