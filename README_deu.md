@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/Lizenz-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Sprache-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-730-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-888-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protokoll-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.5.3` |
 | Reifegrad | Funktionsfähig |
-| Tests | 730 (`python -m pytest -q`) |
+| Tests | 888 (`python -m pytest -q`) |
 | Technik | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
@@ -472,6 +472,8 @@ Der bestehende Live-CAN-Diagnoseablauf verwendet jetzt eine dunkelblau-cyanfarbe
 
 Dieses Tool ist aus Gründen der Lesbarkeit in Module nach Zuständigkeit organisiert - es gibt keinen funktionalen Unterschied zwischen separaten Dateien und einer großen Datei. `tester_config.py` enthält die Konfigurations-/Sprach-/Protokollkonstanten, `tester_transports.py` enthält SLCAN/SocketCAN, `tester_bus_monitor.py` enthält den Frame-Filter und die Busstatistik, `qt_tester.py` ist die Qt-Quick-Brücke (mit `assets/qml/TesterDeck.qml`), `tester_selftest.py`, `tester_telemetry.py` und `tester_autodetect.py` sind die fensterlose Logik von Selbsttest, Live-Werten und Bitratensuche, und `urtc_tester.py` ist nur der Einstiegspunkt.
 
+**Wiederholte Befehle**: Ein Befehl, den die Firmware verwirft, wenn er nicht aufgefrischt wird (eine Heizung, eine Bohrmaschine, ein Laser, ein Lüfter), wird standardmäßig alle 150 ms oder im Takt des jeweiligen Werkzeugs wiederholt. `"keepalive"` in `config.json` ändert das: `"interval_ms"` (eine ganze Zahl von 20 bis 200) legt einen Takt für alle fest, und `"single_io_thread": true` wiederholt alle von einem gemeinsamen Thread aus, ein Frame nach dem anderen, statt je einen Thread (standardmäßig aus). Ein Wert außerhalb dieser Grenzen behält den Standard.
+
 **Sprache**: Englisch als Standard. Wird mit der Sprachauswahl in der Kopfzeile des Fensters gewechselt - wechselt die Oberfläche (Beschriftungen, Schaltflächen, Dialoge, und Protokollnachrichten) zu einer der 8 verfügbaren Sprachen,
 speichert sofort in `config.json` neben diesem Tool, angewendet beim
 nächsten Start. Übersetzungen leben in reinen Textdateien unter
@@ -504,7 +506,7 @@ Welche Versionen der URTC-Programme zusammenarbeiten und welche Protokollversion
 
 ## 🧪 Tests
 
-Die Suite hat 730 Tests (`python -m pytest -q`; mit Qt auf einem Rechner ohne Bildschirm `QT_QPA_PLATFORM=offscreen`; die, die PySide6 brauchen, werden ohne übersprungen): die CAN-Nutzdaten-Kodierer und -Dekodierer jeder Werkzeugfamilie, die SLCAN- und SocketCAN-Transporte gegen Attrappen, die Identitätsabfrage, der Selbsttest, die Watchdog-Keepalives, die Busgesundheitsprüfung, die Testpläne und der Modus ohne Fenster, der Sitzungsexport mit seinem Hash, die Sprachdateien und die Qt-Quick-Panels. Vier Skripte im Wurzelverzeichnis (`verify_qt_*.py`) steuern die Qt-Quick-Panels mit einer echten Qt-Ereignisschleife durchgängig an. Die CI führt außerdem `ruff check`, `python -m mypy` und `tools/ci_validate.py` aus. Nichts davon lief gegen eine echte Platine.
+Die Suite hat 888 Tests (`python -m pytest -q`; mit Qt auf einem Rechner ohne Bildschirm `QT_QPA_PLATFORM=offscreen`; die, die PySide6 brauchen, werden ohne übersprungen): die CAN-Nutzdaten-Kodierer und -Dekodierer jeder Werkzeugfamilie, die SLCAN- und SocketCAN-Transporte gegen Attrappen, die Identitätsabfrage, der Selbsttest, die Watchdog-Keepalives, die Busgesundheitsprüfung, die Testpläne und der Modus ohne Fenster, der Sitzungsexport mit seinem Hash, die Sprachdateien und die Qt-Quick-Panels. Vier Skripte im Wurzelverzeichnis (`verify_qt_*.py`) steuern die Qt-Quick-Panels mit einer echten Qt-Ereignisschleife durchgängig an. Die CI führt außerdem `ruff check`, `python -m mypy` und `tools/ci_validate.py` aus. Nichts davon lief gegen eine echte Platine.
 
 ## 🏗️ Build und Veröffentlichung
 

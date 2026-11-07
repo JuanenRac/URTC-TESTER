@@ -89,6 +89,34 @@ def selftest_limits(config=None):
     return limits
 
 
+KEEPALIVE_DEFAULTS = {"interval_ms": None, "single_io_thread": False}
+KEEPALIVE_INTERVAL_BOUNDS_MS = (20, 200)  # the watchdog of a heater, a drill or a laser is 250 ms (the same limits as the keepalive_ms of a plan step)
+
+
+def keepalive_settings(config=None):
+    """How the commands the firmware drops again if they are not refreshed are repeated, from ``keepalive`` in config.json.
+
+    ``interval_ms`` (a whole number from 20 to 200) replaces the period of every repeated command; ``None`` (the default) keeps the period each tool already has.
+    ``single_io_thread`` (true or false, false by default) repeats all of them from one shared thread instead of one thread each. Anything that is not exactly
+    that (a text, a boolean where a number goes, a number outside the limits) keeps the default of its own field."""
+    settings = dict(KEEPALIVE_DEFAULTS)
+    given = (load_config() if config is None else config).get("keepalive")
+    if isinstance(given, dict):
+        value = given.get("interval_ms")
+        low, high = KEEPALIVE_INTERVAL_BOUNDS_MS
+        if isinstance(value, int) and not isinstance(value, bool) and low <= value <= high:
+            settings["interval_ms"] = value
+        if given.get("single_io_thread") is True:
+            settings["single_io_thread"] = True
+    return settings
+
+
+def keepalive_period_s(default_s, settings=None):
+    """The period in seconds a repeated command really uses: the configured one when there is one, else the tool's own ``default_s``."""
+    settings = keepalive_settings() if settings is None else settings
+    return settings["interval_ms"] / 1000.0 if settings.get("interval_ms") else default_s
+
+
 def evidence_signing_settings(config=None):
     """(enabled, key file) for the Ed25519 signature of the evidence records, from config.json.
 

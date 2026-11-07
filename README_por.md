@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-730-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-888-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Versão | `0.5.3` |
 | Maturidade | Funcional |
-| Testes | 730 (`python -m pytest -q`) |
+| Testes | 888 (`python -m pytest -q`) |
 | Tecnologia | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destino | O PC de quem o usa |
 | Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |
@@ -434,6 +434,8 @@ ficheiros separados ou como um único ficheiro grande. Consulte a secção
 "📂 Repository Structure" perto do final deste documento para
 a descrição completa ficheiro a ficheiro.
 
+**Comandos repetidos**: um comando que o firmware descarta se não for renovado (um aquecedor, um berbequim, um laser, uma ventoinha) é repetido a cada 150 ms por predefinição, ou ao período da sua própria ferramenta. `"keepalive"` em `config.json` altera-o: `"interval_ms"` (um inteiro de 20 a 200) fixa um período para todos, e `"single_io_thread": true` repete-os todos a partir de um fio partilhado, uma trama de cada vez, em vez de um fio cada um (desligado por predefinição). Um valor fora desses limites mantém a predefinição.
+
 **Idioma**: inglês por predefinição. Alterado com o seletor de idioma no cabeçalho da janela - altera a interface (rótulos, botões, caixas de diálogo e mensagens de registo) para qualquer um dos 8 idiomas disponíveis, guardado
 imediatamente em `config.json` junto a esta ferramenta, aplicado no próximo
 arranque. As traduções residem em ficheiros de texto simples em `language/`
@@ -464,7 +466,7 @@ As versões dos programas URTC que funcionam em conjunto, e a versão do protoco
 
 ## 🧪 Testes
 
-O conjunto tem 730 testes (`python -m pytest -q`; com Qt numa máquina sem ecrã, `QT_QPA_PLATFORM=offscreen`; os que precisam do PySide6 são ignorados sem ele): os codificadores e descodificadores de carga CAN de cada família de ferramentas, os transportes SLCAN e SocketCAN contra simulações, a sonda de identidade, o autoteste, os reenvios de vigilância, a verificação de saúde do barramento, os planos de teste e o modo sem janela, a exportação da sessão com o seu hash, os ficheiros de idioma e os painéis Qt Quick. Quatro scripts na raiz (`verify_qt_*.py`) comandam os painéis Qt Quick de ponta a ponta com um ciclo de eventos Qt real. A CI executa também `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Nada disto correu contra uma placa real.
+O conjunto tem 888 testes (`python -m pytest -q`; com Qt numa máquina sem ecrã, `QT_QPA_PLATFORM=offscreen`; os que precisam do PySide6 são ignorados sem ele): os codificadores e descodificadores de carga CAN de cada família de ferramentas, os transportes SLCAN e SocketCAN contra simulações, a sonda de identidade, o autoteste, os reenvios de vigilância, a verificação de saúde do barramento, os planos de teste e o modo sem janela, a exportação da sessão com o seu hash, os ficheiros de idioma e os painéis Qt Quick. Quatro scripts na raiz (`verify_qt_*.py`) comandam os painéis Qt Quick de ponta a ponta com um ciclo de eventos Qt real. A CI executa também `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Nada disto correu contra uma placa real.
 
 ## 🏗️ Compilação e publicação
 

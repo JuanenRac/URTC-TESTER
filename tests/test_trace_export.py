@@ -29,7 +29,7 @@ def test_trc_has_the_header_and_one_line_per_frame():
     assert lines[0] == ";$FILEVERSION=1.1"
     body = [line for line in lines if not line.startswith(";")]
     assert len(body) == 3
-    assert body[0].split() == ["1)", "0.0", "Rx", "01A0", "2", "0102"]
+    assert body[0].split() == ["1)", "0.0", "Rx", "01A0", "2", "01", "02"]
     assert body[1].split()[-2:] == ["0", "0"] or body[1].split()[-1] == "0"  # an empty frame has no data bytes
 
 
@@ -61,3 +61,42 @@ def test_a_trace_that_runs_past_midnight_keeps_counting_forward():
     rows = [("23:59:59.900", "1A0", 0, "", 0.0), ("00:00:00.100", "1A0", 0, "", 200.0), ("00:00:01.100", "1A0", 0, "", 1000.0)]
     assert [round(v, 3) for v in export.offsets_ms(rows)] == [0.0, 200.0, 1200.0]
     assert [float(line.split()[1]) for line in export.render_trc(rows).splitlines() if line.lstrip()[:1].isdigit()] == [0.0, 200.0, 1200.0]
+
+
+# ---- the data bytes of a frame are separated by a space, as PCAN-View and CANalyzer write them -------------------
+
+import pytest
+
+
+@pytest.mark.parametrize("raw, expected", [
+    ("", ""), (None, ""), ("0102", "01 02"), ("0102FF", "01 02 FF"), ("01 02 ff", "01 02 FF"), ("a", "a"), ("0g", "0g"), ("abc", "abc"),
+    ("00 11 22 33 44 55 66 77", "00 11 22 33 44 55 66 77"), ("  AA  ", "AA"), ("aabbccddeeff0011", "AA BB CC DD EE FF 00 11"),
+])
+def test_spaced_bytes_separates_whole_bytes_and_keeps_anything_else_as_it_came(raw, expected):
+    assert export.spaced_bytes(raw) == expected
+
+
+def test_the_trc_data_column_has_the_bytes_separated_by_spaces():
+    body = [line for line in export.render_trc(ROWS).splitlines() if not line.startswith(";")]
+    assert body[0].split()[-2:] == ["01", "02"]
+    assert body[0].endswith("2   01 02")
+    assert body[1].rstrip().endswith("0")  # an empty frame: no data column and no trailing space
+
+
+def test_the_asc_data_column_has_the_bytes_separated_by_spaces():
+    frames = [line for line in export.render_asc(ROWS).splitlines() if " Rx " in line]
+    assert frames[0].split()[-4:] == ["d", "2", "01", "02"]
+    assert frames[1].split()[-2:] == ["d", "0"] and frames[1] == frames[1].rstrip()
+
+
+def test_an_eight_byte_frame_keeps_all_its_bytes_in_both_formats():
+    rows = [("10:00:00.000", "1A0", 8, "0011223344556677", 0.0)]
+    assert export.render_trc(rows).splitlines()[-1].endswith("8   00 11 22 33 44 55 66 77")
+    assert export.render_asc(rows).splitlines()[-2].endswith("d 8 00 11 22 33 44 55 66 77")
+
+
+def test_the_spaced_output_stays_plain_ascii_and_one_line_per_frame():
+    rows = [("10:00:00.000", "1A0", 3, "0A0B0C", 0.0), ("10:00:00.010", "1A1", 0, "", 10.0)]
+    for text in (export.render_trc(rows), export.render_asc(rows)):
+        text.encode("ascii")
+        assert text.count("\n") == len(text.splitlines())

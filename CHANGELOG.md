@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The repeated commands are configurable:** `keepalive` in `config.json` takes `interval_ms` (a whole number from 20 to 200, one period for every command the firmware drops again if it is not refreshed) and `single_io_thread` (true repeats all of them from one shared thread, one frame at a time, instead of one thread each; off by default). A value outside those limits keeps the default of its field. New tests cover the limits, the scheduler (order, periods, a failing command, replacement, cancel, the thread) and the deck in both modes.
+- **The bytes of a frame are separated by a space in the exported `.trc` and `.asc`:** `01 02 FF` instead of `0102FF`, as PCAN-View and CANalyzer write them; an empty frame has no trailing space and a text that is not whole bytes is kept as it came.
+- **The copies of the shared repository are refreshed:** the generated protocol module, the user-interface helpers, the vectors and the signature file name table (`.imgsig`) are at the current version again.
+
 ## [0.5.3] - A trace that runs past midnight keeps counting forward: the time offsets of an exported .trc or .asc no longer turn negative when the clock of the monitor goes from 23:59 to 00:00 between two frames. The copy of the shared... (and 3 more changes)
 
 - **A trace that runs past midnight keeps counting forward:** the time offsets of an exported `.trc` or `.asc` no longer turn negative when the clock of the monitor goes from 23:59 to 00:00 between two frames. The copy of the shared transports also holds the simulated bootloader's handling of a start frame cut short.

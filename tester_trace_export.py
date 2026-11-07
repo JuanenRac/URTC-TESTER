@@ -48,6 +48,18 @@ def _id_hex(can_id):
     return str(can_id).split(" ")[0].replace("0x", "")
 
 
+def spaced_bytes(data_hex):
+    """``"0102FF"`` (or ``"01 02 ff"``) to ``"01 02 FF"``: the bytes of a frame separated by one space, upper case, as PCAN-View and CANalyzer write them.
+
+    An empty frame stays empty. A text that is not whole bytes of hexadecimal digits (an odd number of digits, other characters) is kept as it came, so an
+    export never fails or loses what the monitor showed.
+    """
+    text = "".join(str(data_hex or "").split())
+    if len(text) % 2 or any(ch not in "0123456789abcdefABCDEF" for ch in text):
+        return str(data_hex or "").strip()
+    return " ".join(text[i:i + 2] for i in range(0, len(text), 2)).upper()
+
+
 def render_trc(rows):
     """PEAK PCAN-View style trace text."""
     offsets = offsets_ms(rows)
@@ -55,7 +67,7 @@ def render_trc(rows):
              ";   Message Number", ";   Time Offset (ms)", ";   Type", ";   ID (hex)",
              ";   Data Length Code", ";   Data Bytes (hex)", ";" + "-" * 80]
     for index, (_ts, can_id, dlc, data, _dt) in enumerate(rows, start=1):
-        lines.append(f"{index:>6}) {offsets[index - 1]:>10.1f}  Rx    {_id_hex(can_id).zfill(4)}  {dlc}   {data}")
+        lines.append(f"{index:>6}) {offsets[index - 1]:>10.1f}  Rx    {_id_hex(can_id).zfill(4)}  {dlc}   {spaced_bytes(data)}".rstrip())
     return "\n".join(lines) + "\n"
 
 
@@ -66,7 +78,7 @@ def render_asc(rows, now=None):
     lines = ["date " + stamp, "base hex  timestamps absolute", "internal events logged",
              "Begin Triggerblock " + stamp]
     for index, (_ts, can_id, dlc, data, _dt) in enumerate(rows):
-        lines.append(f"   {offsets[index] / 1000.0:.6f} 1  {_id_hex(can_id):<15} Rx   d {dlc} {data}")
+        lines.append(f"   {offsets[index] / 1000.0:.6f} 1  {_id_hex(can_id):<15} Rx   d {dlc} {spaced_bytes(data)}".rstrip())
     lines.append("End TriggerBlock")
     return "\n".join(lines) + "\n"
 

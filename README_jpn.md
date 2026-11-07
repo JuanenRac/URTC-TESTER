@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-730-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-888-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | バージョン | `0.5.3` |
 | 成熟度 | 機能する |
-| テスト | 730 (`python -m pytest -q`) |
+| テスト | 888 (`python -m pytest -q`) |
 | 技術 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 対象 | 利用者の PC |
 | 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
@@ -445,6 +445,8 @@ Qt Quick ウィンドウのヘッダーに言語セレクターがあります�
 は、本ドキュメント末尾近くの「📂 リポジトリ構成」セクションを参照して
 ください。
 
+**繰り返しコマンド**：更新しないとファームウェアが破棄するコマンド（ヒーター、ドリル、レーザー、ファン）は、既定では 150 ms ごと、またはそれぞれのツールの周期で繰り返されます。`config.json` の `"keepalive"` で変更できます。`"interval_ms"`（20〜200 の整数）はすべてに共通の周期を設定し、`"single_io_thread": true` はすべてを個別のスレッドではなく 1 つの共有スレッドから 1 フレームずつ繰り返します（既定ではオフ）。範囲外の値は既定値のままです。
+
 **言語**：デフォルトは英語です。ウィンドウ上部の言語セレクターから切り替えます——インターフェース（ラベル、ボタン、ダイアログ、ログメッセージ）を 8 つの利用可能な言語のいずれかへ切り替え、即座に本ツールの隣にある
 `config.json` に保存され、次回起動時に適用されます。翻訳は `language/`
 下のプレーンテキストファイル（`english.lng`、`spanish.lng`、
@@ -476,7 +478,7 @@ README](https://github.com/JuanenRac/URTC-FLASHER) の第 1 節と第 2 節
 
 ## 🧪 テスト
 
-テストスイートは 730 件です（`python -m pytest -q`。画面のない環境で Qt を使う場合は `QT_QPA_PLATFORM=offscreen`。PySide6 が必要なものは、なければスキップされます）：各ツール系統の CAN ペイロードのエンコーダーとデコーダー、模擬に対する SLCAN と SocketCAN のトランスポート、識別プローブ、セルフテスト、ウォッチドッグのキープアライブ、バスの健全性チェック、テストプランとウィンドウなしのモード、ハッシュ付きのセッションエクスポート、言語ファイル、Qt Quick のパネルを扱います。ルートにある 4 つのスクリプト（`verify_qt_*.py`）は、実際の Qt イベントループで Qt Quick のパネルをエンドツーエンドで動かします。CI は `ruff check`、`python -m mypy`、`tools/ci_validate.py` も実行します。実際のボードでは一度も動かしていません。
+テストスイートは 888 件です（`python -m pytest -q`。画面のない環境で Qt を使う場合は `QT_QPA_PLATFORM=offscreen`。PySide6 が必要なものは、なければスキップされます）：各ツール系統の CAN ペイロードのエンコーダーとデコーダー、模擬に対する SLCAN と SocketCAN のトランスポート、識別プローブ、セルフテスト、ウォッチドッグのキープアライブ、バスの健全性チェック、テストプランとウィンドウなしのモード、ハッシュ付きのセッションエクスポート、言語ファイル、Qt Quick のパネルを扱います。ルートにある 4 つのスクリプト（`verify_qt_*.py`）は、実際の Qt イベントループで Qt Quick のパネルをエンドツーエンドで動かします。CI は `ruff check`、`python -m mypy`、`tools/ci_validate.py` も実行します。実際のボードでは一度も動かしていません。
 
 ## 🏗️ ビルドとリリース
 

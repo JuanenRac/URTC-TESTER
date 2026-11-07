@@ -44,6 +44,7 @@ from tester_bus_monitor import FrameFilter
 import tester_telemetry as tele
 from tester_selftest import run_self_test
 from tester_trace_export import render as render_trace
+from tester_keepalive import KeepaliveScheduler
 from PySide6.QtCore import QObject, Property, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
@@ -1855,10 +1856,32 @@ class TesterQtBridge(QObject):
             and self._transport is not None
         )
 
+    def _keepalive_hub(self, transport) -> KeepaliveScheduler:
+        hub = getattr(self, "_keepalive", None)
+        if hub is None:
+            hub = KeepaliveScheduler(lambda can_id, data: self._keepalive_send(can_id, data), log=self._log, on_failure=self._keepalive_failed)
+            hub.start()
+            self._keepalive = hub
+        return hub
+
+    def _keepalive_failed(self, key: str) -> None:
+        self._watchdog_stops.pop(key, None)
+        self._watchdog_off_frames.pop(key, None)
+        self.changed.emit()
+
+    def _keepalive_send(self, can_id: int, data: bytes) -> None:
+        transport = self._transport
+        if transport is None:
+            raise RuntimeError("no transport")
+        transport.send_frame(can_id, data)
+
     def _stop_watchdog(self, key: str, off_frame: tuple[int, bytes] | None = None) -> None:
         stop = self._watchdog_stops.pop(key, None)
         if stop is not None:
             stop.set()
+        hub = getattr(self, "_keepalive", None)
+        if hub is not None:
+            hub.cancel(key)
         if off_frame is None:
             off_frame = self._watchdog_off_frames.get(key)
         self._watchdog_off_frames.pop(key, None)
@@ -1882,12 +1905,20 @@ class TesterQtBridge(QObject):
         off_frame: tuple[int, bytes],
     ) -> None:
         self._stop_watchdog(key)
+        settings = tester_config.keepalive_settings()
+        interval_s = tester_config.keepalive_period_s(interval_s, settings)
         stop = threading.Event()
         self._watchdog_stops[key] = stop
         self._watchdog_off_frames[key] = off_frame
         self.changed.emit()
         transport = self._transport
         if transport is None:
+            return
+        if settings["single_io_thread"]:
+            # one shared thread repeats every command (keepalive.single_io_thread in config.json): the scheduler stops its own key when a frame fails
+            scheduler = self._keepalive_hub(transport)
+            scheduler.register(key, frame, interval_s)
+            self._log(f"WATCHDOG_STARTED key={key} can_id=0x{frame[0]:03X} interval_ms={int(interval_s * 1000)} shared_thread=1")
             return
 
         def _worker() -> None:
