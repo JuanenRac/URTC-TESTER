@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A trace that runs past midnight keeps counting forward:** the time offsets of an exported `.trc` or `.asc` no longer turn negative when the clock of the monitor goes from 23:59 to 00:00 between two frames. The copy of the shared transports also holds the simulated bootloader's handling of a start frame cut short.
+
 - **Refreshed copy of the shared protocol and virtual bootloader:** the notes on the signed rotation command and the virtual bootloader that announces its signing keys.
 
 - **The copy of the CAN protocol (generated module and conformance vectors) is refreshed:** it now includes the key rotation status frames (operation `05` of `0x7EA` and its seven-byte answer on `0x7EB`). Nothing in this program sends or needs them yet.

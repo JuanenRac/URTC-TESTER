@@ -55,3 +55,9 @@ def test_an_unknown_format_is_refused():
 def test_both_formats_are_plain_ascii():
     export.render_trc(ROWS).encode("ascii")
     export.render_asc(ROWS).encode("ascii")
+
+
+def test_a_trace_that_runs_past_midnight_keeps_counting_forward():
+    rows = [("23:59:59.900", "1A0", 0, "", 0.0), ("00:00:00.100", "1A0", 0, "", 200.0), ("00:00:01.100", "1A0", 0, "", 1000.0)]
+    assert [round(v, 3) for v in export.offsets_ms(rows)] == [0.0, 200.0, 1200.0]
+    assert [float(line.split()[1]) for line in export.render_trc(rows).splitlines() if line.lstrip()[:1].isdigit()] == [0.0, 200.0, 1200.0]

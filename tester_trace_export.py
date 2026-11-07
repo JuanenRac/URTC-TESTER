@@ -35,7 +35,10 @@ def offsets_ms(rows):
     result = []
     for index, t in enumerate(parsed):
         if t is not None and t0 is not None:
-            result.append((t - t0) * 1000.0)
+            delta = t - t0
+            if delta < 0:
+                delta += 86400.0  # the clock of the monitor went past midnight between two frames: the trace keeps counting forward
+            result.append(delta * 1000.0)
         else:
             result.append(index * 10.0)
     return result
