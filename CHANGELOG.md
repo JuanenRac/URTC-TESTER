@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.5.3] - A trace that runs past midnight keeps counting forward: the time offsets of an exported .trc or .asc no longer turn negative when the clock of the monitor goes from 23:59 to 00:00 between two frames. The copy of the shared... (and 3 more changes)
 
 - **A trace that runs past midnight keeps counting forward:** the time offsets of an exported `.trc` or `.asc` no longer turn negative when the clock of the monitor goes from 23:59 to 00:00 between two frames. The copy of the shared transports also holds the simulated bootloader's handling of a start frame cut short.
 
