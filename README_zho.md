@@ -31,7 +31,7 @@
 
 ---
 
-> **安全与安防现状:**本生态系统不是经认证的安全系统,目前也不存在已组装的 URTC 板卡。引导程序使用 CRC32 和共享密钥的 HMAC-SHA256 校验固件映像,而非非对称签名(计划中);已发布的应用映像使用公开的开发密钥签名(`signing_key_kind: dev`),因此任何人都可以生成引导程序接受的映像;尚未向任何真实板卡发送过任何内容。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)。
+> **安全与安防现状：**本生态系统不是经认证的安全系统，目前也不存在已组装的 URTC 板卡。引导程序使用 CRC32 和共享密钥的 HMAC-SHA256 校验固件映像，而非非对称签名（计划中）；已发布的应用映像使用公开的开发密钥签名（`signing_key_kind: dev`），因此任何人都可以生成引导程序接受的映像；尚未向任何真实板卡发送过任何内容。在依赖此处任何说法来保障人身安全之前，请先阅读[安全基线](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
 ## 📋 速览
 
@@ -135,9 +135,9 @@ URTC-TESTER 是检查 URTC 工具头在运行其应用程序时实际行为的�
 
 ## ✨ 功能
 
-**故障记录器、可选功能、机架试验台和热像(新增,仅用模拟对象检查):** 面板读取板卡的黑匣子(`0x1A8` / `0x1A9`)并保存为 CSV 和 JSON,该选项开启时,板卡每报告一次错误就自动读取一次;可读取上次 HardFault 留下的寄存器(`0x1BC` / `0x1BD`,仅限启用崩溃记录构建的固件)并保存为 JSON;可切换固件的可选功能(`0x1AE` / `0x1AF`,默认关闭,下次上电后生效);提供一个模拟的工具机架,使用 URTC-SMART-RACK 的串行协议、每个工具头的身份(类型和序列号)以及状态页导出;并以伪彩色显示热检测图像(模拟图像会明确标注)。工具名称和类别现在来自 URTC-COMMON 的共享工具配置。这些都没有在真实板卡上使用过。
+**故障记录器、可选功能、机架试验台和热像（新增，仅用模拟对象检查）:** 面板读取板卡的黑匣子（`0x1A8` / `0x1A9`）并保存为 CSV 和 JSON，该选项开启时，板卡每报告一次错误就自动读取一次；可读取上次 HardFault 留下的寄存器（`0x1BC` / `0x1BD`，仅限启用崩溃记录构建的固件）并保存为 JSON；可切换固件的可选功能（`0x1AE` / `0x1AF`，默认关闭，下次上电后生效）；提供一个模拟的工具机架，使用 URTC-SMART-RACK 的串行协议、每个工具头的身份（类型和序列号）以及状态页导出；并以伪彩色显示热检测图像（模拟图像会明确标注）。工具名称和类别现在来自 URTC-COMMON 的共享工具配置。这些都没有在真实板卡上使用过。
 
-**加热器 PID（新增，仅用模拟验证）:** 控制台读取固件加热器 PID 的状态（`0x1B9` / `0x1BA`: 当前生效的增益、状态和上一个控制周期的输出），保存增益（0 到 600），并启动或取消继电器式自整定；自整定会在烙铁当前设定温度（100 到 445 C）附近加热烙铁头，并保存找到的增益。保存增益和启动自整定需要通常的确认，取消则不需要。命令行的模拟工具头（`--transport simulate`）也会应答这些帧。须先在可选功能中打开该功能；以上内容都没有在真实板卡上使用过。
+**加热器 PID（新增，仅用模拟验证）：** 控制台读取固件加热器 PID 的状态（`0x1B9` / `0x1BA`：当前生效的增益、状态和上一个控制周期的输出），保存增益（0 到 600），并启动或取消继电器式自整定；自整定会在烙铁当前设定温度（100 到 445 C）附近加热烙铁头，并保存找到的增益。保存增益和启动自整定需要通常的确认，取消则不需要。命令行的模拟工具头（`--transport simulate`）也会应答这些帧。须先在可选功能中打开该功能；以上内容都没有在真实板卡上使用过。
 
 ### 工作原理
 
@@ -302,13 +302,13 @@ MAXTEMP、HEATING_NO_RISE 或 DROPPED_AT_TARGET）显示在板卡状态中，由
 <!-- urtc-section:bus_scenarios -->
 ### 模拟总线故障
 
-计划或更新可以在无需硬件的情况下，针对像真实总线一样表现不佳的模拟总线运行。场景是一个 JSON 文件（`urtc-scenario/1`），列出各种故障：帧丢失、重复、乱序、延迟、成串丢失或被截短，节点保持沉默或拒绝命令并说明原因，以及处于自由配置（`0x1F`）的刀头以不同方式回应 `0x1A3` 和 `0x1A2`。除非您要求，否则什么都不会改变：选项是 `--scenario 文件`（配合测试器的模拟刀头或烧录器的 mock 传输），文件会被严格检查，其中有任何无法理解之处即被拒绝，真实适配器永远不会接受场景。相同的场景和相同的种子会按相同顺序给出相同的帧，`bus_scenario.py generate --seed N` 会写出组合各种故障的测试场景。运行会留下通常的证据记录（`urtc-evidence/1`），说明总线是模拟的，以及使用了哪个场景和种子。场景可以拿走帧、重复帧或移动帧，但无法让节点声称某件事成功了。格式与规则：[总线场景](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/BUS_SCENARIOS.md)。
+计划或更新可以在无需硬件的情况下，针对像真实总线一样表现不佳的模拟总线运行。场景是一个 JSON 文件（`urtc-scenario/1`），列出各种故障：帧丢失、重复、乱序、延迟、成串丢失或被截短，节点保持沉默或拒绝命令并说明原因，以及处于自由配置（`0x1F`）的工具头以不同方式回应 `0x1A3` 和 `0x1A2`。除非您要求，否则什么都不会改变：选项是 `--scenario 文件`（配合测试器的模拟工具头或刷写器的 mock 传输），文件会被严格检查，其中有任何无法理解之处即被拒绝，真实适配器永远不会接受场景。相同的场景和相同的种子会按相同顺序给出相同的帧，`bus_scenario.py generate --seed N` 会写出组合各种故障的测试场景。运行会留下通常的证据记录（`urtc-evidence/1`），说明总线是模拟的，以及使用了哪个场景和种子。场景可以拿走帧、重复帧或移动帧，但无法让节点声称某件事成功了。格式与规则：[总线场景](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/BUS_SCENARIOS.md)。
 <!-- /urtc-section:bus_scenarios -->
 
 <!-- urtc-section:evidence_report -->
 ### 证据报告
 
-文件夹中的证据记录（`urtc-evidence/1`）可以生成报告，附在构建或验证资料中：`python urtc_tester.py --headless report --evidence-dir 文件夹 --out 文件 [--format html|pdf] [--language 名称]`（未指定格式时按文件扩展名决定），或使用历史窗口的**报告**按钮，它会在该文件夹中写入 `evidence_report.html` 和 `evidence_report.pdf`。报告包含摘要、每条记录的一行和一节、每条记录的检查结果，以及一个清晰的标记，说明该记录是模拟、轨迹回放、来自真实适配器，还是未说明。未通过检查的记录会标为无效并给出原因，绝不会被省略；只要有无效记录，退出状态就是 1，但报告照常写出。HTML 是不含脚本和外部资源的单个文件，记录中的所有文本都会转义，PDF 由程序自己写出（西文文本使用标准字体，中文和日文使用内嵌的 Noto Sans CJK 子集，遵循 SIL Open Font License 1.1；HTML 保留全部字符）。相同的记录得到相同的字节。摘要一致只说明记录在写入后未被改动，而不说明是谁写的；“真实适配器”标记只表示未声明模拟，这些都没有在真实板卡上运行过。测试器还可以用用户的 Ed25519 密钥对其写出的证据记录签名(默认关闭:在 `config.json` 中设置 `"sign_evidence": true`,或单次运行使用 `--sign-evidence`);此时报告会逐条显示签名是否一致,并在使用 `--public-key` 时显示是否由你信任的密钥生成。签名说明密钥持有者写了该记录且之后未被改动,但不说明这个人是谁。该开关也可在面板中打开(其菜单里的一个复选框),你信任的密钥可以按别名列在 `config.json` 的 `trusted_keys` 中(仅公钥):历史、其窗口和报告随后会显示“由 <alias> 签名”或“签名有效,密钥未知”。详情：[证据记录](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/EVIDENCE.md)。
+文件夹中的证据记录（`urtc-evidence/1`）可以生成报告，附在构建或验证资料中：`python urtc_tester.py --headless report --evidence-dir 文件夹 --out 文件 [--format html|pdf] [--language 名称]`（未指定格式时按文件扩展名决定），或使用历史窗口的**报告**按钮，它会在该文件夹中写入 `evidence_report.html` 和 `evidence_report.pdf`。报告包含摘要、每条记录的一行和一节、每条记录的检查结果，以及一个清晰的标记，说明该记录是模拟、轨迹回放、来自真实适配器，还是未说明。未通过检查的记录会标为无效并给出原因，绝不会被省略；只要有无效记录，退出状态就是 1，但报告照常写出。HTML 是不含脚本和外部资源的单个文件，记录中的所有文本都会转义，PDF 由程序自己写出（西文文本使用标准字体，中文和日文使用内嵌的 Noto Sans CJK 子集，遵循 SIL Open Font License 1.1；HTML 保留全部字符）。相同的记录得到相同的字节。摘要一致只说明记录在写入后未被改动，而不说明是谁写的；“真实适配器”标记只表示未声明模拟，其中没有任何内容在真实板卡上运行过。测试器还可以用用户的 Ed25519 密钥对其写出的证据记录签名（默认关闭：在 `config.json` 中设置 `"sign_evidence": true`，或单次运行使用 `--sign-evidence`）；此时报告会逐条显示签名是否一致，并在使用 `--public-key` 时显示是否由你信任的密钥生成。签名说明密钥持有者写了该记录且之后未被改动，但不说明这个人是谁。该开关也可在面板中打开（其菜单里的一个复选框），你信任的密钥可以按别名列在 `config.json` 的 `trusted_keys` 中（仅公钥）：历史、其窗口和报告随后会显示“由 <alias> 签名”或“签名有效，密钥未知”。详情：[证据记录](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/EVIDENCE.md)。
 <!-- /urtc-section:evidence_report -->
 
 ## 🔒 安全与防护
@@ -329,9 +329,9 @@ MAXTEMP、HEATING_NO_RISE 或 DROPPED_AT_TARGET）显示在板卡状态中，由
 （操作系统、Python 版本、当前的传输方式/端口/比特率、检测到的工具）
 保存为一个 `.zip` 文件，以便交给正在调试某个工具头问题的人。
 
-### 🤖 无窗口模式: 测试计划
+### 🤖 无窗口模式：测试计划
 
-`python urtc_tester.py --headless 命令` 以无窗口方式运行测试器，适用于生产线、台架脚本或 CI 任务: `info`（谁在应答: 工具、固件、快速状态）、`selftest`、`run-plan 文件` 和 `validate-plan 文件`。计划是放在 `plans/` 里的简短 JSON 步骤文件（确认工具、无故障、最低固件版本、自检、数值落在范围内的帧、等待、向台架旁的人提问）。命令会写出每一帧的日志，以及一份用 SHA-256 指明该日志的结果记录，与控制台使用的记录相同。计划只发送查询，除非它写明 `"actuation": true` 且操作员加上 `--allow-actuation`；引导程序、更新、配置和擦除帧永远不会发送，固件在不刷新时会丢弃的指令（加热器、钻头、激光）可在计划等待期间重复发送（`keepalive_ms`），凡是下达过指令的计划结束后会再次关闭所有输出。`--transport simulate` 播放模拟的工具头，`--transport replay --port 文件` 播放录制的 `.trc` 或 `.asc` 轨迹，因此无需板卡即可试跑计划。退出状态: 0 通过，1 有检查失败，2 计划或参数有误，3 测试无法进行，4 没有失败但证据不足以判定（无法判定）。输出的文字为英文，与烧录器的命令行一致。详见 [`docs/HEADLESS.md`](docs/HEADLESS.md)。这些内容尚未在真实板卡上运行过。
+`python urtc_tester.py --headless 命令` 以无窗口方式运行测试器，适用于生产线、台架脚本或 CI 任务：`info`（谁在应答：工具、固件、快速状态）、`selftest`、`run-plan 文件` 和 `validate-plan 文件`。计划是放在 `plans/` 里的简短 JSON 步骤文件（确认工具、无故障、最低固件版本、自检、数值落在范围内的帧、等待、向台架旁的人提问）。命令会写出每一帧的日志，以及一份用 SHA-256 指明该日志的结果记录，与控制台使用的记录相同。计划只发送查询，除非它写明 `"actuation": true` 且操作员加上 `--allow-actuation`；引导程序、更新、配置和擦除帧永远不会发送，固件在不刷新时会丢弃的指令（加热器、钻头、激光）可在计划等待期间重复发送（`keepalive_ms`），凡是下达过指令的计划结束后会再次关闭所有输出。`--transport simulate` 播放模拟的工具头，`--transport replay --port 文件` 播放录制的 `.trc` 或 `.asc` 轨迹，因此无需板卡即可试跑计划。退出状态：0 通过，1 有检查失败，2 计划或参数有误，3 测试无法进行，4 没有失败但证据不足以判定（无法判定）。输出的文字为英文，与烧录器的命令行一致。详见 [`docs/HEADLESS.md`](docs/HEADLESS.md)。这些内容尚未在真实板卡上运行过。
 
 **窗口中的计划（新增，仅用测试和模拟头验证）：** 控制台右栏底部的“测试计划”部分会列出 `plans/` 中的计划，用同一引擎对已连接的板卡运行您选择的计划（不能在仅监听模式下运行，且仅在没有其他程序读取总线时），每个步骤一结束就显示，确认步骤的问题以对话框提出，并保存日志和结果记录。会控制输出的计划会先请求确认，结束时关闭所有输出；“取消”会在当前步骤之后停止。
 
@@ -511,18 +511,18 @@ README 和文本提供英语、西班牙语、法语、意大利语、德语、�
 URTC 由相互独立的仓库组成，每个仓库都有自己的版本、测试和 README。以下是按组划分的家族：
 
 * **URTC Tool Platform:**
-  * [URTC](https://github.com/JuanenRac/URTC) - 工具头板卡的固件(25 个工具配置、CAN 引导程序)以及 CAN 协议参考。
-  * [URTC-COMMON](https://github.com/JuanenRac/URTC-COMMON) - 只写一次的 CAN 协议数据(规范、生成的表格、一致性向量)以及各程序共享的代码。
+  * [URTC](https://github.com/JuanenRac/URTC) - 工具头板卡的固件（25 个工具配置、CAN 引导程序）以及 CAN 协议参考。
+  * [URTC-COMMON](https://github.com/JuanenRac/URTC-COMMON) - 只写一次的 CAN 协议数据（规范、生成的表格、一致性向量）以及各程序共享的代码。
   * [URTC-FLASHER](https://github.com/JuanenRac/URTC-FLASHER) - 通过 CAN 或 SWD/JTAG 更新板卡固件的桌面工具。
-  * [URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY) - 位于 CAN 总线前的网关:只放行列表中的标识符,限制其速率,并要求会话密钥。
+  * [URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY) - 位于 CAN 总线前的网关：只放行列表中的标识符，限制其速率，并要求会话密钥。
   * [URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK) - 用于带预热和生命周期跟踪的工具架的、与硬件无关的 C 逻辑和命令协议。
-  * **URTC-TESTER** (本仓库) - 桌面实时 CAN 总线测试器,显示板卡所报告工具配置的控件和遥测。
-  * [URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL) - C 语言的传感器帧协议,以及用于检测工具头的 Python 热成像/RGB 配套程序。
-  * [URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO) - 通过 Web Serial 和 SLCAN 烧录并测试板卡的浏览器应用,无需安装。
+  * **URTC-TESTER** (本仓库) - 桌面实时 CAN 总线测试器，显示板卡所报告工具配置的控件和遥测。
+  * [URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL) - C 语言的传感器帧协议，以及用于检测工具头的 Python 热成像/RGB 配套程序。
+  * [URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO) - 通过 Web Serial 和 SLCAN 烧录并测试板卡的浏览器应用，无需安装。
 * **Ecosystem Operations:**
   * [URTC-DEVTOOLS](https://github.com/JuanenRac/URTC-DEVTOOLS) - 家族共用的仓库工具，作为带版本的整套工具，并用锁文件区分被改动的副本和已过时的副本。
-  * [URTC-DOCS](https://github.com/JuanenRac/URTC-DOCS) - 生态系统的架构、接口、安全基线和生成的目录,以及比较所有仓库的工具。
-  * [URTC-UPDATER](https://github.com/JuanenRac/URTC-UPDATER) - 检测、安装并更新 URTC 家族仓库的桌面工具,每次只执行一个明确的操作。
+  * [URTC-DOCS](https://github.com/JuanenRac/URTC-DOCS) - 生态系统的架构、接口、安全基线和生成的目录，以及比较所有仓库的工具。
+  * [URTC-UPDATER](https://github.com/JuanenRac/URTC-UPDATER) - 检测、安装并更新 URTC 家族仓库的桌面工具，每次只执行一个明确的操作。
 
 **姊妹项目（相互独立，共用同一基础和工具）：**
 
@@ -558,7 +558,7 @@ URTC 由相互独立的仓库组成，每个仓库都有自己的版本、测试
 许可证：源代码为 **GPL-3.0-or-later**，本文档为 **CC BY-SA 4.0**——见本仓库中的
 `LICENSE`，或本文档末尾的“许可证与版权声明”一节。
 
-URTC Tester 版权所有 (c) 2026 JuanenRac（Electro Hobby 3D）。分发本项目
+URTC Tester 版权所有（c） 2026 JuanenRac（Electro Hobby 3D）。分发本项目
 或其衍生作品时必须包含此声明。
 
 本项目由源代码及其自身的文档组成，两者依据不同的许可证提供——各自适合

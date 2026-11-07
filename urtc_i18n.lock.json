@@ -2,14 +2,14 @@
   "format": 1,
   "urtc_common_version": "0.2.4",
   "catalog": "spec/i18n/catalog/tester.json",
-  "catalog_sha256": "9967b5143559226fc6c81cefa6513a280cafbc752d2f2e543656c09b966d16d4",
+  "catalog_sha256": "c85db870d1e464618ab309153b5a9fd2b45d13edfa797c4834277d8b2c8f0d01",
   "files": {
-    "language/chinese.lng": "b22cd74fea4dfcd3b51e13e6882d32785bcd7e72e99f7fa6160a66df8991e348",
+    "language/chinese.lng": "7abc2a3c050b895ffc9ad400b6bd168f26cacb6a453670a38797fc4b2aefb64b",
     "language/english.lng": "1e7dd5ca3dc971ca6bd258d553fefcd5b7c22bdf28a692280abaed0102a2043f",
     "language/french.lng": "196bc242673882a680bd4df37d18eb36e4e46fbf079a9c7bbbcbb5de8aeb93ff",
     "language/german.lng": "903f0a044ae3659a762cb860cf33e6b5612bfaf5bcb9198e8b2e9b774abc5697",
     "language/italian.lng": "aa64ae886a423cbe02cfe8830517a4341fd65d53b15e22e5115f60ebff1f396c",
-    "language/japanese.lng": "f03eb00e7b557ff4c8b07518a3a65057734f4dc86d8dc5975228832fb3486234",
+    "language/japanese.lng": "d8423a26de2de5a0382437ab111cdd0b6e4ceffedcaa9726a24ac8f799d1e321",
     "language/portuguese.lng": "5cdbb1dc380ebfb4d55b30308af746cfeefe9d522eee18ce3800d9c903377e42",
     "language/spanish.lng": "fb158088ed60b6aee0edcb4b13a6f9e68c70b47dd8df7a81f5ea5e9475a8c974",
     "tests/test_i18n_generated.py": "2dbb1740abb41abb5dca047084ac545d4cb403687e599550a73e4e1174c1ce87"
