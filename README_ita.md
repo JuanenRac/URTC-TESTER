@@ -161,7 +161,7 @@ sottocolonne internamente, per lo stesso motivo. Vedi
 all'architettura a livello di modulo che questa sezione riassume.
 
 **Connetti** (sezione 1, identica al flasher): scegli Seriale/SLCAN o
-SocketCAN, la porta/interfaccia, opzionalmente auto-rileva il bitrate,
+SocketCAN, la porta/interfaccia, opzionalmente auto-rileva la velocità del bus,
 poi Connetti.
 
 **Il rilevamento avviene automaticamente alla connessione** (o clicca
@@ -397,7 +397,7 @@ Come il flasher: un registro di sessione con marca temporale viene
 scritto automaticamente in `logs/` (sicuro da
 eliminare), ed **Esporta Pacchetto Debug** salva uno `.zip` con il
 registro attuale a schermo più diagnostica di base del sistema (SO,
-versione Python, trasporto/porta/bitrate attuale, strumento rilevato)
+versione Python, trasporto/porta/velocità del bus attuale, strumento rilevato)
 per consegnare a chi sta facendo debug di un problema di testa
 strumento.
 

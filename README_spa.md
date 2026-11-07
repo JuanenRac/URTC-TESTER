@@ -161,7 +161,7 @@ subcolumnas internamente, por el mismo motivo. Ver
 a nivel de módulos que resume esta sección.
 
 **Conectar** (sección 1, idéntica al flasher): elige Serie/SLCAN o
-SocketCAN, el puerto/interfaz, opcionalmente autodetecta el bitrate,
+SocketCAN, el puerto/interfaz, opcionalmente autodetecta la velocidad de bus,
 luego Conectar.
 
 **La detección ocurre automáticamente al conectar** (o haz clic en
@@ -397,7 +397,7 @@ Igual que el flasher: un registro de sesión con marca de tiempo se
 escribe automáticamente en `logs/` (seguro de borrar),
 y **Exportar Paquete de Depuración** guarda un `.zip` con el registro
 actual en pantalla más diagnósticos básicos del sistema (SO, versión de
-Python, transporte/puerto/bitrate actual, herramienta detectada) para
+Python, transporte/puerto/velocidad de bus actual, herramienta detectada) para
 entregar a quien esté depurando un problema de cabezal de herramienta.
 
 ### 🤖 Sin ventana: planes de prueba
@@ -482,7 +482,7 @@ defectuosa, nombre de archivo equivocado) cae de vuelta al inglés para
 toda la interfaz - de cualquier forma la herramienta se mantiene usable
 mientras se resuelve el desajuste.
 
-**Configuración de SLCAN/SocketCAN en Linux** (reflasheo del adaptador,
+**Configuración de SLCAN/SocketCAN en Linux** (regrabación del adaptador,
 permisos de serie, levantar la interfaz con `ip link`) es exactamente
 igual que la sección 1 del flasher - ver el propio
 [README de URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)

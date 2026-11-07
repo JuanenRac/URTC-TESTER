@@ -158,7 +158,7 @@ em 2 subcolunas internamente, pela mesma razão. Consulte
 que esta secção percorre.
 
 **Ligar** (secção 1, idêntica à do flasher): escolha Serial/SLCAN ou
-SocketCAN, a porta/interface, opcionalmente deteta automaticamente o bitrate, depois
+SocketCAN, a porta/interface, opcionalmente deteta automaticamente a velocidade do barramento, depois
 Ligar.
 
 **A deteção acontece automaticamente ao ligar** (ou clique em **Detetar** para
@@ -366,7 +366,7 @@ Nada disto foi experimentado numa placa real e nada é uma função de seguranç
 Tal como no flasher: um registo de sessão com marca temporal é escrito automaticamente
 em `logs/` (pode ser apagado com segurança), e **Exportar pacote de depuração**
 guarda um `.zip` com o registo atual apresentado no ecrã mais diagnósticos básicos do sistema
-(SO, versão do Python, transporte/porta/bitrate atuais, ferramenta
+(SO, versão do Python, transporte/porta/velocidade do barramento atuais, ferramenta
 detetada) para entregar a quem estiver a depurar um problema numa cabeça de ferramenta.
 
 ### 🤖 Sem janela: planos de teste
@@ -453,7 +453,7 @@ em vez de falhar, e um ficheiro de idioma em falta ou ilegível
 interface - em ambos os casos a ferramenta continua utilizável enquanto a divergência
 é resolvida.
 
-**Configuração de SLCAN/SocketCAN no Linux** (reflash do adaptador, permissões da porta série,
+**Configuração de SLCAN/SocketCAN no Linux** (regravação do adaptador, permissões da porta série,
 ativação com `ip link`) é exatamente igual à secção 1 do flasher - consulte
 o [README do próprio URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER),
 secções 1 e 2, em vez de a duplicar aqui.

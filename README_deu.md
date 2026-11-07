@@ -166,7 +166,7 @@ zusammenfasst.
 
 **Verbinden** (Abschnitt 1, identisch zum Flasher): wählen Sie
 Seriell/SLCAN oder SocketCAN, den Port/die Schnittstelle, erkennen Sie
-optional die Bitrate automatisch, dann Verbinden.
+optional die Busgeschwindigkeit automatisch, dann Verbinden.
 
 **Die Erkennung erfolgt automatisch beim Verbinden** (oder klicken Sie
 auf **Erkennen**, um sie zu wiederholen): das Tool sendet `0x110`
@@ -355,7 +355,7 @@ keinen Watchdog (stattdessen einen Stillstandsdetektor - siehe
 - **ALLE AUSGÄNGE STOPPEN** (in beiden Fenstern, verfügbar bei bestehender Verbindung und scharfgeschalteten aktiven Prüfungen) sendet jeden bekannten Aus-Befehl - Heizungen, Laser, Bohrmaschine, UV-Lampe, Schichtlüfter, Freigabe des Elektromagneten, einfache Schrittmotoren und Crimper - egal welches Werkzeug eingebaut ist, und stoppt jede Auffrischung. Der Hotend-Lüfter bleibt absichtlich an, weil die Düse noch heiß sein kann. Das ist ein Software-Befehl über den CAN-Bus, kein Notaus: Er wirkt nicht, wenn Bus, Adapter, PC oder Platine ausfallen.
 - Die einmaligen Schweißimpulse, der Pasteimpuls und das Crimpen verlangen auch im klassischen Fenster eine Bestätigung, wie es das Qt-Quick-Deck immer tut.
 - Die Bohrmaschine und die UV-Lampe werden wie der Laser und die Heizungen aufgefrischt. Solange die Heizung des 3D-Druckers gehalten wird, enthält ihre 150-ms-Auffrischung 0 Extruderschritte, die die Firmware als Stoppbefehl liest: Eine in diesem Zustand gestartete Extruderbewegung wird innerhalb von 150 ms abgebrochen. Den Extruder daher bei ausgeschalteter Heizung bewegen, bis die Firmware einen Modus bietet, der den Extruder in Ruhe lässt.
-- Port und Bitrate werden für die nächste Sitzung gemerkt (`config.json`), und das Qt-Quick-Deck hat eine eigene Bitraten-Auswahl. Die **automatische Erkennung** hört zuerst nur bei jeder Bitrate zu (auf einem aktiven Bus wird nichts gesendet) und fragt nur dann bei jeder Bitrate nach, wenn der Bus völlig still ist.
+- Port und Busgeschwindigkeit werden für die nächste Sitzung gemerkt (`config.json`), und das Qt-Quick-Deck hat eine eigene Auswahl der Busgeschwindigkeit. Die **automatische Erkennung** hört zuerst nur bei jeder Busgeschwindigkeit zu (auf einem aktiven Bus wird nichts gesendet) und fragt nur dann bei jeder Busgeschwindigkeit nach, wenn der Bus völlig still ist.
 - Der Rohdaten-Busmonitor lässt sich auf einige CAN-IDs (**ID-Filter**) und auf Frames mit geänderten Daten (**Nur Änderungen**) beschränken. An einem Bus mit mehreren Werkzeugköpfen (der Multinode-Erweiterung) trägt jede Zeile ihren Knoten (`N03`), `n3 n12` im Filter behält nur die Frames dieser Knoten, und eine Zusammenfassung unter der Tabelle nennt die Frames pro Sekunde und den Busanteil jedes Knotens.
 
 #### 🔥 Prüfstandstest für thermisches Durchgehen (URTC-Firmware 0.3.2+ / 0.3.3+)
@@ -406,7 +406,7 @@ Wie beim Flasher: ein zeitgestempeltes Sitzungsprotokoll wird
 automatisch nach `logs/` geschrieben (sicher zu
 löschen), und **Debug-Paket exportieren** speichert eine `.zip`-Datei
 mit dem aktuellen Bildschirmprotokoll plus grundlegender Systemdiagnose
-(Betriebssystem, Python-Version, aktueller Transport/Port/Bitrate,
+(Betriebssystem, Python-Version, aktueller Transport/Port/Busgeschwindigkeit,
 erkanntes Werkzeug) zur Weitergabe an denjenigen, der ein
 Werkzeugkopfproblem debuggt.
 
