@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/Licenza-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Linguaggio-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-888-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-896-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocollo-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Versione | `0.5.3` |
 | Maturità | Funzionale |
-| Test | 888 (`python -m pytest -q`) |
+| Test | 896 (`python -m pytest -q`) |
 | Tecnologia | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destinazione | Il PC di chi lo usa |
 | Su hardware reale | Solo simulato: provato con emulatori, test double o simulatori; per questa versione non risulta alcuna esecuzione su hardware reale |
@@ -141,7 +141,7 @@ Catturate su un banco di prova con dati di esempio inventati e senza alcuna inst
 
 ## ✨ Funzionalità
 
-**Registratore di guasti, funzioni opzionali, banco del rack e vista termica (nuovo, verificato solo con simulazioni):** il pannello legge la scatola nera della scheda (`0x1A8` / `0x1A9`) e la salva in CSV e JSON, automaticamente una volta per ogni errore segnalato dalla scheda quando l'opzione è attiva; attiva le funzioni opzionali del firmware (`0x1AE` / `0x1AF`, spente per impostazione predefinita, efficaci al prossimo avvio); ha un rack di utensili simulato con il protocollo seriale di URTC-SMART-RACK, l'identità di ogni testa (tipo e numero di serie) e l'esportazione di una pagina di stato; e mostra l'immagine di ispezione termica in falsi colori (un'immagine simulata lo dichiara). I nomi e i tipi degli utensili ora derivano dai profili utensile condivisi di URTC-COMMON. Nulla di tutto ciò è stato usato con una scheda reale.
+**Registratore di guasti, funzioni opzionali, banco del rack e vista termica (nuovo, verificato solo con simulazioni):** il pannello legge la scatola nera della scheda (`0x1A8` / `0x1A9`) e la salva in CSV e JSON, automaticamente una volta per ogni errore segnalato dalla scheda quando l'opzione è attiva; legge i registri lasciati dall'ultimo HardFault (`0x1BC` / `0x1BD`, solo da un firmware compilato con la cattura dei crash) e li salva in JSON; attiva le funzioni opzionali del firmware (`0x1AE` / `0x1AF`, spente per impostazione predefinita, efficaci al prossimo avvio); ha un rack di utensili simulato con il protocollo seriale di URTC-SMART-RACK, l'identità di ogni testa (tipo e numero di serie) e l'esportazione di una pagina di stato; e mostra l'immagine di ispezione termica in falsi colori (un'immagine simulata lo dichiara). I nomi e i tipi degli utensili ora derivano dai profili utensile condivisi di URTC-COMMON. Nulla di tutto ciò è stato usato con una scheda reale.
 
 **PID del riscaldatore (nuovo, verificato solo con simulazioni):** il pannello legge lo stato del PID del riscaldatore del firmware (`0x1B9` / `0x1BA`: i guadagni in vigore, lo stato e l'uscita dell'ultimo ciclo di controllo), salva i guadagni (da 0 a 600) e avvia o annulla l'autotuning a relè, che scalda la punta attorno al setpoint attuale del saldatore (da 100 a 445 C) e salva i guadagni trovati. Salvare i guadagni e avviare l'autotuning chiedono la solita conferma; annullare no. Anche la testa simulata della riga di comando (`--transport simulate`) risponde a questi frame. La funzione va prima attivata tra le funzioni opzionali; nulla di tutto ciò è stato usato con una scheda reale.
 
@@ -496,7 +496,7 @@ Quali versioni dei programmi URTC funzionano insieme, e quale versione del proto
 
 ## 🧪 Test
 
-La suite ha 888 test (`python -m pytest -q`; con Qt su una macchina senza schermo, `QT_QPA_PLATFORM=offscreen`; quelli che richiedono PySide6 vengono saltati senza): i codificatori e decodificatori dei payload CAN di ogni famiglia di utensili, i trasporti SLCAN e SocketCAN contro finti, la sonda di identità, l'autotest, i reinvii di sorveglianza, il controllo di salute del bus, i piani di test e la modalità senza finestra, l'esportazione della sessione con il suo hash, i file di lingua e i pannelli Qt Quick. Quattro script nella radice (`verify_qt_*.py`) pilotano i pannelli Qt Quick end-to-end con un vero ciclo di eventi Qt. La CI esegue anche `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Niente di tutto questo è girato contro una scheda reale.
+La suite ha 896 test (`python -m pytest -q`; con Qt su una macchina senza schermo, `QT_QPA_PLATFORM=offscreen`; quelli che richiedono PySide6 vengono saltati senza): i codificatori e decodificatori dei payload CAN di ogni famiglia di utensili, i trasporti SLCAN e SocketCAN contro finti, la sonda di identità, l'autotest, i reinvii di sorveglianza, il controllo di salute del bus, i piani di test e la modalità senza finestra, l'esportazione della sessione con il suo hash, i file di lingua e i pannelli Qt Quick. Quattro script nella radice (`verify_qt_*.py`) pilotano i pannelli Qt Quick end-to-end con un vero ciclo di eventi Qt. La CI esegue anche `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Niente di tutto questo è girato contro una scheda reale.
 
 ## 🏗️ Compilazione e rilascio
 

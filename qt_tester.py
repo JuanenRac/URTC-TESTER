@@ -265,6 +265,7 @@ class TesterQtBridge(QObject):
             "diag0": "",
             "spi_response": "",
             "black_box": "",
+            "crash_dump": "",
             "features": "",
             "pid": "",
             "thermal_view": "",
@@ -1638,6 +1639,29 @@ class TesterQtBridge(QObject):
         threading.Thread(target=_worker, daemon=True, name="urtc-tester-black-box").start()
 
     @Property(str, notify=changed)
+    def crashDumpText(self) -> str:
+        return self._query_texts["crash_dump"]
+
+    @Slot()
+    def readCrashDump(self) -> None:
+        """Ask the board for the registers its last HardFault left (0x1BC / 0x1BD) and save them as JSON in the logs folder. Only a firmware built with the crash capture answers."""
+        transport = self._transport
+        if transport is None or not self.canUseUtilityPanels:
+            self._log("CRASH_DUMP_BLOCKED not connected or not in active-check mode")
+            return
+
+        def _worker() -> None:
+            with self._io_lock:
+                try:
+                    dump = extras.download_crash_dump(transport.send_frame, transport.read_frame)
+                    json_path = extras.save_crash_dump(dump, tester_config.LOGS_FOLDER)
+                    self._queryResult.emit("crash_dump", ("ok", extras.crash_dump.summary(dump), json_path))
+                except Exception as exc:
+                    self._queryResult.emit("crash_dump", ("fail", str(exc)))
+
+        threading.Thread(target=_worker, daemon=True, name="urtc-tester-crash-dump").start()
+
+    @Property(str, notify=changed)
     def featuresText(self) -> str:
         return self._query_texts["features"]
 
@@ -2239,6 +2263,13 @@ class TesterQtBridge(QObject):
             else:
                 text = _("LBL_BLACKBOX_FAILED", reason=result[1] if result else "?")
                 self._log(f"BLACK_BOX_FAILED {text}")
+        elif key == "crash_dump":
+            if result is not None and result[0] == "ok":
+                text = _("LBL_CRASH_DUMP_SAVED", summary=result[1], json=result[2])
+                self._log(f"CRASH_DUMP_SAVED {result[2]}")
+            else:
+                text = _("LBL_CRASH_DUMP_FAILED", reason=result[1] if result else "?")
+                self._log(f"CRASH_DUMP_FAILED {text}")
         elif key == "features":
             if result is None:
                 text = _("LBL_FEATURES_NO_RESPONSE")

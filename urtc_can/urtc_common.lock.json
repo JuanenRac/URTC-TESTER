@@ -18,6 +18,10 @@
       "from": "src/urtc_common/conformance.py",
       "sha256": "ac21e8b66c3c7f0865d67cebf75b0347aee227efb51fed0c22a5fb133dfeae10"
     },
+    "crash_dump.py": {
+      "from": "src/urtc_common/crash_dump.py",
+      "sha256": "1f748f814a0e040ab8c5e25129a524fd7ef2b027b751118fc10f467eb8d9e123"
+    },
     "ed25519.py": {
       "from": "src/urtc_common/ed25519.py",
       "sha256": "c32eae555fee5c8d5061aeffcb44be1c116c628bc28aff3f62897fa925cbda6f"
@@ -120,7 +124,7 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "bb239cd317366ccb3690478df06e0e21b4ea2ed1fa83485a0e7044357d3ed399"
+      "sha256": "67ffeb8cba5d7710e6d1f8690e468dd737d56a8e47bc7185d6a7cd4c59a9b951"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",

@@ -1265,6 +1265,12 @@ ApplicationWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
+                    GameButton { text: testerBackend.uiText("BTN_READ_CRASH_DUMP"); accent: "#24465e"; Layout.preferredWidth: 190; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.readCrashDump() }
+                }
+                Text { text: testerBackend.crashDumpText; visible: testerBackend.crashDumpText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
                     Text { text: testerBackend.uiText("TITLE_BLACKBOX_VIEW"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 12; Layout.fillWidth: true; wrapMode: Text.WordWrap }
                     GameButton { text: testerBackend.uiText("BTN_BLACKBOX_OPEN"); accent: "#24465e"; Layout.preferredWidth: 280; onClicked: blackBoxOpenDialog.open() }
                 }

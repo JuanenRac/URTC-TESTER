@@ -14,7 +14,7 @@
 * the optional firmware features (0x1AE / 0x1AF): the mask, its names and the frames;
 * the heater PID (0x1B9 / 0x1BA): the gains, the autotune orders and the state the board reports.
 
-The shared pieces (urtc_can.blackbox, rack_sim, rack_status, thermal_view, tools_catalog) are copies of URTC-COMMON.
+The shared pieces (urtc_can.blackbox, crash_dump, rack_sim, rack_status, thermal_view, tools_catalog) are copies of URTC-COMMON.
 """
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ import zlib
 from collections.abc import Callable
 
 import tester_config
-from urtc_can import blackbox, rack_sim, rack_status, thermal_view
+from urtc_can import blackbox, crash_dump, rack_sim, rack_status, thermal_view
 
 FEATURES_MAGIC = b"FEAT"
 FEATURE_NAMES = ((0x01, "MOTION_RAMPS"), (0x02, "HEALTH_PROFILE"), (0x04, "HSI_AUTOTRIM"), (0x08, "THERMAL_PID"))
@@ -84,6 +84,36 @@ def summarize_black_box(record: blackbox.Record) -> str:
     else:
         text += "; no error flag in the record"
     return text
+
+
+# ---- crash capture ----------------------------------------------------------------------------------------------------------------
+def download_crash_dump(send_frame: Callable[[int, bytes], None], read_frame: Callable[[float], tuple[int, bytes] | None],
+                        timeout_s: float = 0.8) -> crash_dump.CrashDump:
+    """Ask for the registers the last HardFault left (0x1BC) and read the six frames of 0x1BD. A firmware built without the crash capture does not
+    answer, which is an error here ("missing or incomplete"), never a guessed record."""
+
+    def request() -> list[bytes] | None:
+        send_frame(tester_config.CAN_ID_CRASH_DUMP_QUERY, crash_dump.query_request())
+        frames: list[bytes] = []
+        deadline = time.monotonic() + timeout_s
+        while len(frames) < crash_dump.FRAME_COUNT and time.monotonic() < deadline:
+            frame = read_frame(0.05)
+            if frame is not None and frame[0] == tester_config.CAN_ID_CRASH_DUMP_RESP and len(frame[1]) == 8:
+                frames.append(frame[1])
+        return frames if len(frames) == crash_dump.FRAME_COUNT else None
+
+    return crash_dump.download(request)
+
+
+def save_crash_dump(dump: crash_dump.CrashDump, folder: str, stem: str | None = None) -> str:
+    """Write the JSON of a crash record in ``folder``; returns the path."""
+    os.makedirs(folder, exist_ok=True)
+    now = datetime.datetime.now(datetime.timezone.utc)
+    stem = stem or now.strftime("urtc_crashdump_%Y%m%d_%H%M%S")
+    json_path = os.path.join(folder, stem + ".json")
+    with open(json_path, "w", encoding="utf-8", newline="") as handle:
+        handle.write(crash_dump.to_json(dump, now.strftime("%Y-%m-%dT%H:%M:%SZ")))
+    return json_path
 
 
 class AutoDownload:
