@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The Portuguese README uses "trama" for a CAN frame everywhere,** as the application's own Portuguese texts do (it mixed "frame" and "trama").
+
 - **The repeated commands are configurable:** `keepalive` in `config.json` takes `interval_ms` (a whole number from 20 to 200, one period for every command the firmware drops again if it is not refreshed) and `single_io_thread` (true repeats all of them from one shared thread, one frame at a time, instead of one thread each; off by default). A value outside those limits keeps the default of its field. New tests cover the limits, the scheduler (order, periods, a failing command, replacement, cancel, the thread) and the deck in both modes.
 - **The bytes of a frame are separated by a space in the exported `.trc` and `.asc`:** `01 02 FF` instead of `0102FF`, as PCAN-View and CANalyzer write them; an empty frame has no trailing space and a text that is not whole bytes is kept as it came.
 - **The copies of the shared repository are refreshed:** the generated protocol module, the user-interface helpers, the vectors and the signature file name table (`.imgsig`) are at the current version again.

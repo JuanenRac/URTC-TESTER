@@ -27,7 +27,7 @@
 
 ---
 
-**Verificação de honestidade - o que realmente funciona hoje:** os codificadores de payload CAN para as famílias de controlo Qt Quick migradas (`advanced_protocol.py`) são reais e estão cobertos pelos testes de `tests/` (`python -m pytest -q`). O CI deste repositório (`.github/workflows/ci.yml`) também os executa, juntamente com `ruff check`, `python -m mypy`, `tools/ci_validate.py`, uma compilação de sintaxe de cada ficheiro `.py` e os quatro scripts `verify_qt_*.py`, pelo que uma regressão aí faz falhar a compilação. Os quatro scripts `verify_qt_*.py` na raiz do repositório (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) são verificações end-to-end reais, deliberadamente fora de `tests/`, contra um transporte simulado com entrega real de Signals entre threads - os quatro passam com `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que o CI também executa. Esse é o limite honesto do que é verificado automaticamente: a camada de transporte, o tratamento dos IDs CAN/disposição de bytes e a lógica da ponte Qt Quick são reais e exercitados com frames simuladas, não com hardware real - como as "Limitações conhecidas" abaixo já indicam, isto foi construído sem acesso a USB, pelo que nada aqui foi ainda verificado numa placa real. `qt_tester.py` e `assets/qml/TesterDeck.qml` são a implementação real e substancial (milhares de linhas no total), exercitada pelos testes com placas simuladas e pelos scripts de verificação, e nunca por uma placa real.
+**Verificação de honestidade - o que realmente funciona hoje:** os codificadores de payload CAN para as famílias de controlo Qt Quick migradas (`advanced_protocol.py`) são reais e estão cobertos pelos testes de `tests/` (`python -m pytest -q`). O CI deste repositório (`.github/workflows/ci.yml`) também os executa, juntamente com `ruff check`, `python -m mypy`, `tools/ci_validate.py`, uma compilação de sintaxe de cada ficheiro `.py` e os quatro scripts `verify_qt_*.py`, pelo que uma regressão aí faz falhar a compilação. Os quatro scripts `verify_qt_*.py` na raiz do repositório (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) são verificações end-to-end reais, deliberadamente fora de `tests/`, contra um transporte simulado com entrega real de Signals entre threads - os quatro passam com `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que o CI também executa. Esse é o limite honesto do que é verificado automaticamente: a camada de transporte, o tratamento dos IDs CAN/disposição de bytes e a lógica da ponte Qt Quick são reais e exercitados com tramas simuladas, não com hardware real - como as "Limitações conhecidas" abaixo já indicam, isto foi construído sem acesso a USB, pelo que nada aqui foi ainda verificado numa placa real. `qt_tester.py` e `assets/qml/TesterDeck.qml` são a implementação real e substancial (milhares de linhas no total), exercitada pelos testes com placas simuladas e pelos scripts de verificação, e nunca por uma placa real.
 
 ---
 
@@ -76,7 +76,7 @@ estava ao início.
 
 Esta ferramenta e o [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) partilham a mesma camada de transporte (as classes SLCAN e
 SocketCAN são idênticas), uma vez que ambas precisam, no fundo, apenas de colocar
-frames CAN dentro e fora do mesmo tipo de adaptador, mas desempenham
+tramas CAN dentro e fora do mesmo tipo de adaptador, mas desempenham
 funções fundamentalmente diferentes:
 
 | | Flasher | Tester |
@@ -261,9 +261,9 @@ da própria ferramenta) em vez de escala automática, para que a tendência seja
 de relance, em vez de a escala mudar por baixo dela.
 
 **Raw Bus Monitor** (aberto a partir da secção Custom CAN Frame): uma
-janela separada que mostra todas as frames vistas, qualquer ID, independentemente do
+janela separada que mostra todas as tramas vistas, qualquer ID, independentemente do
 painel da ferramenta ativa - uma tabela com deslocamento em direto (Time/ID/DLC/Data/Δt),
-Pause/Clear, e uma leitura aproximada da carga do barramento/taxa de frames (atualizada
+Pause/Clear, e uma leitura aproximada da carga do barramento/taxa de tramas (atualizada
 uma vez por segundo; o valor da carga não modela o overhead de bit-stuffing, por isso
 trate-o como um valor de diagnóstico aproximado, não como uma medição certificada).
 **Export .trc...**/**Export .asc...** guardam a tabela atualmente apresentada como um
@@ -309,7 +309,7 @@ no firmware; a ventoinha de camada tem um de 1000 ms. Marcar a caixa
 "Ativo" relevante não envia o comando apenas uma vez - reenvia-o
 automaticamente (150 ms para as ferramentas com watchdog de 250 ms, 400 ms para a ventoinha
 de camada) enquanto a caixa permanecer marcada, tal como um verdadeiro controlador
-mestre tem de fazer. Desmarcá-la envia uma única frame de zero/desligado e
+mestre tem de fazer. Desmarcá-la envia uma trama única de zero/desligado e
 pára. A ventoinha do hotend não tem watchdog (tem antes um detetor de bloqueio - consulte
 `docs/CANBUS.md`), pelo que é um simples envio único.
 
@@ -537,7 +537,7 @@ qualquer autoridade própria de gravação de firmware - está documentado em
 
 - **Não testada com hardware real.** Cada peça aqui - a camada de
   transporte, o tratamento dos IDs CAN/disposição de bytes, a temporização do keepalive do watchdog -
-  foi verificada isoladamente (frames simuladas, um subprocesso real para a temporização
+  foi verificada isoladamente (tramas simuladas, um subprocesso real para a temporização
   quando relevante), mas o ambiente que a construiu não tem acesso a USB.
   Trate uma primeira sessão real com a mesma cautela que o README do próprio
   flasher pede.
@@ -547,7 +547,7 @@ qualquer autoridade própria de gravação de firmware - está documentado em
   não há telemetria do que os LEDs de estado/anel estão realmente
   a mostrar, apenas do que foi comandado por último.
 - **A imagem térmica da Thermal Inspection é obtida a pedido, não uma
-  transmissão em direto.** Ler uma frame completa implica pedir todos os 48 blocos
+  transmissão em direto.** Ler uma trama completa implica pedir todos os 48 blocos
   sequencialmente por CAN (no pior caso, a resolução do MLX90640/MLX90642) -
   isto pode demorar alguns segundos, e não existe modo de envio contínuo (streaming)
   no protocolo CAN desta ferramenta que o torne mais rápido. Primeiro é preciso acionar uma captura; Read Thermal Image espera então até dois segundos que o sensor indique que está pronto e, se não o fizer, não lê nada, porque o firmware não responde aos pedidos de bloco antes disso. Primeiro pergunta-se qual o sensor instalado (48 blocos para o MLX90640/MLX90642, 12 para o MLX90641), e um bloco perdido deixa os seus píxeis em branco em vez de deslocar o resto da imagem.
