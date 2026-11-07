@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The Spanish texts say "grabar" and "velocidad de bus":** the calques "flashear", "flasheo" and "bitrate" are replaced in the window, the guide, the Spanish README and the shared sections, with the gender of the sentence corrected, so the README names what the window shows.
+
 - **The manifest says which version of the shared contracts it needs:** `min_common` in `urtc.project.json` is the oldest version of URTC-COMMON among the copies this repository carries, the value the updater compares with what is installed (a warning only). `tools/min_common.py` of URTC-COMMON checks it and a new copy brings it up to date.
 
 - **The Portuguese README names the screens as the application does:** the section and button names that were left in English (Detect, Tool Controls, Global Controls, Expansion Board, Persistence F-RAM, SPI passthrough, DIAG0 level, MLX9064x sensor variant, Run Self-Test, Export Debug Bundle, Custom CAN Frame, Raw Bus Monitor, Query, Connect, Export .trc/.asc) now use the words of the Portuguese language file.

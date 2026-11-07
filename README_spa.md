@@ -563,7 +563,7 @@ La lista anotada de cada archivo de código, una línea por archivo, está en [d
 
 El contrato de evidencia de esta herramienta - qué cuenta como
 pass/fail/unknown, por qué la ausencia de evidencia siempre es unknown y
-nunca pass, y por qué no otorga por sí misma autoridad para flashear
+nunca pass, y por qué no otorga por sí misma autoridad para grabar
 firmware - está documentado en
 [docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md).
 
