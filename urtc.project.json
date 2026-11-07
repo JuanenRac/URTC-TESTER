@@ -3,6 +3,7 @@
   "ecosystem": "URTC",
   "name": "URTC-TESTER",
   "version": "0.5.3",
+  "min_common": "0.2.4",
   "role": "tool",
   "stack": "python-qtquick",
   "technologies": [

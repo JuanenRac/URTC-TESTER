@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The manifest says which version of the shared contracts it needs:** `min_common` in `urtc.project.json` is the oldest version of URTC-COMMON among the copies this repository carries, the value the updater compares with what is installed (a warning only). `tools/min_common.py` of URTC-COMMON checks it and a new copy brings it up to date.
+
 - **The Portuguese README names the screens as the application does:** the section and button names that were left in English (Detect, Tool Controls, Global Controls, Expansion Board, Persistence F-RAM, SPI passthrough, DIAG0 level, MLX9064x sensor variant, Run Self-Test, Export Debug Bundle, Custom CAN Frame, Raw Bus Monitor, Query, Connect, Export .trc/.asc) now use the words of the Portuguese language file.
 
 - **The deck reads the registers a HardFault left:** a new button asks the board (`0x1BC`) for the crash record that a firmware built with the crash capture keeps across the watchdog reset (`0x1BD`, six frames, 48 bytes with a CRC-32) and saves it as JSON in the logs folder with the registers in hexadecimal and the causes in words (precise data bus error, invalid state, forced hard fault, the cause of the reset). A firmware without the capture does not answer, which the deck reports as an error; a record with a wrong checksum, version or size is refused, never completed with guessed bytes. The texts are in the eight languages and the shared module `crash_dump` is a copy of URTC-COMMON.
