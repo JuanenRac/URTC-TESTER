@@ -18,7 +18,7 @@
 ### Un exerciseur de bus CAN en direct pour la carte URTC : il n'affiche que les commandes et la télémétrie de la tête d'outil branchée
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Licence-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Langage-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
   <img src="https://img.shields.io/badge/Tests-896-2ea44f.svg" alt="Tests">
@@ -27,7 +27,7 @@
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** les encodeurs de charge utile CAN pour les familles de contrôle migrées vers Qt Quick (`advanced_protocol.py`) sont réels et couverts par les tests de `tests/` (`python -m pytest -q`). La propre CI de ce dépôt (`.github/workflows/ci.yml`) les exécute aussi, avec `ruff check`, `python -m mypy`, `tools/ci_validate.py`, une compilation de syntaxe de chaque fichier `.py` et les quatre scripts `verify_qt_*.py`, donc une régression là fait échouer le build. Les quatre scripts `verify_qt_*.py` à la racine du dépôt (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) sont de vraies vérifications de bout en bout, délibérément en dehors de `tests/`, contre un faux transport avec une vraie livraison de signaux entre threads - les quatre passent avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que la CI exécute aussi. C'est le plafond honnête de ce qui est vérifié automatiquement : la couche de transport, la gestion ID/disposition des octets CAN, et la logique du pont Qt Quick sont réelles et exercées contre des trames simulées, pas du vrai matériel - comme le dit déjà "Known limitations" ci-dessous, ceci a été construit sans accès USB, donc rien ici n'a encore été vérifié contre une vraie carte. `qt_tester.py` et `assets/qml/TesterDeck.qml` sont l'implémentation réelle et substantielle (des milliers de lignes combinées), exercée par les tests avec des cartes simulées et par les scripts de vérification, jamais par une vraie carte.
+**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** les encodeurs de charge utile CAN pour les familles de contrôle migrées vers Qt Quick (`advanced_protocol.py`) sont réels et couverts par les tests de `tests/` (`python -m pytest -q`). La propre CI de ce dépôt (`.github/workflows/ci.yml`) les exécute aussi, avec `ruff check`, `python -m mypy`, `tools/ci_validate.py`, une compilation de syntaxe de chaque fichier `.py` et les quatre scripts `verify_qt_*.py`, donc une régression là fait échouer le build. Les quatre scripts `verify_qt_*.py` à la racine du dépôt (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) sont de vraies vérifications de bout en bout, délibérément en dehors de `tests/`, contre un faux transport avec une vraie livraison de signaux entre threads - les quatre passent avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que la CI exécute aussi. C'est le plafond honnête de ce qui est vérifié automatiquement : la couche de transport, la gestion ID/disposition des octets CAN, et la logique du pont Qt Quick sont réelles et exercées contre des trames simulées, pas du vrai matériel - comme le disent déjà les « limites connues » ci-dessous, ceci a été construit sans accès USB, donc rien ici n'a encore été vérifié contre une vraie carte. `qt_tester.py` et `assets/qml/TesterDeck.qml` sont l'implémentation réelle et substantielle (des milliers de lignes combinées), exercée par les tests avec des cartes simulées et par les scripts de vérification, jamais par une vraie carte.
 
 ---
 
@@ -40,7 +40,7 @@
 | Version | `0.5.4` |
 | Maturité | Fonctionnel |
 | Tests | 896 (`python -m pytest -q`) |
-| Technologie | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
+| Technologie | Python / PySide6 / Qt Quick / diagnostic de bus CAN en direct |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
 
@@ -95,7 +95,7 @@ s'allume), vous voulez celui-ci.
 
 ## 🧩 Rôle dans URTC
 
-URTC-TESTER est le programme qui vérifie ce que fait réellement une tête d'outil URTC pendant qu'elle exécute son application : il se connecte par le même adaptateur USB-CAN que URTC-FLASHER, demande à la carte pour lequel de ses 25 profils d'outil elle est cavalée et n'affiche que les commandes et la télémétrie de cet outil, jamais une fenêtre qui tente de représenter les 25. Tout ce qu'il fait est une commande en cours d'exécution ou une lecture de télémétrie ; il ne touche jamais à la flash, donc il ne peut pas laisser une carte en plus mauvais état qu'il ne l'a trouvée. Le protocole est celui d'URTC-COMMON, et URTC-WEB-STUDIO propose les mêmes flux dans un navigateur.
+URTC-TESTER est le programme qui vérifie ce que fait réellement une tête d'outil URTC pendant qu'elle exécute son application : il se connecte par le même adaptateur USB-CAN que URTC-FLASHER, demande à la carte pour lequel de ses 25 profils d'outil elle est configurée par cavaliers et n'affiche que les commandes et la télémétrie de cet outil, jamais une fenêtre qui tente de représenter les 25. Tout ce qu'il fait est une commande en cours d'exécution ou une lecture de télémétrie ; il ne touche jamais à la flash, donc il ne peut pas laisser une carte en plus mauvais état qu'il ne l'a trouvée. Le protocole est celui d'URTC-COMMON, et URTC-WEB-STUDIO propose les mêmes flux dans un navigateur.
 
 ## 🏛️ Architecture
 
@@ -315,7 +315,7 @@ partir de `docs/CANBUS.md` :
 | Outil | Contrôles | Télémétrie en direct |
 |---|---|---|
 | Fer à souder | Température de consigne, marche/arrêt ; alimentateur de fil direction + nombre de pas (mouvement unique) ; interrogation et réinitialisation à 0 de la position de l'alimentateur | Température réelle ; position de l'alimentateur (estimation en boucle ouverte) |
-| Distributeur Pâte/Liquide, Tournevis, les deux Pinces, SMT Pick & Place, Vacuum Gripper (LG) | Direction + nombre de pas (mouvement unique) | aucune (0x120 partagé, aucune télémétrie pour aucun de ces 7) |
+| Distributeur Pâte/Liquide, Tournevis, les deux Pinces, SMT Pick & Place, Pince à vide (LG) | Direction + nombre de pas (mouvement unique) | aucune (0x120 partagé, aucune télémétrie pour aucun de ces 7) |
 | Prélèvement par Aspiration | aucun | Lecture analogique, pièce détectée |
 | Perceuse | Vitesse + direction | RPM réel, fin de course |
 | Inspection AOI | Mode anneau (éteint/stroboscope/continu) + période de stroboscope | Fin de course |
@@ -324,7 +324,7 @@ partir de `docs/CANBUS.md` :
 | Sonde de Balayage | aucun | Nombre d'événements d'impact + horodatage (`0x095` priorité maximale) |
 | Électroaimant | Case à cocher activer/relâcher bobine | aucune |
 | Soudeuse par Points | Durée d'impulsion + Déclencher | aucune (ne se déclenche que si le capteur de contact lit HIGH d'abord - voir le propre `0x1C0` de `docs/CANBUS.md`) |
-| Revêtement Conforme, Insertion par Pression | aucun - panneau purement informatif | aucune - les deux ID d'outil n'ont aucun gestionnaire CAN, leur propre actionneur et capteur vivent sur la carte mère du robot lui-même, voir `docs/TOOLS.TXT` |
+| Revêtement Conforme, Insertion à Force | aucun - panneau purement informatif | aucune - les deux ID d'outil n'ont aucun gestionnaire CAN, leur propre actionneur et capteur vivent sur la carte mère du robot lui-même, voir `docs/TOOLS.TXT` |
 | Sonde Volante | La lecture basique est automatique ; la lecture avancée nécessite un mot de config ADS1115 brut (hex) + Déclencher Conversion + Lire Résultat | Lecture basique ADC intégré (automatique, `0x243`) |
 | Durcissement UV | Curseur de puissance (0-255) + Envoyer/Éteindre | aucune |
 | Air Chaud pour Retouche | Température de consigne, puissance ventilateur, marche/arrêt | Température en direct (partage la propre télémétrie `0x135` et le graphique en direct du fer à souder - même boucle thermique physique) |
@@ -337,7 +337,7 @@ partir de `docs/CANBUS.md` :
 souder, l'Air Chaud pour Retouche (partage la même boucle thermique et
 le même watchdog que le fer à souder), le laser, et la buse de
 l'imprimante 3D ont chacun un watchdog de 250ms dans le firmware ; le
-ventilateur de couche en a un de 1000ms. Cocher la case "Actif"
+ventilateur de couche en a un de 1000ms. Cocher la case « Actif »
 correspondante n'envoie pas seulement la commande une fois - elle la
 renvoie automatiquement (150ms pour les outils avec watchdog 250ms,
 400ms pour le ventilateur de couche) tant que la case reste cochée, de
@@ -356,7 +356,7 @@ n'a pas de watchdog (un détecteur de blocage à la place - voir
 
 #### 🔥 Test de banc d'emballement thermique (firmware URTC 0.3.2+ / 0.3.3+)
 
-Detect affiche désormais *pourquoi* une carte a verrouillé une erreur :
+**Détecter** affiche désormais *pourquoi* une carte a verrouillé une erreur :
 l'octet 4 de `0x111` (protection contre l'emballement thermique : MAXTEMP,
 HEATING_NO_RISE ou DROPPED_AT_TARGET) apparaît dans l'état de la carte, et un
 redémarrage causé par le watchdog matériel (octet 5 de `0x111`) est
@@ -382,7 +382,7 @@ Un plan ou une mise à jour peut être exécuté contre un bus simulé qui se co
 <!-- urtc-section:evidence_report -->
 ### Rapport des preuves
 
-Les enregistrements de preuves d'un dossier (`urtc-evidence/1`) peuvent devenir un rapport à joindre à une compilation ou à un dossier de validation : `python urtc_tester.py --headless report --evidence-dir DOSSIER --out FICHIER [--format html|pdf] [--language NOM]` (le format suit l'extension du fichier s'il n'est pas donné), ou le bouton **Rapport** de la fenêtre Historique, qui écrit `evidence_report.html` et `evidence_report.pdf` dans le dossier. Le rapport comporte un résumé, une ligne et une section par enregistrement, le résultat du contrôle de chacun et une marque claire disant si l'enregistrement est SIMULÉ, un rejeu d'une trace, d'un adaptateur réel ou ne le dit pas. Un enregistrement qui échoue à son contrôle apparaît comme NON VALIDE avec la raison et n'est jamais omis ; le code de sortie est 1 si l'un est non valide, et le rapport est écrit quand même. Le HTML est un seul fichier sans script ni ressource externe, tout texte d'un enregistrement est échappé, et le PDF est écrit par le programme lui-même (texte occidental avec une police standard, chinois et japonais avec un sous-ensemble incorporé de Noto Sans CJK sous la SIL Open Font License 1.1 ; le HTML garde tous les caractères). Les mêmes enregistrements donnent les mêmes octets. Une empreinte qui correspond montre qu'un enregistrement n'a pas été modifié après son écriture, pas qui l'a écrit, et la marque d'adaptateur réel signifie seulement qu'aucune simulation n'est indiquée : rien de cela n'a tourné sur une vraie carte. Le tester peut aussi signer l'enregistrement de preuve qu'il écrit avec une clé Ed25519 de l'utilisateur (désactivé par défaut : `"sign_evidence": true` dans `config.json`, ou `--sign-evidence` pour une exécution) ; le rapport montre alors, pour chaque enregistrement, si sa signature correspond et, avec `--public-key`, si elle a été faite par la clé à laquelle vous faites confiance. Une signature montre que le détenteur de la clé a écrit l'enregistrement et qu'il n'a pas été modifié ensuite ; elle ne dit pas qui est cette personne. L'interrupteur peut aussi être activé dans le pupitre (une case à cocher dans son menu), et les clés auxquelles vous faites confiance peuvent être listées par alias dans `trusted_keys` de `config.json` (clés publiques uniquement) : l'historique, sa fenêtre et le rapport disent alors "Signé par <alias>" ou "Signature valide, clé inconnue". Détails : [Enregistrements de preuves](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/EVIDENCE.md).
+Les enregistrements de preuves d'un dossier (`urtc-evidence/1`) peuvent devenir un rapport à joindre à une compilation ou à un dossier de validation : `python urtc_tester.py --headless report --evidence-dir DOSSIER --out FICHIER [--format html|pdf] [--language NOM]` (le format suit l'extension du fichier s'il n'est pas donné), ou le bouton **Rapport** de la fenêtre Historique, qui écrit `evidence_report.html` et `evidence_report.pdf` dans le dossier. Le rapport comporte un résumé, une ligne et une section par enregistrement, le résultat du contrôle de chacun et une marque claire disant si l'enregistrement est SIMULÉ, un rejeu d'une trace, d'un adaptateur réel ou ne le dit pas. Un enregistrement qui échoue à son contrôle apparaît comme NON VALIDE avec la raison et n'est jamais omis ; le code de sortie est 1 si l'un est non valide, et le rapport est écrit quand même. Le HTML est un seul fichier sans script ni ressource externe, tout texte d'un enregistrement est échappé, et le PDF est écrit par le programme lui-même (texte occidental avec une police standard, chinois et japonais avec un sous-ensemble incorporé de Noto Sans CJK sous la SIL Open Font License 1.1 ; le HTML garde tous les caractères). Les mêmes enregistrements donnent les mêmes octets. Une empreinte qui correspond montre qu'un enregistrement n'a pas été modifié après son écriture, pas qui l'a écrit, et la marque d'adaptateur réel signifie seulement qu'aucune simulation n'est indiquée : rien de cela n'a tourné sur une vraie carte. Le tester peut aussi signer l'enregistrement de preuve qu'il écrit avec une clé Ed25519 de l'utilisateur (désactivé par défaut : `"sign_evidence": true` dans `config.json`, ou `--sign-evidence` pour une exécution) ; le rapport montre alors, pour chaque enregistrement, si sa signature correspond et, avec `--public-key`, si elle a été faite par la clé à laquelle vous faites confiance. Une signature montre que le détenteur de la clé a écrit l'enregistrement et qu'il n'a pas été modifié ensuite ; elle ne dit pas qui est cette personne. L'interrupteur peut aussi être activé dans le pupitre (une case à cocher dans son menu), et les clés auxquelles vous faites confiance peuvent être listées par alias dans `trusted_keys` de `config.json` (clés publiques uniquement) : l'historique, sa fenêtre et le rapport disent alors « Signé par <alias> » ou « Signature valide, clé inconnue ». Détails : [Enregistrements de preuves](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/EVIDENCE.md).
 <!-- /urtc-section:evidence_report -->
 
 ## 🔒 Sécurité et protection
@@ -450,7 +450,7 @@ inspection thermique, les 5 actionneurs à watchdog-keepalive, télémétrie
 vide/scan-probe), chacune soumise à la même porte : une correspondance
 d'identité, un mode actif armé explicitement et une confirmation de
 l'utilisateur dans QML avant toute émission.
-Rien de tout cela n'a encore été vérifié sur une vraie carte - voir « Limitations connues » ci-dessous.
+Rien de tout cela n'a encore été vérifié sur une vraie carte - voir les « limites connues » ci-dessous.
 
 La console affiche aussi les **valeurs en direct** de l'outil détecté (température avec un graphique défilant et export CSV, régime, fins de course ; elles ne font qu'écouter, donc elles fonctionnent en écoute seule et à côté d'une sortie en marche), exécute l'**autotest**, avertit dans l'en-tête quand le **contrôle de santé du bus** (une interrogation de l'outil actif toutes les 3 secondes tant que rien d'autre n'utilise le bus) voit un problème, et a une boîte **À propos d'URTC Tester** avec le Readme, la Licence et la page GitHub, à côté de **Enregistrer les journaux...**.
 
@@ -466,7 +466,7 @@ Le flux de diagnostic CAN en direct existant utilise désormais une surface de c
 
 ### Structure des fichiers
 
-Cet outil est organisé en modules par responsabilité, purement pour la lisibilité - il n'y a aucune différence fonctionnelle entre les avoir comme fichiers séparés ou comme un seul gros fichier. `tester_config.py` contient les constantes de configuration/langue/protocole, `tester_transports.py` contient SLCAN/SocketCAN, `tester_bus_monitor.py` contient le filtre de trames et les statistiques du bus, `qt_tester.py` est le pont Qt Quick (avec `assets/qml/TesterDeck.qml`), `tester_selftest.py`, `tester_telemetry.py` et `tester_autodetect.py` sont la logique sans fenêtre de l'autotest, des valeurs en direct et de la recherche du débit, et `urtc_tester.py` est juste le point d'entrée.
+Cet outil est organisé en modules par responsabilité, purement pour la lisibilité - il n'y a aucune différence fonctionnelle entre les avoir comme fichiers séparés ou comme un seul gros fichier. Voir la section « 📂 Structure du dépôt » vers la fin de ce document pour le détail complet fichier par fichier.
 
 **Commandes répétées** : une commande que le firmware abandonne si elle n'est pas rafraîchie (un chauffage, une perceuse, un laser, un ventilateur) est répétée toutes les 150 ms par défaut, ou à la période de son outil. `"keepalive"` dans `config.json` la modifie : `"interval_ms"` (un entier de 20 à 200) fixe une période pour toutes, et `"single_io_thread": true` les répète toutes depuis un fil partagé, une trame à la fois, au lieu d'un fil chacune (désactivé par défaut). Une valeur hors de ces limites garde la valeur par défaut.
 
@@ -479,7 +479,7 @@ paires simples `CLE=Valeur`, une par ligne - les lignes commençant par `#` et l
 ignorées, et un `\n` littéral dans une valeur devient un vrai saut de
 ligne (utilisé par la poignée de messages de dialogue multi-lignes).
 Générés depuis le catalogue d'URTC-COMMON (une traduction s'y corrige et les fichiers sont réécrits, jamais modifiés à la main), ou comme point de départ pour une autre langue (ajoutez
-`language/<nom>.lng`, ajoutez `("<nom>", "Nom Natif")` à
+`language/<nom>.lng`, ajoutez `("<nom>", "Nom natif")` à
 `AVAILABLE_LANGUAGES` près du début de `tester_config.py`, et définissez
 `"language": "<nom>"` dans `config.json`). Une clé manquante d'un
 fichier de langue retombe sur l'affichage du nom de cette clé même
@@ -593,7 +593,7 @@ firmware - est documenté dans
   propre résolution de MLX90640/MLX90642) - cela peut prendre plusieurs
   secondes, et il n'existe aucun mode d'envoi en streaming dans le
   propre protocole CAN de cet outil pour accélérer cela. Il faut d'abord déclencher une capture ; Lire Image Thermique attend alors jusqu'à deux secondes que le capteur signale qu'il est prêt et, s'il ne le fait pas, ne lit rien, car le firmware ne répond pas aux demandes de morceau avant cela. Le capteur installé est interrogé en premier (48 morceaux pour MLX90640/MLX90642, 12 pour MLX90641), et un morceau perdu laisse ses pixels vides au lieu de décaler le reste de l'image.
-- **Exécuter Self-Test ne couvre que 7 des 25 outils** (fer à souder,
+- **Exécuter l'auto-test ne couvre que 7 des 25 outils** (fer à souder,
   perceuse, laser, imprimante 3D, AOI, aspiration, sonde de balayage)
   - voir « Comment ça fonctionne » ci-dessus pour l'explication
   complète. Les 18 autres outils ne reçoivent aucune vérification
@@ -655,7 +655,7 @@ URTC est fait de dépôts indépendants, chacun avec sa version, ses tests et so
 
 Licence : **GPL-3.0-or-later** pour le code source, **CC BY-SA 4.0** pour cette
 documentation - voir `LICENSE` dans ce dépôt, ou la section « Licence
-et Avis de Copyright » à la fin de ce document.
+et avis de droit d'auteur » à la fin de ce document.
 
 URTC Tester est (c) 2026 JuanenRac (Electro Hobby 3D). Cet avis doit
 être inclus dans toute distribution de ce projet ou de ses travaux
@@ -685,7 +685,7 @@ conceptions matérielles, et la documentation complète du protocole que
 cet outil exerce. Le propre firmware d'URTC est GPL-3.0-or-later et ses
 conceptions matérielles sont CERN-OHL-S v2 ; la propre licence de cet
 outil ici ne s'étend pas à ce projet séparé, et vice-versa. Une
-alternative basée sur le web couvrant un terrain similaire existe aussi
+alternative basée sur le web couvrant un périmètre similaire existe aussi
 sur
 [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
 

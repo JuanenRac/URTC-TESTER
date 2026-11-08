@@ -18,7 +18,7 @@
 ### Un esercitatore di bus CAN dal vivo per la scheda URTC: mostra solo i controlli e la telemetria della testa utensile collegata
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Licenza-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Linguaggio-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
   <img src="https://img.shields.io/badge/Tests-896-2ea44f.svg" alt="Tests">
@@ -27,7 +27,7 @@
 
 ---
 
-**Verifica di onestà - cosa funziona davvero oggi:** gli encoder di payload CAN per le famiglie di controllo migrate a Qt Quick (`advanced_protocol.py`) sono reali e coperti dai test in `tests/` (`python -m pytest -q`). Anche la CI di questo repository (`.github/workflows/ci.yml`) li esegue, insieme a `ruff check`, `python -m mypy`, `tools/ci_validate.py`, una compilazione di sintassi di ogni file `.py` e i quattro script `verify_qt_*.py`, quindi una regressione lì fa fallire la build. I quattro script `verify_qt_*.py` nella radice del repository (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) sono vere verifiche end-to-end, deliberatamente tenute fuori da `tests/`, contro un trasporto fittizio con vera consegna di segnali cross-thread - tutti e quattro passano con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, che la CI esegue a sua volta. Questo è il tetto onesto di ciò che viene verificato automaticamente: il livello di trasporto, la gestione ID/layout dei byte CAN, e la logica del ponte Qt Quick sono reali ed esercitati contro trame simulate, non hardware reale - come già dice "Known limitations" più sotto, questo è stato costruito senza accesso USB, quindi niente qui è stato ancora verificato contro una scheda reale. `qt_tester.py` e `assets/qml/TesterDeck.qml` sono l'implementazione reale e sostanziale (migliaia di righe combinate), esercitata dai test con schede simulate e dagli script di verifica, mai da una scheda reale.
+**Verifica di onestà - cosa funziona davvero oggi:** gli encoder di payload CAN per le famiglie di controllo migrate a Qt Quick (`advanced_protocol.py`) sono reali e coperti dai test in `tests/` (`python -m pytest -q`). Anche la CI di questo repository (`.github/workflows/ci.yml`) li esegue, insieme a `ruff check`, `python -m mypy`, `tools/ci_validate.py`, una compilazione di sintassi di ogni file `.py` e i quattro script `verify_qt_*.py`, quindi una regressione lì fa fallire la build. I quattro script `verify_qt_*.py` nella radice del repository (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) sono vere verifiche end-to-end, deliberatamente tenute fuori da `tests/`, contro un trasporto fittizio con vera consegna di segnali cross-thread - tutti e quattro passano con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, che la CI esegue a sua volta. Questo è il tetto onesto di ciò che viene verificato automaticamente: il livello di trasporto, la gestione ID/layout dei byte CAN, e la logica del ponte Qt Quick sono reali ed esercitati contro frame simulati, non hardware reale - come già dicono i «limiti noti» più sotto, questo è stato costruito senza accesso USB, quindi niente qui è stato ancora verificato contro una scheda reale. `qt_tester.py` e `assets/qml/TesterDeck.qml` sono l'implementazione reale e sostanziale (migliaia di righe combinate), esercitata dai test con schede simulate e dagli script di verifica, mai da una scheda reale.
 
 ---
 
@@ -40,7 +40,7 @@
 | Versione | `0.5.4` |
 | Maturità | Funzionale |
 | Test | 896 (`python -m pytest -q`) |
-| Tecnologia | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
+| Tecnologia | Python / PySide6 / Qt Quick / diagnostica del bus CAN dal vivo |
 | Destinazione | Il PC di chi lo usa |
 | Su hardware reale | Solo simulato: provato con emulatori, test double o simulatori; per questa versione non risulta alcuna esecuzione su hardware reale |
 
@@ -78,7 +78,7 @@ iniziato.
 
 Questo strumento e [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) condividono lo stesso layer di
 trasporto (le classi SLCAN e SocketCAN sono identiche) poiché entrambi
-in definitiva devono solo far entrare e uscire trame CAN dallo stesso
+in definitiva devono solo far entrare e uscire frame CAN dallo stesso
 tipo di adattatore, ma svolgono compiti fondamentalmente diversi:
 
 | | Flasher | Tester |
@@ -176,7 +176,7 @@ per:
   questo progetto.
 - Costruire il pannello **Controlli Strumento** a destra per quello
   strumento specifico - e solo quello strumento. Cambiare quale
-  strumento è jumperato e rilevare di nuovo smonta il vecchio pannello e
+  strumento è impostato tramite jumper e rilevare di nuovo smonta il vecchio pannello e
   ne costruisce uno nuovo da zero.
 
 **Controlli Globali** (sezione 2, sempre visibile indipendentemente da
@@ -189,7 +189,7 @@ favore del controllo strobo proprio di quello strumento (secondo
 [docs/CANBUS.md](docs/CANBUS.md)) - il colore si applica comunque in entrambi i casi.
 
 **Scheda di Espansione** (sezione 3, sempre visibile): il bus SPI
-generico e la linea DIAG0 proprio di `CONN_EXPANSION` - il passthrough
+generico e la linea DIAG0 propri di `CONN_EXPANSION` - il passthrough
 grezzo condiviso da tutte le varianti di scheda di espansione con
 driver. L'ADS1115 e i sensori MLX9064x, e il driver proprio
 dell'attuatore di crimpatura, non si controllano da qui - vivono
@@ -244,12 +244,12 @@ EEPROM, niente di non volatile su di esso.
 - **Tipo periferica e numero di serie**: **Interroga** mostra il tipo
   di periferica fisso (sempre URTC/0x03) accanto al numero di serie del
   dispositivo attualmente impostato (`0x1A5` - vedi `EEPROM.TXT`
-  sezione 6), un'etichetta assegnata dall'utente per distinguere più
+  sezione 6), un'etichetta assegnata dall'host per distinguere più
   schede altrimenti identiche sullo stesso bus CAN. Sola lettura anche
   qui - `URTC Flasher` scrive il numero di serie, questo strumento lo
   legge solo indietro.
 
-**Trama CAN Personalizzata** (sezione 6, anch'essa sempre visibile):
+**Frame CAN Personalizzato** (sezione 6, anch'essa sempre visibile):
 un'immissione di ID grezzo + byte hex con invio singolo e periodico -
 per un comando che non ha ancora un proprio controllo qui, o per
 testare qualcosa non (o non ancora) documentato in `docs/CANBUS.md`.
@@ -283,11 +283,11 @@ setpoint proprio di quello strumento) invece di auto-scala, così il
 trend è facile da leggere a colpo d'occhio invece che la scala si
 sposti sotto di esso.
 
-**Monitor Bus Grezzo** (aperto dalla sezione Trama CAN Personalizzata):
-una finestra separata che mostra ogni trama vista, qualsiasi ID,
+**Monitor Bus Grezzo** (aperto dalla sezione Frame CAN Personalizzato):
+una finestra separata che mostra ogni frame visto, qualsiasi ID,
 indipendente dal pannello strumento attivo - una tabella a scorrimento
 live (Tempo/ID/DLC/Dati/Δt), Pausa/Pulisci, e una lettura approssimativa
-di carico bus/frequenza trame (aggiornata una volta al secondo; la
+di carico bus/frequenza dei frame (aggiornata una volta al secondo; la
 cifra di carico non modella l'overhead di bit-stuffing, quindi trattala
 come una cifra diagnostica approssimativa, non una misurazione
 certificata). **Esporta .trc...**/**Esporta .asc...** salvano la
@@ -310,7 +310,7 @@ Ognuno dei 25 profili ha il proprio pannello, costruito direttamente da
 | Strumento | Controlli | Telemetria live |
 |---|---|---|
 | Saldatore | Temperatura di setpoint, accensione/spegnimento; alimentatore stagno direzione + conteggio passi (movimento singolo); interrogazione e azzeramento a 0 della posizione dell'alimentatore | Temperatura reale; posizione alimentatore (stima ad anello aperto) |
-| Dispenser Pasta/Liquido, Cacciavite, entrambi i Gripper, SMT Pick & Place, Vacuum Gripper (LG) | Direzione + conteggio passi (movimento singolo) | nessuna (0x120 condiviso, nessuna telemetria per nessuno di questi 7) |
+| Dispenser Pasta/Liquido, Cacciavite, entrambi i Gripper, SMT Pick & Place, Gripper a vuoto (LG) | Direzione + conteggio passi (movimento singolo) | nessuna (0x120 condiviso, nessuna telemetria per nessuno di questi 7) |
 | Prelievo a Vuoto | nessuno | Lettura analogica, pezzo rilevato |
 | Trapano | Velocità + direzione | RPM reale, endstop |
 | Ispezione AOI | Modalità anello (spento/strobo/continuo) + periodo strobo | Endstop |
@@ -318,26 +318,26 @@ Ognuno dei 25 profili ha il proprio pannello, costruito direttamente da
 | Stampante 3D | Setpoint ugello, direzione/passi estrusore, potenza ventola strato, potenza ventola hotend | Temperatura hotend, RPM ventola strato, RPM ventola hotend |
 | Sonda di Scansione | nessuno | Conteggio eventi impatto + timestamp (`0x095` a massima priorità) |
 | Elettromagnete | Casella energizza/rilascia bobina | nessuna |
-| Saldatrice a Punti | Durata impulso + Spara | nessuna (spara solo se il sensore di contatto legge HIGH prima - vedi il proprio `0x1C0` in `docs/CANBUS.md`) |
+| Saldatrice a Punti | Durata impulso + Attiva | nessuna (spara solo se il sensore di contatto legge HIGH prima - vedi il proprio `0x1C0` in `docs/CANBUS.md`) |
 | Rivestimento Conformale, Inseritore a Pressione | nessuno - pannello solo informativo | nessuna - entrambi gli ID strumento non hanno alcun gestore CAN, il proprio attuatore e sensore vivono sulla scheda madre del robot stesso, vedi `docs/TOOLS.TXT` |
 | Sonda Volante | La lettura base è automatica; la lettura avanzata richiede una parola di config ADS1115 grezza (hex) + Avvia Conversione + Leggi Risultato | Lettura base ADC integrato (automatica, `0x243`) |
 | Cura UV | Cursore potenza (0-255) + Invia/Spegni | nessuna |
-| Aria Calda per Retrofitting | Temperatura di setpoint, potenza ventola, accensione/spegnimento | Temperatura live (condivide la propria telemetria `0x135` e il grafico live del saldatore - stesso ciclo termico fisico) |
+| Aria Calda per Rilavorazione | Temperatura di setpoint, potenza ventola, accensione/spegnimento | Temperatura live (condivide la propria telemetria `0x135` e il grafico live del saldatore - stesso ciclo termico fisico) |
 | Attuatore di Crimpatura | Direzione + conteggio passi (movimento singolo, stessa forma degli strumenti di movimento condivisi sopra, ma raggiunge il driver di una scheda di espansione via `0x1F0` invece dello `0x120` integrato) | nessuna |
-| Ispezione termica | Avvia Acquisizione, Controlla Stato, Leggi Immagine Termica | Tela mappa di calore 32x24 pixel (gradiente blu-rosso), estratta chunk per chunk via CAN su richiesta - non è un feed video live, vedi sezione 6 sotto |
-| Jetting Pasta Saldante | Canale PWM + frequenza (Configura), poi ciclo + durata (Spara Impulso) | nessuna |
-| Saldatrice a Ultrasuoni | Durata impulso + Spara | nessuna (stessa forma della Saldatrice a Punti, ma senza il gate del sensore di contatto) |
+| Ispezione termica | Avvia Acquisizione, Controlla Stato, Leggi Immagine Termica | Area mappa di calore 32x24 pixel (gradiente blu-rosso), estratta blocco per blocco via CAN su richiesta - non è un feed video live, vedi sezione 6 sotto |
+| Jetting Pasta Saldante | Canale PWM + frequenza (Configura), poi ciclo + durata (Attiva Impulso) | nessuna |
+| Saldatrice a Ultrasuoni | Durata impulso + Attiva | nessuna (stessa forma della Saldatrice a Punti, ma senza il gate del sensore di contatto) |
 
 **I watchdog di comunicazione sono gestiti per te.** Il saldatore,
-l'Aria Calda per Retrofitting (condivide lo stesso ciclo termico e
+l'Aria Calda per Rilavorazione (condivide lo stesso ciclo termico e
 watchdog del saldatore), il laser, e l'ugello della stampante 3D hanno
 ciascuno un watchdog di 250ms nel firmware; la ventola dello strato ne
-ha uno di 1000ms. Spuntare la relativa casella "Attivo" non invia
+ha uno di 1000ms. Spuntare la relativa casella «Attivo» non invia
 semplicemente il comando una volta - lo reinvia automaticamente (150ms
 per gli strumenti con watchdog 250ms, 400ms per la ventola dello
 strato) finché la casella rimane spuntata, allo stesso modo in cui un
-vero controller master deve fare. Deselezionarla invia una singola
-trama zero/spento e si ferma. La ventola hotend non ha watchdog (un
+vero controller master deve fare. Deselezionarla invia un singolo
+frame zero/spento e si ferma. La ventola hotend non ha watchdog (un
 rilevatore di stallo invece - vedi `docs/CANBUS.md`), quindi è un
 semplice invio singolo.
 
@@ -351,14 +351,14 @@ semplice invio singolo.
 
 #### 🔥 Test al banco della fuga termica (firmware URTC 0.3.2+ / 0.3.3+)
 
-Detect ora mostra *perché* una scheda ha bloccato un errore: il byte 4 di
+**Rileva** ora mostra *perché* una scheda ha bloccato un errore: il byte 4 di
 `0x111` (protezione dalla fuga termica: MAXTEMP, HEATING_NO_RISE o
 DROPPED_AT_TARGET) compare nello stato della scheda, e un reset causato dal
 watchdog hardware (byte 5 di `0x111`) viene registrato nel log. **Contatori
 termici** (pannello F-RAM in entrambe le interfacce) legge `0x1AA`/`0x1AB`:
 guasti termici totali, ore totali di riscaldatore acceso e ultimo guasto. Le
 risposte di firmware più vecchi (`0x111` a 4 byte, nessun `0x1AB`) vengono
-mostrate come "non riportato", mai come zero. La procedura passo passo per
+mostrate come «non riportato», mai come zero. La procedura passo passo per
 verificare la protezione su una scheda reale è in
 [`docs/THERMAL_RUNAWAY_BENCH_TEST.md`](docs/THERMAL_RUNAWAY_BENCH_TEST.md).
 
@@ -377,7 +377,7 @@ Un piano o un aggiornamento può essere eseguito contro un bus simulato che si c
 <!-- urtc-section:evidence_report -->
 ### Rapporto delle evidenze
 
-I registri di evidenza di una cartella (`urtc-evidence/1`) possono diventare un rapporto da allegare a una compilazione o a un fascicolo di validazione: `python urtc_tester.py --headless report --evidence-dir CARTELLA --out FILE [--format html|pdf] [--language NOME]` (se non indicato, il formato segue l'estensione del file), oppure il pulsante **Rapporto** della finestra Storico, che scrive `evidence_report.html` e `evidence_report.pdf` nella cartella. Il rapporto ha un riepilogo, una riga e una sezione per ogni registro, l'esito del controllo di ciascuno e un segno chiaro che dice se il registro è SIMULATO, una riproduzione di una traccia, di un adattatore reale o non lo dice. Un registro che non supera il controllo compare come NON VALIDO con il motivo e non viene mai omesso; il codice di uscita è 1 se uno non è valido, e il rapporto viene scritto comunque. L'HTML è un solo file senza script né risorse esterne, ogni testo di un registro viene sottoposto a escape, e il PDF lo scrive il programma stesso (testo occidentale con un carattere standard, cinese e giapponese con un sottoinsieme incorporato di Noto Sans CJK con licenza SIL Open Font License 1.1; l'HTML conserva tutti i caratteri). Gli stessi registri danno gli stessi byte. Un'impronta che coincide dimostra che un registro non è stato modificato dopo la scrittura, non chi l'ha scritto, e il segno di adattatore reale significa solo che non è dichiarata alcuna simulazione: nulla di tutto ciò è stato eseguito su una scheda reale. Il tester può anche firmare con una chiave Ed25519 dell'utente il registro di evidenza che scrive (disattivato per impostazione predefinita: `"sign_evidence": true` in `config.json`, oppure `--sign-evidence` per un'esecuzione); il rapporto mostra allora, per ogni registro, se la firma corrisponde e, con `--public-key`, se è stata fatta dalla chiave di cui ti fidi. Una firma dimostra che chi possiede la chiave ha scritto il registro e che non è stato modificato dopo; non dice chi sia quella persona. L'interruttore si può attivare anche nel pannello (una casella nel suo menu), e le chiavi di cui ti fidi si possono elencare per alias in `trusted_keys` di `config.json` (solo chiavi pubbliche): lo storico, la sua finestra e il rapporto dicono allora "Firmato da <alias>" o "Firma valida, chiave sconosciuta". Dettagli: [Registri di evidenza](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/EVIDENCE.md).
+I registri di evidenza di una cartella (`urtc-evidence/1`) possono diventare un rapporto da allegare a una compilazione o a un fascicolo di validazione: `python urtc_tester.py --headless report --evidence-dir CARTELLA --out FILE [--format html|pdf] [--language NOME]` (se non indicato, il formato segue l'estensione del file), oppure il pulsante **Rapporto** della finestra Storico, che scrive `evidence_report.html` e `evidence_report.pdf` nella cartella. Il rapporto ha un riepilogo, una riga e una sezione per ogni registro, l'esito del controllo di ciascuno e un segno chiaro che dice se il registro è SIMULATO, una riproduzione di una traccia, di un adattatore reale o non lo dice. Un registro che non supera il controllo compare come NON VALIDO con il motivo e non viene mai omesso; il codice di uscita è 1 se uno non è valido, e il rapporto viene scritto comunque. L'HTML è un solo file senza script né risorse esterne, ogni testo di un registro viene sottoposto a escape, e il PDF lo scrive il programma stesso (testo occidentale con un carattere standard, cinese e giapponese con un sottoinsieme incorporato di Noto Sans CJK con licenza SIL Open Font License 1.1; l'HTML conserva tutti i caratteri). Gli stessi registri danno gli stessi byte. Un'impronta che coincide dimostra che un registro non è stato modificato dopo la scrittura, non chi l'ha scritto, e il segno di adattatore reale significa solo che non è dichiarata alcuna simulazione: nulla di tutto ciò è stato eseguito su una scheda reale. Il tester può anche firmare con una chiave Ed25519 dell'utente il registro di evidenza che scrive (disattivato per impostazione predefinita: `"sign_evidence": true` in `config.json`, oppure `--sign-evidence` per un'esecuzione); il rapporto mostra allora, per ogni registro, se la firma corrisponde e, con `--public-key`, se è stata fatta dalla chiave di cui ti fidi. Una firma dimostra che chi possiede la chiave ha scritto il registro e che non è stato modificato dopo; non dice chi sia quella persona. L'interruttore si può attivare anche nel pannello (una casella nel suo menu), e le chiavi di cui ti fidi si possono elencare per alias in `trusted_keys` di `config.json` (solo chiavi pubbliche): lo storico, la sua finestra e il rapporto dicono allora «Firmato da <alias>» o «Firma valida, chiave sconosciuta». Dettagli: [Registri di evidenza](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/EVIDENCE.md).
 <!-- /urtc-section:evidence_report -->
 
 ## 🔒 Sicurezza e protezione
@@ -445,7 +445,7 @@ di saldatura a punti/ultrasonica, getto di pasta, flying probe, ispezione
 termica, i 5 attuatori con watchdog-keepalive, telemetria di vuoto/scan-probe),
 tutti soggetti allo stesso controllo: una corrispondenza di identità, una
 modalità attiva armata esplicitamente e una conferma dell'utente in QML prima
-di trasmettere qualsiasi cosa. Nulla di tutto ciò è stato ancora verificato con una scheda reale - vedi «Limitazioni note» più sotto.
+di trasmettere qualsiasi cosa. Nulla di tutto ciò è stato ancora verificato con una scheda reale - vedi i «limiti noti» più sotto.
 
 La console mostra anche i **valori in tempo reale** dello strumento rilevato (temperatura con grafico scorrevole ed esportazione CSV, giri, finecorsa; si limitano ad ascoltare, quindi funzionano in sola ascolto e accanto a un'uscita attiva), esegue l'**autotest**, avvisa nell'intestazione quando il **controllo di salute del bus** (una richiesta dello strumento attivo ogni 3 secondi finché nient'altro usa il bus) rileva un problema, e ha una finestra **Informazioni su URTC Tester** con il Readme, la Licenza e la pagina GitHub, accanto a **Salva registri...**.
 
@@ -461,7 +461,7 @@ Il flusso di diagnostica CAN dal vivo esistente usa ora una superficie di contro
 
 ### Struttura dei file
 
-Questo strumento è organizzato in moduli per responsabilità, puramente per leggibilità - non c'è alcuna differenza funzionale tra averli come file separati o come uno grande. `tester_config.py` contiene le costanti di configurazione/lingua/protocollo, `tester_transports.py` contiene SLCAN/SocketCAN, `tester_bus_monitor.py` contiene il filtro delle trame e le statistiche del bus, `qt_tester.py` è il ponte Qt Quick (con `assets/qml/TesterDeck.qml`), `tester_selftest.py`, `tester_telemetry.py` e `tester_autodetect.py` sono la logica senza finestra di autotest, valori in tempo reale e ricerca della velocità, e `urtc_tester.py` è solo il punto di ingresso.
+Questo strumento è organizzato in moduli per responsabilità, puramente per leggibilità - non c'è alcuna differenza funzionale tra averli come file separati o come uno grande. Vedi la sezione «📂 Struttura del repository» verso la fine di questo documento per il dettaglio completo file per file.
 
 **Comandi ripetuti**: un comando che il firmware scarta se non viene rinfrescato (un riscaldatore, un trapano, un laser, una ventola) viene ripetuto ogni 150 ms per impostazione predefinita, o al periodo del proprio strumento. `"keepalive"` in `config.json` lo cambia: `"interval_ms"` (un intero da 20 a 200) fissa un periodo per tutti, e `"single_io_thread": true` li ripete tutti da un thread condiviso, un frame alla volta, invece di un thread ciascuno (disattivato per impostazione predefinita). Un valore fuori da questi limiti mantiene il predefinito.
 
@@ -473,7 +473,7 @@ file di testo semplice sotto `language/` (`english.lng`, `spanish.lng`,
 vuote vengono ignorate, e un `\n` letterale dentro un valore diventa un
 vero a capo (usato dalla manciata di messaggi di dialogo multi-riga).
 Generati dal catalogo di URTC-COMMON (una traduzione si corregge lì e i file vengono riscritti, mai modificati a mano), o come punto di partenza per un'altra lingua (aggiungi
-`language/<nome>.lng`, aggiungi `("<nome>", "Nome Nativo")` a
+`language/<nome>.lng`, aggiungi `("<nome>", "Nome nativo")` a
 `AVAILABLE_LANGUAGES` vicino all'inizio di `tester_config.py`, e imposta
 `"language": "<nome>"` in `config.json`). Una chiave mancante da un file
 di lingua ricade nel mostrare il nome della chiave stessa invece di
@@ -569,8 +569,8 @@ firmware - è documentato in
 
 - **Non testato contro hardware reale.** Ogni pezzo qui - il layer di
   trasporto, la gestione ID CAN/layout byte, la temporizzazione
-  keepalive del watchdog - è stato controllato in isolamento (trame
-  simulate, un sottoprocesso reale per la temporizzazione dove
+  keepalive del watchdog - è stato controllato in isolamento (frame
+  simulati, un sottoprocesso reale per la temporizzazione dove
   rilevante) ma l'ambiente che ha costruito questo non ha accesso USB.
   Tratta una prima sessione reale con la stessa cautela che il README
   stesso del flasher richiede.
@@ -583,14 +583,14 @@ firmware - è documentato in
   l'ultima volta.
 - **L'immagine termica propria dell'Ispezione termica è basata su
   estrazione, non un feed live.** Leggere un frame completo significa
-  richiedere tutti i 48 chunk sequenzialmente via CAN (caso peggiore,
+  richiedere tutti i 48 blocchi sequenzialmente via CAN (caso peggiore,
   la risoluzione propria di MLX90640/MLX90642) - questo può richiedere
   alcuni secondi, e non esiste una modalità di invio in streaming nel
   protocollo CAN proprio di questo strumento per renderlo più veloce.
-  Prima va avviata un'acquisizione; Leggi Immagine Termica attende poi fino a due secondi che il sensore segnali di essere pronto e, se non lo fa, non legge nulla, perché il firmware non risponde alle richieste di chunk prima di quel momento. Si chiede prima quale sensore è installato (48 chunk per MLX90640/MLX90642, 12 per MLX90641), e un chunk perso lascia i suoi pixel vuoti invece di spostare il resto dell'immagine.
-- **Esegui Self-Test copre solo 7 dei 25 strumenti** (saldatore,
+  Prima va avviata un'acquisizione; Leggi Immagine Termica attende poi fino a due secondi che il sensore segnali di essere pronto e, se non lo fa, non legge nulla, perché il firmware non risponde alle richieste di blocco prima di quel momento. Si chiede prima quale sensore è installato (48 blocchi per MLX90640/MLX90642, 12 per MLX90641), e un blocco perso lascia i suoi pixel vuoti invece di spostare il resto dell'immagine.
+- **Esegui Autotest copre solo 7 dei 25 strumenti** (saldatore,
   trapano, laser, stampante 3D, AOI, vuoto, sonda di scansione) - vedi
-  "Come funziona" sopra per la spiegazione completa. Gli altri 18
+  «Come funziona» sopra per la spiegazione completa. Gli altri 18
   strumenti non ricevono alcun controllo automatico da quel pulsante;
   verificarli significa comunque osservare come l'hardware reale
   risponde ai controlli del proprio pannello.
@@ -650,7 +650,7 @@ URTC è fatto di repository indipendenti, ciascuno con la propria versione, i pr
 
 Licenza: **GPL-3.0-or-later** per il codice sorgente, **CC BY-SA 4.0** per questa
 documentazione - vedi `LICENSE` in questo repository, o la sezione
-"Licenza e Note sul Copyright" alla fine di questo documento.
+«Licenza e avvisi di copyright» alla fine di questo documento.
 
 URTC Tester è (c) 2026 JuanenRac (Electro Hobby 3D). Questo avviso deve
 essere incluso in qualsiasi distribuzione di questo progetto o lavoro
@@ -680,7 +680,7 @@ scheda, i design hardware, e la documentazione completa del protocollo
 che questo strumento esercita. Il firmware proprio di URTC è GPL-3.0-or-later e
 i suoi design hardware sono CERN-OHL-S v2; la licenza propria di questo
 strumento qui non si estende a quel progetto separato, e viceversa.
-Esiste anche un'alternativa basata sul web che copre terreno simile su
+Esiste anche un'alternativa basata sul web che copre ambiti simili su
 [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
 
 Se costruisci su questo progetto, tieni presente la separazione delle

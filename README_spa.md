@@ -18,7 +18,7 @@
 ### Un ejercitador de bus CAN en vivo para la placa URTC: muestra solo los controles y la telemetría del cabezal que está conectado
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Lenguaje-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
   <img src="https://img.shields.io/badge/Tests-896-2ea44f.svg" alt="Tests">
@@ -27,7 +27,7 @@
 
 ---
 
-**Comprobación de honestidad - lo que realmente funciona hoy:** los codificadores de payload CAN para las familias de control migradas a Qt Quick (`advanced_protocol.py`) son reales y están cubiertos por los tests de `tests/` (`python -m pytest -q`). La propia CI de este repositorio (`.github/workflows/ci.yml`) también los ejecuta, junto con `ruff check`, `python -m mypy`, `tools/ci_validate.py`, una compilación de sintaxis de cada archivo `.py` y los cuatro scripts `verify_qt_*.py`, así que una regresión ahí hace fallar la build. Los cuatro scripts `verify_qt_*.py` en la raíz del repositorio (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) son comprobaciones reales de extremo a extremo, deliberadamente fuera de `tests/`, contra un transporte falso con entrega real de señales entre hilos - los cuatro pasan con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que la CI también ejecuta. Ese es el techo honesto de lo que se verifica automáticamente: la capa de transporte, el manejo de ID/diseño de bytes CAN, y la lógica del puente Qt Quick son reales y se ejercitan contra tramas simuladas, no hardware real - como ya dice "Known limitations" más abajo, esto se construyó sin acceso USB, así que nada de esto se ha comprobado todavía contra una placa real. `qt_tester.py` y `assets/qml/TesterDeck.qml` son la implementación real y sustancial (miles de líneas combinadas), ejercitada por los tests con placas simuladas y por los scripts de verificación, nunca por una placa real.
+**Comprobación de honestidad - lo que realmente funciona hoy:** los codificadores de payload CAN para las familias de control migradas a Qt Quick (`advanced_protocol.py`) son reales y están cubiertos por los tests de `tests/` (`python -m pytest -q`). La propia CI de este repositorio (`.github/workflows/ci.yml`) también los ejecuta, junto con `ruff check`, `python -m mypy`, `tools/ci_validate.py`, una compilación de sintaxis de cada archivo `.py` y los cuatro scripts `verify_qt_*.py`, así que una regresión ahí hace fallar la build. Los cuatro scripts `verify_qt_*.py` en la raíz del repositorio (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) son comprobaciones reales de extremo a extremo, deliberadamente fuera de `tests/`, contra un transporte falso con entrega real de señales entre hilos - los cuatro pasan con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que la CI también ejecuta. Ese es el techo honesto de lo que se verifica automáticamente: la capa de transporte, el manejo de ID/diseño de bytes CAN, y la lógica del puente Qt Quick son reales y se ejercitan contra tramas simuladas, no hardware real - como ya dicen los «límites conocidos» más abajo, esto se construyó sin acceso USB, así que nada de esto se ha comprobado todavía contra una placa real. `qt_tester.py` y `assets/qml/TesterDeck.qml` son la implementación real y sustancial (miles de líneas combinadas), ejercitada por los tests con placas simuladas y por los scripts de verificación, nunca por una placa real.
 
 ---
 
@@ -40,7 +40,7 @@
 | Versión | `0.5.4` |
 | Madurez | Funcional |
 | Tests | 896 (`python -m pytest -q`) |
-| Tecnología | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
+| Tecnología | Python / PySide6 / Qt Quick / diagnóstico de bus CAN en vivo |
 | Destino | El PC de quien lo usa |
 | En hardware real | Solo simulado: probado con emuladores, dobles de prueba o simuladores; no consta ninguna ejecución en hardware real para esta versión |
 
@@ -143,7 +143,7 @@ Capturadas en un banco de pruebas con datos de ejemplo inventados y sin ninguna 
 
 **Registrador de fallos, funciones opcionales, banco de rack y vista térmica (nuevo, comprobado solo con simulaciones):** el panel lee la caja negra de la placa (`0x1A8` / `0x1A9`) y la guarda como CSV y JSON, automáticamente una vez por cada error que la placa indica cuando esa opción está activada; lee los registros que dejó el último HardFault (`0x1BC` / `0x1BD`, solo de un firmware compilado con la captura de fallos) y los guarda como JSON; activa las funciones opcionales del firmware (`0x1AE` / `0x1AF`, apagadas por defecto, con efecto tras el próximo arranque); tiene un rack de herramientas simulado con el protocolo serie de URTC-SMART-RACK, la identidad de cada cabezal (tipo y número de serie) y la exportación de una página de estado; y muestra la imagen de inspección térmica en falso color (una imagen simulada lo dice). Los nombres y tipos de herramienta ahora salen de los perfiles de herramienta compartidos de URTC-COMMON. Nada de esto se ha usado con una placa real.
 
-**PID del calentador (nuevo, comprobado solo con simulaciones):** el panel lee el estado del PID del calentador del firmware (`0x1B9` / `0x1BA`: las ganancias en vigor, el estado y la salida del último ciclo de control), guarda ganancias (de 0 a 600) y inicia o cancela el autoajuste por relé, que calienta la punta alrededor de la consigna actual del soldador (100 a 445 C) y guarda las ganancias que encuentra. Guardar ganancias e iniciar el autoajuste piden la confirmación habitual; cancelar no. La cabeza simulada de la línea de comandos (`--transport simulate`) también responde a estas tramas. Hay que activar antes la función entre las funciones opcionales; nada de esto se ha usado con una placa real.
+**PID del calentador (nuevo, comprobado solo con simulaciones):** el panel lee el estado del PID del calentador del firmware (`0x1B9` / `0x1BA`: las ganancias en vigor, el estado y la salida del último ciclo de control), guarda ganancias (de 0 a 600) y inicia o cancela el autoajuste por relé, que calienta la punta alrededor de la consigna actual del soldador (100 a 445 C) y guarda las ganancias que encuentra. Guardar ganancias e iniciar el autoajuste piden la confirmación habitual; cancelar no. El cabezal simulado de la línea de comandos (`--transport simulate`) también responde a estas tramas. Hay que activar antes la función entre las funciones opcionales; nada de esto se ha usado con una placa real.
 
 ### Cómo funciona
 
@@ -176,7 +176,7 @@ para:
   proyecto.
 - Construir el panel de **Controles de Herramienta** a la derecha para
   esa herramienta específica - y solo esa herramienta. Cambiar qué
-  herramienta está jumpeada y detectar de nuevo desmonta el panel viejo
+  herramienta está seleccionada con los puentes y detectar de nuevo desmonta el panel viejo
   y construye el nuevo desde cero.
 
 **Controles Globales** (sección 2, siempre visible sin importar qué
@@ -245,7 +245,7 @@ en él.
 - **Tipo de periférico y número de serie**: **Consultar** muestra el
   tipo de periférico fijo (siempre URTC/0x03) junto al número de serie
   del dispositivo establecido actualmente (`0x1A5` - ver `EEPROM.TXT`
-  sección 6), una etiqueta asignada por el usuario para distinguir
+  sección 6), una etiqueta asignada por el host para distinguir
   varias placas por lo demás idénticas en el mismo bus CAN. Solo lectura
   aquí también - `URTC Flasher` escribe el número de serie, esta
   herramienta solo lo lee de vuelta.
@@ -318,13 +318,13 @@ directamente a partir de `docs/CANBUS.md`:
 | Impresora 3D | Setpoint de boquilla, dirección/pasos del extrusor, potencia del ventilador de capa, potencia del ventilador de hotend | Temperatura de hotend, RPM del ventilador de capa, RPM del ventilador de hotend |
 | Sonda de Escaneo | ninguno | Cuenta de eventos de impacto + marca de tiempo (`0x095` de máxima prioridad) |
 | Electroimán | Casilla energizar/liberar bobina | ninguna |
-| Soldador por Puntos | Duración de pulso + Disparar | ninguna (solo dispara si el sensor de contacto lee HIGH primero - ver `docs/CANBUS.md`'s propio `0x1C0`) |
+| Soldador por Puntos | Duración de pulso + Disparar | ninguna (solo dispara si el sensor de contacto lee HIGH primero - ver el propio `0x1C0` de `docs/CANBUS.md`) |
 | Recubrimiento Conformal, Insertador a Presión | ninguno - panel solo informativo | ninguna - ambos IDs de herramienta no tienen manejador CAN alguno, su propio actuador y sensor viven en la placa base del propio robot, ver `docs/TOOLS.TXT` |
 | Sonda Voladora | La lectura básica es automática; la lectura avanzada necesita una palabra de config ADS1115 en bruto (hex) + Disparar Conversión + Leer Resultado | Lectura básica del ADC integrado (automática, `0x243`) |
 | Curado UV | Deslizador de potencia (0-255) + Enviar/Apagar | ninguna |
 | Aire Caliente para Retrabajo | Temperatura de setpoint, potencia del soplador, encendido/apagado | Temperatura en vivo (comparte la propia telemetría `0x135` y gráfica en vivo del soldador - mismo lazo térmico físico) |
 | Actuador de Crimpado | Dirección + cuenta de pasos (movimiento de una vez, misma forma que las herramientas de movimiento compartidas de arriba, pero llega al driver de una placa de expansión vía `0x1F0` en vez del `0x120` integrado) | ninguna |
-| Inspección Avanzada de PCB | Disparar Captura, Comprobar Estado, Leer Imagen Térmica | Lienzo de mapa de calor de 32x24 píxeles (gradiente azul a rojo), extraído chunk por chunk por CAN bajo demanda - no es un video en vivo, ver sección 6 abajo |
+| Inspección Térmica | Disparar Captura, Comprobar Estado, Leer Imagen Térmica | Lienzo de mapa de calor de 32x24 píxeles (gradiente azul a rojo), extraído bloque a bloque por CAN bajo demanda - no es un video en vivo, ver sección 6 abajo |
 | Jetting de Pasta de Soldar | Canal PWM + frecuencia (Configurar), luego ciclo + duración (Disparar Pulso) | ninguna |
 | Soldador Ultrasónico | Duración de pulso + Disparar | ninguna (misma forma que el Soldador por Puntos, pero sin puerta de sensor de contacto) |
 
@@ -351,14 +351,14 @@ que es un envío simple de una vez.
 
 #### 🔥 Prueba de banco de embalamiento térmico (firmware URTC 0.3.2+ / 0.3.3+)
 
-Detect ahora muestra *por qué* una placa enclavó un error: el byte 4 de
+**Detectar** ahora muestra *por qué* una placa enclavó un error: el byte 4 de
 `0x111` (protección contra embalamiento térmico: MAXTEMP, HEATING_NO_RISE o
 DROPPED_AT_TARGET) aparece en el estado de la placa, y un reinicio causado
 por el watchdog de hardware (byte 5 de `0x111`) queda en el registro.
 **Contadores térmicos** (panel F-RAM en ambas interfaces) lee `0x1AA`/`0x1AB`:
 fallos térmicos acumulados, horas totales con el calentador encendido y el
 último fallo. Las respuestas de firmware antiguo (`0x111` de 4 bytes, sin
-`0x1AB`) se muestran como "no informado", nunca como cero. El procedimiento
+`0x1AB`) se muestran como «no informado», nunca como cero. El procedimiento
 paso a paso para confirmar la protección en una placa real está en
 [`docs/THERMAL_RUNAWAY_BENCH_TEST.md`](docs/THERMAL_RUNAWAY_BENCH_TEST.md).
 
@@ -402,9 +402,9 @@ entregar a quien esté depurando un problema de cabezal de herramienta.
 
 ### 🤖 Sin ventana: planes de prueba
 
-`python urtc_tester.py --headless COMANDO` ejecuta el tester sin ventana, para una línea de producción, un script de banco o un trabajo de CI: `info` (quién responde: herramienta, firmware, estado rápido), `selftest`, `run-plan ARCHIVO` y `validate-plan ARCHIVO`. Un plan es un archivo JSON corto de pasos que vive en `plans/` (esperar una herramienta, sin fallos, una versión mínima de firmware, el autotest, una trama cuyo valor esté en un rango, una espera, una pregunta a la persona del banco). El comando escribe un registro de cada trama y un registro de resultado que nombra el registro por su SHA-256, el mismo que el del panel. Un plan solo envía consultas salvo que diga `"actuation": true` y el operador añada `--allow-actuation`; las tramas del bootloader, de actualización, de configuración y de borrado no se envían nunca, un comando que el firmware abandona si no se refresca (un calentador, un taladro, un láser) puede repetirse mientras el plan espera (`keepalive_ms`), y tras un plan que ordenó algo se apagan de nuevo todas las salidas. `--transport simulate` reproduce una cabeza simulada y `--transport replay --port ARCHIVO` una traza `.trc` o `.asc` grabada, de modo que un plan se puede probar sin placa. Código de salida: 0 correcto, 1 una comprobación falló, 2 el plan o los argumentos son erróneos, 3 la prueba no pudo realizarse, 4 nada falló pero las pruebas no bastan para decidir (sin determinar). El texto que imprime está en inglés, como la línea de comandos del flasher. Detalles en [`docs/HEADLESS.md`](docs/HEADLESS.md). Nada de esto se ha ejecutado contra una placa real.
+`python urtc_tester.py --headless COMANDO` ejecuta el tester sin ventana, para una línea de producción, un script de banco o un trabajo de CI: `info` (quién responde: herramienta, firmware, estado rápido), `selftest`, `run-plan ARCHIVO` y `validate-plan ARCHIVO`. Un plan es un archivo JSON corto de pasos que vive en `plans/` (esperar una herramienta, sin fallos, una versión mínima de firmware, el autotest, una trama cuyo valor esté en un rango, una espera, una pregunta a la persona del banco). El comando escribe un registro de cada trama y un registro de resultado que nombra el registro por su SHA-256, el mismo que el del panel. Un plan solo envía consultas salvo que diga `"actuation": true` y el operador añada `--allow-actuation`; las tramas del bootloader, de actualización, de configuración y de borrado no se envían nunca, un comando que el firmware abandona si no se refresca (un calentador, un taladro, un láser) puede repetirse mientras el plan espera (`keepalive_ms`), y tras un plan que ordenó algo se apagan de nuevo todas las salidas. `--transport simulate` reproduce un cabezal simulado y `--transport replay --port ARCHIVO` una traza `.trc` o `.asc` grabada, de modo que un plan se puede probar sin placa. Código de salida: 0 correcto, 1 una comprobación falló, 2 el plan o los argumentos son erróneos, 3 la prueba no pudo realizarse, 4 nada falló pero las pruebas no bastan para decidir (sin determinar). El texto que imprime está en inglés, como la línea de comandos del flasher. Detalles en [`docs/HEADLESS.md`](docs/HEADLESS.md). Nada de esto se ha ejecutado contra una placa real.
 
-**Planes en la ventana (nuevo, comprobado solo con tests y la cabeza simulada):** la sección PLANES DE PRUEBA, al final de la columna derecha de la ventana, lista los planes de `plans/`, ejecuta el que elijas contra la placa conectada con el mismo motor (no en modo solo escucha y solo mientras nada más lea el bus), muestra cada paso en cuanto termina, hace en un diálogo las preguntas de un paso de confirmación y guarda el log y el registro de resultado. Un plan que ordena salidas pide antes una confirmación y al final se apagan todas las salidas; Cancelar lo detiene tras el paso en curso.
+**Planes en la ventana (nuevo, comprobado solo con tests y el cabezal simulado):** la sección PLANES DE PRUEBA, al final de la columna derecha de la ventana, lista los planes de `plans/`, ejecuta el que elijas contra la placa conectada con el mismo motor (no en modo solo escucha y solo mientras nada más lea el bus), muestra cada paso en cuanto termina, hace en un diálogo las preguntas de un paso de confirmación y guarda el log y el registro de resultado. Un plan que ordena salidas pide antes una confirmación y al final se apagan todas las salidas; Cancelar lo detiene tras el paso en curso.
 
 **Buscar actualización.** El botón «Buscar actualización» pregunta una vez a GitHub por la última release y solo ofrece descargarla si trae un paquete para este sistema más nuevo que la versión instalada. El paquete solo se acepta si su SHA-256 y su firma Ed25519 (la clave de las releases, fijada en el programa) son válidos; se instala únicamente tras tu confirmación, nunca mientras haya una salida activada, y se conserva la versión anterior para poder volver (y se restaura sola si la nueva no arranca). Nada se comprueba ni se instala por su cuenta: la comprobación al abrir es una opción, apagada por defecto, y la confirmación solo se desactiva en la misma ventana tras un aviso.
 
@@ -445,7 +445,7 @@ flying probe, inspección térmica, los 5 actuadores con watchdog-keepalive,
 telemetría de vacío/sonda de escaneo), todos con la misma compuerta: una
 coincidencia de identidad, un modo activo armado explícitamente y una
 confirmación del usuario en QML antes de transmitir nada.
-Todavía no se ha comprobado nada de esto con una placa real - consulta "Limitaciones conocidas" más abajo.
+Todavía no se ha comprobado nada de esto con una placa real - consulta los «límites conocidos» más abajo.
 
 El panel también muestra las **lecturas en directo** de la herramienta detectada (temperatura con un gráfico deslizante y exportación a CSV, RPM, finales de carrera; solo escuchan, así que funcionan en modo solo escucha y junto a una salida en marcha), ejecuta el **autotest**, avisa en la cabecera cuando la **comprobación de salud del bus** (una consulta de la herramienta activa cada 3 segundos mientras nada más usa el bus) detecta un problema, y tiene un diálogo **Acerca de URTC Tester** con el Readme, la Licencia y la página de GitHub, junto a **Guardar registros...**.
 
@@ -461,7 +461,7 @@ El flujo de diagnóstico CAN en vivo existente usa ahora una superficie de contr
 
 ### Estructura de archivos
 
-Esta herramienta está organizada en módulos por responsabilidad, puramente por legibilidad - no hay ninguna diferencia funcional entre tenerlos como archivos separados o como uno grande. `tester_config.py` contiene las constantes de configuración/idioma/protocolo, `tester_transports.py` contiene SLCAN/SocketCAN, `tester_bus_monitor.py` contiene el filtro de tramas y las estadísticas del bus, `qt_tester.py` es el puente de Qt Quick (con `assets/qml/TesterDeck.qml`), `tester_selftest.py`, `tester_telemetry.py` y `tester_autodetect.py` son la lógica sin ventana del autotest, de las lecturas en directo y de la búsqueda de velocidad, y `urtc_tester.py` es solo el punto de entrada.
+Esta herramienta está organizada en módulos por responsabilidad, puramente por legibilidad - no hay ninguna diferencia funcional entre tenerlos como archivos separados o como uno grande. Consulta la sección «📂 Estructura del repositorio» cerca del final de este documento para ver el desglose completo archivo por archivo.
 
 **Órdenes repetidas**: una orden que el firmware descarta si no se refresca (un calentador, un taladro, un láser, un ventilador) se repite cada 150 ms por defecto, o al periodo de su propia herramienta. `"keepalive"` en `config.json` lo cambia: `"interval_ms"` (un entero de 20 a 200) fija un periodo para todas, y `"single_io_thread": true` las repite todas desde un hilo compartido, una trama cada vez, en lugar de un hilo cada una (apagado por defecto). Un valor fuera de esos límites mantiene el valor por defecto.
 
@@ -581,13 +581,13 @@ firmware - está documentado en
   lectura en vivo - no hay telemetría de qué están mostrando realmente
   en este momento los LEDs de estado/anillo, solo lo que se ordenó por
   última vez.
-- **La propia imagen térmica de Inspección Avanzada de PCB se basa en
+- **La propia imagen térmica de Inspección Térmica se obtiene por
   extracción, no en un feed en vivo.** Leer una imagen completa
-  significa solicitar los 48 chunks secuencialmente por CAN (peor caso,
+  significa solicitar los 48 bloques secuencialmente por CAN (peor caso,
   la propia resolución de MLX90640/MLX90642) - esto puede tardar varios
   segundos, y no existe un modo de envío en streaming en el propio
-  protocolo CAN de esta herramienta para hacerlo más rápido. Primero hay que disparar una captura; Leer Imagen Térmica espera entonces hasta dos segundos a que el sensor indique que está listo y, si no lo hace, no lee nada, porque el firmware no responde a las peticiones de chunk antes de ese momento. Primero se pregunta qué sensor hay instalado (48 chunks para MLX90640/MLX90642, 12 para MLX90641), y un chunk perdido deja sus píxeles en blanco en lugar de desplazar el resto de la imagen.
-- **Ejecutar Self-Test solo cubre 7 de las 25 herramientas** (soldador,
+  protocolo CAN de esta herramienta para hacerlo más rápido. Primero hay que disparar una captura; Leer Imagen Térmica espera entonces hasta dos segundos a que el sensor indique que está listo y, si no lo hace, no lee nada, porque el firmware no responde a las peticiones de bloque antes de ese momento. Primero se pregunta qué sensor hay instalado (48 bloques para MLX90640/MLX90642, 12 para MLX90641), y un bloque perdido deja sus píxeles en blanco en lugar de desplazar el resto de la imagen.
+- **Ejecutar Autoprueba solo cubre 7 de las 25 herramientas** (soldador,
   taladro, láser, impresora 3D, AOI, vacío, sonda de escaneo) - ver
   "Cómo funciona" arriba para la explicación completa. Las otras 18
   herramientas no reciben ninguna comprobación automatizada desde ese

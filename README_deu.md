@@ -18,7 +18,7 @@
 ### Ein Live-CAN-Bus-Prüfer für die URTC-Platine: Er zeigt nur die Bedienelemente und die Telemetrie des angesteckten Werkzeugkopfs
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Lizenz-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Sprache-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
   <img src="https://img.shields.io/badge/Tests-896-2ea44f.svg" alt="Tests">
@@ -27,7 +27,7 @@
 
 ---
 
-**Ehrlichkeitscheck - was heute wirklich funktioniert:** die CAN-Payload-Encoder für die auf Qt Quick migrierten Steuerungsfamilien (`advanced_protocol.py`) sind real und durch die Tests in `tests/` abgedeckt (`python -m pytest -q`). Die eigene CI dieses Repos (`.github/workflows/ci.yml`) führt sie ebenfalls aus, zusammen mit `ruff check`, `python -m mypy`, `tools/ci_validate.py`, einer Syntaxkompilierung jeder `.py`-Datei und den vier `verify_qt_*.py`-Skripten, sodass eine Regression dort den Build fehlschlagen lässt. Die vier `verify_qt_*.py`-Skripte im Repo-Root (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) sind echte, bewusst außerhalb von `tests/` gehaltene End-to-End-Prüfungen gegen einen simulierten Transport mit echter Cross-Thread-Signal-Zustellung - alle vier bestehen mit `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, was die CI ebenfalls ausführt. Das ist die ehrliche Obergrenze dessen, was automatisch verifiziert wird: die Transportschicht, die CAN-ID-/Byte-Layout-Verarbeitung und die Qt-Quick-Brückenlogik sind real und werden gegen simulierte Frames geprüft, nicht gegen echte Hardware - wie "Known limitations" weiter unten bereits sagt, wurde dies ohne USB-Zugriff gebaut, sodass hier noch nichts gegen eine echte Platine geprüft wurde. `qt_tester.py` und `assets/qml/TesterDeck.qml` sind die reale, umfangreiche Implementierung (zusammen tausende Zeilen), geprüft durch die Tests mit simulierten Platinen und die Verify-Skripte, nie durch eine echte Platine.
+**Ehrlichkeitscheck - was heute wirklich funktioniert:** die CAN-Payload-Encoder für die auf Qt Quick migrierten Steuerungsfamilien (`advanced_protocol.py`) sind real und durch die Tests in `tests/` abgedeckt (`python -m pytest -q`). Die eigene CI dieses Repos (`.github/workflows/ci.yml`) führt sie ebenfalls aus, zusammen mit `ruff check`, `python -m mypy`, `tools/ci_validate.py`, einer Syntaxkompilierung jeder `.py`-Datei und den vier `verify_qt_*.py`-Skripten, sodass eine Regression dort den Build fehlschlagen lässt. Die vier `verify_qt_*.py`-Skripte im Repo-Root (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) sind echte, bewusst außerhalb von `tests/` gehaltene End-to-End-Prüfungen gegen einen simulierten Transport mit echter Cross-Thread-Signal-Zustellung - alle vier bestehen mit `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, was die CI ebenfalls ausführt. Das ist die ehrliche Obergrenze dessen, was automatisch verifiziert wird: die Transportschicht, die CAN-ID-/Byte-Layout-Verarbeitung und die Qt-Quick-Brückenlogik sind real und werden gegen simulierte Frames geprüft, nicht gegen echte Hardware - wie die „Bekannten Grenzen“ weiter unten bereits sagen, wurde dies ohne USB-Zugriff gebaut, sodass hier noch nichts gegen eine echte Platine geprüft wurde. `qt_tester.py` und `assets/qml/TesterDeck.qml` sind die reale, umfangreiche Implementierung (zusammen tausende Zeilen), geprüft durch die Tests mit simulierten Platinen und die Verify-Skripte, nie durch eine echte Platine.
 
 ---
 
@@ -40,11 +40,11 @@
 | Version | `0.5.4` |
 | Reifegrad | Funktionsfähig |
 | Tests | 896 (`python -m pytest -q`) |
-| Technik | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
+| Technik | Python / PySide6 / Qt Quick / CAN-Bus-Live-Diagnose |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
 
-**Springe zu:** [Überblick](#-überblick) · [Architektur](#-architektur) · [Funktionen](#-funktionen) · [Sicherheit](#-sicherheit-und-schutz) · [Schnittstellen](#-schnittstellen) · [Schnellstart](#-schnellstart) · [Tests](#-tests) · [Struktur](#-struktur-des-repositorys) · [Verwandte](#-verwandte-projekte)
+**Springen Sie zu:** [Überblick](#-überblick) · [Architektur](#-architektur) · [Funktionen](#-funktionen) · [Sicherheit](#-sicherheit-und-schutz) · [Schnittstellen](#-schnittstellen) · [Schnellstart](#-schnellstart) · [Tests](#-tests) · [Struktur](#-struktur-des-repositorys) · [Verwandte](#-verwandte-projekte)
 
 <!-- urtc-section:status_tester -->
 ## 🚦 Projektstatus
@@ -180,7 +180,7 @@ verwendet die Antwort, um:
   `THIS_HARDWARE_ID` dieses Projekts übereinstimmt.
 - Das Panel **Werkzeugsteuerung** rechts für dieses spezifische
   Werkzeug zu erstellen - und nur dieses Werkzeug. Das Wechseln, welches
-  Werkzeug gejumpert ist, und erneutes Erkennen baut das alte Panel ab
+  Werkzeug per Jumper gewählt ist, und erneutes Erkennen baut das alte Panel ab
   und erstellt das neue von Grund auf neu.
 
 **Globale Steuerung** (Abschnitt 2, immer sichtbar unabhängig davon,
@@ -197,8 +197,8 @@ generische SPI-Bus und die DIAG0-Leitung von `CONN_EXPANSION` - der
 rohe Durchgang, den sich alle Erweiterungsplatinen-Varianten mit
 Treiber teilen. Der ADS1115 und die MLX9064x-Sensoren sowie der eigene
 Treiber des Crimp-Aktuators werden nicht von hier gesteuert - sie leben
-stattdessen im Panel des jeweiligen Werkzeugs (Flying Probe, PCB
-Advanced Inspection, Crimping Actuator - siehe Abschnitt 4 unten), da
+stattdessen im Panel des jeweiligen Werkzeugs (Flying Probe, Thermische
+Inspektion, Crimp-Aktuator - siehe Abschnitt 4 unten), da
 davon abhängt, welches davon tatsächlich zutrifft, welches
 Werkzeugprofil per Jumper konfiguriert ist.
 
@@ -319,7 +319,7 @@ Jedes der 25 Profile hat sein eigenes Panel, direkt aus
 | Werkzeug | Steuerelemente | Live-Telemetrie |
 |---|---|---|
 | Lötkolben | Solltemperatur, Ein/Aus; Lötzinnvorschub Richtung + Schrittzahl (Einmalbewegung); Abfrage und Zurücksetzen der Vorschubposition auf 0 | Ist-Temperatur; Vorschubposition (Schätzung im offenen Regelkreis) |
-| Pasten-/Flüssigkeitsspender, Schraubendreher, beide Greifer, SMT Pick & Place, Vacuum Gripper (LG) | Richtung + Schrittzahl (Einmalbewegung) | keine (gemeinsames 0x120, keine Telemetrie für keines dieser 7) |
+| Pasten-/Flüssigkeitsspender, Schraubendreher, beide Greifer, SMT Pick & Place, Vakuumgreifer (LG) | Richtung + Schrittzahl (Einmalbewegung) | keine (gemeinsames 0x120, keine Telemetrie für keines dieser 7) |
 | Vakuum-Aufnahme | keine | Analogmessung, Teil erkannt |
 | Bohrer | Geschwindigkeit + Richtung | Ist-Drehzahl, Endanschlag |
 | AOI-Inspektion | Ringmodus (aus/Stroboskop/kontinuierlich) + Stroboskopperiode | Endanschlag |
@@ -328,12 +328,12 @@ Jedes der 25 Profile hat sein eigenes Panel, direkt aus
 | Scan-Sonde | keine | Anzahl Aufprallereignisse + Zeitstempel (`0x095` mit höchster Priorität) |
 | Elektromagnet | Kontrollkästchen Spule erregen/lösen | keine |
 | Punktschweißgerät | Impulsdauer + Auslösen | keine (löst nur aus, wenn der Kontaktsensor zuvor HIGH liest - siehe das eigene `0x1C0` in `docs/CANBUS.md`) |
-| Konforme Beschichtung, Einpress-Zylinder | keine - rein informatives Panel | keine - beide Werkzeug-IDs haben keinen eigenen CAN-Handler, ihr eigener Aktuator und Sensor befinden sich auf der Hauptplatine des Roboters selbst, siehe `docs/TOOLS.TXT` |
+| Konforme Beschichtung, Einpresswerkzeug | keine - rein informatives Panel | keine - beide Werkzeug-IDs haben keinen eigenen CAN-Handler, ihr eigener Aktuator und Sensor befinden sich auf der Hauptplatine des Roboters selbst, siehe `docs/TOOLS.TXT` |
 | Flying Probe | Die Basismessung erfolgt automatisch; die erweiterte Messung benötigt ein rohes ADS1115-Konfigurationswort (hex) + Konvertierung Auslösen + Ergebnis Lesen | Basismessung integrierter ADC (automatisch, `0x243`) |
 | UV-Härtung | Leistungsregler (0-255) + Senden/Aus | keine |
 | Heißluft für Nacharbeit | Solltemperatur, Gebläseleistung, Ein/Aus | Live-Temperatur (teilt sich die eigene `0x135`-Telemetrie und das Live-Diagramm des Lötkolbens - derselbe physische Thermoregelkreis) |
 | Crimp-Aktuator | Richtung + Schrittzahl (Einmalbewegung, gleiche Form wie die oben gemeinsam genutzten Bewegungswerkzeuge, erreicht aber den Treiber einer Erweiterungsplatine über `0x1F0` statt des integrierten `0x120`) | keine |
-| Thermal Inspection | Erfassung Auslösen, Status Prüfen, Wärmebild Lesen | 32x24-Pixel-Wärmebild-Leinwand (Blau-Rot-Verlauf), Chunk für Chunk über CAN auf Anfrage abgerufen - kein Live-Videofeed, siehe Abschnitt 6 unten |
+| Thermische Inspektion | Erfassung Auslösen, Status Prüfen, Wärmebild Lesen | 32x24-Pixel-Wärmebild-Leinwand (Blau-Rot-Verlauf), Block für Block über CAN auf Anfrage abgerufen - kein Live-Videofeed, siehe Abschnitt 6 unten |
 | Lötpasten-Jetting | PWM-Kanal + Frequenz (Konfigurieren), dann Tastverhältnis + Dauer (Impuls Auslösen) | keine |
 | Ultraschallschweißgerät | Impulsdauer + Auslösen | keine (gleiche Form wie Punktschweißgerät, aber ohne Kontaktsensor-Sperre) |
 
@@ -360,14 +360,14 @@ keinen Watchdog (stattdessen einen Stillstandsdetektor - siehe
 
 #### 🔥 Prüfstandstest für thermisches Durchgehen (URTC-Firmware 0.3.2+ / 0.3.3+)
 
-Detect zeigt jetzt, *warum* eine Platine einen Fehler verriegelt hat: Byte 4
+**Erkennen** zeigt jetzt, *warum* eine Platine einen Fehler verriegelt hat: Byte 4
 von `0x111` (Schutz vor thermischem Durchgehen: MAXTEMP, HEATING_NO_RISE oder
 DROPPED_AT_TARGET) erscheint im Platinenstatus, und ein vom
 Hardware-Watchdog ausgelöster Reset (Byte 5 von `0x111`) wird protokolliert.
 **Thermik-Zähler** (F-RAM-Bereich in beiden Oberflächen) liest
 `0x1AA`/`0x1AB`: thermische Fehler insgesamt, gesamte Heizstunden und den
 letzten Fehler. Antworten älterer Firmware (`0x111` mit 4 Bytes, kein
-`0x1AB`) werden als "nicht gemeldet" angezeigt, nie als null. Die
+`0x1AB`) werden als „nicht gemeldet“ angezeigt, nie als null. Die
 Schritt-für-Schritt-Anleitung zur Prüfung an einer echten Platine steht in
 [`docs/THERMAL_RUNAWAY_BENCH_TEST.md`](docs/THERMAL_RUNAWAY_BENCH_TEST.md).
 
@@ -422,7 +422,7 @@ Werkzeugkopfproblem debuggt.
 
 **Blackbox-Betrachter.** Der von der Platine gelesene Datensatz und jeder früher gespeicherte (`.json` oder `.csv`, von diesem Programm geschrieben, geöffnet mit „Gespeicherten Datensatz öffnen“, ohne Platine) wird als gemessene Temperatur und Sollwert über der Zeit gezeichnet, mit einer Marke, wo das Fehlerflag zuerst gesetzt wurde, und Messwert für Messwert mit den Flags in Worten aufgelistet. Jedes Feld muss eine ganze Zahl im Bereich sein, und ein Datensatz hat höchstens 67 Messwerte; eine Datei, die kein Datensatz ist, wird mit Grund abgelehnt, und die vorherige Zeichnung bleibt.
 
-**Ohne Hardware:** Eine virtuelle Platine ersetzt Adapter und Platine. Starte `python -m urtc_can.virtual_board` und gib ihre serielle URL als Port an (`--transport serial --port socket://127.0.0.1:7777`); die Platine beantwortet die Versionsabfrage und den Schnellstatus wie eine Anwendung, sodass `info` und Pläne aus Abfragen ohne angeschlossene Geräte vollständig durchlaufen. Sie ist ein Modell nach der Protokollbeschreibung, kein Werkzeugkopf: Der Selbsttest eines Werkzeugs meldet, was er nicht lesen kann.
+**Ohne Hardware:** Eine virtuelle Platine ersetzt Adapter und Platine. Starten Sie `python -m urtc_can.virtual_board` und geben Sie ihre serielle URL als Port an (`--transport serial --port socket://127.0.0.1:7777`); die Platine beantwortet die Versionsabfrage und den Schnellstatus wie eine Anwendung, sodass `info` und Pläne aus Abfragen ohne angeschlossene Geräte vollständig durchlaufen. Sie ist ein Modell nach der Protokollbeschreibung, kein Werkzeugkopf: Der Selbsttest eines Werkzeugs meldet, was er nicht lesen kann.
 
 - **Verlauf der Vorgänge.** Die Schaltfläche **Verlauf** neben Hilfe öffnet die Nachweisdatensätze (`urtc-evidence/1`), die URTC-TESTER in seinem Protokollordner geschrieben hat. Jede Zeile zeigt die Art, das Ergebnis, das Werkzeug, die Platine und die Versionen, die neuesten zuerst; ein nach dem Schreiben bearbeiteter Eintrag, eine Datei, die kein JSON ist, oder ein Eintrag eines anderen Formats wird als ungültig angezeigt, mit dem, was nicht stimmt. Die Liste lässt sich nach Ergebnis und Text filtern oder auf die fehlgeschlagenen Einträge beschränken; sie liest den Ordner bei jedem Öffnen neu, zeigt höchstens 500 Zeilen (und nennt die Gesamtzahl) und ändert nichts auf dem Datenträger. Es ist dasselbe Fenster in URTC-FLASHER, URTC-TESTER und URTC-UPDATER, aus URTC-COMMON geteilt, in den acht Sprachen. Auf der Kommandozeile listet `python urtc_tester.py --headless history [FOLDER] [--json]` die Einträge eines Ordners auf, prüft jeden und endet mit Status 1, wenn einer ungültig ist; es öffnet keinen Bus.
 
@@ -450,11 +450,11 @@ Es nutzt die Transporte SLCAN/SocketCAN und startet im
 Nur-Lese-Modus, kann also erst senden, wenn aktive Prüfungen bewusst aktiviert
 werden. Jeder der Befehle der 25 Werkzeugprofile ist hier real und bestätigt
 abgedeckt (Bewegung, Bohrer, AOI, Elektromagnet, Punkt-/Ultraschall-
-Schweißpuls, Pastendosierung, Flying Probe, Thermoinspektion, die 5 Aktoren
+Schweißpuls, Pastendosierung, Flying Probe, thermische Inspektion, die 5 Aktoren
 mit Watchdog-Keepalive, Vakuum-/Scan-Probe-Telemetrie), jeweils gleich
 abgesichert: eine Identitätsübereinstimmung, ein ausdrücklich aktivierter
 aktiver Modus und eine Benutzerbestätigung in QML, bevor etwas gesendet wird.
-Bisher wurde nichts davon an einer echten Platine geprüft - siehe „Bekannte Einschränkungen“ unten.
+Bisher wurde nichts davon an einer echten Platine geprüft - siehe die „Bekannten Grenzen“ unten.
 
 Das Pult zeigt außerdem die **Live-Werte** des erkannten Werkzeugs (Temperatur mit rollendem Diagramm und CSV-Export, Drehzahl, Endschalter; sie hören nur zu und funktionieren daher im Nur-Hören-Modus und neben einem laufenden Ausgang), führt den **Selbsttest** aus, warnt in der Kopfzeile, wenn die **Busgesundheitsprüfung** (alle 3 Sekunden eine Abfrage des aktiven Werkzeugs, solange nichts anderes den Bus nutzt) ein Problem sieht, und hat einen **Über URTC Tester**-Dialog mit Readme, Lizenz und GitHub-Seite neben **Protokolle speichern...**.
 
@@ -470,7 +470,7 @@ Der bestehende Live-CAN-Diagnoseablauf verwendet jetzt eine dunkelblau-cyanfarbe
 
 ### Dateistruktur
 
-Dieses Tool ist aus Gründen der Lesbarkeit in Module nach Zuständigkeit organisiert - es gibt keinen funktionalen Unterschied zwischen separaten Dateien und einer großen Datei. `tester_config.py` enthält die Konfigurations-/Sprach-/Protokollkonstanten, `tester_transports.py` enthält SLCAN/SocketCAN, `tester_bus_monitor.py` enthält den Frame-Filter und die Busstatistik, `qt_tester.py` ist die Qt-Quick-Brücke (mit `assets/qml/TesterDeck.qml`), `tester_selftest.py`, `tester_telemetry.py` und `tester_autodetect.py` sind die fensterlose Logik von Selbsttest, Live-Werten und Bitratensuche, und `urtc_tester.py` ist nur der Einstiegspunkt.
+Dieses Tool ist aus Gründen der Lesbarkeit in Module nach Zuständigkeit organisiert - es gibt keinen funktionalen Unterschied zwischen separaten Dateien und einer großen Datei. Die vollständige Aufschlüsselung Datei für Datei steht im Abschnitt „📂 Struktur des Repositorys“ weiter unten in diesem Dokument.
 
 **Wiederholte Befehle**: Ein Befehl, den die Firmware verwirft, wenn er nicht aufgefrischt wird (eine Heizung, eine Bohrmaschine, ein Laser, ein Lüfter), wird standardmäßig alle 150 ms oder im Takt des jeweiligen Werkzeugs wiederholt. `"keepalive"` in `config.json` ändert das: `"interval_ms"` (eine ganze Zahl von 20 bis 200) legt einen Takt für alle fest, und `"single_io_thread": true` wiederholt alle von einem gemeinsamen Thread aus, ein Frame nach dem anderen, statt je einen Thread (standardmäßig aus). Ein Wert außerhalb dieser Grenzen behält den Standard.
 
@@ -592,17 +592,17 @@ dokumentiert.
   Live-Rücklesen - es gibt keine Telemetrie dafür, was die
   Status-/Ring-LEDs aktuell tatsächlich anzeigen, nur was zuletzt
   befohlen wurde.
-- **Das eigene Wärmebild von Thermal Inspection basiert auf
+- **Das eigene Wärmebild der Thermischen Inspektion basiert auf
   Abruf, nicht auf einem Live-Feed.** Ein vollständiges Bild zu lesen
-  bedeutet, alle 48 Chunks nacheinander über CAN abzufragen
+  bedeutet, alle 48 Blöcke nacheinander über CAN abzufragen
   (schlimmster Fall, die eigene Auflösung von MLX90640/MLX90642) - dies
   kann einige Sekunden dauern, und es gibt keinen Streaming-Sendemodus
   im eigenen CAN-Protokoll dieses Werkzeugs, um es schneller zu machen.
-  Zuerst muss eine Erfassung ausgelöst werden; Wärmebild Lesen wartet dann bis zu zwei Sekunden darauf, dass der Sensor „bereit“ meldet, und liest andernfalls nichts, weil die Firmware Chunk-Anfragen vorher nicht beantwortet. Zuerst wird abgefragt, welcher Sensor verbaut ist (48 Chunks für MLX90640/MLX90642, 12 für MLX90641), und ein verlorener Chunk lässt seine Pixel leer, statt den Rest des Bildes zu verschieben.
-- **Self-Test ausführen deckt nur 7 der 25 Werkzeuge ab** (Lötkolben,
+  Zuerst muss eine Erfassung ausgelöst werden; Wärmebild Lesen wartet dann bis zu zwei Sekunden darauf, dass der Sensor „bereit“ meldet, und liest andernfalls nichts, weil die Firmware Blockanfragen vorher nicht beantwortet. Zuerst wird abgefragt, welcher Sensor verbaut ist (48 Blöcke für MLX90640/MLX90642, 12 für MLX90641), und ein verlorener Block lässt seine Pixel leer, statt den Rest des Bildes zu verschieben.
+- **Selbsttest ausführen deckt nur 7 der 25 Werkzeuge ab** (Lötkolben,
   Bohrer, Laser, 3D-Drucker, AOI, Vakuum, Scan-Sonde) - siehe „Wie es
-  funktioniert" oben für die vollständige Erklärung. Die anderen 18
-  Werkzeuge erhalten von diesem Button keine automatisierte Prüfung;
+  funktioniert“ oben für die vollständige Erklärung. Die anderen 18
+  Werkzeuge erhalten von dieser Schaltfläche keine automatisierte Prüfung;
   sie zu verifizieren bedeutet weiterhin, die tatsächliche Hardware bei
   der Reaktion auf die Bedienelemente ihres eigenen Panels zu
   beobachten.
@@ -646,11 +646,11 @@ URTC besteht aus unabhängigen Repositories mit jeweils eigener Version, eigenen
 
 ## 🤝 Mitwirken und Community
 
-* Führe vor einem Pull Request `URTC_CI=1 python tools/ci_validate.py` aus: es muss bestehen. Siehe [CONTRIBUTING.md](CONTRIBUTING.md) und den [Verhaltenskodex](CODE_OF_CONDUCT.md).
+* Führen Sie vor einem Pull Request `URTC_CI=1 python tools/ci_validate.py` aus: Es muss bestehen. Siehe [CONTRIBUTING.md](CONTRIBUTING.md) und den [Verhaltenskodex](CODE_OF_CONDUCT.md).
 * Das README gibt es in acht Sprachen: Eine Textänderung wird in allen acht Dateien vorgenommen, und die mit anderen Repositorys geteilten Abschnitte schreibt `tools/readme_sections.py` von URTC-COMMON.
 * Eine Änderung am CAN-Protokoll beginnt in URTC-COMMON (`spec/can_protocol.json`) und gelangt über die geprüfte Kopie in dieses Repository.
-* Beschreibe nichts als auf einer Platine funktionierend, was nur gebaut wurde.
-* Melde eine Schwachstelle privat: [SECURITY.md](SECURITY.md). Fragen, Ideen und Meldungen: electrohobby3d@gmail.com ([SUPPORT.md](SUPPORT.md)).
+* Beschreiben Sie nichts als auf einer Platine funktionierend, was nur gebaut wurde.
+* Melden Sie eine Schwachstelle privat: [SECURITY.md](SECURITY.md). Fragen, Ideen und Meldungen: electrohobby3d@gmail.com ([SUPPORT.md](SUPPORT.md)).
 
 ## 👤 AUTOR
 
@@ -662,7 +662,7 @@ URTC besteht aus unabhängigen Repositories mit jeweils eigener Version, eigenen
 
 Lizenz: **GPL-3.0-or-later** für den Quellcode, **CC BY-SA 4.0** für diese
 Dokumentation - siehe `LICENSE` in diesem Repository, oder den
-Abschnitt „Lizenz und Urheberrechtshinweise" am Ende dieses Dokuments.
+Abschnitt „Lizenz und Urheberrechtshinweise“ am Ende dieses Dokuments.
 
 URTC Tester ist (c) 2026 JuanenRac (Electro Hobby 3D). Dieser Hinweis
 muss in jeder Verteilung dieses Projekts oder abgeleiteter Werke
@@ -693,7 +693,7 @@ Protokolldokumentation, die dieses Tool ausübt. Die eigene Firmware von
 URTC ist GPL-3.0-or-later und ihre Hardware-Designs sind CERN-OHL-S v2; die
 eigene Lizenz dieses Tools erstreckt sich hier nicht auf dieses
 separate Projekt, und umgekehrt. Eine webbasierte Alternative, die
-ähnliches Terrain abdeckt, existiert ebenfalls unter
+ähnliche Aufgaben abdeckt, existiert ebenfalls unter
 [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
 
 Wenn Sie auf diesem Projekt aufbauen, denken Sie an die Lizenztrennung:
