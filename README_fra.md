@@ -40,7 +40,7 @@
 | Version | `0.5.4` |
 | Maturité | Fonctionnel |
 | Tests | 896 (`python -m pytest -q`) |
-| Technologie | Python / PySide6 / Qt Quick / diagnostic de bus CAN en direct |
+| Technologie | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
 

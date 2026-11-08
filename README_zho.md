@@ -40,7 +40,7 @@
 | 版本 | `0.5.4` |
 | 成熟度 | 可用 |
 | 测试 | 896 (`python -m pytest -q`) |
-| 技术栈 | Python / PySide6 / Qt Quick / 实时 CAN 总线诊断 |
+| 技术栈 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
 

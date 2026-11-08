@@ -40,7 +40,7 @@
 | バージョン | `0.5.4` |
 | 成熟度 | 機能する |
 | テスト | 896 (`python -m pytest -q`) |
-| 技術 | Python / PySide6 / Qt Quick / ライブ CAN バス診断 |
+| 技術 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 対象 | 利用者の PC |
 | 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
 

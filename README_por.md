@@ -40,7 +40,7 @@
 | Versão | `0.5.4` |
 | Maturidade | Funcional |
 | Testes | 896 (`python -m pytest -q`) |
-| Tecnologia | Python / PySide6 / Qt Quick / diagnóstico de barramento CAN em direto |
+| Tecnologia | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destino | O PC de quem o usa |
 | Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |
 
