@@ -72,3 +72,35 @@ def test_every_warning_has_its_text_in_the_eight_languages():
         for key in ap.BUS_SYMPTOM_KEYS.values():
             assert f"\n{key}=" in text, (language, key)
     assert json.dumps(sorted(ap.BUS_SYMPTOM_KEYS)) == json.dumps(sorted(["mixed_bus_suspected", "no_head_at_any_speed", "bus_errors", "legacy_head_known"]))
+
+
+# ---- the live reading: the window judges the health frames that go by while it polls the board ------------------------------------------------------
+def test_the_poll_keeps_the_health_frames_that_go_by_and_the_window_turns_them_into_a_warning(monkeypatch):
+    qt = pytest.importorskip("qt_tester")
+    frames = [(protocol.CAN_ID_HEALTH_PROFILE, health_frame(tec=120)), (protocol.CAN_ID_ACTIVE_TOOL_RESP, bytes([0, 0, 0, 0, 0, 0, 0, 0]))]
+
+    class Transport:
+        def read_frame(self, timeout=0.1):
+            return frames.pop(0) if frames else None
+
+    bridge = qt.TesterQtBridge.__new__(qt.TesterQtBridge)
+    bridge._transport = Transport()
+    kept: list[bytes] = []
+    answer = qt.TesterQtBridge._wait_for(bridge, protocol.CAN_ID_ACTIVE_TOOL_RESP, 0.5, health_frames=kept)
+    assert answer is not None and kept == [health_frame(tec=120)]
+    bridge._active_tool_id = 0
+    monkeypatch.setattr(qt, "bus_health_thresholds", lambda: config.bus_health_thresholds({}))
+    assert [key for key, _args in qt.TesterQtBridge._bus_symptoms(bridge, kept)] == ["STATE_BUS_ERRORS"]
+
+
+def test_without_a_list_the_wait_behaves_as_before():
+    qt = pytest.importorskip("qt_tester")
+    frames = [(protocol.CAN_ID_HEALTH_PROFILE, health_frame(tec=120)), (0x111, b"\x01")]
+
+    class Transport:
+        def read_frame(self, timeout=0.1):
+            return frames.pop(0) if frames else None
+
+    bridge = qt.TesterQtBridge.__new__(qt.TesterQtBridge)
+    bridge._transport = Transport()
+    assert qt.TesterQtBridge._wait_for(bridge, 0x111, 0.5) == b"\x01"

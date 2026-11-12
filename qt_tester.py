@@ -60,6 +60,7 @@ from tester_config import (
     DEFAULT_BITRATE_LABEL,
     SLCAN_BITRATES,
     bitrate_bps_for_label,
+    bus_health_thresholds,
     load_config,
     save_config,
     translate_log_line,
@@ -121,7 +122,7 @@ from urtc_can.node_monitor import NodeBusStats, label as node_label
 from urtc_can.node_picker import GatedTransport, NodePicker, config_reader_for, transport_io
 from urtc_can.node_picker_qt import NodePickerModel
 from urtc_can.evidence_history_qt import EvidenceHistoryModel
-from urtc_can.protocol import decode_error_counters_response, CAN_ID_ERROR_COUNTERS_RESPONSE, CAN_ID_QUERY_ERROR_COUNTERS, CAN_ID_SLAVE_APP_PATCH, CAN_ID_SLAVE_REG_READ
+from urtc_can.protocol import decode_error_counters_response, CAN_ID_ERROR_COUNTERS_RESPONSE, CAN_ID_HEALTH_PROFILE, CAN_ID_QUERY_ERROR_COUNTERS, CAN_ID_SLAVE_APP_PATCH, CAN_ID_SLAVE_REG_READ
 from urtc_can.update_qt import UpdateModel
 from qt_tool_panel import ToolPanelController
 from urtc_ui import LanguageModel, connection_badge, format_can_id, format_hex
@@ -1291,6 +1292,12 @@ class TesterQtBridge(QObject):
     # -- bus health: the board is asked who it is every few seconds while idle ---
     BUS_HEALTH_INTERVAL_S = 3.0
 
+    def _bus_symptoms(self, health_frames) -> list[tuple[str, dict]]:
+        """The warnings of a bus that mixes speeds, from the health frames that were heard (thresholds and the heads known to be of 500 kbit/s from config.json)."""
+        entry = tools_catalog.tool_by_id(self._active_tool_id) if self._active_tool_id >= 0 else None
+        heads = [str(self._active_tool_id)] + ([str(entry["name"])] if entry and entry.get("name") else [])
+        return protocol.bus_symptoms(health_frames, False, heads, bus_health_thresholds())
+
     @Property(str, notify=changed)
     def busHealthText(self) -> str:
         """Empty while the bus looks healthy; otherwise the translated reason (already shown in the log)."""
@@ -1316,6 +1323,7 @@ class TesterQtBridge(QObject):
         One silent poll is not a verdict yet: see protocol.BusHealthTracker."""
         tracker = protocol.BusHealthTracker()
         was_bad = False
+        recent_health: list[bytes] = []          # the health frames of the heads that were heard, the last few polls
         while not stop.wait(self.BUS_HEALTH_INTERVAL_S):
             if transport is not self._transport:
                 break
@@ -1327,7 +1335,7 @@ class TesterQtBridge(QObject):
                 if self._busy:
                     continue
                 transport.send_frame(CAN_ID_QUERY_ACTIVE_TOOL, b"")
-                tool_data = self._wait_for(CAN_ID_ACTIVE_TOOL_RESP, 1.0)
+                tool_data = self._wait_for(CAN_ID_ACTIVE_TOOL_RESP, 1.0, health_frames=recent_health)
             except Exception as exc:
                 self._log(f"BUS_HEALTH_POLL_FAILED {exc}")
                 continue
@@ -1338,6 +1346,9 @@ class TesterQtBridge(QObject):
             problems = tracker.evaluate(tool_data)
             if problems is None:
                 continue
+            symptoms = self._bus_symptoms(recent_health)      # only the health frames heard since the last poll: an old error does not stay forever
+            recent_health.clear()
+            problems = problems + symptoms
             bad = bool(problems)
             reason = ", ".join(_(key, **args) for key, args in problems) if bad else ""
             raw = getattr(transport, "_transport", transport)  # what the window holds may be the gate around the adapter
@@ -2885,11 +2896,16 @@ class TesterQtBridge(QObject):
             self._set_state(status="PASSIVE WINDOW COMPLETE", busy=False)
             self._log(f"PASSIVE_CAPTURE_COMPLETE {summary}")
 
-    def _wait_for(self, can_id: int, timeout: float) -> bytes | None:
+    def _wait_for(self, can_id: int, timeout: float, health_frames: list | None = None) -> bytes | None:
+        """The payload of the next frame with this identifier, or None. With ``health_frames`` the health frames (0x1B8) that go by meanwhile are kept in that list."""
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             frame = self._transport.read_frame(timeout=0.1)
-            if frame is not None and frame[0] == can_id:
+            if frame is None:
+                continue
+            if health_frames is not None and frame[0] == CAN_ID_HEALTH_PROFILE:
+                health_frames.append(bytes(frame[1]))
+            if frame[0] == can_id:
                 return frame[1]
         return None
 
