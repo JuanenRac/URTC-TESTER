@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-896-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-904-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | 版本 | `0.5.4` |
 | 成熟度 | 可用 |
-| 测试 | 896 (`python -m pytest -q`) |
+| 测试 | 904 (`python -m pytest -q`) |
 | 技术栈 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
@@ -266,6 +266,8 @@ MAXTEMP、HEATING_NO_RISE 或 DROPPED_AT_TARGET）显示在板卡状态中，由
 
 `python urtc_tester.py --headless 命令` 以无窗口方式运行测试器，适用于生产线、台架脚本或 CI 任务：`info`（谁在应答：工具、固件、快速状态）、`selftest`、`run-plan 文件` 和 `validate-plan 文件`。计划是放在 `plans/` 里的简短 JSON 步骤文件（确认工具、无故障、最低固件版本、自检、数值落在范围内的帧、等待、向台架旁的人提问）。命令会写出每一帧的日志，以及一份用 SHA-256 指明该日志的结果记录，与控制台使用的记录相同。计划只发送查询，除非它写明 `"actuation": true` 且操作员加上 `--allow-actuation`；引导程序、更新、配置和擦除帧永远不会发送，固件在不刷新时会丢弃的指令（加热器、钻头、激光）可在计划等待期间重复发送（`keepalive_ms`），凡是下达过指令的计划结束后会再次关闭所有输出。`--transport simulate` 播放模拟的工具头，`--transport replay --port 文件` 播放录制的 `.trc` 或 `.asc` 轨迹，因此无需板卡即可试跑计划。退出状态：0 通过，1 有检查失败，2 计划或参数有误，3 测试无法进行，4 没有失败但证据不足以判定（无法判定）。输出的文字为英文，与刷写工具的命令行一致。详见 [`docs/HEADLESS.md`](docs/HEADLESS.md)。这些内容尚未在真实板卡上运行过。
 
+`image-info FILE`（同样无需窗口）读取固件镜像内部携带的头：它面向的硬件、版本、长度和 CRC-32。它会说明该文件是被接受、带警告接受（没有头的旧镜像），还是被拒绝（头不成立、带戳的 `.urimg` 文件、与 `--hardware main|slave` 不符的其他板卡）；`--policy accept|warn|require` 是针对没有头的镜像的兼容开关。它不会打开任何总线。
+
 **窗口中的计划（新增，仅用测试和模拟头验证）：** 控制台右栏底部的“测试计划”部分会列出 `plans/` 中的计划，用同一引擎对已连接的板卡运行你选择的计划（不能在仅监听模式下运行，且仅在没有其他程序读取总线时），每个步骤一结束就显示，确认步骤的问题以对话框提出，并保存日志和结果记录。会控制输出的计划会先请求确认，结束时关闭所有输出；“取消”会在当前步骤之后停止。
 
 **检查更新。** “检查更新”按钮向 GitHub 查询一次最新发布版，只有当它带有适用于此系统且比已安装版本更新的包时，才会提供下载。只有当包的 SHA-256 和 Ed25519 签名（程序中固定的发布密钥）都有效时才会接受；只有在你确认之后、且没有输出开启时才会安装，并保留上一版本以便退回（新版本无法启动时会自动恢复）。程序绝不会自行检查或安装：启动时检查是一个选项，默认关闭，而确认步骤只能在同一窗口中经过警告后才能关闭。
@@ -339,7 +341,7 @@ README](https://github.com/JuanenRac/URTC-FLASHER) 第 1 和第 2 节，此处�
 
 ## 🧪 测试
 
-测试套件共有 896 个测试（`python -m pytest -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；需要 PySide6 的测试在没有它时会被跳过）：每个工具系列的 CAN 载荷编码器和解码器、针对模拟对象的 SLCAN 和 SocketCAN 传输层、身份探测、自检、看门狗保活、总线健康检查、测试计划和无窗口模式、带哈希的会话导出、语言文件以及 Qt Quick 面板。根目录下的四个脚本（`verify_qt_*.py`）用真实的 Qt 事件循环对 Qt Quick 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。这一切都没有针对真实的板卡运行过。
+测试套件共有 904 个测试（`python -m pytest -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；需要 PySide6 的测试在没有它时会被跳过）：每个工具系列的 CAN 载荷编码器和解码器、针对模拟对象的 SLCAN 和 SocketCAN 传输层、身份探测、自检、看门狗保活、总线健康检查、测试计划和无窗口模式、带哈希的会话导出、语言文件以及 Qt Quick 面板。根目录下的四个脚本（`verify_qt_*.py`）用真实的 Qt 事件循环对 Qt Quick 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。这一切都没有针对真实的板卡运行过。
 
 ## 🏗️ 构建与发布
 

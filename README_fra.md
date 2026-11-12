@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Langage-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-896-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-904-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocole-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.5.4` |
 | Maturité | Fonctionnel |
-| Tests | 896 (`python -m pytest -q`) |
+| Tests | 904 (`python -m pytest -q`) |
 | Technologie | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
@@ -409,6 +409,8 @@ remettre à quiconque déboguant un problème de tête d'outil.
 
 `python urtc_tester.py --headless COMMANDE` exécute le testeur sans fenêtre, pour une ligne de production, un script de banc ou une tâche de CI : `info` (qui répond : outil, firmware, état rapide), `selftest`, `run-plan FICHIER` et `validate-plan FICHIER`. Un plan est un court fichier JSON d'étapes rangé dans `plans/` (attendre un outil, aucun défaut, une version minimale du firmware, l'autotest, une trame dont la valeur est dans une plage, une attente, une question à la personne au banc). La commande écrit un journal de chaque trame et un enregistrement de résultat qui nomme le journal par son SHA-256, le même que celui du pupitre. Un plan n'envoie que des requêtes, sauf s'il dit `"actuation": true` et que l'opérateur ajoute `--allow-actuation` ; les trames du bootloader, de mise à jour, de configuration et d'effacement ne sont jamais envoyées, une commande que le firmware abandonne si elle n'est pas rafraîchie (un chauffage, une perceuse, un laser) peut être répétée pendant que le plan attend (`keepalive_ms`), et après un plan qui a commandé quelque chose toutes les sorties sont de nouveau coupées. `--transport simulate` joue une tête d'outil simulée et `--transport replay --port FICHIER` une trace `.trc` ou `.asc` enregistrée, de sorte qu'un plan peut être essayé sans carte. Code de sortie : 0 réussi, 1 une vérification a échoué, 2 le plan ou les arguments sont faux, 3 le test n'a pas pu être mené, 4 rien n'a échoué mais les preuves ne permettent pas de trancher (indéterminé). Le texte affiché est en anglais, comme la ligne de commande du flasher. Détails dans [`docs/HEADLESS.md`](docs/HEADLESS.md). Rien de cela n'a tourné contre une vraie carte.
 
+`image-info FICHIER` (également sans fenêtre) lit l'en-tête qu'une image de firmware porte en elle : le matériel auquel elle est destinée, sa version, sa longueur et son CRC-32. Il dit si le fichier est accepté, accepté avec un avertissement (une image plus ancienne sans en-tête) ou refusé (un en-tête qui ne tient pas, un fichier `.urimg` estampillé, une autre carte avec `--hardware main|slave`), et `--policy accept|warn|require` est l'interrupteur de compatibilité pour une image sans en-tête. Il n'ouvre aucun bus.
+
 **Plans dans la fenêtre (nouveau, vérifié seulement par des tests et la tête simulée) :** la section PLANS DE TEST, en bas de la colonne de droite du deck, liste les plans de `plans/`, exécute celui que vous choisissez contre la carte connectée avec le même moteur (pas en mode écoute seule, et seulement tant que rien d'autre ne lit le bus), affiche chaque étape dès qu'elle se termine, pose dans une boîte de dialogue les questions d'une étape de confirmation et enregistre le journal et l'enregistrement du résultat. Un plan qui commande des sorties demande d'abord une confirmation et toutes les sorties sont coupées à la fin ; Annuler l'arrête après l'étape en cours.
 
 **Rechercher une mise à jour.** Le bouton « Rechercher une mise à jour » interroge GitHub une fois sur la dernière release et ne propose le téléchargement que si elle contient un paquet pour ce système plus récent que la version installée. Le paquet n'est accepté que si son SHA-256 et sa signature Ed25519 (la clé des releases, épinglée dans le programme) sont valides ; il n'est installé qu'après votre confirmation, jamais tant qu'une sortie est active, et la version précédente est conservée pour revenir en arrière (et rétablie d'elle-même si la nouvelle ne démarre pas). Rien n'est jamais vérifié ni installé tout seul : la vérification à l'ouverture est une option, désactivée par défaut, et la confirmation ne se désactive que dans la même fenêtre, après un avertissement.
@@ -502,7 +504,7 @@ Les versions des programmes URTC qui fonctionnent ensemble, et la version du pro
 
 ## 🧪 Tests
 
-La suite compte 896 tests (`python -m pytest -q` ; avec Qt sur une machine sans écran, `QT_QPA_PLATFORM=offscreen` ; ceux qui ont besoin de PySide6 sont ignorés sans lui) : les encodeurs et décodeurs de charge CAN de chaque famille d'outils, les transports SLCAN et SocketCAN face à des faux, la sonde d'identité, l'autotest, les renvois de surveillance, le contrôle de santé du bus, les plans de test et le mode sans fenêtre, l'export de session avec son hachage, les fichiers de langue et les panneaux Qt Quick. Quatre scripts à la racine (`verify_qt_*.py`) pilotent les panneaux Qt Quick de bout en bout avec une vraie boucle d'événements Qt. La CI exécute aussi `ruff check`, `python -m mypy` et `tools/ci_validate.py`. Rien de tout cela n'a tourné contre une vraie carte.
+La suite compte 904 tests (`python -m pytest -q` ; avec Qt sur une machine sans écran, `QT_QPA_PLATFORM=offscreen` ; ceux qui ont besoin de PySide6 sont ignorés sans lui) : les encodeurs et décodeurs de charge CAN de chaque famille d'outils, les transports SLCAN et SocketCAN face à des faux, la sonde d'identité, l'autotest, les renvois de surveillance, le contrôle de santé du bus, les plans de test et le mode sans fenêtre, l'export de session avec son hachage, les fichiers de langue et les panneaux Qt Quick. Quatre scripts à la racine (`verify_qt_*.py`) pilotent les panneaux Qt Quick de bout en bout avec une vraie boucle d'événements Qt. La CI exécute aussi `ruff check`, `python -m mypy` et `tools/ci_validate.py`. Rien de tout cela n'a tourné contre une vraie carte.
 
 ## 🏗️ Compilation et publication
 

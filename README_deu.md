@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Sprache-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-896-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-904-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protokoll-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.5.4` |
 | Reifegrad | Funktionsfähig |
-| Tests | 896 (`python -m pytest -q`) |
+| Tests | 904 (`python -m pytest -q`) |
 | Technik | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
@@ -414,6 +414,8 @@ Werkzeugkopfproblem debuggt.
 
 `python urtc_tester.py --headless BEFEHL` führt den Tester ohne Fenster aus, für eine Fertigungslinie, ein Prüfstandsskript oder einen CI-Job: `info` (wer antwortet: Werkzeug, Firmware, Schnellstatus), `selftest`, `run-plan DATEI` und `validate-plan DATEI`. Ein Plan ist eine kurze JSON-Datei mit Schritten in `plans/` (ein Werkzeug erwarten, keine Fehler, eine Mindest-Firmwareversion, der Selbsttest, ein Frame, dessen Wert in einem Bereich liegt, eine Wartezeit, eine Frage an die Person am Prüfplatz). Der Befehl schreibt ein Protokoll jedes Frames und einen Ergebnisdatensatz, der das Protokoll über seinen SHA-256 benennt, derselbe Datensatz wie im Deck. Ein Plan sendet nur Abfragen, es sei denn, er sagt `"actuation": true` und die Bedienperson fügt `--allow-actuation` hinzu; Bootloader-, Update-, Konfigurations- und Löschframes werden nie gesendet, ein Befehl, den die Firmware ohne Auffrischung wieder fallen lässt (Heizer, Bohrer, Laser), kann während des Wartens des Plans wiederholt werden (`keepalive_ms`), und nach einem Plan, der etwas angesteuert hat, werden alle Ausgänge wieder abgeschaltet. `--transport simulate` spielt einen simulierten Werkzeugkopf ab und `--transport replay --port DATEI` einen aufgezeichneten `.trc`- oder `.asc`-Mitschnitt, sodass ein Plan ohne Platine erprobt werden kann. Exit-Status: 0 bestanden, 1 eine Prüfung ist fehlgeschlagen, 2 Plan oder Argumente sind falsch, 3 die Prüfung konnte nicht durchgeführt werden, 4 nichts ist fehlgeschlagen, aber die Belege reichen nicht für eine Entscheidung (unbestimmt). Die Ausgabe ist englisch, wie die Kommandozeile des Flashers. Einzelheiten in [`docs/HEADLESS.md`](docs/HEADLESS.md). Nichts davon ist gegen eine echte Platine gelaufen.
 
+`image-info DATEI` (ebenfalls ohne Fenster) liest den Header, den ein Firmware-Image in sich trägt: die Hardware, für die es gebaut ist, seine Version, seine Länge und seine CRC-32. Es sagt, ob die Datei akzeptiert, mit Warnung akzeptiert (ein älteres Image ohne Header) oder abgelehnt wird (ein Header, der nicht stimmt, eine gestempelte `.urimg`-Datei, eine andere Platine mit `--hardware main|slave`); `--policy accept|warn|require` ist der Kompatibilitätsschalter für ein Image ohne Header. Es öffnet keinen Bus.
+
 **Pläne im Fenster (neu, nur mit Tests und dem simulierten Kopf geprüft):** der Abschnitt TESTPLÄNE am Ende der rechten Spalte des Decks listet die Pläne aus `plans/`, führt den gewählten mit demselben Motor gegen die verbundene Platine aus (nicht im Nur-Hören-Modus und nur, solange nichts anderes den Bus liest), zeigt jeden Schritt, sobald er endet, stellt die Fragen eines Bestätigungsschritts in einem Dialog und speichert das Log und den Ergebnisdatensatz. Ein Plan, der Ausgänge ansteuert, fragt zuerst nach einer Bestätigung und am Ende werden alle Ausgänge abgeschaltet; Abbrechen stoppt ihn nach dem laufenden Schritt.
 
 **Nach Updates suchen.** Die Schaltfläche „Nach Updates suchen“ fragt GitHub einmal nach dem neuesten Release und bietet den Download nur an, wenn es ein Paket für dieses System enthält, das neuer als die installierte Version ist. Das Paket wird nur akzeptiert, wenn SHA-256 und Ed25519-Signatur (der im Programm angeheftete Schlüssel der Releases) gültig sind; es wird erst nach Ihrer Bestätigung installiert, nie, solange ein Ausgang eingeschaltet ist, und die vorherige Version bleibt zum Zurückgehen erhalten (und wird von selbst wiederhergestellt, wenn die neue nicht startet). Nichts wird von selbst geprüft oder installiert: die Prüfung beim Start ist eine Option, standardmäßig aus, und die Bestätigung lässt sich nur im selben Fenster nach einer Warnung abschalten.
@@ -506,7 +508,7 @@ Welche Versionen der URTC-Programme zusammenarbeiten und welche Protokollversion
 
 ## 🧪 Tests
 
-Die Suite hat 896 Tests (`python -m pytest -q`; mit Qt auf einem Rechner ohne Bildschirm `QT_QPA_PLATFORM=offscreen`; die, die PySide6 brauchen, werden ohne übersprungen): die CAN-Nutzdaten-Kodierer und -Dekodierer jeder Werkzeugfamilie, die SLCAN- und SocketCAN-Transporte gegen Attrappen, die Identitätsabfrage, der Selbsttest, die Watchdog-Keepalives, die Busgesundheitsprüfung, die Testpläne und der Modus ohne Fenster, der Sitzungsexport mit seinem Hash, die Sprachdateien und die Qt-Quick-Panels. Vier Skripte im Wurzelverzeichnis (`verify_qt_*.py`) steuern die Qt-Quick-Panels mit einer echten Qt-Ereignisschleife durchgängig an. Die CI führt außerdem `ruff check`, `python -m mypy` und `tools/ci_validate.py` aus. Nichts davon lief gegen eine echte Platine.
+Die Suite hat 904 Tests (`python -m pytest -q`; mit Qt auf einem Rechner ohne Bildschirm `QT_QPA_PLATFORM=offscreen`; die, die PySide6 brauchen, werden ohne übersprungen): die CAN-Nutzdaten-Kodierer und -Dekodierer jeder Werkzeugfamilie, die SLCAN- und SocketCAN-Transporte gegen Attrappen, die Identitätsabfrage, der Selbsttest, die Watchdog-Keepalives, die Busgesundheitsprüfung, die Testpläne und der Modus ohne Fenster, der Sitzungsexport mit seinem Hash, die Sprachdateien und die Qt-Quick-Panels. Vier Skripte im Wurzelverzeichnis (`verify_qt_*.py`) steuern die Qt-Quick-Panels mit einer echten Qt-Ereignisschleife durchgängig an. Die CI führt außerdem `ruff check`, `python -m mypy` und `tools/ci_validate.py` aus. Nichts davon lief gegen eine echte Platine.
 
 ## 🏗️ Build und Veröffentlichung
 

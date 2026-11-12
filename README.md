@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-896-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-904-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.5.4` |
 | Maturity | Functional |
-| Tests | 896 (`python -m pytest -q`) |
+| Tests | 904 (`python -m pytest -q`) |
 | Stack | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |
@@ -373,6 +373,8 @@ tool) for handing to whoever's debugging a tool head issue.
 
 `python urtc_tester.py --headless COMMAND` runs the tester without a window, for a production line, a bench script or a CI job: `info` (who answers: tool, firmware, quick state), `selftest`, `run-plan FILE` and `validate-plan FILE`. A plan is a short JSON file of steps kept in `plans/` (expect a tool, no faults, a minimum firmware version, the self-test, a frame whose value lies in a range, a wait, a question for the person at the bench). The command writes a log of every frame and a result record that names the log by its SHA-256, the same record as the deck. A plan sends only queries unless it says `"actuation": true` and the operator adds `--allow-actuation`; the boot-loader, update, configuration and erase frames are never sent, a command that the firmware drops unless it is refreshed (a heater, a drill, a laser) can be repeated while the plan waits (`keepalive_ms`), and every output is switched off again after a plan that commanded something. `--transport simulate` plays a simulated tool head and `--transport replay --port FILE` a recorded `.trc` or `.asc` trace, so a plan can be tried without a board. Exit status: 0 passed, 1 a check failed, 2 the plan or the arguments are wrong, 3 the test could not be carried out, 4 nothing failed but the evidence could not decide (unknown). The text it prints is English, like the command line of the flasher. Details in [`docs/HEADLESS.md`](docs/HEADLESS.md). Nothing here has run against a real board.
 
+`image-info FILE` (also headless) reads the header that a firmware image carries inside it: the hardware it is for, its version, its length and its CRC-32. It says whether the file is accepted, accepted with a warning (an older image without the header) or refused (a header that does not hold, a stamped `.urimg` file, another board with `--hardware main|slave`), and `--policy accept|warn|require` is the compatibility switch for an image without the header. It opens no bus.
+
 **Plans in the window (new, checked with tests and the simulated head only):** the section TEST PLANS at the bottom of the right column of the deck lists the plans of `plans/`, runs the one you choose against the connected board with the same engine (not in listen-only mode, and only while nothing else reads the bus), shows each step as soon as it ends, asks the questions of a confirm step in a dialog and saves the log and the result record. A plan that commands outputs asks for a confirmation first and every output is switched off at the end; Cancel stops it after the step that is running.
 
 **Check for updates.** The button "Check for updates" asks GitHub once for the latest release and, only if it carries a package for this system that is newer than the installed version, offers to download it. The package is accepted only if its SHA-256 and its Ed25519 signature (the key of the releases, pinned in the program) are valid; it is installed only after you confirm it, never while an output is on, and the previous version is kept so you can go back (and is restored by itself if the new one does not start). Nothing is ever checked or installed on its own: the check when the program opens is an option, off by default, and the confirmation can only be turned off in the same window after a warning.
@@ -466,7 +468,7 @@ Which versions of the URTC programs work together, and which protocol version ea
 
 ## 🧪 Testing
 
-The suite has 896 tests (`python -m pytest -q`; with Qt on a machine with no screen, `QT_QPA_PLATFORM=offscreen`; the ones that need PySide6 skip without it): the CAN payload encoders and decoders of every tool family, the SLCAN and SocketCAN transports against fakes, the identity probe, the self-test, the watchdog keepalives, the bus-health check, the test plans and the headless mode, the session export with its hash, the language files and the Qt Quick panels. Four scripts at the root (`verify_qt_*.py`) drive the Qt Quick panels end to end with a real Qt event loop. CI also runs `ruff check`, `python -m mypy` and `tools/ci_validate.py`. None of it has run against a real board.
+The suite has 904 tests (`python -m pytest -q`; with Qt on a machine with no screen, `QT_QPA_PLATFORM=offscreen`; the ones that need PySide6 skip without it): the CAN payload encoders and decoders of every tool family, the SLCAN and SocketCAN transports against fakes, the identity probe, the self-test, the watchdog keepalives, the bus-health check, the test plans and the headless mode, the session export with its hash, the language files and the Qt Quick panels. Four scripts at the root (`verify_qt_*.py`) drive the Qt Quick panels end to end with a real Qt event loop. CI also runs `ruff check`, `python -m mypy` and `tools/ci_validate.py`. None of it has run against a real board.
 
 ## 🏗️ Build & Release
 

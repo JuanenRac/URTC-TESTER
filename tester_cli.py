@@ -12,6 +12,8 @@ For a production line, a bench script or a CI job that has no display. Commands:
     run-plan FILE  a test plan (see tester_plan.py and docs/HEADLESS.md)
     validate-plan FILE   check a plan without touching a bus
     history [FOLDER]     list the evidence records (urtc-evidence/1) of a folder (default: --out), checking each one; touches no bus
+    image-info FILE      what the header inside a firmware image states (hardware, version, length, CRC-32) and what the switch (--policy accept|warn|require,
+                         default warn) decides about the file; --hardware main|slave|NUMBER also checks the board it is for; touches no bus
     report               write a report of the evidence records of --evidence-dir as one HTML page or a PDF (--out FILE, --format html|pdf);
                          every record is listed, one that fails its check as NOT VALID (exit 1, the report is written all the same); touches no bus
 
@@ -37,6 +39,7 @@ from pathlib import Path
 import tester_plan
 from tester_config import TESTER_VERSION, evidence_signing_settings, trusted_keys_store
 from tester_result_record import make_record, save_evidence, save_record
+from urtc_can import image_header
 
 EXIT_PASS, EXIT_FAIL, EXIT_USAGE, EXIT_ERROR, EXIT_UNKNOWN, EXIT_CANCELLED = 0, 1, 2, 3, 4, 130
 TRANSPORTS = ("serial", "socketcan", "python-can", "simulate", "replay")
@@ -49,8 +52,8 @@ def _say(message: str) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="urtc_tester.py --headless", description="URTC Tester without a window: identify, self-test and run test plans against a tool head.")
-    parser.add_argument("command", choices=("info", "selftest", "run-plan", "validate-plan", "history", "report"))
-    parser.add_argument("plan", nargs="?", help="the plan file, for run-plan and validate-plan; the folder of the records, for history")
+    parser.add_argument("command", choices=("info", "selftest", "run-plan", "validate-plan", "history", "report", "image-info"))
+    parser.add_argument("plan", nargs="?", help="the plan file, for run-plan and validate-plan; the folder of the records, for history; the firmware image, for image-info")
     parser.add_argument("--transport", choices=TRANSPORTS, default="serial",
                         help="serial (SLCAN adapter, default), socketcan (Linux), python-can (PCAN, Kvaser, gs_usb ...), simulate (an in-memory tool head, "
                              "nothing real is touched) or replay (the frames of a .trc/.asc trace)")
@@ -70,6 +73,10 @@ def build_parser() -> argparse.ArgumentParser:
                         help="sign the evidence record this run writes with the Ed25519 key of this user (also on with \"sign_evidence\": true in config.json; off by default). The key is made on first use and never printed")
     parser.add_argument("--public-key", default=None, metavar="HEX",
                         help="with history and report: the public key (64 hexadecimal digits) you trust; a signature by another key is told apart and fails the status")
+    parser.add_argument("--policy", choices=image_header.POLICIES, default=None,
+                        help="with image-info: what to do with an image that has no header inside it (accept, warn = the default, require); a header that is there is always checked")
+    parser.add_argument("--hardware", default=None, metavar="BOARD",
+                        help="with image-info: the board the image must be for: main, slave or a HardwareID number")
     parser.add_argument("--json", action="store_true", help="print the result as one JSON object instead of text")
     parser.add_argument("--allow-actuation", action="store_true", help="let a plan that says \"actuation\": true send commands that are not queries (heaters, motors, laser ...)")
     parser.add_argument("--assume-yes", action="store_true", help="answer yes to the confirm steps of a plan (only when a person has looked at what the step asks)")
@@ -251,6 +258,49 @@ def _report(args, out: str | None) -> int:
     return EXIT_FAIL if invalid else EXIT_PASS
 
 
+_BOARDS = {"main": 0x0303CC01, "slave": 0x0303CB01}
+_REASONS = {
+    "header_short": "the file is too short to hold the header", "header_bad_magic": "the marker of the header is wrong", "header_bad_version": "the header version is unknown",
+    "header_bad_size": "the header size is wrong", "header_bad_header_crc": "the CRC-32 of the header does not match", "header_bad_length": "the length it states is not the length of the file",
+    "header_bad_payload_crc": "the CRC-32 of the image does not match", "header_bad_flags": "the flags are not those of a header inside the image",
+    "header_not_sealed": "the header was never sealed after the build", "wrong_hardware": "the image is built for another board", "wrong_version": "the version differs",
+    "stamped_file": "a stamped file (header in front of the binary) is not an image to flash", "header_required": "the image has no header and the switch requires one",
+    "no_header": "no header inside the image (an older image): its identity cannot be checked", "ok": "ok",
+}
+
+
+def _image_info(args) -> int:
+    """image-info FILE: read the header inside a firmware image and say what the compatibility switch decides. Touches no bus."""
+    if not args.plan:
+        _say("ERROR: image-info needs the firmware image.")
+        return EXIT_USAGE
+    hardware = None
+    if args.hardware:
+        try:
+            hardware = _BOARDS[args.hardware] if args.hardware in _BOARDS else int(args.hardware, 0)
+        except ValueError:
+            _say(f"ERROR: --hardware is main, slave or a number, not {args.hardware!r}.")
+            return EXIT_USAGE
+    try:
+        data = Path(args.plan).read_bytes()
+    except OSError as exc:
+        _say(f"ERROR: cannot read the image: {exc}")
+        return EXIT_USAGE
+    check = image_header.inspect_image(data, args.policy or image_header.DEFAULT_POLICY, hardware)
+    info = check.info
+    if args.json:
+        _say(json.dumps({"file": Path(args.plan).name, "bytes": len(data), "kind": check.kind, "accepted": check.accepted, "reason": check.reason, "warning": check.warn,
+                         "policy": image_header.parse_policy(args.policy), "hardware_id": None if info is None else f"0x{info.hardware_id:08X}",
+                         "version": None if info is None else info.version_text(), "length": None if info is None else info.payload_length,
+                         "crc32": None if info is None else f"0x{info.payload_crc32:08X}"}, indent=2))
+    else:
+        _say(f"Image: {Path(args.plan).name} ({len(data)} bytes)")
+        if info is not None:
+            _say(f"  hardware: 0x{info.hardware_id:08X}   version: {info.version_text()}   length: {info.payload_length}   CRC-32: 0x{info.payload_crc32:08X}")
+        _say(f"  {'ACCEPTED' if check.accepted else 'REFUSED'}{' with a warning' if check.warn else ''}: {_REASONS.get(check.reason, check.reason)}")
+    return EXIT_PASS if check.accepted else EXIT_FAIL
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -260,6 +310,8 @@ def main(argv: list[str] | None = None) -> int:
         return _report(args, report_out)
     if args.command == "history":
         return _history(args)
+    if args.command == "image-info":
+        return _image_info(args)
     if args.command in ("run-plan", "validate-plan"):
         if not args.plan:
             _say(f"ERROR: {args.command} needs the plan file.")

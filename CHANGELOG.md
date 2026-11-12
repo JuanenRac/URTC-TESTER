@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **`--headless image-info FILE` reads the header inside a firmware image:** it prints the hardware, version, length and CRC-32 the image states and what the compatibility switch decides (`--policy accept|warn|require`, default `warn`; `--hardware` names the board it must be for; `--json`); a header that does not hold, an unsealed slot and a stamped `.urimg` file are refused whatever the switch says. It opens no bus.
+
 ## [0.5.4] - The Spanish texts say "grabar" and "velocidad de bus": the calques "flashear", "flasheo" and "bitrate" are replaced in the window, the guide, the Spanish README and the shared sections, with the gender of the sentence... (and 7 more changes)
 
 - **The Spanish texts say "grabar" and "velocidad de bus":** the calques "flashear", "flasheo" and "bitrate" are replaced in the window, the guide, the Spanish README and the shared sections, with the gender of the sentence corrected, so the README names what the window shows.

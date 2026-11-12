@@ -9,6 +9,7 @@
 | `run-plan FILE` | Runs a test plan (below). |
 | `validate-plan FILE` | Checks a plan without opening any bus. |
 | `history [FOLDER]` | Lists the evidence records (`urtc-evidence/1`) of a folder (by default the `--out` folder), newest first, and checks each one: a record edited after it was written is listed as not valid and the exit status is 1. The result records the tester writes next to its evidence (`<name>_<time>.json`) and the update reports of the flasher are not evidence: they are recognized by their shape, counted apart as other records and listed by name and type, never as not valid. `--json` prints the list with its summary and the `others`. Opens no bus. |
+| `image-info FILE` | Reads the header inside a firmware image (hardware, version, length, CRC-32) and says what the compatibility switch decides: `--policy accept|warn|require` for an image without the header (default `warn`; a header that is there is always checked), `--hardware main|slave|NUMBER` for the board it must be for; `--json` prints the facts. Exit 1 when the file is refused. Opens no bus. |
 | `report --evidence-dir DIR --out FILE` | Writes a report of the evidence records of `DIR` as one HTML page or a PDF (below). Opens no bus. |
 
 | Option | Meaning |

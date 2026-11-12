@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Linguaggio-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-896-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-904-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocollo-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Versione | `0.5.4` |
 | Maturità | Funzionale |
-| Test | 896 (`python -m pytest -q`) |
+| Test | 904 (`python -m pytest -q`) |
 | Tecnologia | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destinazione | Il PC di chi lo usa |
 | Su hardware reale | Solo simulato: provato con emulatori, test double o simulatori; per questa versione non risulta alcuna esecuzione su hardware reale |
@@ -405,6 +405,8 @@ strumento.
 
 `python urtc_tester.py --headless COMANDO` esegue il tester senza finestra, per una linea di produzione, uno script di banco o un lavoro di CI: `info` (chi risponde: utensile, firmware, stato rapido), `selftest`, `run-plan FILE` e `validate-plan FILE`. Un piano è un breve file JSON di passi nella cartella `plans/` (attendere un utensile, nessun guasto, una versione minima del firmware, l'autotest, un frame il cui valore sta in un intervallo, un'attesa, una domanda alla persona al banco). Il comando scrive un registro di ogni frame e un record di risultato che nomina il registro tramite il suo SHA-256, lo stesso record del pannello. Un piano invia solo interrogazioni a meno che dica `"actuation": true` e l'operatore aggiunga `--allow-actuation`; i frame del bootloader, di aggiornamento, di configurazione e di cancellazione non vengono mai inviati, un comando che il firmware abbandona se non viene rinfrescato (un riscaldatore, un trapano, un laser) può essere ripetuto mentre il piano attende (`keepalive_ms`), e dopo un piano che ha comandato qualcosa tutte le uscite vengono spente di nuovo. `--transport simulate` riproduce una testa utensile simulata e `--transport replay --port FILE` una traccia `.trc` o `.asc` registrata, così un piano si può provare senza scheda. Codice di uscita: 0 superato, 1 una verifica è fallita, 2 il piano o gli argomenti sono errati, 3 la prova non ha potuto essere eseguita, 4 nulla è fallito ma le prove non bastano per decidere (indeterminato). Il testo stampato è in inglese, come la riga di comando del flasher. Dettagli in [`docs/HEADLESS.md`](docs/HEADLESS.md). Nulla di tutto ciò è stato eseguito su una scheda reale.
 
+`image-info FILE` (anche senza finestra) legge l'intestazione che un'immagine firmware porta al suo interno: l'hardware a cui è destinata, la sua versione, la sua lunghezza e il suo CRC-32. Dice se il file è accettato, accettato con un avviso (un'immagine precedente senza intestazione) o rifiutato (un'intestazione che non regge, un file `.urimg` timbrato, un'altra scheda con `--hardware main|slave`), e `--policy accept|warn|require` è l'interruttore di compatibilità per un'immagine senza intestazione. Non apre alcun bus.
+
 **Piani nella finestra (nuovo, verificato solo con test e la testa simulata):** la sezione PIANI DI TEST, in fondo alla colonna di destra del deck, elenca i piani di `plans/`, esegue quello scelto sulla scheda collegata con lo stesso motore (non in modalità solo ascolto e solo finché nient'altro legge il bus), mostra ogni passo appena termina, pone in una finestra di dialogo le domande di un passo di conferma e salva il log e il record del risultato. Un piano che comanda uscite chiede prima una conferma e alla fine tutte le uscite vengono spente; Annulla lo ferma dopo il passo in corso.
 
 **Cerca aggiornamenti.** Il pulsante «Cerca aggiornamenti» interroga GitHub una volta sull'ultima release e propone il download solo se contiene un pacchetto per questo sistema più recente della versione installata. Il pacchetto è accettato solo se SHA-256 e firma Ed25519 (la chiave delle release, fissata nel programma) sono validi; viene installato solo dopo la tua conferma, mai finché un'uscita è attiva, e la versione precedente è conservata per tornare indietro (e ripristinata da sola se la nuova non si avvia). Nulla viene mai controllato o installato da solo: il controllo all'avvio è un'opzione, spenta per impostazione predefinita, e la conferma si disattiva solo nella stessa finestra dopo un avviso.
@@ -496,7 +498,7 @@ Quali versioni dei programmi URTC funzionano insieme, e quale versione del proto
 
 ## 🧪 Test
 
-La suite ha 896 test (`python -m pytest -q`; con Qt su una macchina senza schermo, `QT_QPA_PLATFORM=offscreen`; quelli che richiedono PySide6 vengono saltati senza): i codificatori e decodificatori dei payload CAN di ogni famiglia di utensili, i trasporti SLCAN e SocketCAN contro finti, la sonda di identità, l'autotest, i reinvii di sorveglianza, il controllo di salute del bus, i piani di test e la modalità senza finestra, l'esportazione della sessione con il suo hash, i file di lingua e i pannelli Qt Quick. Quattro script nella radice (`verify_qt_*.py`) pilotano i pannelli Qt Quick end-to-end con un vero ciclo di eventi Qt. La CI esegue anche `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Niente di tutto questo è girato contro una scheda reale.
+La suite ha 904 test (`python -m pytest -q`; con Qt su una macchina senza schermo, `QT_QPA_PLATFORM=offscreen`; quelli che richiedono PySide6 vengono saltati senza): i codificatori e decodificatori dei payload CAN di ogni famiglia di utensili, i trasporti SLCAN e SocketCAN contro finti, la sonda di identità, l'autotest, i reinvii di sorveglianza, il controllo di salute del bus, i piani di test e la modalità senza finestra, l'esportazione della sessione con il suo hash, i file di lingua e i pannelli Qt Quick. Quattro script nella radice (`verify_qt_*.py`) pilotano i pannelli Qt Quick end-to-end con un vero ciclo di eventi Qt. La CI esegue anche `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Niente di tutto questo è girato contro una scheda reale.
 
 ## 🏗️ Compilazione e rilascio
 
