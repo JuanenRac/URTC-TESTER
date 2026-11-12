@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The black box record is tested over generated inputs with a fixed seed:** what the firmware builds is read back with every count and write index, a flipped bit anywhere in a record is refused, random bytes are never a record, a saved JSON or CSV file reads back exactly, and a damaged or cut file is refused with the error of the module and never another.
+
 - **A bus that mixes speeds is recognised by its symptoms:** a head at another speed cannot be heard, so the protocol gains nothing from it declaring its speed; the tester warns when the heads that are heard show error counters or a bus-off (health frame `0x1B8`), when a search at every speed finds nobody, or when a head known to be built for 500 kbit/s is on the bus. `bus_health` in `config.json` sets the thresholds (`tec_warn`, `rec_warn`, `bus_off_warn`, `legacy_heads`). The four texts are in the eight languages. The window judges the health frames that go by while it polls the board, so the warning appears by itself. Tested with the virtual bus; nothing has run on a real one.
 
 - **The tester opens the bus at 1 Mbit/s, the speed of the tool heads:** the default speed of the adapter, of the bus load and of the command line is the `BITRATE` of the shared specification, the search for the speed of a bus tries 1 Mbit/s first and 500 kbit/s second, and an unknown label gives the default. **Compatibility note:** every board and adapter of one bus must run at the same speed (the default is now 1 Mbit/s; early boards run at 500 kbit/s), the trunk should stay under about 25 m at 1 Mbit/s with short stubs and a 120 ohm termination at each end.
