@@ -10,6 +10,10 @@
       "from": "src/urtc_common/blackbox.py",
       "sha256": "a2deaf4ccc731fc9acc633c04b0ccc5d93356e40b07c3ef35ad620e56dc74bbf"
     },
+    "bus_health.py": {
+      "from": "src/urtc_common/bus_health.py",
+      "sha256": "36edb06b9fb55c15e8b59ed1cc7452c519754430a9e0e5eb7dab0b730519505c"
+    },
     "bus_scenario.py": {
       "from": "src/urtc_common/bus_scenario.py",
       "sha256": "5121706c348576fd5ca4a48e03c1a102bf01e0e8aab6146f421cc8bebd9ac195"

@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-933-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-944-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Versão | `0.5.4` |
 | Maturidade | Funcional |
-| Testes | 933 (`python -m pytest -q`) |
+| Testes | 944 (`python -m pytest -q`) |
 | Tecnologia | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destino | O PC de quem o usa |
 | Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |
@@ -440,6 +440,8 @@ a descrição completa ficheiro a ficheiro.
 
 **Subir uma ferramenta ligada**: uma ferramenta cujo comando se repete (um aquecedor, um berbequim, o laser) toma o valor que foi confirmado ao ligá-la. Subi-la mais de 20 % acima desse valor pede nova confirmação (baixar nunca pede, e arrastar em passos pequenos não deixa passar o limite). `"power_guard"` em `config.json` altera isto: `"rise_percent"` (um inteiro de 0 a 500) define a percentagem e `"enabled": false` desliga a pergunta (ligada por omissão). Um valor fora desses limites mantém o valor por omissão.
 
+**Um barramento que mistura velocidades**: uma cabeça a outra velocidade que a do barramento não se ouve, por isso não pode declarar a sua velocidade; o testador reconhece o barramento pelos seus sintomas e mostra um aviso: os contadores de erros ou um bus-off das cabeças que se ouvem (trama de saúde `0x1B8`), uma pesquisa a todas as velocidades que não encontra ninguém, ou uma cabeça que se sabe feita para 500 kbit/s. `"bus_health"` em `config.json` define os limiares: `"tec_warn"`, `"rec_warn"` e `"bus_off_warn"` (inteiros de 1 a 255; 96, 96 e 1 por omissão) e `"legacy_heads"` (os nomes ou números de série das cabeças feitas para 500 kbit/s). Um valor fora dos limites mantém o valor por omissão. Testado com barramentos simulados; nada correu num barramento real.
+
 **Idioma**: inglês por predefinição. Alterado com o seletor de idioma no cabeçalho da janela - altera a interface (rótulos, botões, caixas de diálogo e mensagens de registo) para qualquer um dos 8 idiomas disponíveis, guardado
 imediatamente em `config.json` junto a esta ferramenta, aplicado no próximo
 arranque. As traduções residem em ficheiros de texto simples em `language/`
@@ -470,7 +472,7 @@ As versões dos programas URTC que funcionam em conjunto, e a versão do protoco
 
 ## 🧪 Testes
 
-O conjunto tem 933 testes (`python -m pytest -q`; com Qt numa máquina sem ecrã, `QT_QPA_PLATFORM=offscreen`; os que precisam do PySide6 são ignorados sem ele): os codificadores e descodificadores de carga CAN de cada família de ferramentas, os transportes SLCAN e SocketCAN contra simulações, a sonda de identidade, o autoteste, os reenvios de vigilância, a verificação de saúde do barramento, os planos de teste e o modo sem janela, a exportação da sessão com o seu hash, os ficheiros de idioma e os painéis Qt Quick. Quatro scripts na raiz (`verify_qt_*.py`) comandam os painéis Qt Quick de ponta a ponta com um ciclo de eventos Qt real. A CI executa também `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Nada disto correu contra uma placa real.
+O conjunto tem 944 testes (`python -m pytest -q`; com Qt numa máquina sem ecrã, `QT_QPA_PLATFORM=offscreen`; os que precisam do PySide6 são ignorados sem ele): os codificadores e descodificadores de carga CAN de cada família de ferramentas, os transportes SLCAN e SocketCAN contra simulações, a sonda de identidade, o autoteste, os reenvios de vigilância, a verificação de saúde do barramento, os planos de teste e o modo sem janela, a exportação da sessão com o seu hash, os ficheiros de idioma e os painéis Qt Quick. Quatro scripts na raiz (`verify_qt_*.py`) comandam os painéis Qt Quick de ponta a ponta com um ciclo de eventos Qt real. A CI executa também `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Nada disto correu contra uma placa real.
 
 ## 🏗️ Compilação e publicação
 

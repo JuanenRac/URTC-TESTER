@@ -508,6 +508,22 @@ class BusHealthTracker:
         return problems
 
 
+BUS_SYMPTOM_KEYS = {
+    "mixed_bus_suspected": "STATE_MIXED_BUS_SUSPECTED",
+    "no_head_at_any_speed": "STATE_NO_HEAD_AT_ANY_SPEED",
+    "bus_errors": "STATE_BUS_ERRORS",
+    "legacy_head_known": "STATE_LEGACY_HEAD_KNOWN",
+}
+
+
+def bus_symptoms(profile_frames, found_nobody_at_any_speed: bool = False, heads_on_bus=(), thresholds=None) -> list[tuple[str, dict]]:
+    """The warnings about the bus that its symptoms give, as (translation key, arguments) like BusHealthTracker.evaluate: the health frames (0x1B8) of the heads that were
+    heard, a search that found nobody at any speed and the heads known to be built for 500 kbit/s. No change of the protocol: a head at another speed cannot be heard."""
+    from urtc_can import bus_health
+    profiles = [fields for fields in (protocol.decode_health_profile(bytes(frame)) for frame in profile_frames) if fields]
+    return [(BUS_SYMPTOM_KEYS[code], {}) for code in bus_health.warnings(profiles, found_nobody_at_any_speed, heads_on_bus, thresholds)]
+
+
 def firmware_version_text(major: int, minor: int, patch_frame: bytes | None) -> str:
     """The firmware version as the board reported it. 0x7F9 carries only major and minor; firmware from 0.3.5 on adds the
     patch in the companion frame 0x7E9 right after it. Without that frame, or with the patch marked unknown (0xFF), the patch is not

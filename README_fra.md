@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Langage-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-933-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-944-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocole-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.5.4` |
 | Maturité | Fonctionnel |
-| Tests | 933 (`python -m pytest -q`) |
+| Tests | 944 (`python -m pytest -q`) |
 | Technologie | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
@@ -474,6 +474,8 @@ Cet outil est organisé en modules par responsabilité, purement pour la lisibil
 
 **Augmenter un outil allumé** : un outil dont la commande se répète (un chauffage, une perceuse, le laser) prend la valeur confirmée à son allumage. Le monter de plus de 20 % au-dessus de cette valeur demande une nouvelle confirmation (baisser ne demande jamais, et un glissement par petits pas ne permet pas de dépasser la limite). `"power_guard"` dans `config.json` le modifie : `"rise_percent"` (un entier de 0 à 500) fixe le pourcentage et `"enabled": false` supprime la question (activée par défaut). Une valeur hors de ces limites garde la valeur par défaut.
 
+**Un bus qui mélange les vitesses** : une tête à une autre vitesse que le bus ne s'entend pas, elle ne peut donc pas déclarer sa vitesse ; le testeur reconnaît le bus à ses symptômes et affiche un avertissement : les compteurs d'erreurs ou un bus-off des têtes que l'on entend (trame de santé `0x1B8`), une recherche à toutes les vitesses qui ne trouve personne, ou une tête connue pour être prévue pour 500 kbit/s. `"bus_health"` dans `config.json` fixe les seuils : `"tec_warn"`, `"rec_warn"` et `"bus_off_warn"` (entiers de 1 à 255 ; 96, 96 et 1 par défaut) et `"legacy_heads"` (les noms ou numéros de série des têtes prévues pour 500 kbit/s). Une valeur hors des limites garde la valeur par défaut. Testé avec des bus simulés ; rien n'a tourné sur un vrai bus.
+
 **Langue** : anglais par défaut. Se change avec le sélecteur de langue de l'en-tête de la fenêtre - change l'interface (étiquettes, boutons, dialogues, et messages de journal) vers l'une des 8 langues disponibles,
 enregistre immédiatement dans `config.json` à côté de cet outil,
 appliqué au prochain démarrage. Les traductions vivent dans des fichiers
@@ -506,7 +508,7 @@ Les versions des programmes URTC qui fonctionnent ensemble, et la version du pro
 
 ## 🧪 Tests
 
-La suite compte 933 tests (`python -m pytest -q` ; avec Qt sur une machine sans écran, `QT_QPA_PLATFORM=offscreen` ; ceux qui ont besoin de PySide6 sont ignorés sans lui) : les encodeurs et décodeurs de charge CAN de chaque famille d'outils, les transports SLCAN et SocketCAN face à des faux, la sonde d'identité, l'autotest, les renvois de surveillance, le contrôle de santé du bus, les plans de test et le mode sans fenêtre, l'export de session avec son hachage, les fichiers de langue et les panneaux Qt Quick. Quatre scripts à la racine (`verify_qt_*.py`) pilotent les panneaux Qt Quick de bout en bout avec une vraie boucle d'événements Qt. La CI exécute aussi `ruff check`, `python -m mypy` et `tools/ci_validate.py`. Rien de tout cela n'a tourné contre une vraie carte.
+La suite compte 944 tests (`python -m pytest -q` ; avec Qt sur une machine sans écran, `QT_QPA_PLATFORM=offscreen` ; ceux qui ont besoin de PySide6 sont ignorés sans lui) : les encodeurs et décodeurs de charge CAN de chaque famille d'outils, les transports SLCAN et SocketCAN face à des faux, la sonde d'identité, l'autotest, les renvois de surveillance, le contrôle de santé du bus, les plans de test et le mode sans fenêtre, l'export de session avec son hachage, les fichiers de langue et les panneaux Qt Quick. Quatre scripts à la racine (`verify_qt_*.py`) pilotent les panneaux Qt Quick de bout en bout avec une vraie boucle d'événements Qt. La CI exécute aussi `ruff check`, `python -m mypy` et `tools/ci_validate.py`. Rien de tout cela n'a tourné contre une vraie carte.
 
 ## 🏗️ Compilation et publication
 

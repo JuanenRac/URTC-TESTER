@@ -151,6 +151,13 @@ def power_rise_needs_confirmation(confirmed, new, settings=None):
     return new > confirmed * (1 + settings.get("rise_percent", 20) / 100.0)
 
 
+def bus_health_thresholds(config=None):
+    """The thresholds of the bus-health warnings from ``bus_health`` in config.json: ``tec_warn``, ``rec_warn`` and ``bus_off_warn`` (whole numbers from 1 to 255; a value
+    outside keeps its default) and ``legacy_heads`` (names or serial numbers of the heads built for 500 kbit/s)."""
+    from urtc_can import bus_health
+    return bus_health.thresholds_from_config((load_config() if config is None else config).get("bus_health"))
+
+
 def evidence_signing_settings(config=None):
     """(enabled, key file) for the Ed25519 signature of the evidence records, from config.json.
 

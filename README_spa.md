@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Lenguaje-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-933-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-944-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocolo-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Versión | `0.5.4` |
 | Madurez | Funcional |
-| Tests | 933 (`python -m pytest -q`) |
+| Tests | 944 (`python -m pytest -q`) |
 | Tecnología | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Destino | El PC de quien lo usa |
 | En hardware real | Solo simulado: probado con emuladores, dobles de prueba o simuladores; no consta ninguna ejecución en hardware real para esta versión |
@@ -469,6 +469,8 @@ Esta herramienta está organizada en módulos por responsabilidad, puramente por
 
 **Subir una herramienta encendida**: una herramienta cuya orden se repite (un calentador, un taladro, el láser) toma el valor que se confirmó al encenderla. Subirla más de un 20 % sobre ese valor pide una nueva confirmación (bajar nunca la pide, y arrastrar en pasos pequeños no permite pasar el límite). `"power_guard"` en `config.json` lo cambia: `"rise_percent"` (un entero de 0 a 500) fija el porcentaje y `"enabled": false` apaga la pregunta (encendida por defecto). Un valor fuera de esos límites mantiene el valor por defecto.
 
+**Un bus que mezcla velocidades**: un cabezal a otra velocidad que el bus no se oye, así que no puede declarar su velocidad; el tester reconoce el bus por sus síntomas y muestra un aviso: los contadores de error o un bus-off de los cabezales que se oyen (trama de salud `0x1B8`), una búsqueda a todas las velocidades que no encuentra a nadie, o un cabezal que se sabe hecho para 500 kbit/s. `"bus_health"` en `config.json` fija los umbrales: `"tec_warn"`, `"rec_warn"` y `"bus_off_warn"` (enteros de 1 a 255; 96, 96 y 1 por defecto) y `"legacy_heads"` (los nombres o números de serie de los cabezales hechos para 500 kbit/s). Un valor fuera de los límites mantiene el valor por defecto. Probado con buses simulados; nada ha corrido en un bus real.
+
 **Idioma**: inglés por defecto. Se cambia con el selector de idioma de la cabecera de la ventana - cambia la interfaz (etiquetas, botones, diálogos, y mensajes de registro) a cualquiera de los 8 idiomas disponibles, se guarda inmediatamente en `config.json` junto a esta
 herramienta, y se aplica en el siguiente arranque. Las traducciones
 viven en archivos de texto plano bajo `language/` (`english.lng`,
@@ -500,7 +502,7 @@ Qué versiones de los programas de URTC funcionan juntas, y qué versión del pr
 
 ## 🧪 Pruebas
 
-La suite tiene 933 pruebas (`python -m pytest -q`; con Qt en un equipo sin pantalla, `QT_QPA_PLATFORM=offscreen`; las que necesitan PySide6 se omiten sin él): los codificadores y decodificadores de carga CAN de cada familia de herramientas, los transportes SLCAN y SocketCAN contra simulados, la sonda de identidad, el autotest, los reenvíos de vigilancia, la comprobación de salud del bus, los planes de prueba y el modo sin ventana, la exportación de sesión con su hash, los archivos de idioma y los paneles Qt Quick. Cuatro scripts en la raíz (`verify_qt_*.py`) manejan los paneles Qt Quick de extremo a extremo con un bucle de eventos Qt real. La CI ejecuta además `ruff check`, `python -m mypy` y `tools/ci_validate.py`. Nada de esto se ha ejecutado contra una placa real.
+La suite tiene 944 pruebas (`python -m pytest -q`; con Qt en un equipo sin pantalla, `QT_QPA_PLATFORM=offscreen`; las que necesitan PySide6 se omiten sin él): los codificadores y decodificadores de carga CAN de cada familia de herramientas, los transportes SLCAN y SocketCAN contra simulados, la sonda de identidad, el autotest, los reenvíos de vigilancia, la comprobación de salud del bus, los planes de prueba y el modo sin ventana, la exportación de sesión con su hash, los archivos de idioma y los paneles Qt Quick. Cuatro scripts en la raíz (`verify_qt_*.py`) manejan los paneles Qt Quick de extremo a extremo con un bucle de eventos Qt real. La CI ejecuta además `ruff check`, `python -m mypy` y `tools/ci_validate.py`. Nada de esto se ha ejecutado contra una placa real.
 
 ## 🏗️ Compilación y publicación
 

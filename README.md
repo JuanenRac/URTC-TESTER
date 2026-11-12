@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-933-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-944-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.5.4` |
 | Maturity | Functional |
-| Tests | 933 (`python -m pytest -q`) |
+| Tests | 944 (`python -m pytest -q`) |
 | Stack | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |
@@ -440,6 +440,8 @@ the full file-by-file breakdown.
 
 **Raising a tool that is on**: a tool whose command repeats (a heater, a drill, the laser) takes the value that was confirmed when it was switched on. Raising it by more than 20 % over that value asks for a confirmation again (lowering never asks, and a drag in small steps cannot creep past the limit). `"power_guard"` in `config.json` changes it: `"rise_percent"` (a whole number from 0 to 500) sets the percentage and `"enabled": false` turns the question off (on by default). A value outside those limits keeps the default.
 
+**A bus that mixes speeds**: a head at another speed than the bus cannot be heard, so it cannot state its speed; the tester recognises the bus by its symptoms and shows a warning: the error counters or a bus-off of the heads that are heard (health frame `0x1B8`), a search at every speed that finds nobody, or a head known to be built for 500 kbit/s. `"bus_health"` in `config.json` sets the thresholds: `"tec_warn"`, `"rec_warn"` and `"bus_off_warn"` (whole numbers from 1 to 255; 96, 96 and 1 by default) and `"legacy_heads"` (the names or serial numbers of the heads built for 500 kbit/s). A value outside the limits keeps the default. Tested with simulated buses; nothing has run on a real bus.
+
 **Language**: English by default. Chosen with the selector in the header of the window - switches the interface (labels, buttons, dialogs, and log messages) to any of the 8 available languages, saved
 immediately to `config.json` next to this tool, applied on the next
 launch. Translations live in plain text files under `language/`
@@ -470,7 +472,7 @@ Which versions of the URTC programs work together, and which protocol version ea
 
 ## 🧪 Testing
 
-The suite has 933 tests (`python -m pytest -q`; with Qt on a machine with no screen, `QT_QPA_PLATFORM=offscreen`; the ones that need PySide6 skip without it): the CAN payload encoders and decoders of every tool family, the SLCAN and SocketCAN transports against fakes, the identity probe, the self-test, the watchdog keepalives, the bus-health check, the test plans and the headless mode, the session export with its hash, the language files and the Qt Quick panels. Four scripts at the root (`verify_qt_*.py`) drive the Qt Quick panels end to end with a real Qt event loop. CI also runs `ruff check`, `python -m mypy` and `tools/ci_validate.py`. None of it has run against a real board.
+The suite has 944 tests (`python -m pytest -q`; with Qt on a machine with no screen, `QT_QPA_PLATFORM=offscreen`; the ones that need PySide6 skip without it): the CAN payload encoders and decoders of every tool family, the SLCAN and SocketCAN transports against fakes, the identity probe, the self-test, the watchdog keepalives, the bus-health check, the test plans and the headless mode, the session export with its hash, the language files and the Qt Quick panels. Four scripts at the root (`verify_qt_*.py`) drive the Qt Quick panels end to end with a real Qt event loop. CI also runs `ruff check`, `python -m mypy` and `tools/ci_validate.py`. None of it has run against a real board.
 
 ## 🏗️ Build & Release
 
