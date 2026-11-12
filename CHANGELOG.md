@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The title of the advanced flying probe panel is translated in German, French and Italian:** it was left in English ("Advanced") in those three languages.
+
 - **The shared document policy check is refreshed:** `tools/_doc_policy.py` and `tools/ci_validate.py` are the current copies, which also fail when a build script changes a version and when a script switches into a virtual environment instead of running its python directly. The run scripts run the python of the virtual environment directly.
 
 - **A tool that is on asks again before it goes up too far:** a tool whose command repeats (a heater, a drill, the laser) takes the value confirmed when it was switched on; raising it by more than 20 % over that value goes through the deck's confirmation first (lowering never asks, and a drag in small steps cannot creep past the limit). `power_guard` in `config.json` sets the percentage (`rise_percent`, a whole number from 0 to 500) and the switch (`enabled`, on by default). Tested with the fake host; nothing has run against a real board.
