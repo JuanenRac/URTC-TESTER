@@ -147,7 +147,7 @@ class BitrateTests(unittest.TestCase):
         self.assertEqual(bitrate_bps_for_label("500 kbit/s"), 500000)
         self.assertEqual(bitrate_bps_for_label("125 kbit/s"), 125000)
         self.assertEqual(bitrate_bps_for_label("1 Mbit/s"), 1000000)
-        self.assertEqual(bitrate_bps_for_label("???"), 500000)
+        self.assertEqual(bitrate_bps_for_label("???"), 1000000)      # the default speed of the bus of the tool heads
 
 
 @unittest.skipIf(qt_tester is None, "PySide6 is not available")

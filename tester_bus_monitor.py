@@ -9,7 +9,9 @@ import threading
 import time
 
 from tester_config import _
-from urtc_can import node_monitor
+from urtc_can import node_monitor, protocol
+
+BUS_BITRATE_BPS = protocol.BITRATE   # the default speed of the bus of the tool heads (the load is counted against it)
 
 class CANBusMonitor:
     """Owns the one and only background thread reading frames off the
@@ -246,7 +248,7 @@ class BusStats:
         while self._events and self._events[0][0] < cutoff:
             self._events.popleft()
 
-    def snapshot(self, bitrate_bps=500000):
+    def snapshot(self, bitrate_bps=BUS_BITRATE_BPS):
         """(frames_per_second, bus_load_percent) over the last window."""
         now = self._clock()
         with self._lock:

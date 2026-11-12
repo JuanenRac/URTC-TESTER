@@ -71,7 +71,7 @@ def slcan(monkeypatch):
 # ---- SLCAN ---------------------------------------------------------------------------------
 def test_opening_the_channel_closes_sets_the_bitrate_then_opens(slcan):
     slcan.open_channel()
-    assert slcan.ser.written == b"C\rS6\rO\r"
+    assert slcan.ser.written == b"C\rS8\rO\r"
     assert slcan.listen_only is False
 
 

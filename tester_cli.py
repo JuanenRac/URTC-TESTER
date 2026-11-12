@@ -39,11 +39,11 @@ from pathlib import Path
 import tester_plan
 from tester_config import TESTER_VERSION, evidence_signing_settings, trusted_keys_store
 from tester_result_record import make_record, save_evidence, save_record
-from urtc_can import image_header
+from urtc_can import image_header, protocol
 
 EXIT_PASS, EXIT_FAIL, EXIT_USAGE, EXIT_ERROR, EXIT_UNKNOWN, EXIT_CANCELLED = 0, 1, 2, 3, 4, 130
 TRANSPORTS = ("serial", "socketcan", "python-can", "simulate", "replay")
-BITRATE = 500000
+BITRATE = protocol.BITRATE
 
 
 def _say(message: str) -> None:

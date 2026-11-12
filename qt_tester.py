@@ -56,7 +56,8 @@ from tester_config import (
     AOI_STROBE_MAX_MS,
     SETPOINT_MAX_C,
     LOGS_FOLDER,
-    BITRATE_500K_SLCAN_CODE,
+    BITRATE_DEFAULT_SLCAN_CODE,
+    DEFAULT_BITRATE_LABEL,
     SLCAN_BITRATES,
     bitrate_bps_for_label,
     load_config,
@@ -178,7 +179,7 @@ class TesterQtBridge(QObject):
         saved = load_config()
         self._preferred_port = str(saved.get("port", ""))
         saved_bitrate = saved.get("bitrate")
-        self._bitrate_label = saved_bitrate if saved_bitrate in dict(SLCAN_BITRATES) else "500 kbit/s"
+        self._bitrate_label = saved_bitrate if saved_bitrate in dict(SLCAN_BITRATES) else DEFAULT_BITRATE_LABEL
         self._selected_port = ""
         self._transport: Any = None
         self._listen_only = True
@@ -1261,7 +1262,7 @@ class TesterQtBridge(QObject):
                 transport.open_channel(listen_only=self._listen_only)
             else:
                 transport = SLCAN(self._selected_port, log=self._log)
-                transport.open_channel(dict(SLCAN_BITRATES).get(self._bitrate_label, BITRATE_500K_SLCAN_CODE), listen_only=self._listen_only)
+                transport.open_channel(dict(SLCAN_BITRATES).get(self._bitrate_label, BITRATE_DEFAULT_SLCAN_CODE), listen_only=self._listen_only)
             self._connectionResult.emit(transport, "")
         except Exception as exc:
             self._connectionResult.emit(None, str(exc))

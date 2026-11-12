@@ -52,4 +52,4 @@ def test_the_list_the_selector_the_bitrate_and_the_badge_come_from_the_shared_in
     assert bridge.statusColor == urtc_ui.connection_badge(True, bridge._listen_only).colour
     assert tester_config.bitrate_bps_for_label("1 Mbit/s") == 1_000_000
     assert tester_config.bitrate_bps_for_label("125 kbit/s") == 125_000
-    assert tester_config.bitrate_bps_for_label("nonsense") == 500_000
+    assert tester_config.bitrate_bps_for_label("nonsense") == 1_000_000      # the default speed of the bus of the tool heads

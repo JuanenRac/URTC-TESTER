@@ -24,10 +24,10 @@ def settings_file(tmp_path, monkeypatch):
 
 # ---- bitrates ------------------------------------------------------------------------------------------------------
 
-def test_a_bitrate_label_gives_its_bits_per_second_and_an_unknown_one_gives_500_kbit(monkeypatch):
+def test_a_bitrate_label_gives_its_bits_per_second_and_an_unknown_one_gives_the_default_1_mbit(monkeypatch):
     assert config.bitrate_bps_for_label("500 kbit/s") == 500000
     assert config.bitrate_bps_for_label("1 Mbit/s") == 1000000
-    assert config.bitrate_bps_for_label("nonsense") == 500000
+    assert config.bitrate_bps_for_label("nonsense") == 1000000
 
 
 # ---- config.json -------------------------------------------------------------------------------------------------------

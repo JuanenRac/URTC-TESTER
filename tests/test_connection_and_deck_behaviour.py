@@ -371,7 +371,7 @@ class QtDeckTests(unittest.TestCase):
 
     def test_the_bit_rate_cannot_change_while_connected(self):
         self.bridge.selectBitrate("10 kbit/s")
-        self.assertEqual(self.bridge.selectedBitrate, "500 kbit/s")
+        self.assertEqual(self.bridge.selectedBitrate, "1 Mbit/s")
 
     def test_the_port_is_remembered(self):
         bridge = self.bridge

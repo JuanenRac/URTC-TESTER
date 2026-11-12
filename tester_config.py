@@ -27,20 +27,21 @@ TESTER_AUTHOR = "JuanenRac"
 # answering than the one this was set up for), never to gate anything.
 THIS_HARDWARE_ID = protocol.HARDWARE_ID_MAIN
 
-BITRATE_500K_SLCAN_CODE = "6"  # SLCAN's "Sx" bitrate codes: 6 = 500 kbit/s
+BITRATE_DEFAULT_SLCAN_CODE = protocol.SLCAN_BITRATE_DEFAULT_CODE  # SLCAN's "Sx" bitrate codes: 8 = 1 Mbit/s, the speed of the bus of the tool heads
 SLCAN_BITRATES = [
     ("10 kbit/s", "0"), ("20 kbit/s", "1"), ("50 kbit/s", "2"),
     ("100 kbit/s", "3"), ("125 kbit/s", "4"), ("250 kbit/s", "5"),
     ("500 kbit/s", "6"), ("800 kbit/s", "7"), ("1 Mbit/s", "8"),
 ]
+DEFAULT_BITRATE_LABEL = next(label for label, code in SLCAN_BITRATES if code == BITRATE_DEFAULT_SLCAN_CODE)
 
 
 def bitrate_bps_for_label(label):
-    """Bits per second of a bitrate label such as "500 kbit/s" or "1 Mbit/s" (500000 when it is not recognised)."""
+    """Bits per second of a bitrate label such as "500 kbit/s" or "1 Mbit/s" (the default rate of the bus, 1 Mbit/s, when it is not recognised)."""
     try:
         return parse_bitrate(str(label))
     except ValueError:
-        return 500000
+        return protocol.BITRATE
 
 
 if getattr(sys, "frozen", False):

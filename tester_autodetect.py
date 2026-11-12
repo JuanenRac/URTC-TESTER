@@ -11,8 +11,8 @@ import time
 from tester_config import CAN_ID_ACTIVE_TOOL_RESP, CAN_ID_QUERY_ACTIVE_TOOL
 from tester_transports import SLCANError
 
-AUTODETECT_ORDER = ("500 kbit/s", "250 kbit/s", "125 kbit/s", "1 Mbit/s",
-                    "100 kbit/s", "50 kbit/s", "20 kbit/s", "10 kbit/s", "800 kbit/s")
+AUTODETECT_ORDER = ("1 Mbit/s", "500 kbit/s", "250 kbit/s", "125 kbit/s",
+                    "100 kbit/s", "50 kbit/s", "20 kbit/s", "10 kbit/s", "800 kbit/s")   # the speed of the bus of the tool heads first, then the legacy one
 
 
 def scan_bitrates(port, slcan_factory, bitrates, log=None, on_try=None, on_traffic=None,

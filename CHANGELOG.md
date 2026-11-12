@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The tester opens the bus at 1 Mbit/s, the speed of the tool heads:** the default speed of the adapter, of the bus load and of the command line is the `BITRATE` of the shared specification, the search for the speed of a bus tries 1 Mbit/s first and 500 kbit/s second, and an unknown label gives the default. **Compatibility note:** every board and adapter of one bus must run at the same speed (the default is now 1 Mbit/s; early boards run at 500 kbit/s), the trunk should stay under about 25 m at 1 Mbit/s with short stubs and a 120 ohm termination at each end.
+
 - **The title of the advanced flying probe panel is translated in German, French and Italian:** it was left in English ("Advanced") in those three languages.
 
 - **The shared document policy check is refreshed:** `tools/_doc_policy.py` and `tools/ci_validate.py` are the current copies, which also fail when a build script changes a version and when a script switches into a virtual environment instead of running its python directly. The run scripts run the python of the virtual environment directly.
