@@ -79,3 +79,45 @@ def warnings(profiles: Iterable[Mapping[str, Any]], found_nobody_at_any_speed: b
     if legacy:
         found.append(LEGACY_HEAD_KNOWN)
     return found
+
+
+# ---- feeding the function from the frames that go by -------------------------------------------------------------------------------------------------
+CAN_ID_HEALTH_PROFILE = 0x1B8       # the health frame of a head (the same value as protocol.CAN_ID_HEALTH_PROFILE; kept here so that a copy needs nothing else)
+
+
+def profile_from_frame(data: bytes) -> dict[str, int] | None:
+    """The three fields of a health frame (0x1B8) that this module judges, or None when the payload is shorter than the bytes it needs (tec, rec, bus_off_count)."""
+    return {"tec": data[0], "rec": data[1], "bus_off_count": data[2]} if len(data) >= 3 else None
+
+
+def profiles_from_frames(frames: Iterable[bytes]) -> list[dict[str, int]]:
+    return [profile for profile in (profile_from_frame(bytes(frame)) for frame in frames) if profile is not None]
+
+
+class HealthTap:
+    """Listens on a transport without changing it: the health frames (0x1B8) that are read are kept, and ``take()`` hands them over and starts again.
+
+    The tool decides when to look (at the end of a flash, of a read, of a poll), so a tool that has no continuous poll still sees what went by while it worked.
+    The transport keeps its own class and identity: only its ``read_frame`` is wrapped, on the instance."""
+
+    def __init__(self, transport: Any, keep: int = 64) -> None:
+        self._frames: list[bytes] = []
+        self._keep = keep
+        self._read = transport.read_frame
+        transport.read_frame = self._tapped          # the instance, not the class: isinstance() and the other methods are untouched
+        self.transport = transport
+
+    def _tapped(self, *args: Any, **kwargs: Any) -> Any:
+        frame = self._read(*args, **kwargs)
+        if frame is not None and frame[0] == CAN_ID_HEALTH_PROFILE:
+            self._frames.append(bytes(frame[1]))
+            del self._frames[:-self._keep]
+        return frame
+
+    def take(self) -> list[bytes]:
+        frames, self._frames = self._frames, []
+        return frames
+
+    def release(self) -> None:
+        """Gives the transport its own ``read_frame`` back."""
+        self.transport.read_frame = self._read
