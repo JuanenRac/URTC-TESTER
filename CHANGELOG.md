@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The shared document policy check is refreshed:** `tools/_doc_policy.py` and `tools/ci_validate.py` are the current copies, which also fail when a build script changes a version and when a script switches into a virtual environment instead of running its python directly. The run scripts run the python of the virtual environment directly.
+
 - **A tool that is on asks again before it goes up too far:** a tool whose command repeats (a heater, a drill, the laser) takes the value confirmed when it was switched on; raising it by more than 20 % over that value goes through the deck's confirmation first (lowering never asks, and a drag in small steps cannot creep past the limit). `power_guard` in `config.json` sets the percentage (`rise_percent`, a whole number from 0 to 500) and the switch (`enabled`, on by default). Tested with the fake host; nothing has run against a real board.
 
 - **The package tool signs the package the Windows build makes:** `tools/make_update_package.py sign PACKAGE` (the copy of URTC-COMMON's tool, refreshed) signs the very bytes of the `.zip` that the manual Windows build in Actions packs without a key, after checking that the `app_info.json` inside agrees with the name of the file, and writes `PACKAGE.sha256` and `PACKAGE.sig` next to it; it then runs the same check the program runs. The package is never rewritten, so the attestation of the build still describes the bytes that are signed. A test checks that the companions are byte for byte the ones a signed build writes.
