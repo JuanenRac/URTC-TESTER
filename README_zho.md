@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-905-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-929-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | 版本 | `0.5.4` |
 | 成熟度 | 可用 |
-| 测试 | 905 (`python -m pytest -q`) |
+| 测试 | 929 (`python -m pytest -q`) |
 | 技术栈 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
@@ -321,6 +321,8 @@ Qt Quick 窗口的标题栏有语言选择器；所选语言会被保存，并�
 
 **重复发送的命令**：固件在不刷新时会丢弃的命令（加热器、钻头、激光、风扇）默认每 150 ms 重复一次，或按各自工具的周期重复。`config.json` 中的 `"keepalive"` 可以修改：`"interval_ms"`（20 到 200 的整数）为所有命令设置同一周期，`"single_io_thread": true` 让所有命令由一个共享线程每次发送一帧，而不是各自一个线程（默认关闭）。超出范围的值保持默认。
 
+**提高已开启的工具**：命令会重复发送的工具（加热器、钻头、激光）使用开启时确认的值。把它提高到超过该值 20 % 时会再次要求确认（降低从不询问，小步拖动也无法越过上限）。可在 `config.json` 的 `"power_guard"` 中修改：`"rise_percent"`（0 到 500 的整数）设定百分比，`"enabled": false` 关闭该询问（默认开启）。超出这些范围的值保持默认值。
+
 **语言**：默认为英语。通过窗口顶部的语言选择器切换——将界面（标签、按钮、对话框和日志消息）切换为 8 种可用语言中的任意一种，立即保存到本工具旁边的 `config.json`，在下次启动时应用。翻译文件以纯文本形式存放在 `language/` 下（`english.lng`、
 `spanish.lng`、`italian.lng`、`french.lng`、`german.lng`、`chinese.lng`、
 `japanese.lng`、`portuguese.lng`），采用简单的
@@ -341,7 +343,7 @@ README](https://github.com/JuanenRac/URTC-FLASHER) 第 1 和第 2 节，此处�
 
 ## 🧪 测试
 
-测试套件共有 905 个测试（`python -m pytest -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；需要 PySide6 的测试在没有它时会被跳过）：每个工具系列的 CAN 载荷编码器和解码器、针对模拟对象的 SLCAN 和 SocketCAN 传输层、身份探测、自检、看门狗保活、总线健康检查、测试计划和无窗口模式、带哈希的会话导出、语言文件以及 Qt Quick 面板。根目录下的四个脚本（`verify_qt_*.py`）用真实的 Qt 事件循环对 Qt Quick 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。这一切都没有针对真实的板卡运行过。
+测试套件共有 929 个测试（`python -m pytest -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；需要 PySide6 的测试在没有它时会被跳过）：每个工具系列的 CAN 载荷编码器和解码器、针对模拟对象的 SLCAN 和 SocketCAN 传输层、身份探测、自检、看门狗保活、总线健康检查、测试计划和无窗口模式、带哈希的会话导出、语言文件以及 Qt Quick 面板。根目录下的四个脚本（`verify_qt_*.py`）用真实的 Qt 事件循环对 Qt Quick 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。这一切都没有针对真实的板卡运行过。
 
 ## 🏗️ 构建与发布
 

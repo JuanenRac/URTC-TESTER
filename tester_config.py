@@ -117,6 +117,39 @@ def keepalive_period_s(default_s, settings=None):
     return settings["interval_ms"] / 1000.0 if settings.get("interval_ms") else default_s
 
 
+POWER_GUARD_DEFAULTS = {"enabled": True, "rise_percent": 20}
+POWER_GUARD_RISE_BOUNDS = (0, 500)
+
+
+def power_guard_settings(config=None):
+    """When raising the value of a tool that is already on needs the person to confirm again, from ``power_guard`` in config.json.
+
+    A tool that repeats its command (a heater, a drill, the laser) took the value the person confirmed when it was switched on. ``rise_percent`` (a whole
+    number from 0 to 500, 20 by default) is how much above that value a new one may go without asking again; going down never asks. ``enabled`` (true by
+    default) is the switch: only an explicit false turns the question off. Anything else (a text, a boolean where a number goes, a number outside the
+    limits) keeps the default of its own field."""
+    settings = dict(POWER_GUARD_DEFAULTS)
+    given = (load_config() if config is None else config).get("power_guard")
+    if isinstance(given, dict):
+        if given.get("enabled") is False:
+            settings["enabled"] = False
+        value = given.get("rise_percent")
+        low, high = POWER_GUARD_RISE_BOUNDS
+        if isinstance(value, int) and not isinstance(value, bool) and low <= value <= high:
+            settings["rise_percent"] = value
+    return settings
+
+
+def power_rise_needs_confirmation(confirmed, new, settings=None):
+    """True when ``new`` goes above ``confirmed`` by more than the allowed percentage (a rise from zero always counts); a lower value never does."""
+    settings = power_guard_settings() if settings is None else settings
+    if not settings.get("enabled", True):
+        return False
+    if isinstance(confirmed, bool) or isinstance(new, bool) or not isinstance(confirmed, (int, float)) or not isinstance(new, (int, float)):
+        return False
+    return new > confirmed * (1 + settings.get("rise_percent", 20) / 100.0)
+
+
 def evidence_signing_settings(config=None):
     """(enabled, key file) for the Ed25519 signature of the evidence records, from config.json.
 
@@ -228,7 +261,7 @@ def _(key, **kwargs):
 # For these words the label is a whole sentence and the English detail that follows is dropped.
 _LOG_LABEL_ONLY = frozenset({
     "AOI_BLOCKED", "AUTODETECT_ACTIVE_PHASE", "BUS_MONITOR_BLOCKED", "BUS_MONITOR_EXPORT_EMPTY", "ERROR",
-    "FEEDER_RESET_BLOCKED", "FLYING_PROBE_CONFIG_BLOCKED", "PASSIVE_CAPTURE_BLOCKED", "PASTE_CONFIG_BLOCKED",
+    "FEEDER_RESET_BLOCKED", "FLYING_PROBE_CONFIG_BLOCKED", "PANEL_POWER_RAISE_BLOCKED", "PASSIVE_CAPTURE_BLOCKED", "PASTE_CONFIG_BLOCKED",
     "PASTE_PULSE_BLOCKED", "PORT_SCAN_BLOCKED", "PROBE_BLOCKED", "READOUT_EXPORT_EMPTY", "WATCHDOG_BLOCKED",
     "WELD_PULSE_BLOCKED",
 })

@@ -15,6 +15,13 @@ ColumnLayout {
     property var model
     property var ask: function(action) { action() }
     property bool canAct: false
+    // A value that raises a tool that is on too far above the confirmed one goes through the deck's confirmation first.
+    function setControl(id, value) {
+        if (view.model.needsConfirm(id, value))
+            view.ask(function() { view.model.setValueConfirmed(id, value) })
+        else
+            view.model.setValue(id, value)
+    }
     property color panelColor: "#14253b"
     property color borderColor: "#294965"
     property color textColor: "#edf7ff"
@@ -84,7 +91,7 @@ ColumnLayout {
                                     stepSize: 1
                                     value: Number(field.modelData.value)
                                     implicitWidth: 140
-                                    onMoved: view.model.setValue(field.modelData.id, Math.round(value))
+                                    onMoved: view.setControl(field.modelData.id, Math.round(value))
                                 }
                                 Text { text: String(field.modelData.value); color: view.textColor; font.family: "Cascadia Mono"; font.pixelSize: 10 }
                             }
@@ -94,7 +101,7 @@ ColumnLayout {
                                 text: String(field.modelData.value)
                                 implicitWidth: field.modelData.type === "hex" ? 90 : 110
                                 color: field.modelData.valid === false ? "#ff7b7b" : view.textColor
-                                onEditingFinished: view.model.setValue(field.modelData.id, text)
+                                onEditingFinished: view.setControl(field.modelData.id, text)
                             }
                         }
                     }

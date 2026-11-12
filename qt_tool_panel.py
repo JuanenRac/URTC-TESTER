@@ -20,6 +20,7 @@ from typing import Any
 
 from PySide6.QtCore import QObject, Property, Signal, Slot
 
+import tester_config
 from urtc_can import tool_panel_model as model
 from urtc_can.protocol import KEEPALIVE_INTERVAL_MS
 
@@ -75,6 +76,7 @@ class ToolPanelController(QObject):
         self._host = host
         self._values: dict[int, dict[str, model.PanelValue]] = {}
         self._active: set[tuple[int, int]] = set()          # (tool, section) with a repeated command on
+        self._confirmed: dict[tuple[int, int], dict[str, float]] = {}   # the value the person confirmed for each control of a command that repeats
         self._latched: dict[tuple[int, int, int], bool] = {}
         self._readings: dict[tuple[int, str], dict[str, Any]] = {}
         self._queries: dict[tuple[int, int, int], int | None] = {}
@@ -199,25 +201,71 @@ class ToolPanelController(QObject):
         return self._host.uiText("PANEL_SHOW_PROFILE_PANEL")
 
     # ------------------------------------------------------------------ controls
+    def _control(self, control_id: str) -> Mapping | None:
+        panel = self._panel()
+        return next((c for c in model.panel_controls(panel) if c["id"] == control_id), None) if panel else None
+
+    def _coerce(self, control: Mapping, raw: Any) -> model.PanelValue | None:
+        """The value a control takes from ``raw`` (None when it does not take it)."""
+        if control["type"] in ("range", "number"):
+            return model.clamp_control(control, raw)
+        if control["type"] == "checkbox":
+            return bool(raw)
+        if control["type"] == "select":
+            return next((o["value"] for o in control["options"] if str(o["value"]) == str(raw)), None)
+        return str(raw)
+
+    def _repeating_sections_using(self, tool: int, control_id: str) -> list[int]:
+        """The sections with a repeated command that is on and takes the control as one of its values."""
+        panel = model.panel_of(tool)
+        found: list[int] = []
+        for si, section in enumerate(panel["sections"] if panel else []):
+            if (tool, si) in self._active and any(a["type"] == "keepalive" and control_id in (a.get("args") or []) for a in section.get("actions", [])):
+                found.append(si)
+        return found
+
+    def _raise_needs_confirmation(self, tool: int, control_id: str, value: Any) -> bool:
+        """True when a command that repeats and is on would take a value above the confirmed one by more than the configured percentage."""
+        settings = tester_config.power_guard_settings()
+        for si in self._repeating_sections_using(tool, control_id):
+            confirmed = self._confirmed.get((tool, si), {}).get(control_id)
+            if confirmed is not None and tester_config.power_rise_needs_confirmation(confirmed, value, settings):
+                return True
+        return False
+
+    @Slot(str, "QVariant", result=bool)
+    def needsConfirm(self, control_id: str, raw: Any) -> bool:
+        """True when setting the control to ``raw`` would raise a tool that is on too far above the value the person confirmed (ask, then ``setValueConfirmed``)."""
+        control = self._control(control_id)
+        value = self._coerce(control, raw) if control else None
+        return value is not None and self._raise_needs_confirmation(self._tool(), control_id, value)
+
     @Slot(str, "QVariant")
     def setValue(self, control_id: str, raw: Any) -> None:
+        self._set_value(control_id, raw, confirmed=False)
+
+    @Slot(str, "QVariant")
+    def setValueConfirmed(self, control_id: str, raw: Any) -> None:
+        """Sets a value after the person confirmed it: it becomes the value the next rise is measured from."""
+        self._set_value(control_id, raw, confirmed=True)
+
+    def _set_value(self, control_id: str, raw: Any, confirmed: bool) -> None:
         panel = self._panel()
-        if panel is None:
-            return
-        control = next((c for c in model.panel_controls(panel) if c["id"] == control_id), None)
-        if control is None:
+        control = self._control(control_id)
+        if panel is None or control is None:
             return
         tool = self._tool()
-        if control["type"] in ("range", "number"):
-            value: model.PanelValue = model.clamp_control(control, raw)
-        elif control["type"] == "checkbox":
-            value = bool(raw)
-        elif control["type"] == "select":
-            if not any(str(o["value"]) == str(raw) for o in control["options"]):
-                return
-            value = next(o["value"] for o in control["options"] if str(o["value"]) == str(raw))
-        else:
-            value = str(raw)
+        value = self._coerce(control, raw)
+        if value is None:
+            return
+        if not confirmed and self._raise_needs_confirmation(tool, control_id, value):
+            self._host._log("PANEL_POWER_RAISE_BLOCKED")
+            self.changed.emit()          # the control goes back to the value the tool really has
+            return
+        if confirmed:
+            for si in self._repeating_sections_using(tool, control_id):
+                if isinstance(value, (int, float)) and not isinstance(value, bool):
+                    self._confirmed.setdefault((tool, si), {})[control_id] = value
         self._values_of(tool)[control_id] = value
         for si, section in enumerate(panel["sections"]):     # a command that repeats follows the control it uses
             if (tool, si) in self._active:
@@ -308,6 +356,9 @@ class ToolPanelController(QObject):
         except (ValueError, KeyError) as exc:
             self._host._log(f"PANEL_BLOCKED {exc}")
             return
+        if (tool, section) not in self._active:      # switching it on is the confirmation of the values it starts with
+            values = self._values_of(tool)
+            self._confirmed[(tool, section)] = {c: v for c, v in values.items() if c in (a.get("args") or []) and isinstance(v, (int, float)) and not isinstance(v, bool)}
         self._active.add((tool, section))
         off = self._frame(a, tool, section, off=True)
         interval = (a.get("interval_ms") or KEEPALIVE_INTERVAL_MS) / 1000.0
@@ -317,6 +368,7 @@ class ToolPanelController(QObject):
     def _stop_repeat(self, tool: int, section: int) -> None:
         if (tool, section) in self._active:
             self._active.discard((tool, section))
+            self._confirmed.pop((tool, section), None)
             self._host._stop_watchdog(f"panel{tool}_{section}")
 
     # ------------------------------------------------------------------ asking the board

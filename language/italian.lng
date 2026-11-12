@@ -322,6 +322,7 @@ QTLOG_MOTION_FAILED=Comando di movimento non riuscito
 QTLOG_MOTION_SENT=Comando di movimento inviato
 QTLOG_MOTION_STOP_FAILED=Arresto del movimento non riuscito
 QTLOG_MOTION_STOP_SENT=Arresto del movimento inviato
+QTLOG_PANEL_POWER_RAISE_BLOCKED=Aumento di potenza trattenuto: un utensile acceso richiede una conferma per salire oltre la percentuale impostata
 QTLOG_PASSIVE_CAPTURE_BLOCKED=Acquisizione passiva bloccata: connettiti prima in modalità solo ascolto
 QTLOG_PASSIVE_CAPTURE_COMPLETE=Acquisizione passiva completata
 QTLOG_PASSIVE_CAPTURE_FAILED=Acquisizione passiva non riuscita

@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Langage-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-905-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-929-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocole-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.5.4` |
 | Maturité | Fonctionnel |
-| Tests | 905 (`python -m pytest -q`) |
+| Tests | 929 (`python -m pytest -q`) |
 | Technologie | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
@@ -472,6 +472,8 @@ Cet outil est organisé en modules par responsabilité, purement pour la lisibil
 
 **Commandes répétées** : une commande que le firmware abandonne si elle n'est pas rafraîchie (un chauffage, une perceuse, un laser, un ventilateur) est répétée toutes les 150 ms par défaut, ou à la période de son outil. `"keepalive"` dans `config.json` la modifie : `"interval_ms"` (un entier de 20 à 200) fixe une période pour toutes, et `"single_io_thread": true` les répète toutes depuis un fil partagé, une trame à la fois, au lieu d'un fil chacune (désactivé par défaut). Une valeur hors de ces limites garde la valeur par défaut.
 
+**Augmenter un outil allumé** : un outil dont la commande se répète (un chauffage, une perceuse, le laser) prend la valeur confirmée à son allumage. Le monter de plus de 20 % au-dessus de cette valeur demande une nouvelle confirmation (baisser ne demande jamais, et un glissement par petits pas ne permet pas de dépasser la limite). `"power_guard"` dans `config.json` le modifie : `"rise_percent"` (un entier de 0 à 500) fixe le pourcentage et `"enabled": false` supprime la question (activée par défaut). Une valeur hors de ces limites garde la valeur par défaut.
+
 **Langue** : anglais par défaut. Se change avec le sélecteur de langue de l'en-tête de la fenêtre - change l'interface (étiquettes, boutons, dialogues, et messages de journal) vers l'une des 8 langues disponibles,
 enregistre immédiatement dans `config.json` à côté de cet outil,
 appliqué au prochain démarrage. Les traductions vivent dans des fichiers
@@ -504,7 +506,7 @@ Les versions des programmes URTC qui fonctionnent ensemble, et la version du pro
 
 ## 🧪 Tests
 
-La suite compte 905 tests (`python -m pytest -q` ; avec Qt sur une machine sans écran, `QT_QPA_PLATFORM=offscreen` ; ceux qui ont besoin de PySide6 sont ignorés sans lui) : les encodeurs et décodeurs de charge CAN de chaque famille d'outils, les transports SLCAN et SocketCAN face à des faux, la sonde d'identité, l'autotest, les renvois de surveillance, le contrôle de santé du bus, les plans de test et le mode sans fenêtre, l'export de session avec son hachage, les fichiers de langue et les panneaux Qt Quick. Quatre scripts à la racine (`verify_qt_*.py`) pilotent les panneaux Qt Quick de bout en bout avec une vraie boucle d'événements Qt. La CI exécute aussi `ruff check`, `python -m mypy` et `tools/ci_validate.py`. Rien de tout cela n'a tourné contre une vraie carte.
+La suite compte 929 tests (`python -m pytest -q` ; avec Qt sur une machine sans écran, `QT_QPA_PLATFORM=offscreen` ; ceux qui ont besoin de PySide6 sont ignorés sans lui) : les encodeurs et décodeurs de charge CAN de chaque famille d'outils, les transports SLCAN et SocketCAN face à des faux, la sonde d'identité, l'autotest, les renvois de surveillance, le contrôle de santé du bus, les plans de test et le mode sans fenêtre, l'export de session avec son hachage, les fichiers de langue et les panneaux Qt Quick. Quatre scripts à la racine (`verify_qt_*.py`) pilotent les panneaux Qt Quick de bout en bout avec une vraie boucle d'événements Qt. La CI exécute aussi `ruff check`, `python -m mypy` et `tools/ci_validate.py`. Rien de tout cela n'a tourné contre une vraie carte.
 
 ## 🏗️ Compilation et publication
 

@@ -322,6 +322,7 @@ QTLOG_MOTION_FAILED=Falló el comando de movimiento
 QTLOG_MOTION_SENT=Comando de movimiento enviado
 QTLOG_MOTION_STOP_FAILED=Falló la parada del movimiento
 QTLOG_MOTION_STOP_SENT=Parada del movimiento enviada
+QTLOG_PANEL_POWER_RAISE_BLOCKED=Subida de potencia retenida: una herramienta encendida necesita confirmación para subir más del porcentaje configurado
 QTLOG_PASSIVE_CAPTURE_BLOCKED=Captura pasiva bloqueada: conecta antes en modo solo escucha
 QTLOG_PASSIVE_CAPTURE_COMPLETE=Captura pasiva terminada
 QTLOG_PASSIVE_CAPTURE_FAILED=Falló la captura pasiva

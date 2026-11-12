@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-905-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-929-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN-yellow.svg" alt="CAN">
 </p>
 
@@ -39,7 +39,7 @@
 |---|---|
 | バージョン | `0.5.4` |
 | 成熟度 | 機能する |
-| テスト | 905 (`python -m pytest -q`) |
+| テスト | 929 (`python -m pytest -q`) |
 | 技術 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | 対象 | 利用者の PC |
 | 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
@@ -306,6 +306,8 @@ Qt Quick ウィンドウのヘッダーに言語セレクターがあります�
 
 **繰り返しコマンド**：更新しないとファームウェアが破棄するコマンド（ヒーター、ドリル、レーザー、ファン）は、既定では 150 ms ごと、またはそれぞれのツールの周期で繰り返されます。`config.json` の `"keepalive"` で変更できます。`"interval_ms"`（20〜200 の整数）はすべてに共通の周期を設定し、`"single_io_thread": true` はすべてを個別のスレッドではなく 1 つの共有スレッドから 1 フレームずつ繰り返します（既定ではオフ）。範囲外の値は既定値のままです。
 
+**電源が入っているツールの引き上げ**：コマンドを繰り返し送るツール（ヒーター、ドリル、レーザー）は、電源を入れたときに確認した値を使います。その値より 20 % を超えて上げると、もう一度確認を求められます（下げるときは確認しません。小刻みにドラッグしても上限を超えることはできません）。`config.json` の `"power_guard"` で変更できます。`"rise_percent"`（0〜500 の整数）で割合を設定し、`"enabled": false` で確認をオフにできます（既定ではオン）。範囲外の値は既定値のままです。
+
 **言語**：既定は英語です。ウィンドウ上部の言語セレクターで切り替えます。インターフェース（ラベル、ボタン、ダイアログ、ログメッセージ）が利用可能な 8 つの言語のいずれかに切り替わり、選択はすぐに本ツールと同じ場所の `config.json` に保存されて、次回起動時に適用されます。翻訳は `language/` 以下のプレーンテキストファイル（`english.lng`、`spanish.lng`、`italian.lng`、`french.lng`、`german.lng`、`chinese.lng`、`japanese.lng`、`portuguese.lng`）にあり、1 行に 1 つの `KEY=Value` という単純な形式です。`#` で始まる行と空行は無視され、値の中の `
 ` は実際の改行になります（複数行のダイアログメッセージのいくつかで使っています）。これらのファイルは URTC-COMMON のカタログから生成されます（翻訳はそこで修正してファイルを書き出し直し、手では編集しません）。別の言語を追加するときの出発点にもなります（`language/<name>.lng` を追加し、`tester_config.py` の先頭付近にある `AVAILABLE_LANGUAGES` に `("<name>", "現地語名")` を追加して、`config.json` に `"language": "<name>"` を設定します）。言語ファイルにないキーは、クラッシュせずにそのキー名をそのまま表示し、言語ファイルが見つからない、または読み取れない場合（編集の誤りやファイル名の間違い）は、インターフェース全体が英語に戻ります。どちらの場合も、不一致を直すまでの間、ツールは使い続けられます。
 
@@ -320,7 +322,7 @@ README](https://github.com/JuanenRac/URTC-FLASHER) の第 1 節と第 2 節を�
 
 ## 🧪 テスト
 
-テストスイートは 905 件です（`python -m pytest -q`。画面のない環境で Qt を使う場合は `QT_QPA_PLATFORM=offscreen`。PySide6 が必要なものは、なければスキップされます）：各ツール系統の CAN ペイロードのエンコーダーとデコーダー、模擬に対する SLCAN と SocketCAN のトランスポート、識別プローブ、セルフテスト、ウォッチドッグのキープアライブ、バスの健全性チェック、テストプランとウィンドウなしのモード、ハッシュ付きのセッションエクスポート、言語ファイル、Qt Quick のパネルを扱います。ルートにある 4 つのスクリプト（`verify_qt_*.py`）は、実際の Qt イベントループで Qt Quick のパネルをエンドツーエンドで動かします。CI は `ruff check`、`python -m mypy`、`tools/ci_validate.py` も実行します。実際のボードでは一度も動かしていません。
+テストスイートは 929 件です（`python -m pytest -q`。画面のない環境で Qt を使う場合は `QT_QPA_PLATFORM=offscreen`。PySide6 が必要なものは、なければスキップされます）：各ツール系統の CAN ペイロードのエンコーダーとデコーダー、模擬に対する SLCAN と SocketCAN のトランスポート、識別プローブ、セルフテスト、ウォッチドッグのキープアライブ、バスの健全性チェック、テストプランとウィンドウなしのモード、ハッシュ付きのセッションエクスポート、言語ファイル、Qt Quick のパネルを扱います。ルートにある 4 つのスクリプト（`verify_qt_*.py`）は、実際の Qt イベントループで Qt Quick のパネルをエンドツーエンドで動かします。CI は `ruff check`、`python -m mypy`、`tools/ci_validate.py` も実行します。実際のボードでは一度も動かしていません。
 
 ## 🏗️ ビルドとリリース
 

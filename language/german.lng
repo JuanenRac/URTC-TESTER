@@ -322,6 +322,7 @@ QTLOG_MOTION_FAILED=Bewegungsbefehl fehlgeschlagen
 QTLOG_MOTION_SENT=Bewegungsbefehl gesendet
 QTLOG_MOTION_STOP_FAILED=Bewegungsstopp fehlgeschlagen
 QTLOG_MOTION_STOP_SENT=Bewegungsstopp gesendet
+QTLOG_PANEL_POWER_RAISE_BLOCKED=Leistungserhöhung zurückgehalten: Ein eingeschaltetes Werkzeug braucht eine Bestätigung, um mehr als den eingestellten Prozentsatz zu steigen
 QTLOG_PASSIVE_CAPTURE_BLOCKED=Passive Aufnahme blockiert: Zuerst im Nur-Zuhören-Modus verbinden
 QTLOG_PASSIVE_CAPTURE_COMPLETE=Passive Aufnahme abgeschlossen
 QTLOG_PASSIVE_CAPTURE_FAILED=Passive Aufnahme fehlgeschlagen

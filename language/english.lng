@@ -321,6 +321,7 @@ QTLOG_MOTION_FAILED=Motion command failed
 QTLOG_MOTION_SENT=Motion command sent
 QTLOG_MOTION_STOP_FAILED=Motion stop failed
 QTLOG_MOTION_STOP_SENT=Motion stop sent
+QTLOG_PANEL_POWER_RAISE_BLOCKED=Power raise held back: a tool that is on needs a confirmation to go up by more than the set percentage
 QTLOG_PASSIVE_CAPTURE_BLOCKED=Passive capture blocked: connect in listen-only mode first
 QTLOG_PASSIVE_CAPTURE_COMPLETE=Passive capture complete
 QTLOG_PASSIVE_CAPTURE_FAILED=Passive capture failed
