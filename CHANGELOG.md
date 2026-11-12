@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The package tool signs the package the Windows build makes:** `tools/make_update_package.py sign PACKAGE` (the copy of URTC-COMMON's tool, refreshed) signs the very bytes of the `.zip` that the manual Windows build in Actions packs without a key, after checking that the `app_info.json` inside agrees with the name of the file, and writes `PACKAGE.sha256` and `PACKAGE.sig` next to it; it then runs the same check the program runs. The package is never rewritten, so the attestation of the build still describes the bytes that are signed. A test checks that the companions are byte for byte the ones a signed build writes.
+
 - **`--headless image-info FILE` reads the header inside a firmware image:** it prints the hardware, version, length and CRC-32 the image states and what the compatibility switch decides (`--policy accept|warn|require`, default `warn`; `--hardware` names the board it must be for; `--json`); a header that does not hold, an unsealed slot and a stamped `.urimg` file are refused whatever the switch says. It opens no bus.
 
 ## [0.5.4] - The Spanish texts say "grabar" and "velocidad de bus": the calques "flashear", "flasheo" and "bitrate" are replaced in the window, the guide, the Spanish README and the shared sections, with the gender of the sentence... (and 7 more changes)
