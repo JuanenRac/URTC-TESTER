@@ -15,7 +15,7 @@
   🇵🇹 <b>Português</b>
 </p>
 
-### Um testador de barramento CAN em direto para a placa URTC: mostra apenas os controlos e a telemetria da cabeça de ferramenta ligada
+### Um tester de barramento CAN em direto para a placa URTC: mostra apenas os controlos e a telemetria da cabeça de ferramenta ligada
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
@@ -27,11 +27,11 @@
 
 ---
 
-**Verificação de honestidade - o que realmente funciona hoje:** os codificadores de payload CAN para as famílias de controlo Qt Quick migradas (`advanced_protocol.py`) são reais e estão cobertos pelos testes de `tests/` (`python -m pytest -q`). O CI deste repositório (`.github/workflows/ci.yml`) também os executa, juntamente com `ruff check`, `python -m mypy`, `tools/ci_validate.py`, uma compilação de sintaxe de cada ficheiro `.py` e os quatro scripts `verify_qt_*.py`, pelo que uma regressão aí faz falhar a compilação. Os quatro scripts `verify_qt_*.py` na raiz do repositório (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) são verificações end-to-end reais, deliberadamente fora de `tests/`, contra um transporte simulado com entrega real de Signals entre threads - os quatro passam com `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que o CI também executa. Esse é o limite honesto do que é verificado automaticamente: a camada de transporte, o tratamento dos IDs CAN/disposição de bytes e a lógica da ponte Qt Quick são reais e exercitados com tramas simuladas, não com hardware real - como os «limites conhecidos» abaixo já indicam, isto foi construído sem acesso a USB, pelo que nada aqui foi ainda verificado numa placa real. `qt_tester.py` e `assets/qml/TesterDeck.qml` são a implementação real e substancial (milhares de linhas no total), exercitada pelos testes com placas simuladas e pelos scripts de verificação, e nunca por uma placa real.
+**Ponto de honestidade: o que realmente funciona hoje:** os codificadores de payload CAN para as famílias de controlo Qt Quick migradas (`advanced_protocol.py`) são reais e estão cobertos pelos testes de `tests/` (`python -m pytest -q`). O CI deste repositório (`.github/workflows/ci.yml`) também os executa, juntamente com `ruff check`, `python -m mypy`, `tools/ci_validate.py`, uma compilação de sintaxe de cada ficheiro `.py` e os quatro scripts `verify_qt_*.py`, pelo que uma regressão aí faz falhar a compilação. Os quatro scripts `verify_qt_*.py` na raiz do repositório (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) são verificações end-to-end reais, deliberadamente fora de `tests/`, contra um transporte simulado com entrega real de Signals entre threads - os quatro passam com `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que o CI também executa. Esse é o limite honesto do que é verificado automaticamente: a camada de transporte, o tratamento dos IDs CAN/disposição de bytes e a lógica da ponte Qt Quick são reais e exercitados com tramas simuladas, não com hardware real - como os «limites conhecidos» abaixo já indicam, isto foi construído sem acesso a USB, pelo que nada aqui foi ainda verificado numa placa real. `qt_tester.py` e `assets/qml/TesterDeck.qml` são a implementação real e substancial (milhares de linhas no total), exercitada pelos testes com placas simuladas e pelos scripts de verificação, e nunca por uma placa real.
 
 ---
 
-> **Estado de segurança (safety e security):** este ecossistema não é um sistema de segurança certificado e ainda não existe nenhuma placa URTC montada. Os bootloaders verificam as imagens de firmware com CRC32 e um HMAC-SHA256 de chave partilhada, não com uma assinatura assimétrica (prevista); as imagens de aplicação publicadas estão assinadas com a chave pública de desenvolvimento (`signing_key_kind: dev`), pelo que qualquer pessoa pode produzir uma imagem que o bootloader aceita; nada foi transmitido a uma placa real. Leia a [base de segurança](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) e o [modelo de ameaças](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) antes de confiar em qualquer afirmação aqui para a segurança de uma pessoa.
+> **Estado de segurança (safety e security):** este ecossistema não é um sistema de segurança certificado e ainda não existe nenhuma placa URTC montada. Os bootloaders verificam as imagens de firmware com CRC32 e um HMAC-SHA256 de chave partilhada, não com uma assinatura assimétrica (prevista); as imagens de aplicação publicadas estão assinadas com a chave pública de desenvolvimento (`signing_key_kind: dev`), pelo que qualquer pessoa pode produzir uma imagem que o bootloader aceita; nada foi transmitido a uma placa real. Leia a [base de segurança](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) e o [modelo de ameaças](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) antes de confiar em qualquer afirmação deste repositório sobre a segurança de uma pessoa.
 
 ## 📋 Num relance
 
@@ -181,8 +181,8 @@ próprio dessa ferramenta (segundo [docs/CANBUS.md](docs/CANBUS.md)) - a cor apl
 
 **Placa de expansão** (secção 3, sempre visível): o barramento SPI genérico
 e a linha DIAG0 de `CONN_EXPANSION` - a passagem direta em bruto que todas as variantes
-de placa de expansão com driver partilham. Os sensores ADS1115 e MLX9064x,
-e o driver do atuador de crimpagem, não são controlados
+de placa de expansão com controlador partilham. Os sensores ADS1115 e MLX9064x,
+e o controlador do atuador de crimpagem, não são controlados
 a partir daqui - vivem dentro do painel da sua própria ferramenta (Sonda
 voadora, Inspeção térmica, Atuador de crimpagem - consulte a secção 4
 abaixo), uma vez que qual deles se aplica depende de qual perfil de ferramenta
@@ -297,7 +297,7 @@ Cada um dos 25 perfis tem o seu próprio painel, construído diretamente a parti
 | Sonda voadora | A leitura básica é automática; a leitura avançada precisa de uma palavra de configuração ADS1115 em bruto (hex) + Iniciar conversão + Ler resultado | Leitura básica do ADC integrado (automática, `0x243`) |
 | Cura UV | Cursor de potência (0-255) + Enviar/Desligar | nenhuma |
 | Retrabalho com ar quente | Temperatura de setpoint, potência do soprador, ligar/desligar | Temperatura em direto (partilha a telemetria `0x135` do ferro de soldar e o gráfico em direto - o mesmo ciclo térmico físico) |
-| Atuador de crimpagem | Sentido + número de passos (movimento único, da mesma forma que as ferramentas de movimento partilhadas acima, mas chega ao driver de uma placa de expansão através de `0x1F0` em vez de `0x120` integrado) | nenhuma |
+| Atuador de crimpagem | Sentido + número de passos (movimento único, da mesma forma que as ferramentas de movimento partilhadas acima, mas chega ao controlador de uma placa de expansão através de `0x1F0` em vez de `0x120` integrado) | nenhuma |
 | Inspeção térmica | Iniciar captura, Verificar estado, Ler imagem térmica | Canvas de mapa de calor de 32x24 píxeis (gradiente de azul a vermelho), obtido bloco a bloco por CAN a pedido - não é uma transmissão de vídeo em direto, consulte a secção 6 abaixo |
 | Projeção de pasta de soldar | Canal PWM + frequência (Configurar), depois ciclo de trabalho + duração (Disparar pulso) | nenhuma |
 | Soldador ultrassónico | Duração do pulso + Disparar | nenhuma (mesma forma que o Soldador por pontos, mas sem controlo por sensor de contacto) |
@@ -306,7 +306,7 @@ Cada um dos 25 perfis tem o seu próprio painel, construído diretamente a parti
 o Retrabalho com ar quente (partilha o mesmo ciclo térmico e watchdog que o
 ferro de soldar), o laser e o bico da impressora 3D têm cada um um watchdog de 250 ms
 no firmware; a ventoinha de camada tem um de 1000 ms. Marcar a caixa
-"Ativo" relevante não envia o comando apenas uma vez - reenvia-o
+«Ativo» relevante não envia o comando apenas uma vez - reenvia-o
 automaticamente (150 ms para as ferramentas com watchdog de 250 ms, 400 ms para a ventoinha
 de camada) enquanto a caixa permanecer marcada, tal como um verdadeiro controlador
 mestre tem de fazer. Desmarcá-la envia uma trama única de zero/desligado e
@@ -356,7 +356,7 @@ Os registos de evidência de uma pasta (`urtc-evidence/1`) podem ser transformad
 |---|---|
 | Uma ordem enviada a uma placa que não é a ferramenta que a janela mostra | O painel de uma ferramenta só é mostrado para a ferramenta que a própria placa comunicou, e cada comando está condicionado por uma correspondência de identidade |
 | Transmitir sem querer | A janela arranca em modo só de escuta: não pode transmitir até as verificações ativas serem armadas deliberadamente, e cada ação que atua sobre a placa pede primeiro uma confirmação na janela |
-| Danificar a placa | O testador nunca toca na flash: tudo o que faz é um comando em execução ou uma leitura de telemetria contra a aplicação que está a funcionar |
+| Danificar a placa | O tester nunca toca na flash: tudo o que faz é um comando em execução ou uma leitura de telemetria contra a aplicação que está a funcionar |
 | Um registo que alguém pudesse alterar | A exportação da sessão é um zip com o registo, um manifesto que o nomeia pelo seu SHA-256 e os diagnósticos do sistema |
 
 Nada disto foi experimentado numa placa real e nada é uma função de segurança certificada; veja as limitações abaixo.
@@ -440,7 +440,7 @@ a descrição completa ficheiro a ficheiro.
 
 **Subir uma ferramenta ligada**: uma ferramenta cujo comando se repete (um aquecedor, um berbequim, o laser) toma o valor que foi confirmado ao ligá-la. Subi-la mais de 20 % acima desse valor pede nova confirmação (baixar nunca pede, e arrastar em passos pequenos não deixa passar o limite). `"power_guard"` em `config.json` altera isto: `"rise_percent"` (um inteiro de 0 a 500) define a percentagem e `"enabled": false` desliga a pergunta (ligada por omissão). Um valor fora desses limites mantém o valor por omissão.
 
-**Um barramento que mistura velocidades**: uma cabeça a outra velocidade que a do barramento não se ouve, por isso não pode declarar a sua velocidade; o testador reconhece o barramento pelos seus sintomas e mostra um aviso: os contadores de erros ou um bus-off das cabeças que se ouvem (trama de saúde `0x1B8`), uma pesquisa a todas as velocidades que não encontra ninguém, ou uma cabeça que se sabe feita para 500 kbit/s. `"bus_health"` em `config.json` define os limiares: `"tec_warn"`, `"rec_warn"` e `"bus_off_warn"` (inteiros de 1 a 255; 96, 96 e 1 por omissão) e `"legacy_heads"` (os nomes ou números de série das cabeças feitas para 500 kbit/s). Um valor fora dos limites mantém o valor por omissão. Testado com barramentos simulados; nada correu num barramento real.
+**Um barramento que mistura velocidades**: uma cabeça a outra velocidade que a do barramento não se ouve, por isso não pode declarar a sua velocidade; o tester reconhece o barramento pelos seus sintomas e mostra um aviso: os contadores de erros ou um bus-off das cabeças que se ouvem (trama de saúde `0x1B8`), uma pesquisa a todas as velocidades que não encontra ninguém, ou uma cabeça que se sabe feita para 500 kbit/s. `"bus_health"` em `config.json` define os limiares: `"tec_warn"`, `"rec_warn"` e `"bus_off_warn"` (inteiros de 1 a 255; 96, 96 e 1 por omissão) e `"legacy_heads"` (os nomes ou números de série das cabeças feitas para 500 kbit/s). Um valor fora dos limites mantém o valor por omissão. Testado com barramentos simulados; nada correu num barramento real.
 
 **Idioma**: inglês por predefinição. Alterado com o seletor de idioma no cabeçalho da janela - altera a interface (rótulos, botões, caixas de diálogo e mensagens de registo) para qualquer um dos 8 idiomas disponíveis, guardado
 imediatamente em `config.json` junto a esta ferramenta, aplicado no próximo
@@ -575,10 +575,10 @@ O URTC é feito de repositórios independentes, cada um com a sua versão, os se
   * [URTC](https://github.com/JuanenRac/URTC) - firmware da placa da cabeça de ferramenta (25 perfis de ferramenta, bootloader CAN) e a referência do protocolo CAN.
   * [URTC-COMMON](https://github.com/JuanenRac/URTC-COMMON) - o protocolo CAN escrito uma só vez como dados (especificação, tabelas geradas, vetores de conformidade) e o código que os programas partilham.
   * [URTC-FLASHER](https://github.com/JuanenRac/URTC-FLASHER) - ferramenta de ambiente de trabalho que atualiza o firmware da placa por CAN ou por SWD/JTAG.
-  * [URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY) - gateway à frente do barramento CAN: só deixa passar os identificadores de uma lista, limita a sua taxa e pede uma chave de sessão.
+  * [URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY) - gateway à frente do barramento CAN: só deixa passar os identificadores de uma lista, limita a sua frequência e pede uma chave de sessão.
   * [URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK) - lógica em C independente do hardware e protocolo de comandos para um suporte de ferramentas com pré-aquecimento e acompanhamento do ciclo de vida.
-  * **URTC-TESTER** (este repositório) - testador de ambiente de trabalho do barramento CAN em direto que mostra os controlos e a telemetria do perfil de ferramenta que uma placa reporta.
-  * [URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL) - protocolo de tramas de sensor em C e um companheiro em Python térmico/RGB para uma cabeça de ferramenta de inspeção.
+  * **URTC-TESTER** (este repositório) - tester de ambiente de trabalho do barramento CAN em direto que mostra os controlos e a telemetria do perfil de ferramenta que uma placa reporta.
+  * [URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL) - protocolo de tramas de sensor em C e um acompanhante em Python térmico/RGB para uma cabeça de ferramenta de inspeção.
   * [URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO) - aplicação de navegador que grava e testa a placa por Web Serial e SLCAN, sem instalar nada.
 * **Ecosystem Operations:**
   * [URTC-DEVTOOLS](https://github.com/JuanenRac/URTC-DEVTOOLS) - as ferramentas de repositório partilhadas da família como um conjunto com versão e um ficheiro de bloqueio que distingue uma cópia editada de uma desatualizada.
@@ -594,9 +594,9 @@ O URTC é feito de repositórios independentes, cada um com a sua versão, os se
 ## 📚 Documentação
 
 - **[docs/WINDOW_GUIDE.md](docs/WINDOW_GUIDE.md)** — um guia da janela com imagens: a janela principal, a ajuda e a janela de atualização.
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — stack tecnológica e diretrizes de código para um pull request.
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — tecnologias utilizadas e diretrizes de código para um pull request.
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — as normas de comportamento esperadas nesta comunidade.
-- **[SECURITY.md](SECURITY.md)** — como reportar uma vulnerabilidade, e as áreas de foco de segurança reais deste projeto.
+- **[SECURITY.md](SECURITY.md)** — como reportar uma vulnerabilidade, e as prioridades de segurança reais deste projeto.
 - **[SUPPORT.md](SUPPORT.md)** — onde colocar questões e reportar erros.
 - **[LICENSE.md](LICENSE.md)** — a licença própria deste projeto.
 

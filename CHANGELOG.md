@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The Spanish, German, French and European Portuguese README were read for register and wording:** the programs are called the same way in every language (tester, updater, Web Studio), calques, straight quotes and words of another language were corrected, and the Related Projects section follows the shared texts.
+
 - **A button lifts the latched error of a head, and the three new switches are next to the other optional functions:** "Clear error" sends the command `0x1B2` and writes what the head answers: that it lifted the error, or why it did not (the switch is off, there was no error, the error cannot be lifted by command, the tool is not below 50 C or its temperature is unknown, an actuator is not at zero), and, while the error stays, why it was latched (thermal, sensor, no valid tool, communication watchdog, fan stall, stepper silence, electromagnet release). The panel of optional functions gained the switches of the clear-error command, of the communication watchdog of the steppers and the electromagnet, and of the electromagnet release (it needs the watchdog); all three are off on a head that was never written, and a change acts after the next power-up. The button asks before it sends unless `clear_error.confirm` of `config.json` is exactly `false`. Tested against the virtual board, which answers with the decisions of the firmware; not tried on a board.
 
 - **The Chinese texts say "flashing" with one word:** the texts of the program and the README use 刷写 for flashing a firmware image, over the bus or with a probe, instead of mixing it with 烧录 and 烧写; the texts come from the shared catalog.
