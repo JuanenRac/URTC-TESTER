@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The Chinese texts say "flashing" with one word:** the texts of the program and the README use 刷写 for flashing a firmware image, over the bus or with a probe, instead of mixing it with 烧录 and 烧写; the texts come from the shared catalog.
+
 - **The window fits the screen it opens on and stays resizable:** the Qt Quick window used to open at a fixed 1440 x 900 with a minimum of 1080 x 680, which hung off the edge of a small laptop screen. It now opens at the configured size but never larger than a fraction (95 % by default) of the free area of its screen, and its minimum is lowered to that size when the screen is smaller; it can still be made larger or smaller by hand. The sizes are the `window` section of `config.json` (`width`, `height`, `min_width`, `min_height`, `screen_fraction`; a value outside its bounds keeps its default). Tested on the settings and the geometry, and with the real deck loaded offscreen on a 1024 x 600 screen (opens inside it, grows, shrinks, draws at the size it has).
 
 - **The keepalive of the printer heater can use the frame of 2 bytes of 0x170, which leaves the extruder alone:** the frame of 6 bytes with 0 steps stops the extruder, so the keepalive of a heater that is on cancelled every move of the extruder every 150 ms. With `keepalive.printer_heater_only_frame` set to true in `config.json` the keepalive sends the setpoint alone; the default is off, because a head whose firmware does not know the short frame would let its watchdog cut the heater. The safe-off frame stays the long one, which also stops the extruder.
