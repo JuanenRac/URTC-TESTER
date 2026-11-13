@@ -2024,7 +2024,7 @@ class TesterQtBridge(QObject):
         # The frames come from the one encoder the tests cover (advanced_protocol.watchdog_frames): this screen had its own copies, and the heater's safe-off had 5 bytes where the
         # firmware needs 6, so the "safe off" button did not turn the heater off.
         try:
-            frame, off, _encoded_interval = protocol.watchdog_frames(kind, value, secondary)
+            frame, off, _encoded_interval = protocol.watchdog_frames(kind, value, secondary, heater_only=kind == "printer_heater" and tester_config.printer_heater_only_frame())
         except ValueError:
             self._log("WATCHDOG_BLOCKED invalid numeric parameters")
             return

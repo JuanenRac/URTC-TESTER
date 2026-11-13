@@ -85,6 +85,21 @@ class AdvancedProtocolTests(unittest.TestCase):
         self.assertEqual(off[1], b"\x00\x00\x01\x00\x00\x00")
         self.assertEqual(protocol.printer_frame("extruder", "20", "250")[1], b"\x00\xfa\x01\x00\x00\x14")
 
+    def test_the_printer_heater_keepalive_can_be_the_frame_of_two_bytes_which_leaves_the_extruder_alone(self):
+        frame, off, interval = protocol.watchdog_frames("printer_heater", "210", "0", heater_only=True)
+        self.assertEqual(frame[1], b"\x00\xd2")
+        self.assertEqual(off[1], b"\x00\x00\x01\x00\x00\x00")
+        self.assertEqual(frame[0], off[0])
+        self.assertEqual(interval, 0.15)
+        # by default the long frame is what is sent, as before
+        self.assertEqual(protocol.watchdog_frames("printer_heater", "210", "0")[0][1], b"\x00\xd2\x01\x00\x00\x00")
+        # the switch changes nothing for the other families
+        for kind in ("solder", "laser", "drill", "layer_fan", "uv", "hotair"):
+            self.assertEqual(protocol.watchdog_frames(kind, 100, 1, heater_only=True), protocol.watchdog_frames(kind, 100, 1))
+        # the value is bounded the same way
+        with self.assertRaises(ValueError):
+            protocol.watchdog_frames("printer_heater", "301", "0", heater_only=True)
+
     def test_telemetry_fixtures_are_test_only_and_decode_documented_shapes(self):
         self.assertEqual(
             protocol.decode_telemetry_fixture(CAN_ID_VACUUM_TELEMETRY, b"\x04\xd2\x01"),

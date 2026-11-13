@@ -163,12 +163,19 @@ def printer_frame(action: str, first: str | int, second: str | int) -> tuple[int
     raise ValueError("unknown printer action")
 
 
-def watchdog_frames(kind: str, first: str | int, second: str | int) -> tuple[tuple[int, bytes], tuple[int, bytes], float]:
-    """Return (refresh frame, safe-off frame, interval seconds)."""
+def watchdog_frames(kind: str, first: str | int, second: str | int, heater_only: bool = False) -> tuple[tuple[int, bytes], tuple[int, bytes], float]:
+    """Return (refresh frame, safe-off frame, interval seconds).
+
+    ``heater_only`` (the printer heater only): the refresh is the frame of 2 bytes of 0x170, the setpoint alone, which leaves the extruder as it was; the frame of
+    6 bytes with 0 steps stops the extruder, so with it the keepalive cancelled every move of the extruder every 150 ms. A head whose firmware does not know the short
+    frame ignores it, and its watchdog would then cut the heater: that is why it is a switch (``keepalive.printer_heater_only_frame``) that is off by default. The safe-off
+    frame is always the long one, which is the one that also stops the extruder."""
     if kind == "solder":
         return (CAN_ID_SOLDER_SETPOINT, struct.pack(">H", bounded_int(first, 0, SETPOINT_MAX_C))), (CAN_ID_SOLDER_SETPOINT, b"\x00\x00"), 0.15
     if kind == "laser":
         return (CAN_ID_LASER_CMD, bytes([bounded_int(first, 0, 255), 0x01 if bounded_int(second, 0, 1) else 0x00])), (CAN_ID_LASER_CMD, b"\x00\x00"), 0.15
+    if kind == "printer_heater" and heater_only:
+        return (CAN_ID_3DP_THERMAL_MOTION, struct.pack(">H", bounded_int(first, 0, 300))), (CAN_ID_3DP_THERMAL_MOTION, b"\x00\x00\x01\x00\x00\x00"), 0.15
     if kind == "printer_heater":
         return (CAN_ID_3DP_THERMAL_MOTION, struct.pack(">H", bounded_int(first, 0, 300)) + b"\x01\x00\x00\x00"), (CAN_ID_3DP_THERMAL_MOTION, b"\x00\x00\x01\x00\x00\x00"), 0.15
     if kind == "drill":
