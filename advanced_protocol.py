@@ -509,6 +509,7 @@ class BusHealthTracker:
 
 
 BUS_SYMPTOM_KEYS = {
+    "rates_declared_differ": "STATE_RATES_DECLARED_DIFFER",
     "mixed_bus_suspected": "STATE_MIXED_BUS_SUSPECTED",
     "no_head_at_any_speed": "STATE_NO_HEAD_AT_ANY_SPEED",
     "bus_errors": "STATE_BUS_ERRORS",
@@ -516,12 +517,28 @@ BUS_SYMPTOM_KEYS = {
 }
 
 
-def bus_symptoms(profile_frames, found_nobody_at_any_speed: bool = False, heads_on_bus=(), thresholds=None) -> list[tuple[str, dict]]:
+def bus_symptoms(profile_frames, found_nobody_at_any_speed: bool = False, heads_on_bus=(), thresholds=None, info_frames=()) -> list[tuple[str, dict]]:
     """The warnings about the bus that its symptoms give, as (translation key, arguments) like BusHealthTracker.evaluate: the health frames (0x1B8) of the heads that were
-    heard, a search that found nobody at any speed and the heads known to be built for 500 kbit/s. No change of the protocol: a head at another speed cannot be heard."""
-    from urtc_can import bus_health
+    heard, a search that found nobody at any speed and the heads known to be built for 500 kbit/s. ``info_frames`` are the identity frames (0x1BB): heads of protocol version 2
+    declare the speed of their bus there, and two different declared speeds are a mixed bus for certain. A head at another speed than the bus cannot be heard, so the symptoms
+    stay the way to notice a head that declares nothing."""
+    from urtc_can import bus_health, health_info
     profiles = [fields for fields in (protocol.decode_health_profile(bytes(frame)) for frame in profile_frames) if fields]
-    return [(BUS_SYMPTOM_KEYS[code], {}) for code in bus_health.warnings(profiles, found_nobody_at_any_speed, heads_on_bus, thresholds)]
+    declared = health_info.declared_rates(bytes(frame) for frame in info_frames)
+    return [(BUS_SYMPTOM_KEYS[code], {}) for code in bus_health.warnings(profiles, found_nobody_at_any_speed, heads_on_bus, thresholds, declared)]
+
+
+def declared_rate_line(info_frames) -> tuple[str, dict] | None:
+    """The (translation key, arguments) that say the bus speed the heads declare in their identity frames (0x1BB), or None when no identity frame was heard. Two different
+    declared speeds are shown as the speeds one after the other; a head of older firmware that declares nothing gives the line for not declared."""
+    from urtc_can import health_info
+    frames = [bytes(frame) for frame in info_frames]
+    if not any(health_info.parse(frame) is not None for frame in frames):
+        return None
+    rates = sorted(set(health_info.declared_rates(frames)), reverse=True)
+    if not rates:
+        return ("STATE_RATE_NOT_DECLARED", {})
+    return ("STATE_RATE_DECLARED", {"rate": " / ".join(health_info.rate_text(rate) for rate in rates)})
 
 
 def firmware_version_text(major: int, minor: int, patch_frame: bytes | None) -> str:

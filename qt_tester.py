@@ -122,7 +122,7 @@ from urtc_can.node_monitor import NodeBusStats, label as node_label
 from urtc_can.node_picker import GatedTransport, NodePicker, config_reader_for, transport_io
 from urtc_can.node_picker_qt import NodePickerModel
 from urtc_can.evidence_history_qt import EvidenceHistoryModel
-from urtc_can.protocol import decode_error_counters_response, CAN_ID_ERROR_COUNTERS_RESPONSE, CAN_ID_HEALTH_PROFILE, CAN_ID_QUERY_ERROR_COUNTERS, CAN_ID_SLAVE_APP_PATCH, CAN_ID_SLAVE_REG_READ
+from urtc_can.protocol import decode_error_counters_response, CAN_ID_ERROR_COUNTERS_RESPONSE, CAN_ID_HEALTH_INFO, CAN_ID_HEALTH_PROFILE, CAN_ID_QUERY_ERROR_COUNTERS, CAN_ID_SLAVE_APP_PATCH, CAN_ID_SLAVE_REG_READ
 from urtc_can.update_qt import UpdateModel
 from qt_tool_panel import ToolPanelController
 from urtc_ui import LanguageModel, connection_badge, format_can_id, format_hex
@@ -163,6 +163,7 @@ class TesterQtBridge(QObject):
     _selfTestLine = Signal(str, str)
     _readoutUpdated = Signal(str, str, float)
     _busHealth = Signal(bool, str)
+    _busRate = Signal(str)
     _selfTestDone = Signal(int, str)
     _planLine = Signal(str, str)
     _planDone = Signal(str, str)
@@ -291,6 +292,7 @@ class TesterQtBridge(QObject):
         self._readout_values: dict[str, str] = {}
         self._readout_series = tele.Series()
         self._bus_health_text = ""
+        self._bus_rate_text = ""
         self._bus_health_stop: threading.Event | None = None
         self._self_test_running = False
         self._custom_periodic_last_ok = True
@@ -308,6 +310,7 @@ class TesterQtBridge(QObject):
         self._selfTestLine.connect(self._on_self_test_line)
         self._readoutUpdated.connect(self._on_readout)
         self._busHealth.connect(self._on_bus_health)
+        self._busRate.connect(self._on_bus_rate)
         self._selfTestDone.connect(self._on_self_test_done)
         self._planLine.connect(self._on_plan_line)
         self._planDone.connect(self._on_plan_done)
@@ -1292,11 +1295,16 @@ class TesterQtBridge(QObject):
     # -- bus health: the board is asked who it is every few seconds while idle ---
     BUS_HEALTH_INTERVAL_S = 3.0
 
-    def _bus_symptoms(self, health_frames) -> list[tuple[str, dict]]:
+    def _bus_symptoms(self, health_frames, info_frames=()) -> list[tuple[str, dict]]:
         """The warnings of a bus that mixes speeds, from the health frames that were heard (thresholds and the heads known to be of 500 kbit/s from config.json)."""
         entry = tools_catalog.tool_by_id(self._active_tool_id) if self._active_tool_id >= 0 else None
         heads = [str(self._active_tool_id)] + ([str(entry["name"])] if entry and entry.get("name") else [])
-        return protocol.bus_symptoms(health_frames, False, heads, bus_health_thresholds())
+        return protocol.bus_symptoms(health_frames, False, heads, bus_health_thresholds(), info_frames)
+
+    @Property(str, notify=changed)
+    def busRateText(self) -> str:
+        """The bus speed the head declares in its identity frame (empty until one was heard; heads of older firmware say they declare nothing)."""
+        return self._bus_rate_text
 
     @Property(str, notify=changed)
     def busHealthText(self) -> str:
@@ -1315,6 +1323,7 @@ class TesterQtBridge(QObject):
         if stop is not None:
             stop.set()
         self._bus_health_text = ""
+        self._bus_rate_text = ""
 
     def _bus_health_worker(self, transport, stop: threading.Event) -> None:
         """Notices a bus that goes bad after the first probe (a loose termination, a node misbehaving, an unplugged adapter).
@@ -1324,6 +1333,7 @@ class TesterQtBridge(QObject):
         tracker = protocol.BusHealthTracker()
         was_bad = False
         recent_health: list[bytes] = []          # the health frames of the heads that were heard, the last few polls
+        recent_info: list[bytes] = []            # the identity frames (one every ten seconds per head): the last few, so that two heads are judged together
         while not stop.wait(self.BUS_HEALTH_INTERVAL_S):
             if transport is not self._transport:
                 break
@@ -1335,7 +1345,7 @@ class TesterQtBridge(QObject):
                 if self._busy:
                     continue
                 transport.send_frame(CAN_ID_QUERY_ACTIVE_TOOL, b"")
-                tool_data = self._wait_for(CAN_ID_ACTIVE_TOOL_RESP, 1.0, health_frames=recent_health)
+                tool_data = self._wait_for(CAN_ID_ACTIVE_TOOL_RESP, 1.0, health_frames=recent_health, info_frames=recent_info)
             except Exception as exc:
                 self._log(f"BUS_HEALTH_POLL_FAILED {exc}")
                 continue
@@ -1346,7 +1356,11 @@ class TesterQtBridge(QObject):
             problems = tracker.evaluate(tool_data)
             if problems is None:
                 continue
-            symptoms = self._bus_symptoms(recent_health)      # only the health frames heard since the last poll: an old error does not stay forever
+            del recent_info[:-6]
+            line = protocol.declared_rate_line(recent_info)
+            if line is not None:
+                self._busRate.emit(_(line[0], **line[1]))
+            symptoms = self._bus_symptoms(recent_health, recent_info)      # only the health frames heard since the last poll: an old error does not stay forever
             recent_health.clear()
             problems = problems + symptoms
             bad = bool(problems)
@@ -1358,6 +1372,14 @@ class TesterQtBridge(QObject):
             if bad != was_bad:
                 was_bad = bad
                 self._busHealth.emit(bad, reason)
+
+    @Slot(str)
+    def _on_bus_rate(self, text: str) -> None:
+        if self._transport is None or text == self._bus_rate_text:
+            return
+        self._bus_rate_text = text
+        self._log(f"BUS_RATE {text}")
+        self.changed.emit()
 
     @Slot(bool, str)
     def _on_bus_health(self, bad: bool, reason: str) -> None:
@@ -2896,7 +2918,7 @@ class TesterQtBridge(QObject):
             self._set_state(status="PASSIVE WINDOW COMPLETE", busy=False)
             self._log(f"PASSIVE_CAPTURE_COMPLETE {summary}")
 
-    def _wait_for(self, can_id: int, timeout: float, health_frames: list | None = None) -> bytes | None:
+    def _wait_for(self, can_id: int, timeout: float, health_frames: list | None = None, info_frames: list | None = None) -> bytes | None:
         """The payload of the next frame with this identifier, or None. With ``health_frames`` the health frames (0x1B8) that go by meanwhile are kept in that list."""
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
@@ -2905,6 +2927,8 @@ class TesterQtBridge(QObject):
                 continue
             if health_frames is not None and frame[0] == CAN_ID_HEALTH_PROFILE:
                 health_frames.append(bytes(frame[1]))
+            if info_frames is not None and frame[0] == CAN_ID_HEALTH_INFO:
+                info_frames.append(bytes(frame[1]))
             if frame[0] == can_id:
                 return frame[1]
         return None
