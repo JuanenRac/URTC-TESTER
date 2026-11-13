@@ -476,13 +476,8 @@ CAN_ID_VERSION_RESPONSE  = protocol.CAN_ID_VERSION_RESPONSE
 CAN_ID_VERSION_PATCH_RESPONSE = protocol.CAN_ID_VERSION_PATCH_RESPONSE  # companion of 0x7F9: patch number of the installed application (URTC firmware 0.3.5+)
 VERSION_PATCH_GRACE_S = protocol.VERSION_PATCH_GRACE_MS / 1000.0  # how long after 0x7F9 the companion frame is waited for
 
-# Layers built-in names (derived from every CAN_ID_* constant just above,
-# via globals() - not a separately hand-maintained list that could drift)
-# underneath whatever urtc_custom_ids.json already loaded into
-# CUSTOM_ID_NAMES above. setdefault leaves any custom override already
-# present alone - so a custom file that deliberately renames a standard ID
-# still wins, and everything else gets a sensible built-in name instead of
-# nothing at all.
+# Built-in names from every CAN_ID_* constant above (via globals(), so the list cannot drift), under whatever urtc_custom_ids.json loaded:
+# setdefault leaves a custom rename of a standard ID in place.
 for _name, _value in list(globals().items()):
     if _name.startswith("CAN_ID_") and isinstance(_value, int):
         CUSTOM_ID_NAMES.setdefault(_value, _name[len("CAN_ID_"):].replace("_", " ").title())

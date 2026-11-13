@@ -27,40 +27,15 @@ class CANBusMonitor:
         self.transport = transport
         self.log = log
         self._handlers = {}  # can_id -> list of persistent callback(data) functions, registered by tool panels
-        # Kept deliberately SEPARATE from _handlers above, even though
-        # wait_for_one's own _capture callback is conceptually "just
-        # another handler" - clear_all() (called by the GUI on every
-        # tool-panel rebuild, i.e. every Detect) wipes _handlers wholesale,
-        # and it's meant to: that's specifically the per-tool telemetry
-        # registrations left over from whichever panel was showing before.
-        # But if wait_for_one() shared that same dict, a clear_all() firing
-        # while ANY wait_for_one() elsewhere is still blocked in
-        # event.wait() - the bus health background loop's own periodic
-        # poll, a self-test in progress, another panel's query button, all
-        # of which run concurrently with the GUI thread that can trigger a
-        # rebuild - would silently drop that in-flight wait's registration.
-        # The real response frame would then arrive with nothing left
-        # listening for it, and the wait would time out as if the board
-        # never answered at all, even though it did. For the bus health
-        # monitor specifically this is worse than a missed poll: a None
-        # result there reads as "no error bit set", so a genuine ongoing
-        # bus problem could get silently reported as "recovered" purely
-        # because Detect happened to be clicked at the wrong moment.
+        # Kept separate from _handlers: clear_all() (every tool-panel rebuild) wipes _handlers, and must not drop the registration of a wait_for_one()
+        # still blocked elsewhere (health poll, self-test), or a board that did answer would read as a timeout.
         self._waiters = {}  # can_id -> list of one-shot callback(data) functions, used only by wait_for_one below
         self._sniffers = []  # callback(can_id, data) functions - called for EVERY frame, regardless of ID
         self._running = False
         self._thread = None
         self._lock = threading.Lock()
         self.listen_only = listen_only  # mirrors the transport's own flag
-        # (set at open_channel time) - checked here too, first, so every
-        # caller across the whole GUI that goes through self.bus.send()
-        # (which is all of them) gets a quiet no-op instead of an
-        # SLCANError/SocketCANError bubbling up out of a button click.
-        # wait_for_one's own send_after_register callbacks funnel through
-        # this same send() too, so a query that can never get an answer
-        # (nothing was actually transmitted to prompt one) just times out
-        # normally rather than raising - the correct, expected outcome
-        # while genuinely listen-only, not a bug to report.
+        # Checked here first too, so every send() is a quiet no-op while listen-only; a query then simply times out.
 
     def register(self, can_id, callback):
         with self._lock:
@@ -151,21 +126,11 @@ class CANBusMonitor:
         self.transport.send_frame(can_id, data)
 
     def wait_for_one(self, can_id, timeout=1.5, send_after_register=None):
-        """One-off synchronous wait for a single frame on can_id, layered
-        on top of the same registration mechanism everything else uses -
-        never calls read_frame() directly, so this never races against
-        the background thread's own reading.
+        """One-off synchronous wait for a single frame on can_id, layered on the same registration mechanism as everything else
+        (never calls read_frame() itself, so it cannot race the background reader).
 
-        send_after_register, when given, is called with no arguments
-        right after the callback is registered but before waiting - this
-        closes the window where a fast enough response could otherwise
-        arrive and get processed by the background thread before
-        anything was listening for it, which would cause a false timeout
-        on an otherwise-successful exchange. A caller that sends its
-        request frame itself before calling this method instead of using
-        send_after_register is still safe, just without that race closed
-        for
-        them specifically) since this parameter is optional."""
+        send_after_register, when given, is called with no arguments right after the callback is registered and before waiting,
+        so a fast answer cannot arrive before anything listens (a false timeout). A caller that sends its request first is still safe, without that guarantee."""
         result = {"data": None}
         event = threading.Event()
 
