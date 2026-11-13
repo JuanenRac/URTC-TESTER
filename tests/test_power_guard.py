@@ -34,11 +34,15 @@ def test_only_an_explicit_false_turns_the_guard_off(value, expected):
     assert config.power_guard_settings({"power_guard": {"enabled": value}})["enabled"] is expected
 
 
-def test_a_rise_over_the_percentage_needs_confirmation_and_a_fall_never_does():
+def test_a_change_over_the_percentage_needs_confirmation_up_or_down():
     rule = config.power_rise_needs_confirmation
     assert rule(100, 110, DEFAULT) is False          # exactly 10 % is allowed
     assert rule(100, 111, DEFAULT) is True
-    assert rule(100, 10, DEFAULT) is False
+    assert rule(100, 90, DEFAULT) is False           # exactly 10 % down is allowed
+    assert rule(100, 89, DEFAULT) is True
+    assert rule(100, 10, DEFAULT) is True
+    assert rule(100, 0, DEFAULT) is False            # switching off never asks
+    assert rule(100, -5, DEFAULT) is False
     assert rule(100, 100, DEFAULT) is False
     assert rule(0, 1, DEFAULT) is True               # a rise from zero is always more than any percentage
     assert rule(0, 0, DEFAULT) is False
@@ -92,15 +96,25 @@ def test_a_big_rise_while_the_tool_is_on_is_held_back_until_the_person_confirms(
     assert speed_of(controller) == 111 and host.watchdogs["panel5_0"][1][1][0] == 111
 
 
-def test_a_small_rise_and_any_fall_go_through_without_asking(app, guard):
+def test_a_small_change_and_switching_off_go_through_without_asking(app, guard):
     host, controller = drill_on(100)
     assert controller.needsConfirm("speed", 110) is False
     controller.setValue("speed", 110)
     assert speed_of(controller) == 110
-    controller.setValue("speed", 10)
-    assert speed_of(controller) == 10 and "PANEL_POWER_RAISE_BLOCKED" not in host.logs
+    controller.setValue("speed", 95)
+    assert speed_of(controller) == 95 and "PANEL_POWER_RAISE_BLOCKED" not in host.logs
+    assert controller.needsConfirm("speed", 0) is False
     controller.setValue("speed", 110)                              # back up to what the person confirmed
     assert speed_of(controller) == 110
+
+
+def test_a_big_fall_while_the_tool_is_on_is_held_back_until_the_person_confirms(app, guard):
+    host, controller = drill_on(100)
+    assert controller.needsConfirm("speed", 89) is True
+    controller.setValue("speed", 89)
+    assert speed_of(controller) == 100 and host.logs[-1] == "PANEL_POWER_RAISE_BLOCKED"
+    controller.setValueConfirmed("speed", 89)
+    assert speed_of(controller) == 89
 
 
 def test_a_drag_in_small_steps_cannot_creep_past_the_limit(app, guard):
