@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The repeated commands are tested in a closed loop with a simulated iron whose watchdog is 250 ms:** every interval the settings accept (20 to 200 ms) is run on a virtual clock with one to eight commands sharing the one thread and a generous bus time per frame; the iron never loses its target and no command is silent for the watchdog time. A period above 200 ms is run as a control and does lose the target, so the green result is not an artefact of the model. The load of the bus at the fastest interval is also checked. Simulation only: a bench run with a real head is still the proof.
+
 ## [0.5.5] - The tester opens the bus at 1 Mbit/s, recognises mixed speeds by their symptoms and asks again before a tool that is on goes up too far
 
 - **The black box record is tested over generated inputs with a fixed seed:** what the firmware builds is read back with every count and write index, a flipped bit anywhere in a record is refused, random bytes are never a record, a saved JSON or CSV file reads back exactly, and a damaged or cut file is refused with the error of the module and never another.
