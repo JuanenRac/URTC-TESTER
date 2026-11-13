@@ -441,6 +441,7 @@ ApplicationWindow {
                 }
                 Item { Layout.fillWidth: true }
                 Text { text: testerBackend.status; color: testerBackend.statusColor; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 11 }
+                Text { visible: testerBackend.busRateText.length > 0; text: testerBackend.busRateText; color: muted; font.family: "Bahnschrift"; font.pixelSize: 10; Layout.maximumWidth: 220; elide: Text.ElideRight }
                 Text { visible: testerBackend.busHealthText.length > 0; text: testerBackend.busHealthText; color: "#ee6b80"; font.bold: true; font.pixelSize: 11; Layout.maximumWidth: 260; elide: Text.ElideRight }
                 Text {
                     id: busStatsText

@@ -212,7 +212,7 @@ class BridgeTests(unittest.TestCase):
         guard.start()
         self.addCleanup(guard.cancel)
 
-        def wait_for(can_id, timeout, health_frames=None):
+        def wait_for(can_id, timeout, health_frames=None, info_frames=None):
             data = answers.pop(0)
             if not answers:
                 stop.set()

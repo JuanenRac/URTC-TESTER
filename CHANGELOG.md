@@ -22,6 +22,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The tester reads and shows the bus speed that the heads declare:** heads of protocol version 2 state in their identity frame (`0x1BB`) the bit rate they were built for; the window keeps the last identity frames that go by while it polls the board, shows the declared speed next to the bus status (or says that the head declares nothing, as the heads of older firmware do) and writes it to the log. Two different declared speeds are a mixed bus for certain and are warned first; for a head that declares nothing the warnings by symptoms stay as they were. The shared copies (`urtc_can`, the vectors and the language files) are refreshed from the new specification, with three texts in the eight languages. Tested with the virtual frames and the poll of the window; not tried against a bus with real heads.
+
 - **The file of settings is tested at its edges:** a missing, broken or foreign file reads as empty, saving merges and leaves no temporary file, a failed write keeps the old file, every number read from it (self-test limits, keepalive interval, power guard) takes its bounds and nothing outside them, also over inputs generated with a fixed seed.
 
 - **A tool that is on asks again after a change of more than 10 %, up or down:** the percentage of `power_guard` in `config.json` (`rise_percent`) is 10 by default instead of 20; a smaller change goes through, a bigger one, rise or fall, asks for confirmation first, switching off never asks, and the file can set another value. Tested with the fake host; nothing has run against a real board.
