@@ -14,7 +14,7 @@ import pytest
 
 import tester_config as config
 
-DEFAULT = {"enabled": True, "rise_percent": 20}
+DEFAULT = {"enabled": True, "rise_percent": 10}
 
 
 # ---- the settings and the rule (no Qt) -----------------------------------------------------------------------------
@@ -24,7 +24,7 @@ def test_without_a_setting_the_guard_is_on_and_allows_twenty_percent():
     assert config.power_guard_settings({"power_guard": "oops"}) == DEFAULT
 
 
-@pytest.mark.parametrize("value, expected", [(0, 0), (35, 35), (500, 500), (-1, 20), (501, 20), (12.5, 20), ("30", 20), (True, 20), (None, 20)])
+@pytest.mark.parametrize("value, expected", [(0, 0), (35, 35), (500, 500), (-1, 10), (501, 10), (12.5, 10), ("30", 10), (True, 10), (None, 10)])
 def test_the_percentage_is_a_whole_number_from_0_to_500(value, expected):
     assert config.power_guard_settings({"power_guard": {"rise_percent": value}})["rise_percent"] == expected
 
@@ -36,8 +36,8 @@ def test_only_an_explicit_false_turns_the_guard_off(value, expected):
 
 def test_a_rise_over_the_percentage_needs_confirmation_and_a_fall_never_does():
     rule = config.power_rise_needs_confirmation
-    assert rule(100, 120, DEFAULT) is False          # exactly 20 % is allowed
-    assert rule(100, 121, DEFAULT) is True
+    assert rule(100, 110, DEFAULT) is False          # exactly 10 % is allowed
+    assert rule(100, 111, DEFAULT) is True
     assert rule(100, 10, DEFAULT) is False
     assert rule(100, 100, DEFAULT) is False
     assert rule(0, 1, DEFAULT) is True               # a rise from zero is always more than any percentage
@@ -84,39 +84,39 @@ def speed_of(controller) -> int:
 
 def test_a_big_rise_while_the_tool_is_on_is_held_back_until_the_person_confirms(app, guard):
     host, controller = drill_on(100)
-    assert controller.needsConfirm("speed", 121) is True
-    controller.setValue("speed", 121)
+    assert controller.needsConfirm("speed", 111) is True
+    controller.setValue("speed", 111)
     assert speed_of(controller) == 100 and host.logs[-1] == "PANEL_POWER_RAISE_BLOCKED"
     assert host.watchdogs["panel5_0"][1][1][0] == 100            # the repeated frame still carries the confirmed value
-    controller.setValueConfirmed("speed", 121)
-    assert speed_of(controller) == 121 and host.watchdogs["panel5_0"][1][1][0] == 121
+    controller.setValueConfirmed("speed", 111)
+    assert speed_of(controller) == 111 and host.watchdogs["panel5_0"][1][1][0] == 111
 
 
 def test_a_small_rise_and_any_fall_go_through_without_asking(app, guard):
     host, controller = drill_on(100)
-    assert controller.needsConfirm("speed", 120) is False
-    controller.setValue("speed", 120)
-    assert speed_of(controller) == 120
+    assert controller.needsConfirm("speed", 110) is False
+    controller.setValue("speed", 110)
+    assert speed_of(controller) == 110
     controller.setValue("speed", 10)
     assert speed_of(controller) == 10 and "PANEL_POWER_RAISE_BLOCKED" not in host.logs
-    controller.setValue("speed", 120)                              # back up to what the person confirmed
-    assert speed_of(controller) == 120
+    controller.setValue("speed", 110)                              # back up to what the person confirmed
+    assert speed_of(controller) == 110
 
 
 def test_a_drag_in_small_steps_cannot_creep_past_the_limit(app, guard):
     host, controller = drill_on(100)
-    for value in range(101, 140):
+    for value in range(101, 130):
         controller.setValue("speed", value)
-    assert speed_of(controller) == 120 and host.logs.count("PANEL_POWER_RAISE_BLOCKED") == 19
+    assert speed_of(controller) == 110 and host.logs.count("PANEL_POWER_RAISE_BLOCKED") == 19
 
 
 def test_a_value_confirmed_is_the_new_reference_for_the_next_rise(app, guard):
     host, controller = drill_on(100)
     controller.setValueConfirmed("speed", 150)
-    controller.setValue("speed", 180)                              # 20 % over 150
-    assert speed_of(controller) == 180
-    controller.setValue("speed", 181)
-    assert speed_of(controller) == 180
+    controller.setValue("speed", 165)                              # 10 % over 150
+    assert speed_of(controller) == 165
+    controller.setValue("speed", 166)
+    assert speed_of(controller) == 165
 
 
 def test_a_tool_that_is_off_takes_any_value_and_switching_on_confirms_the_value(app, guard):
@@ -148,3 +148,11 @@ def test_a_control_that_is_not_a_number_or_an_unknown_one_never_asks(app, guard)
     assert controller.needsConfirm("nonsense", 5) is False
     controller.setValue("nonsense", 5)
     assert speed_of(controller) == 100
+
+
+def test_the_default_percentage_of_the_guard_is_ten_and_a_file_can_change_it():
+    assert config.POWER_GUARD_DEFAULTS["rise_percent"] == 10
+    rule = config.power_rise_needs_confirmation
+    assert rule(200, 220, config.power_guard_settings({})) is False
+    assert rule(200, 221, config.power_guard_settings({})) is True
+    assert rule(200, 221, config.power_guard_settings({"power_guard": {"rise_percent": 25}})) is False

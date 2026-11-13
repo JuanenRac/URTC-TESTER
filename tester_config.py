@@ -118,7 +118,7 @@ def keepalive_period_s(default_s, settings=None):
     return settings["interval_ms"] / 1000.0 if settings.get("interval_ms") else default_s
 
 
-POWER_GUARD_DEFAULTS = {"enabled": True, "rise_percent": 20}
+POWER_GUARD_DEFAULTS = {"enabled": True, "rise_percent": 10}
 POWER_GUARD_RISE_BOUNDS = (0, 500)
 
 
@@ -126,7 +126,7 @@ def power_guard_settings(config=None):
     """When raising the value of a tool that is already on needs the person to confirm again, from ``power_guard`` in config.json.
 
     A tool that repeats its command (a heater, a drill, the laser) took the value the person confirmed when it was switched on. ``rise_percent`` (a whole
-    number from 0 to 500, 20 by default) is how much above that value a new one may go without asking again; going down never asks. ``enabled`` (true by
+    number from 0 to 500, 10 by default) is how much above that value a new one may go without asking again; going down never asks. ``enabled`` (true by
     default) is the switch: only an explicit false turns the question off. Anything else (a text, a boolean where a number goes, a number outside the
     limits) keeps the default of its own field."""
     settings = dict(POWER_GUARD_DEFAULTS)
@@ -148,7 +148,7 @@ def power_rise_needs_confirmation(confirmed, new, settings=None):
         return False
     if isinstance(confirmed, bool) or isinstance(new, bool) or not isinstance(confirmed, (int, float)) or not isinstance(new, (int, float)):
         return False
-    return new > confirmed * (1 + settings.get("rise_percent", 20) / 100.0)
+    return new > confirmed * (1 + settings.get("rise_percent", POWER_GUARD_DEFAULTS["rise_percent"]) / 100.0)
 
 
 def bus_health_thresholds(config=None):
