@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The Spanish README carries the current wording of the shared sections:** one sentence of the shared block was behind the corrected text of the common repository.
+
 - **The Spanish, German, French and European Portuguese README were read sentence by sentence:** words left from English (exerciser, payload, setpoint, widget, jumper, watchdog, driver) are worded in the language of the page and the program is called a tester in every language.
 
 - **The Spanish, German, French and European Portuguese README were read for register and wording:** the programs are called the same way in every language (tester, updater, Web Studio), calques, straight quotes and words of another language were corrected, and the Related Projects section follows the shared texts.
