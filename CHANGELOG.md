@@ -23,6 +23,7 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 - **The coverage of the continuous check is the coverage of the own code:** the copies of the shared module (`urtc_can` and `urtc_ui`, whose locks list every file) are measured where they come from and no longer here, and the floor goes from 73 to the value that is measured, 85.
+- **The search for the bit rate of a bus is tested against modelled buses:** the order of the rates, a live bus found while listening, a live bus that does not answer (nothing is transmitted at any other rate), an idle bus found by asking, an adapter that fails to open or to close, rates that are not known, and the callbacks.
 
 - **The tester reads and shows the bus speed that the heads declare:** heads of protocol version 2 state in their identity frame (`0x1BB`) the bit rate they were built for; the window keeps the last identity frames that go by while it polls the board, shows the declared speed next to the bus status (or says that the head declares nothing, as the heads of older firmware do) and writes it to the log. Two different declared speeds are a mixed bus for certain and are warned first; for a head that declares nothing the warnings by symptoms stay as they were. The shared copies (`urtc_can`, the vectors and the language files) are refreshed from the new specification, with three texts in the eight languages. Tested with the virtual frames and the poll of the window; not tried against a bus with real heads.
 
