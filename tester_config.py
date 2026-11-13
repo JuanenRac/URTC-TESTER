@@ -150,6 +150,22 @@ def window_geometry(available_width, available_height, settings=None):
     return {"width": width, "height": height, "minimumWidth": min(settings["min_width"], width), "minimumHeight": min(settings["min_height"], height)}
 
 
+CLEAR_ERROR_DEFAULTS = {"confirm": True}
+
+
+def clear_error_settings(config=None):
+    """Whether the button that lifts a latched error of the head asks first, from ``clear_error`` in config.json.
+
+    ``confirm`` is true by default: only an explicit false lets the button send at once. The command itself works only on a head whose CLEAR_ERROR switch was
+    turned on (and the head refuses it unless it is cool and every actuator is at zero), so the question is a second guard, not the only one. Anything that is
+    not exactly false keeps the default."""
+    settings = dict(CLEAR_ERROR_DEFAULTS)
+    given = (load_config() if config is None else config).get("clear_error")
+    if isinstance(given, dict) and given.get("confirm") is False:
+        settings["confirm"] = False
+    return settings
+
+
 def printer_heater_only_frame(config=None) -> bool:
     """True when the keepalive of the printer heater uses the frame of 2 bytes of 0x170 (the setpoint alone, the extruder left as it is): ``keepalive.printer_heater_only_frame``
     in config.json. Off unless it is exactly true: a head whose firmware does not know the short frame would let its watchdog cut the heater."""
@@ -475,6 +491,7 @@ CAN_ID_CRASH_DUMP_QUERY = protocol.CAN_ID_CRASH_DUMP_QUERY    # Asks for the reg
 CAN_ID_CRASH_DUMP_RESP  = protocol.CAN_ID_CRASH_DUMP_RESP     # Six frames of eight bytes make the 48-byte record
 CAN_ID_SET_FEATURES  = protocol.CAN_ID_SET_FEATURES          # Switches the optional firmware functions (persistent)
 CAN_ID_FEATURES_RESP  = protocol.CAN_ID_FEATURES_RESP        # Answers CAN_ID_SET_FEATURES, or an empty query
+CAN_ID_CLEAR_ERROR  = protocol.CAN_ID_CLEAR_ERROR            # Lifts a latched critical error (feature CLEAR_ERROR); answered with CAN_ID_ACTIVE_TOOL_RESP
 CAN_ID_PID_CONFIG     = protocol.CAN_ID_PID_CONFIG           # Heater PID: store the gains, start or abort the autotune, ask for the state
 CAN_ID_PID_STATE      = protocol.CAN_ID_PID_STATE_RESP       # Gains in force, state and heater output; answers CAN_ID_PID_CONFIG or an empty query
 CAN_ID_ERASE_FRAM       = protocol.CAN_ID_ERASE_FRAM  # Magic-payload erase - see ERASE_FRAM_MAGIC below

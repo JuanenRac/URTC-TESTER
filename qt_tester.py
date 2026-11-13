@@ -260,6 +260,7 @@ class TesterQtBridge(QObject):
             "black_box": "",
             "crash_dump": "",
             "features": "",
+            "clear_error": "",
             "pid": "",
             "thermal_view": "",
             "rack_bench": "",
@@ -1708,6 +1709,23 @@ class TesterQtBridge(QObject):
         self._run_query("features", frame, extras.CAN_ID_FEATURES_RESP, extras.decode_features)
 
     @Property(str, notify=changed)
+    def clearErrorText(self) -> str:
+        return self._query_texts["clear_error"]
+
+    @Property(bool, notify=changed)
+    def clearErrorNeedsConfirmation(self) -> bool:
+        return bool(tester_config.clear_error_settings()["confirm"])
+
+    @Slot()
+    def clearError(self) -> None:
+        """Ask the head to lift its latched critical error. QML asks for the usual confirmation first (unless config.json says otherwise); the head decides
+        (its CLEAR_ERROR switch, the temperature and the actuators) and says why when it refuses."""
+        if not self.canUseUtilityPanels:
+            self._log("FEATURES_BLOCKED not connected or not in active-check mode")
+            return
+        self._run_query("clear_error", extras.clear_error_frame(), extras.CAN_ID_ACTIVE_TOOL_RESP, extras.decode_clear_error)
+
+    @Property(str, notify=changed)
     def pidText(self) -> str:
         return self._query_texts["pid"]
 
@@ -2294,6 +2312,17 @@ class TesterQtBridge(QObject):
                 text = _("LBL_FEATURES_TEXT", stored=extras.features_text(result["stored"]), running=extras.features_text(result["running"]),
                          supported=extras.features_text(result["supported"]))
             self._log(f"FIRMWARE_FEATURES {result}")
+        elif key == "clear_error":
+            if result is None:
+                text = _("LBL_FEATURES_NO_RESPONSE")
+            else:
+                outcome = _(extras.CLEAR_RESULT_KEYS[result["clear_result"]], limit=extras.protocol.CLEAR_ERROR_MAX_TEMP_C) \
+                    if result["clear_result"] in extras.CLEAR_RESULT_KEYS else str(result["clear_result"])
+                text = _("LBL_CLEAR_ERROR_RESULT", result=outcome)
+                reason_key = extras.ERROR_REASON_KEYS.get(result["error_reason"] or 0)
+                if result["system_error"] and reason_key:
+                    text += "\n" + _("LBL_ERROR_REASON", reason=_(reason_key))
+            self._log(f"FIRMWARE_FEATURES clear_error {result}")
         elif key == "pid":
             if result is None:
                 text = _("LBL_PID_NO_RESPONSE")

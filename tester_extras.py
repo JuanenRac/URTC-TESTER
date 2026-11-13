@@ -27,13 +27,16 @@ import zlib
 from collections.abc import Callable
 
 import tester_config
-from urtc_can import blackbox, crash_dump, rack_sim, rack_status, thermal_view
+from urtc_can import blackbox, crash_dump, protocol, quick_state, rack_sim, rack_status, thermal_view
 
 FEATURES_MAGIC = b"FEAT"
-FEATURE_NAMES = ((0x01, "MOTION_RAMPS"), (0x02, "HEALTH_PROFILE"), (0x04, "HSI_AUTOTRIM"), (0x08, "THERMAL_PID"))
-FEATURES_SUPPORTED = 0x0F
+FEATURE_NAMES = ((0x01, "MOTION_RAMPS"), (0x02, "HEALTH_PROFILE"), (0x04, "HSI_AUTOTRIM"), (0x08, "THERMAL_PID"), (0x10, "CLEAR_ERROR"), (0x20, "COMMS_WATCHDOG"),
+                 (0x40, "MAGNET_RELEASE"))
+FEATURES_SUPPORTED = 0x7F
 CAN_ID_SET_FEATURES = tester_config.CAN_ID_SET_FEATURES
 CAN_ID_FEATURES_RESP = tester_config.CAN_ID_FEATURES_RESP
+CAN_ID_CLEAR_ERROR = tester_config.CAN_ID_CLEAR_ERROR
+CAN_ID_ACTIVE_TOOL_RESP = tester_config.CAN_ID_ACTIVE_TOOL_RESP
 
 
 # ---- fault recorder ---------------------------------------------------------------------------------------------------------------
@@ -140,6 +143,27 @@ def decode_features(data: bytes) -> dict | None:
         return None
     stored, running, supported = data
     return {"stored": stored, "running": running, "supported": supported}
+
+
+def clear_error_frame() -> tuple[int, bytes]:
+    """The command that lifts a latched critical error: the identifier and the magic payload ``CLER``."""
+    return CAN_ID_CLEAR_ERROR, protocol.MAGIC_CLEAR_ERROR
+
+
+def decode_clear_error(data: bytes) -> dict | None:
+    """The quick state the head answers with: the reason of the error and what the command did (None when the head does not send those bytes)."""
+    state = quick_state.decode(data)
+    if state is None or state["clear_result"] is None:
+        return None
+    return {"system_error": state["system_error"], "error_reason": state["error_reason"], "error_reason_name": state["error_reason_name"],
+            "clear_result": state["clear_result"], "clear_result_name": state["clear_result_name"]}
+
+
+# the language key of the outcome and of the reason of an error
+CLEAR_RESULT_KEYS = {1: "LBL_CLEAR_RESULT_CLEARED", 2: "LBL_CLEAR_RESULT_SWITCH_OFF", 3: "LBL_CLEAR_RESULT_NO_ERROR", 4: "LBL_CLEAR_RESULT_NOT_CLEARABLE",
+                     5: "LBL_CLEAR_RESULT_HOT", 6: "LBL_CLEAR_RESULT_ACTUATOR_ON"}
+ERROR_REASON_KEYS = {1: "LBL_ERROR_REASON_UNKNOWN", 2: "LBL_ERROR_REASON_THERMAL", 3: "LBL_ERROR_REASON_SENSOR", 4: "LBL_ERROR_REASON_TOOL_ID",
+                     5: "LBL_ERROR_REASON_COMMS_WATCHDOG", 6: "LBL_ERROR_REASON_FAN_STALL", 7: "LBL_ERROR_REASON_STEPPER_SILENCE", 8: "LBL_ERROR_REASON_MAGNET_RELEASE"}
 
 
 def features_text(mask: int) -> str:
