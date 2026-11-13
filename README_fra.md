@@ -349,9 +349,9 @@ n'a pas de watchdog (un détecteur de blocage à la place - voir
 **Notes de confort (commodités logicielles, pas des fonctions de sécurité).**
 
 - **ARRÊTER TOUTES LES SORTIES** (dans les deux fenêtres, disponible une fois connecté avec les vérifications actives armées) envoie toutes les commandes d'arrêt connues - chauffages, laser, perceuse, lampe UV, ventilateur de couche, relâchement de l'électroaimant, moteurs pas à pas simples et sertisseuse - quel que soit l'outil monté, et arrête tous les rafraîchissements. Le ventilateur du hotend est laissé en marche volontairement, car la buse peut être encore chaude. C'est une commande logicielle envoyée sur le bus CAN, pas un arrêt d'urgence : elle ne peut pas agir si le bus, l'adaptateur, le PC ou la carte tombe en panne.
-- Les impulsions de soudure ponctuelles, l'impulsion de pâte et le sertissage demandent aussi une confirmation dans la fenêtre classique, comme le fait toujours le deck Qt Quick.
+- Les impulsions de soudure ponctuelles, l'impulsion de pâte et le sertissage demandent aussi une confirmation dans la fenêtre classique, comme le fait toujours le tableau de commande Qt Quick.
 - La perceuse et la lampe UV sont rafraîchies comme le laser et les chauffages. Tant que le chauffage de l'imprimante 3D est maintenu, son rafraîchissement de 150 ms porte 0 pas d'extrudeur, que le firmware lit comme un ordre d'arrêt : un mouvement d'extrudeur lancé dans cet état est annulé en 150 ms, donc déplacez l'extrudeur chauffage éteint jusqu'à ce que le firmware offre un mode qui le laisse tranquille.
-- Le port et le débit sont mémorisés pour la prochaine session (`config.json`) et le deck Qt Quick a son propre sélecteur de débit. La **détection automatique** commence par écouter à chaque débit (rien n'est émis sur un bus actif) et n'interroge à chaque débit que si le bus est complètement silencieux.
+- Le port et le débit sont mémorisés pour la prochaine session (`config.json`) et le tableau de commande Qt Quick a son propre sélecteur de débit. La **détection automatique** commence par écouter à chaque débit (rien n'est émis sur un bus actif) et n'interroge à chaque débit que si le bus est complètement silencieux.
 - Le Moniteur de bus brut peut être limité à certains ID CAN (**Filtre d'ID**) et aux trames dont les données ont changé (**Changements seulement**). Sur un bus avec plusieurs têtes d'outil (l'extension multinœud), chaque ligne porte son nœud (`N03`), `n3 n12` dans le filtre ne garde que les trames de ces nœuds, et un résumé sous le tableau donne les trames par seconde et la part du bus de chaque nœud.
 
 #### 🔥 Test de banc d'emballement thermique (firmware URTC 0.3.2+ / 0.3.3+)
@@ -411,7 +411,7 @@ remettre à quiconque déboguant un problème de tête d'outil.
 
 `image-info FICHIER` (également sans fenêtre) lit l'en-tête qu'une image de firmware porte en elle : le matériel auquel elle est destinée, sa version, sa longueur et son CRC-32. Il dit si le fichier est accepté, accepté avec un avertissement (une image plus ancienne sans en-tête) ou refusé (un en-tête qui ne tient pas, un fichier `.urimg` estampillé, une autre carte avec `--hardware main|slave`), et `--policy accept|warn|require` est l'interrupteur de compatibilité pour une image sans en-tête. Il n'ouvre aucun bus.
 
-**Plans dans la fenêtre (nouveau, vérifié seulement par des tests et la tête simulée) :** la section PLANS DE TEST, en bas de la colonne de droite du deck, liste les plans de `plans/`, exécute celui que vous choisissez contre la carte connectée avec le même moteur (pas en mode écoute seule, et seulement tant que rien d'autre ne lit le bus), affiche chaque étape dès qu'elle se termine, pose dans une boîte de dialogue les questions d'une étape de confirmation et enregistre le journal et l'enregistrement du résultat. Un plan qui commande des sorties demande d'abord une confirmation et toutes les sorties sont coupées à la fin ; Annuler l'arrête après l'étape en cours.
+**Plans dans la fenêtre (nouveau, vérifié seulement par des tests et la tête simulée) :** la section PLANS DE TEST, en bas de la colonne de droite du tableau de commande, liste les plans de `plans/`, exécute celui que vous choisissez contre la carte connectée avec le même moteur (pas en mode écoute seule, et seulement tant que rien d'autre ne lit le bus), affiche chaque étape dès qu'elle se termine, pose dans une boîte de dialogue les questions d'une étape de confirmation et enregistre le journal et l'enregistrement du résultat. Un plan qui commande des sorties demande d'abord une confirmation et toutes les sorties sont coupées à la fin ; Annuler l'arrête après l'étape en cours.
 
 **Rechercher une mise à jour.** Le bouton « Rechercher une mise à jour » interroge GitHub une fois sur la dernière release et ne propose le téléchargement que si elle contient un paquet pour ce système plus récent que la version installée. Le paquet n'est accepté que si son SHA-256 et sa signature Ed25519 (la clé des releases, épinglée dans le programme) sont valides ; il n'est installé qu'après votre confirmation, jamais tant qu'une sortie est active, et la version précédente est conservée pour revenir en arrière (et rétablie d'elle-même si la nouvelle ne démarre pas). Rien n'est jamais vérifié ni installé tout seul : la vérification à l'ouverture est une option, désactivée par défaut, et la confirmation ne se désactive que dans la même fenêtre, après un avertissement.
 
@@ -494,7 +494,7 @@ plutôt que de planter, et un fichier de langue manquant ou illisible
 pour toute l'interface - dans les deux cas l'outil reste utilisable
 pendant que le décalage se règle.
 
-**Configuration SLCAN/SocketCAN sous Linux** (reflash de l'adaptateur,
+**Configuration SLCAN/SocketCAN sous Linux** (reprogrammation de l'adaptateur,
 permissions série, activation avec `ip link`) est exactement la même
 que la section 1 du flasher - voir le
 [README d'URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)
@@ -573,8 +573,8 @@ La liste annotée de chaque fichier source, une ligne par fichier, est dans [doc
 
 ## 🗺️ Feuille de route et limites connues
 
-Le contrat de preuve de cet outil - ce qui compte comme pass/fail/unknown,
-pourquoi l'absence de preuve est toujours unknown et jamais pass, et
+Le contrat de preuve de cet outil - ce qui compte comme réussi, échoué ou indéterminé,
+pourquoi l'absence de preuve est toujours indéterminée et jamais réussie, et
 pourquoi il n'accorde par lui-même aucune autorité de flashage de
 firmware - est documenté dans
 [docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md).

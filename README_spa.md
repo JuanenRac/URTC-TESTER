@@ -344,9 +344,9 @@ que es un envío simple de una vez.
 **Notas de comodidad (utilidades de software, no funciones de seguridad).**
 
 - **PARAR TODAS LAS SALIDAS** (en ambas ventanas, disponible con la conexión hecha y las comprobaciones activas armadas) envía todas las órdenes de apagado conocidas - calefactores, láser, taladro, lámpara UV, ventilador de capa, liberación del electroimán, motores paso a paso simples y crimpadora - sea cual sea la herramienta instalada, y detiene todos los refrescos. El ventilador del hotend se deja encendido a propósito, porque la boquilla puede seguir caliente. Es una orden de software enviada por el bus CAN, no una parada de emergencia: no puede actuar si falla el bus, el adaptador, el PC o la placa.
-- Los pulsos de soldadura de un solo disparo, el pulso de pasta y el crimpado piden confirmación también en la ventana clásica, como siempre hace el deck de Qt Quick.
+- Los pulsos de soldadura de un solo disparo, el pulso de pasta y el crimpado piden confirmación también en la ventana clásica, como siempre hace el panel de Qt Quick.
 - El taladro y la lámpara UV se refrescan igual que el láser y los calefactores. Mientras se mantiene el calefactor de la impresora 3D, su refresco de 150 ms lleva 0 pasos de extrusor, que el firmware lee como orden de parada: un movimiento del extrusor iniciado en ese estado se cancela en 150 ms, así que mueve el extrusor con el calefactor apagado hasta que el firmware ofrezca un modo que lo deje en paz.
-- El puerto y la velocidad se recuerdan para la próxima sesión (`config.json`) y el deck de Qt Quick tiene su propio selector de velocidad. La **autodetección** primero solo escucha a cada velocidad (no se transmite nada en un bus vivo) y solo pregunta a cada velocidad cuando el bus está completamente en silencio.
+- El puerto y la velocidad se recuerdan para la próxima sesión (`config.json`) y el panel de Qt Quick tiene su propio selector de velocidad. La **autodetección** primero solo escucha a cada velocidad (no se transmite nada en un bus vivo) y solo pregunta a cada velocidad cuando el bus está completamente en silencio.
 - El Monitor de bus en bruto se puede limitar a algunos ID CAN (**Filtro de ID**) y a las tramas cuyos datos cambiaron (**Solo cambios**). En un bus con varios cabezales (la extensión multinodo) cada fila lleva su nodo (`N03`), `n3 n12` en el filtro deja solo las tramas de esos nodos y un resumen bajo la tabla da las tramas por segundo y la parte del bus de cada nodo.
 
 #### 🔥 Prueba de banco de embalamiento térmico (firmware URTC 0.3.2+ / 0.3.3+)
@@ -443,7 +443,7 @@ escucha, por lo que no puede transmitir hasta que armes deliberadamente las
 comprobaciones activas. Cada uno de los comandos propios de los 25 perfiles de
 herramienta tiene aquí cobertura real y confirmada (movimiento, taladro, AOI,
 electroimán, pulso de soldadura por puntos/ultrasónica, proyección de pasta,
-flying probe, inspección térmica, los 5 actuadores con perro guardián y reenvío periódico (keepalive),
+sonda voladora, inspección térmica, los 5 actuadores con perro guardián y reenvío periódico (keepalive),
 telemetría de vacío/sonda de escaneo), todos con la misma compuerta: una
 coincidencia de identidad, un modo activo armado explícitamente y una
 confirmación del usuario en QML antes de transmitir nada.
@@ -568,7 +568,7 @@ La lista anotada de cada archivo de código, una línea por archivo, está en [d
 ## 🗺️ Hoja de ruta y límites conocidos
 
 El contrato de evidencia de esta herramienta - qué cuenta como
-pass/fail/unknown, por qué la ausencia de evidencia siempre es unknown y
+correcto, fallido y sin determinar, por qué la ausencia de evidencia siempre es unknown y
 nunca pass, y por qué no otorga por sí misma autoridad para grabar
 firmware - está documentado en
 [docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md).
