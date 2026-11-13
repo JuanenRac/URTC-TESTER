@@ -22,6 +22,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The search for the bit rate of a bus is tested against modelled buses:** the order of the rates, a live bus found while listening, a live bus that does not answer (nothing is transmitted at any other rate), an idle bus found by asking, an adapter that fails to open or to close, rates that are not known, and the callbacks.
+
 - **The tester reads and shows the bus speed that the heads declare:** heads of protocol version 2 state in their identity frame (`0x1BB`) the bit rate they were built for; the window keeps the last identity frames that go by while it polls the board, shows the declared speed next to the bus status (or says that the head declares nothing, as the heads of older firmware do) and writes it to the log. Two different declared speeds are a mixed bus for certain and are warned first; for a head that declares nothing the warnings by symptoms stay as they were. The shared copies (`urtc_can`, the vectors and the language files) are refreshed from the new specification, with three texts in the eight languages. Tested with the virtual frames and the poll of the window; not tried against a bus with real heads.
 
 - **The file of settings is tested at its edges:** a missing, broken or foreign file reads as empty, saving merges and leaves no temporary file, a failed write keeps the old file, every number read from it (self-test limits, keepalive interval, power guard) takes its bounds and nothing outside them, also over inputs generated with a fixed seed.
