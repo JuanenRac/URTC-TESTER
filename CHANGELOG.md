@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The keepalive of the printer heater can use the frame of 2 bytes of 0x170, which leaves the extruder alone:** the frame of 6 bytes with 0 steps stops the extruder, so the keepalive of a heater that is on cancelled every move of the extruder every 150 ms. With `keepalive.printer_heater_only_frame` set to true in `config.json` the keepalive sends the setpoint alone; the default is off, because a head whose firmware does not know the short frame would let its watchdog cut the heater. The safe-off frame stays the long one, which also stops the extruder.
+
 - **The repeated commands are tested in a closed loop with a simulated iron whose watchdog is 250 ms:** every interval the settings accept (20 to 200 ms) is run on a virtual clock with one to eight commands sharing the one thread and a generous bus time per frame; the iron never loses its target and no command is silent for the watchdog time. A period above 200 ms is run as a control and does lose the target, so the green result is not an artefact of the model. The load of the bus at the fastest interval is also checked. Simulation only: a bench run with a real head is still the proof.
 
 ## [0.5.5] - The tester opens the bus at 1 Mbit/s, recognises mixed speeds by their symptoms and asks again before a tool that is on goes up too far

@@ -32,6 +32,17 @@ def make(clock=None, fail_ids=()):
     return KeepaliveScheduler(send, clock=clock, log=logs.append, on_failure=failed.append), clock, sent, failed, logs
 
 
+def test_the_short_frame_of_the_printer_heater_is_a_switch_that_is_off_unless_it_is_exactly_true():
+    assert cfg.printer_heater_only_frame({}) is False
+    assert cfg.printer_heater_only_frame({"keepalive": {}}) is False
+    assert cfg.printer_heater_only_frame({"keepalive": {"printer_heater_only_frame": True}}) is True
+    for value in (False, None, 1, "true", "yes", [True], 0, 1.0):
+        assert cfg.printer_heater_only_frame({"keepalive": {"printer_heater_only_frame": value}}) is False
+    for section in (None, True, "keepalive", [], 5):
+        assert cfg.printer_heater_only_frame({"keepalive": section}) is False
+    assert cfg.keepalive_settings({"keepalive": {"printer_heater_only_frame": True}}) == {"interval_ms": None, "single_io_thread": False}
+
+
 # ---- the settings -------------------------------------------------------------------------------------------------------
 
 def test_the_defaults_keep_each_tool_period_and_one_thread_per_command():

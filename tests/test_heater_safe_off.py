@@ -51,6 +51,19 @@ class QtDeckTests(unittest.TestCase):
         bridge.setWatchdogOutput("printer_heater", False, "220", "0")
         self.assertEqual(stopped[0][1], (CAN_ID_3DP_THERMAL_MOTION, b"\x00\x00\x01\x00\x00\x00"))
 
+    def test_the_deck_sends_the_long_frame_by_default_and_the_short_one_only_when_the_switch_is_on(self):
+        bridge, started, _stopped = self._bridge()
+        bridge.setWatchdogOutput("printer_heater", True, "220", "0")
+        self.assertEqual(len(started[0][1][1]), 6)
+        saved = qt_tester.tester_config.printer_heater_only_frame
+        qt_tester.tester_config.printer_heater_only_frame = lambda config=None: True
+        try:
+            bridge.setWatchdogOutput("printer_heater", True, "220", "0")
+        finally:
+            qt_tester.tester_config.printer_heater_only_frame = saved
+        self.assertEqual(started[1][1][1], b"\x00\xdc")
+        self.assertEqual(len(started[1][2][1]), 6)      # and the safe-off is the long one in both cases
+
     def test_the_deck_refuses_a_setpoint_above_the_ceiling(self):
         bridge, started, _stopped = self._bridge()
         bridge.setWatchdogOutput("solder", True, "446", "0")

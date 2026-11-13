@@ -112,6 +112,13 @@ def keepalive_settings(config=None):
     return settings
 
 
+def printer_heater_only_frame(config=None) -> bool:
+    """True when the keepalive of the printer heater uses the frame of 2 bytes of 0x170 (the setpoint alone, the extruder left as it is): ``keepalive.printer_heater_only_frame``
+    in config.json. Off unless it is exactly true: a head whose firmware does not know the short frame would let its watchdog cut the heater."""
+    given = (load_config() if config is None else config).get("keepalive")
+    return isinstance(given, dict) and given.get("printer_heater_only_frame") is True
+
+
 def keepalive_period_s(default_s, settings=None):
     """The period in seconds a repeated command really uses: the configured one when there is one, else the tool's own ``default_s``."""
     settings = keepalive_settings() if settings is None else settings
