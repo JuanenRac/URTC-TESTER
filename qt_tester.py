@@ -152,13 +152,8 @@ class TesterQtBridge(QObject):
     _flyingProbeResult = Signal(str, str)
     _thermalResult = Signal(object, str)
     _logRequested = Signal(str)
-    # Real, continuous telemetry - unlike every _XResult signal above (one
-    # bounded worker thread, one final emit), these fire repeatedly for as
-    # long as a watch is running, marshalled the same way _log() already
-    # is (worker thread -> Signal.emit -> Qt's own cross-thread queued
-    # delivery -> a @Slot back on the GUI thread). Vacuum/Scan Probe have
-    # no commands at all (see watchTelemetry) - nothing here can ever
-    # write to a real actuator.
+    # Continuous telemetry: unlike the _XResult signals above (one final emit), these fire repeatedly while a watch runs, queued across threads
+    # like _log(). Vacuum/Scan Probe have no commands (see watchTelemetry): nothing here writes to an actuator.
     _vacuumTelemetry = Signal(int, bool)
     _scanProbeImpact = Signal(str)
     _selfTestLine = Signal(str, str)
@@ -233,13 +228,7 @@ class TesterQtBridge(QObject):
         self._logs: list[str] = []
         self._watchdog_stops: dict[str, threading.Event] = {}
         self._watchdog_off_frames: dict[str, tuple[int, bytes]] = {}
-        # Continuous telemetry watch - same real threading.Event-keyed-dict
-        # shape as _watchdog_stops above (one real, proven mechanism for
-        # "a background thread that runs until told to stop", not a
-        # second one invented for this), but for a read loop rather than
-        # a periodic send. At most one key is ever active - only one tool
-        # panel is visible at a time - kept as a dict anyway to reuse the
-        # exact same stop/cleanup shape _stop_watchdog already has.
+        # Continuous telemetry watch: same Event-keyed dict as _watchdog_stops, for a read loop; at most one key is active (one panel is visible).
         self._telemetry_stops: dict[str, threading.Event] = {}
         # Raw bus monitor: its own stop flag (a monitor is not a telemetry watch) and a bounded frame table.
         self._monitor_stop: threading.Event | None = None
@@ -279,14 +268,8 @@ class TesterQtBridge(QObject):
         self._auto_black_box = extras.AutoDownload(True)
         self._bench = extras.RackBench()
         self._thermal_view_source = ""
-        # Custom CAN Frame - the one real tool-independent action with no
-        # per-field validation beyond frame shape (see HELP_SENDS_RAW_FRAME's
-        # own real text): whatever is typed goes on the bus exactly as
-        # typed. Periodic re-send is owned by a QML Timer (see
-        # sendCustomFramePeriodicTick's own docstring for why), not a
-        # Python thread like _watchdog_stops/_telemetry_stops above - this
-        # flag is the single source of truth the Timer's running binding
-        # and the CheckBox's checked binding both read.
+        # Custom CAN frame: whatever is typed goes on the bus as typed. The periodic re-send is a QML Timer (see sendCustomFramePeriodicTick),
+        # not a thread; this flag is what the Timer and the CheckBox both read.
         self._custom_periodic_active = False
         self._self_test_lines: list[dict[str, str]] = []
         self._self_test_verdict = ""  # PASS, FAIL or UNKNOWN of the last run
@@ -1871,13 +1854,7 @@ class TesterQtBridge(QObject):
         if not 1 <= steps <= 0xFFFFFFFF:
             self._log("MOTION_BLOCKED steps outside 1..4294967295")
             return
-        # `0x01 if direction == "forward" else 0x00` used to
-        # let ANY unrecognized value (a typo, wrong case, a stray value
-        # from a forged/stale UI state) silently encode as "reverse" - a
-        # real, different, valid movement - instead of being rejected.
-        # QML only ever offers "forward"/"reverse", but that is a UI
-        # constraint, not a protocol-boundary guarantee against a forged
-        # call.
+        # Any other value must be refused, not encoded as "reverse": QML only offers the two, but that is no guarantee at the protocol boundary.
         if direction not in ("forward", "reverse"):
             self._log(f"MOTION_BLOCKED unknown direction {direction!r}")
             return
@@ -2878,15 +2855,8 @@ class TesterQtBridge(QObject):
         count = 0
         identifiers: set[int] = set()
         frames: list[dict[str, str]] = []
-        # Real bus-load estimate, derived from this same 2.0 s window's own
-        # frame count/sizes rather than a second, separate tracking
-        # mechanism. Per-frame bit cost uses the standard CAN 2.0A
-        # 11-bit-ID data-frame overhead (SOF 1 + arbitration 12 + control
-        # 6 + CRC 16 + ACK 2 + EOF 7 + IFS 3 = 47 fixed bits) plus 8 data
-        # bits per byte actually seen - bit stuffing is deliberately not
-        # modeled (it depends on the actual bit pattern, not just frame
-        # count/size), so this reads slightly low on buses with a lot of
-        # same-bit runs, never high.
+        # Bus load of this 2.0 s window: 47 fixed bits per standard data frame (SOF 1 + arbitration 12 + control 6 + CRC 16 + ACK 2 + EOF 7 + IFS 3)
+        # plus 8 per data byte; bit stuffing is not modeled, so the figure reads slightly low, never high.
         CAN_FRAME_OVERHEAD_BITS = 47
         total_bits = 0
         try:
