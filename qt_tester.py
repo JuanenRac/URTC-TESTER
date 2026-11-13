@@ -65,6 +65,7 @@ from tester_config import (
     save_config,
     translate_log_line,
     translate_status,
+    window_geometry,
     CAN_ID_ACTIVE_TOOL_RESP,
     CAN_ID_3DP_LAYER_FAN_CMD,
     CAN_ID_3DP_THERMAL_MOTION,
@@ -404,6 +405,11 @@ class TesterQtBridge(QObject):
             return _("MSG_RESTART_NEEDED")
         self._log(f"LANGUAGE_SAVE_FAILED {code}")
         return ""
+
+    @Slot(float, float, result="QVariantMap")
+    def windowGeometry(self, available_width: float, available_height: float) -> dict:
+        """Where the window opens and how small it may get, for the free area of the screen it opens on (the sizes come from ``window`` in config.json)."""
+        return window_geometry(available_width, available_height)
 
     @Property(str, constant=True)
     def iconSource(self) -> str:
