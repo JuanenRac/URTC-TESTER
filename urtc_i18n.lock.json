@@ -2,9 +2,9 @@
   "format": 1,
   "urtc_common_version": "0.2.6",
   "catalog": "spec/i18n/catalog/tester.json",
-  "catalog_sha256": "ab2c9b2e6d82d128d70faefc64b2ad37d52cf4fb44d5b62640a893273ed48e9e",
+  "catalog_sha256": "999a7362ef707ac49803b6ebdc200aa88f6a5c2d38e0b6f7f58d840a27192c5f",
   "files": {
-    "language/chinese.lng": "f1cf51263741f160dbb8fc96375a108aaff433728e4abf3f7a7799cb617cab4d",
+    "language/chinese.lng": "00ba636f6187034f938c69f48a48e4985b791f4a0126ad1709ac71b2449714e1",
     "language/english.lng": "4d971d63d50008e667515b6fb2d8aae437413ba626b2faa30da1c37ae17045c8",
     "language/french.lng": "d6f2a7f1bea74cd564a0b3c672686042a2b1d3dcddd1582df57bda9e3ca2eeee",
     "language/german.lng": "8d6a552d74eeb17f31d05f902d21fdcaec14e3bf184b9cf528fc914a8ae8f394",
