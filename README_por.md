@@ -74,7 +74,7 @@ estava ao início.
 
 ### Relação com o flasher
 
-Esta ferramenta e o [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) partilham a mesma camada de transporte (as classes SLCAN e
+Este tester e o [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) partilham a mesma camada de transporte (as classes SLCAN e
 SocketCAN são idênticas), uma vez que ambas precisam, no fundo, apenas de colocar
 tramas CAN dentro e fora do mesmo tipo de adaptador, mas desempenham
 funções fundamentalmente diferentes:
@@ -328,7 +328,7 @@ O fluxo de diagnóstico CAN em direto existente utiliza agora uma superfície de
 
 ### Estrutura de ficheiros
 
-Esta ferramenta está organizada em módulos por responsabilidade, puramente para
+Este tester está organizado em módulos por responsabilidade, puramente para
 legibilidade - não há diferença funcional entre tê-los como
 ficheiros separados ou como um único ficheiro grande. Consulte a secção
 «📂 Estrutura do repositório» perto do final deste documento para
@@ -341,7 +341,7 @@ a descrição completa ficheiro a ficheiro.
 **Um barramento que mistura velocidades**: uma cabeça a outra velocidade que a do barramento não se ouve, por isso não pode declarar a sua velocidade; o tester reconhece o barramento pelos seus sintomas e mostra um aviso: os contadores de erros ou um bus-off das cabeças que se ouvem (trama de saúde `0x1B8`), uma pesquisa a todas as velocidades que não encontra ninguém, ou uma cabeça que se sabe feita para 500 kbit/s. `"bus_health"` em `config.json` define os limiares: `"tec_warn"`, `"rec_warn"` e `"bus_off_warn"` (inteiros de 1 a 255; 96, 96 e 1 por omissão) e `"legacy_heads"` (os nomes ou números de série das cabeças feitas para 500 kbit/s). Um valor fora dos limites mantém o valor por omissão. Testado com barramentos simulados; nada correu num barramento real.
 
 **Idioma**: inglês por predefinição. Alterado com o seletor de idioma no cabeçalho da janela - altera a interface (rótulos, botões, caixas de diálogo e mensagens de registo) para qualquer um dos 8 idiomas disponíveis, guardado
-imediatamente em `config.json` junto a esta ferramenta, aplicado no próximo
+imediatamente em `config.json` junto a este tester, aplicado no próximo
 arranque. As traduções residem em ficheiros de texto simples em `language/`
 (`english.lng`, `spanish.lng`, `italian.lng`, `french.lng`,
 `german.lng`, `chinese.lng`, `japanese.lng`, `portuguese.lng`) como simples pares `KEY=Value`,
@@ -434,14 +434,14 @@ A lista anotada de cada ficheiro de código, uma linha por ficheiro, está em [d
 
 ## 🗺️ Roteiro e limites conhecidos
 
-O contrato de evidência desta ferramenta - o que conta como aprovado, reprovado ou desconhecido, por que razão a ausência de evidência é sempre desconhecido e nunca aprovado, e por que razão não concede qualquer autoridade própria de gravação de firmware - está documentado em [docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md).
+O contrato de evidência deste tester - o que conta como aprovado, reprovado ou desconhecido, por que razão a ausência de evidência é sempre desconhecido e nunca aprovado, e por que razão não concede qualquer autoridade própria de gravação de firmware - está documentado em [docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md).
 
 - **Não testada com hardware real.** Cada peça - a camada de transporte, o tratamento dos IDs CAN e da disposição dos bytes, a temporização do reenvio do cão de guarda - foi verificada isoladamente (tramas simuladas e, quando relevante, um subprocesso real para a temporização), mas o ambiente que a construiu não tem acesso a USB. Trate uma primeira sessão real com a mesma cautela que o README do próprio flasher pede.
 - **Um painel de ferramenta de cada vez, por conceção**, não é uma limitação atual a remover mais tarde - consulte a introdução acima para saber porquê.
 - **As cores globais dos LEDs são uma substituição direta**, não uma leitura em direto -
   não há telemetria do que os LEDs de estado/anel estão realmente
   a mostrar, apenas do que foi comandado por último.
-- **A imagem térmica da Inspeção térmica é obtida a pedido, não em transmissão em direto.** Ler uma trama completa implica pedir todos os 48 blocos sequencialmente por CAN (no pior caso, a resolução do MLX90640/MLX90642); isto pode demorar alguns segundos, e o protocolo CAN desta ferramenta não tem nenhum modo de envio contínuo
+- **A imagem térmica da Inspeção térmica é obtida a pedido, não em transmissão em direto.** Ler uma trama completa implica pedir todos os 48 blocos sequencialmente por CAN (no pior caso, a resolução do MLX90640/MLX90642); isto pode demorar alguns segundos, e o protocolo CAN deste tester não tem nenhum modo de envio contínuo
   que o torne mais rápido. Primeiro é preciso acionar uma captura; Ler imagem térmica espera então até dois segundos que o sensor indique que está pronto e, se não o fizer, não lê nada, porque o firmware não responde aos pedidos de bloco antes disso. Primeiro pergunta-se qual o sensor instalado (48 blocos para o MLX90640/MLX90642, 12 para o MLX90641), e um bloco perdido deixa os seus píxeis em branco em vez de deslocar o resto da imagem.
 - **Executar autoteste só cobre 7 das 25 ferramentas** (ferro de soldar,
   broca, laser, impressora 3D, AOI, vácuo, sonda de varrimento) - consulte "Como
@@ -525,12 +525,12 @@ abrange:
    International (CC BY-SA 4.0)**. Texto completo em
    https://creativecommons.org/licenses/by-sa/4.0/.
 
-Esta ferramenta é o companheiro de diagnóstico CAN em direto do projeto
+Este tester é o companheiro de diagnóstico CAN em direto do projeto
 [URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC)
 - consulte o repositório desse projeto para o firmware da placa,
-os desenhos de hardware e a documentação completa do protocolo contra o qual esta ferramenta
+os desenhos de hardware e a documentação completa do protocolo contra o qual este tester
 é exercitada. O firmware do próprio URTC é GPL-3.0-or-later e os seus desenhos de hardware são
-CERN-OHL-S v2; a licença desta ferramenta aqui não se estende a esse
+CERN-OHL-S v2; a licença deste tester aqui não se estende a esse
 projeto separado, e vice-versa. Existe também uma alternativa baseada na web que cobre
 um âmbito semelhante em
 [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).

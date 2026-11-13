@@ -76,7 +76,7 @@ puisse laisser la carte moins fonctionnelle qu'au départ.
 
 ### Relation avec le flasher
 
-Cet outil et [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) partagent la même couche de transport
+Le tester et [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) partagent la même couche de transport
 (les classes SLCAN et SocketCAN sont identiques) puisque les deux ont
 finalement juste besoin de faire entrer et sortir des trames CAN du
 même type d'adaptateur, mais ils font des travaux fondamentalement
@@ -339,7 +339,7 @@ Le flux de diagnostic CAN en direct existant utilise désormais une surface de c
 
 ### Structure des fichiers
 
-Cet outil est organisé en modules par responsabilité, purement pour la lisibilité - il n'y a aucune différence fonctionnelle entre les avoir comme fichiers séparés ou comme un seul gros fichier. Voir la section « 📂 Structure du dépôt » vers la fin de ce document pour le détail complet fichier par fichier.
+Le tester est organisé en modules par responsabilité, purement pour la lisibilité - il n'y a aucune différence fonctionnelle entre les avoir comme fichiers séparés ou comme un seul gros fichier. Voir la section « 📂 Structure du dépôt » vers la fin de ce document pour le détail complet fichier par fichier.
 
 **Commandes répétées** : une commande que le firmware abandonne si elle n'est pas rafraîchie (un chauffage, une perceuse, un laser, un ventilateur) est répétée toutes les 150 ms par défaut, ou à la période de son outil. `"keepalive"` dans `config.json` la modifie : `"interval_ms"` (un entier de 20 à 200) fixe une période pour toutes, et `"single_io_thread": true` les répète toutes depuis un fil partagé, une trame à la fois, au lieu d'un fil chacune (désactivé par défaut). Une valeur hors de ces limites garde la valeur par défaut.
 
@@ -348,7 +348,7 @@ Cet outil est organisé en modules par responsabilité, purement pour la lisibil
 **Un bus qui mélange les vitesses** : une tête à une autre vitesse que le bus ne s'entend pas, elle ne peut donc pas déclarer sa vitesse ; le tester reconnaît le bus à ses symptômes et affiche un avertissement : les compteurs d'erreurs ou un bus-off des têtes que l'on entend (trame de santé `0x1B8`), une recherche à toutes les vitesses qui ne trouve personne, ou une tête connue pour être prévue pour 500 kbit/s. `"bus_health"` dans `config.json` fixe les seuils : `"tec_warn"`, `"rec_warn"` et `"bus_off_warn"` (entiers de 1 à 255 ; 96, 96 et 1 par défaut) et `"legacy_heads"` (les noms ou numéros de série des têtes prévues pour 500 kbit/s). Une valeur hors des limites garde la valeur par défaut. Testé avec des bus simulés ; rien n'a tourné sur un vrai bus.
 
 **Langue** : anglais par défaut. Se change avec le sélecteur de langue de l'en-tête de la fenêtre - change l'interface (étiquettes, boutons, dialogues, et messages de journal) vers l'une des 8 langues disponibles,
-enregistre immédiatement dans `config.json` à côté de cet outil,
+enregistre immédiatement dans `config.json` à côté du tester,
 appliqué au prochain démarrage. Les traductions vivent dans des fichiers
 texte brut sous `language/` (`english.lng`, `spanish.lng`, `italian.lng`,
 `french.lng`, `german.lng`, `chinese.lng`, `japanese.lng`, `portuguese.lng`) sous forme de

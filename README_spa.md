@@ -76,7 +76,7 @@ de lo que estaba al empezar.
 
 ### Relación con el flasher
 
-Esta herramienta y [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) comparten la misma capa de
+El tester y [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) comparten la misma capa de
 transporte (las clases SLCAN y SocketCAN son idénticas) ya que ambas en
 última instancia solo necesitan meter y sacar tramas CAN del mismo tipo
 de adaptador, pero hacen trabajos fundamentalmente distintos:
@@ -277,7 +277,7 @@ ninguna comprobación al pulsar este botón.
 como de la boquilla de la impresora 3D muestran un pequeño gráfico de
 línea deslizante junto a su lectura de temperatura en vivo - un elemento
 Canvas de Qt Quick simple, no una dependencia nueva (matplotlib/
-pyqtgraph romperían la política de cero dependencias de esta herramienta
+pyqtgraph romperían la política de cero dependencias del tester
 más allá de pyserial). Escala de eje Y fija (0 hasta el techo de
 consigna de esa herramienta) en vez de auto-escalado, así que la
 tendencia es fácil de leer de un vistazo en vez de que la escala se
@@ -300,7 +300,7 @@ script (opcional, no incluido por defecto - `{"0x199": "My Sensor"}`),
 la columna ID muestra ese nombre amigable junto al ID hex en bruto -
 útil para cualquiera que pruebe el propio tráfico de una placa de
 expansión personalizada sin necesitar modificar el código fuente de
-esta herramienta.
+el tester.
 
 ### Cobertura de herramientas
 
@@ -463,7 +463,7 @@ El flujo de diagnóstico CAN en vivo existente usa ahora una superficie de contr
 
 ### Estructura de archivos
 
-Esta herramienta está organizada en módulos por responsabilidad, puramente por legibilidad - no hay ninguna diferencia funcional entre tenerlos como archivos separados o como uno grande. Consulta la sección «📂 Estructura del repositorio» cerca del final de este documento para ver el desglose completo archivo por archivo.
+El tester está organizado en módulos por responsabilidad, puramente por legibilidad - no hay ninguna diferencia funcional entre tenerlos como archivos separados o como uno grande. Consulta la sección «📂 Estructura del repositorio» cerca del final de este documento para ver el desglose completo archivo por archivo.
 
 **Órdenes repetidas**: una orden que el firmware descarta si no se refresca (un calentador, un taladro, un láser, un ventilador) se repite cada 150 ms por defecto, o al periodo de su propia herramienta. `"keepalive"` en `config.json` lo cambia: `"interval_ms"` (un entero de 20 a 200) fija un periodo para todas, y `"single_io_thread": true` las repite todas desde un hilo compartido, una trama cada vez, en lugar de un hilo cada una (apagado por defecto). Un valor fuera de esos límites mantiene el valor por defecto.
 
@@ -567,7 +567,7 @@ La lista anotada de cada archivo de código, una línea por archivo, está en [d
 
 ## 🗺️ Hoja de ruta y límites conocidos
 
-El contrato de evidencia de esta herramienta - qué cuenta como
+El contrato de evidencia del tester - qué cuenta como
 correcto, fallido y sin determinar, por qué la ausencia de evidencia siempre es unknown y
 nunca pass, y por qué no otorga por sí misma autoridad para grabar
 firmware - está documentado en
@@ -592,7 +592,7 @@ firmware - está documentado en
   significa solicitar los 48 bloques secuencialmente por CAN (peor caso,
   la propia resolución de MLX90640/MLX90642) - esto puede tardar varios
   segundos, y no existe un modo de envío en streaming en el propio
-  protocolo CAN de esta herramienta para hacerlo más rápido. Primero hay que disparar una captura; Leer Imagen Térmica espera entonces hasta dos segundos a que el sensor indique que está listo y, si no lo hace, no lee nada, porque el firmware no responde a las peticiones de bloque antes de ese momento. Primero se pregunta qué sensor hay instalado (48 bloques para MLX90640/MLX90642, 12 para MLX90641), y un bloque perdido deja sus píxeles en blanco en lugar de desplazar el resto de la imagen.
+  protocolo CAN del tester para hacerlo más rápido. Primero hay que disparar una captura; Leer Imagen Térmica espera entonces hasta dos segundos a que el sensor indique que está listo y, si no lo hace, no lee nada, porque el firmware no responde a las peticiones de bloque antes de ese momento. Primero se pregunta qué sensor hay instalado (48 bloques para MLX90640/MLX90642, 12 para MLX90641), y un bloque perdido deja sus píxeles en blanco en lugar de desplazar el resto de la imagen.
 - **Ejecutar Autoprueba solo cubre 7 de las 25 herramientas** (soldador,
   taladro, láser, impresora 3D, AOI, vacío, sonda de escaneo) - ver
   «Cómo funciona» arriba para la explicación completa. Las otras 18
@@ -678,13 +678,13 @@ realmente cubre:
    International (CC BY-SA 4.0)**. Texto completo en
    https://creativecommons.org/licenses/by-sa/4.0/.
 
-Esta herramienta es el compañero de diagnóstico en vivo del bus CAN del
+El tester es el compañero de diagnóstico en vivo del bus CAN del
 proyecto [URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC)
 - ver el propio repositorio de ese proyecto para el firmware de la
 placa, los diseños de hardware, y la documentación completa del
-protocolo que esta herramienta ejercita. El propio firmware de URTC es
+protocolo que el tester ejercita. El propio firmware de URTC es
 GPL-3.0-or-later y sus diseños de hardware son CERN-OHL-S v2; la propia licencia
-de esta herramienta aquí no se extiende a ese proyecto separado, y
+del tester aquí no se extiende a ese proyecto separado, y
 viceversa. También existe una alternativa basada en web que cubre
 terreno similar en
 [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).

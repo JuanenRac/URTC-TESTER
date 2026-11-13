@@ -77,7 +77,7 @@ begonnen hat.
 
 ### Beziehung zum Flasher
 
-Dieses Tool und [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) teilen sich denselben
+Der Tester und [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) teilen sich denselben
 Transport-Layer (die SLCAN- und SocketCAN-Klassen sind identisch), da
 beide letztlich nur CAN-Frames auf denselben Adaptertyp bringen und von
 ihm holen müssen, aber sie erledigen grundlegend unterschiedliche
@@ -334,7 +334,7 @@ Der bestehende Live-CAN-Diagnoseablauf verwendet jetzt eine dunkelblau-cyanfarbe
 
 ### Dateistruktur
 
-Dieses Tool ist aus Gründen der Lesbarkeit in Module nach Zuständigkeit organisiert - es gibt keinen funktionalen Unterschied zwischen separaten Dateien und einer großen Datei. Die vollständige Aufschlüsselung Datei für Datei steht im Abschnitt „📂 Struktur des Repositorys“ weiter unten in diesem Dokument.
+Der Tester ist aus Gründen der Lesbarkeit in Module nach Zuständigkeit organisiert - es gibt keinen funktionalen Unterschied zwischen separaten Dateien und einer großen Datei. Die vollständige Aufschlüsselung Datei für Datei steht im Abschnitt „📂 Struktur des Repositorys“ weiter unten in diesem Dokument.
 
 **Wiederholte Befehle**: Ein Befehl, den die Firmware verwirft, wenn er nicht aufgefrischt wird (eine Heizung, eine Bohrmaschine, ein Laser, ein Lüfter), wird standardmäßig alle 150 ms oder im Takt des jeweiligen Werkzeugs wiederholt. `"keepalive"` in `config.json` ändert das: `"interval_ms"` (eine ganze Zahl von 20 bis 200) legt einen Takt für alle fest, und `"single_io_thread": true` wiederholt alle von einem gemeinsamen Thread aus, ein Frame nach dem anderen, statt je einen Thread (standardmäßig aus). Ein Wert außerhalb dieser Grenzen behält den Standard.
 
@@ -343,7 +343,7 @@ Dieses Tool ist aus Gründen der Lesbarkeit in Module nach Zuständigkeit organi
 **Ein Bus mit gemischten Geschwindigkeiten**: Ein Kopf mit einer anderen Geschwindigkeit als der Bus ist nicht zu hören und kann seine Geschwindigkeit daher nicht angeben; der Tester erkennt den Bus an seinen Symptomen und zeigt eine Warnung: die Fehlerzähler oder ein Bus-off der gehörten Köpfe (Gesundheitsframe `0x1B8`), eine Suche bei allen Geschwindigkeiten, die niemanden findet, oder ein Kopf, der bekanntermaßen für 500 kbit/s gebaut ist. `"bus_health"` in `config.json` legt die Schwellen fest: `"tec_warn"`, `"rec_warn"` und `"bus_off_warn"` (ganze Zahlen von 1 bis 255; standardmäßig 96, 96 und 1) und `"legacy_heads"` (die Namen oder Seriennummern der für 500 kbit/s gebauten Köpfe). Ein Wert außerhalb der Grenzen behält den Standardwert. Mit simulierten Bussen getestet; nichts ist auf einem echten Bus gelaufen.
 
 **Sprache**: Englisch als Standard. Wird mit der Sprachauswahl in der Kopfzeile des Fensters gewechselt - wechselt die Oberfläche (Beschriftungen, Schaltflächen, Dialoge, und Protokollnachrichten) zu einer der 8 verfügbaren Sprachen,
-speichert sofort in `config.json` neben diesem Tool, angewendet beim
+speichert sofort in `config.json` neben dem Tester, angewendet beim
 nächsten Start. Übersetzungen leben in reinen Textdateien unter
 `language/` (`english.lng`, `spanish.lng`, `italian.lng`, `french.lng`,
 `german.lng`, `chinese.lng`, `japanese.lng`, `portuguese.lng`) als einfache
