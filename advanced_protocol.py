@@ -391,13 +391,25 @@ RESET_CAUSE_BITS = (
 )
 
 
+ERROR_REASON_NAMES = {
+    1: "UNKNOWN", 2: "THERMAL", 3: "SENSOR", 4: "TOOL_ID", 5: "COMMS_WATCHDOG", 6: "FAN_STALL", 7: "STEPPER_SILENCE", 8: "MAGNET_RELEASE",
+}
+CLEAR_RESULT_NAMES = {
+    1: "CLEARED", 2: "REFUSED_SWITCH_OFF", 3: "REFUSED_NO_ERROR", 4: "REFUSED_NOT_CLEARABLE", 5: "REFUSED_HOT", 6: "REFUSED_ACTUATOR_ON",
+}
+
+
 def decode_quick_state(data: bytes) -> dict[str, object] | None:
     """Decodes CAN_ID_ACTIVE_TOOL_RESP (0x111), including the optional
-    thermal fault code (byte 4) and reset cause (byte 5)."""
+    thermal fault code (byte 4), reset cause (byte 5), the reason of the
+    latched error (byte 6) and the outcome of the last clear-error command
+    (byte 7); a byte the firmware does not send is None, not zero."""
     if len(data) < 4:
         return None
     thermal = data[4] if len(data) >= 5 else None
     reset = data[5] if len(data) >= 6 else None
+    reason = data[6] if len(data) >= 7 else None
+    clear = data[7] if len(data) >= 8 else None
     return {
         "tool_id": data[0],
         "system_error": bool(data[1]),
@@ -408,6 +420,10 @@ def decode_quick_state(data: bytes) -> dict[str, object] | None:
         "reset_cause": reset,
         "reset_causes": [name for bit, name in RESET_CAUSE_BITS if reset is not None and reset & bit],
         "watchdog_reset": bool(reset is not None and reset & 0x01),
+        "error_reason": reason,
+        "error_reason_name": ERROR_REASON_NAMES.get(reason, f"CODE_{reason}") if reason else None,
+        "clear_result": clear,
+        "clear_result_name": CLEAR_RESULT_NAMES.get(clear, f"CODE_{clear}") if clear else None,
     }
 
 

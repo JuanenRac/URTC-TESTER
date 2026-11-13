@@ -1357,16 +1357,35 @@ ApplicationWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
+                    CheckBox { id: featClear; text: testerBackend.uiText("LBL_FEATURE_CLEAR_ERROR"); font.pixelSize: 10 }
+                    CheckBox { id: featComms; text: testerBackend.uiText("LBL_FEATURE_COMMS_WATCHDOG"); font.pixelSize: 10 }
+                    CheckBox { id: featMagnet; text: testerBackend.uiText("LBL_FEATURE_MAGNET_RELEASE"); enabled: featComms.checked; font.pixelSize: 10 }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
                     GameButton { text: testerBackend.uiText("BTN_QUERY_FEATURES"); accent: "#24465e"; Layout.preferredWidth: 190; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.queryFeatures() }
                     GameButton {
                         text: testerBackend.uiText("BTN_WRITE_FEATURES")
                         accent: "#b86a35"
                         Layout.preferredWidth: 260
                         enabled: testerBackend.canUseUtilityPanels
-                        onClicked: window.requestUtilityAction(function() { testerBackend.writeFeatures((featRamps.checked ? 1 : 0) + (featHealth.checked ? 2 : 0) + (featHsi.checked ? 4 : 0) + (featPid.checked ? 8 : 0)) })
+                        onClicked: window.requestUtilityAction(function() { testerBackend.writeFeatures((featRamps.checked ? 1 : 0) + (featHealth.checked ? 2 : 0) + (featHsi.checked ? 4 : 0) + (featPid.checked ? 8 : 0) + (featClear.checked ? 16 : 0) + (featComms.checked ? 32 : 0) + (featMagnet.checked && featComms.checked ? 64 : 0)) })
                     }
                 }
                 Text { text: testerBackend.featuresText; visible: testerBackend.featuresText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    GameButton {
+                        text: testerBackend.uiText("BTN_CLEAR_ERROR")
+                        accent: "#b86a35"
+                        Layout.preferredWidth: 190
+                        enabled: testerBackend.canUseUtilityPanels
+                        onClicked: testerBackend.clearErrorNeedsConfirmation ? window.requestUtilityAction(function() { testerBackend.clearError() }) : testerBackend.clearError()
+                    }
+                }
+                Text { text: testerBackend.clearErrorText; visible: testerBackend.clearErrorText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
 
                 Text { text: testerBackend.uiText("QT_PID_PANEL"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 12 }
                 RowLayout {

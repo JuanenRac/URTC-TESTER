@@ -88,7 +88,7 @@ def test_the_automatic_download_fires_once_per_fault_and_can_be_switched_off():
 # ---- optional functions ------------------------------------------------------------------------------------------------------------
 def test_the_features_frame_and_its_answer():
     assert extras.features_frame(0x0A) == (0x1AE, b"FEAT\x0a")
-    for bad in (-1, 16):
+    for bad in (-1, 128):
         with pytest.raises(ValueError):
             extras.features_frame(bad)
     assert extras.decode_features(bytes([2, 0, 15])) == {"stored": 2, "running": 0, "supported": 15}
