@@ -22,6 +22,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A tool that is on asks again after a change of more than 10 %:** the percentage of `power_guard` in `config.json` (`rise_percent`) is 10 by default instead of 20; a smaller change goes through, a bigger one asks for confirmation first, and the file can set another value. Tested with the fake host; nothing has run against a real board.
+
 ## [0.5.4] - The Spanish texts say "grabar" and "velocidad de bus": the calques "flashear", "flasheo" and "bitrate" are replaced in the window, the guide, the Spanish README and the shared sections, with the gender of the sentence... (and 7 more changes)
 
 - **The Spanish texts say "grabar" and "velocidad de bus":** the calques "flashear", "flasheo" and "bitrate" are replaced in the window, the guide, the Spanish README and the shared sections, with the gender of the sentence corrected, so the README names what the window shows.
