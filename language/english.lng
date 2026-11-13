@@ -282,6 +282,7 @@ QTLOG_BUS_MONITOR_EXPORT_EMPTY=Nothing to export: the bus monitor has no frames
 QTLOG_BUS_MONITOR_EXPORT_FAILED=Bus monitor export failed
 QTLOG_BUS_MONITOR_FAILED=Bus monitor failed
 QTLOG_BUS_MONITOR_STARTED=Bus monitor started
+QTLOG_BUS_RATE=Bus speed declared by the heads
 QTLOG_BUS_MONITOR_STOPPED=Bus monitor stopped
 QTLOG_CONNECTION_FAILED=Connection failed
 QTLOG_CUSTOM_FRAME_BLOCKED=Custom frame blocked

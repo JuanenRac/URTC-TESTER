@@ -283,6 +283,7 @@ QTLOG_BUS_MONITOR_EXPORT_EMPTY=Rien à exporter : le moniteur de bus n'a aucune 
 QTLOG_BUS_MONITOR_EXPORT_FAILED=Échec de l'export du moniteur de bus
 QTLOG_BUS_MONITOR_FAILED=Échec du moniteur de bus
 QTLOG_BUS_MONITOR_STARTED=Moniteur de bus démarré
+QTLOG_BUS_RATE=Vitesse du bus déclarée par les têtes
 QTLOG_BUS_MONITOR_STOPPED=Moniteur de bus arrêté
 QTLOG_CONNECTION_FAILED=Échec de la connexion
 QTLOG_CUSTOM_FRAME_BLOCKED=Trame personnalisée bloquée

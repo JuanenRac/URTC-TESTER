@@ -283,6 +283,7 @@ QTLOG_BUS_MONITOR_EXPORT_EMPTY=Nada para exportar: o monitor do barramento não 
 QTLOG_BUS_MONITOR_EXPORT_FAILED=Falha ao exportar o monitor do barramento
 QTLOG_BUS_MONITOR_FAILED=O monitor do barramento falhou
 QTLOG_BUS_MONITOR_STARTED=Monitor do barramento iniciado
+QTLOG_BUS_RATE=Velocidade do barramento declarada pelas cabeças
 QTLOG_BUS_MONITOR_STOPPED=Monitor do barramento parado
 QTLOG_CONNECTION_FAILED=Falhou a ligação
 QTLOG_CUSTOM_FRAME_BLOCKED=Trama personalizada bloqueada
