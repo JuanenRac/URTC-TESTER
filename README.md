@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.5.5` |
 | Maturity | Functional |
-| Tests | 957 (`python -m pytest -q`) |
+| Tests | 1007 (`python -m pytest -q`) |
 | Stack | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |

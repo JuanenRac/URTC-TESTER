@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.5.5` |
 | Reifegrad | Funktionsfähig |
-| Tests | 957 (`python -m pytest -q`) |
+| Tests | 1007 (`python -m pytest -q`) |
 | Technik | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
