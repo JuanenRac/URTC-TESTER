@@ -112,6 +112,44 @@ def keepalive_settings(config=None):
     return settings
 
 
+WINDOW_DEFAULTS = {"width": 1440, "height": 900, "min_width": 1080, "min_height": 680, "screen_fraction": 0.95}
+WINDOW_BOUNDS = {"width": (640, 7680), "height": (480, 4320), "min_width": (480, 7680), "min_height": (360, 4320)}
+WINDOW_FRACTION_BOUNDS = (0.5, 1.0)
+
+
+def window_settings(config=None):
+    """The size of the window, from ``window`` in config.json: ``width`` and ``height`` it opens with, ``min_width`` and ``min_height`` below which the layout does not shrink,
+    and ``screen_fraction`` (0.5 to 1.0) of the free area of the screen that the window may take. A value that is not a whole number inside its bounds keeps the default of its own field."""
+    settings = dict(WINDOW_DEFAULTS)
+    given = (load_config() if config is None else config).get("window")
+    if isinstance(given, dict):
+        for key, (low, high) in WINDOW_BOUNDS.items():
+            value = given.get(key)
+            if isinstance(value, int) and not isinstance(value, bool) and low <= value <= high:
+                settings[key] = value
+        fraction = given.get("screen_fraction")
+        low_f, high_f = WINDOW_FRACTION_BOUNDS
+        if isinstance(fraction, (int, float)) and not isinstance(fraction, bool) and low_f <= fraction <= high_f:
+            settings["screen_fraction"] = float(fraction)
+    return settings
+
+
+def window_geometry(available_width, available_height, settings=None):
+    """The opening and the minimum size of the window for a screen whose free area is ``available_width`` x ``available_height`` (0 or a bad value: the screen is not known).
+
+    The window opens at its configured size but never larger than ``screen_fraction`` of the free area, so on a small screen it fits instead of hanging off the edge; the minimum is
+    the configured one, lowered to that size when the screen is smaller. The window stays resizable: this only chooses where it starts and how far it may shrink."""
+    settings = window_settings() if settings is None else settings
+
+    def fit(wanted, available):
+        known = isinstance(available, (int, float)) and not isinstance(available, bool) and available > 0
+        return min(wanted, int(available * settings["screen_fraction"])) if known else wanted
+
+    width = fit(settings["width"], available_width)
+    height = fit(settings["height"], available_height)
+    return {"width": width, "height": height, "minimumWidth": min(settings["min_width"], width), "minimumHeight": min(settings["min_height"], height)}
+
+
 def printer_heater_only_frame(config=None) -> bool:
     """True when the keepalive of the printer heater uses the frame of 2 bytes of 0x170 (the setpoint alone, the extruder left as it is): ``keepalive.printer_heater_only_frame``
     in config.json. Off unless it is exactly true: a head whose firmware does not know the short frame would let its watchdog cut the heater."""

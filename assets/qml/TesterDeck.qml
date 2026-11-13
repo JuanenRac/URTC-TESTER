@@ -12,10 +12,12 @@ import QtQuick.VectorImage
 ApplicationWindow {
     id: window
     Component.onCompleted: testerBackend.refreshPlans()
-    width: 1440
-    height: 900
-    minimumWidth: 1080
-    minimumHeight: 680
+    // The size comes from the backend (config.json "window"), fitted to the free area of the screen the window opens on; the window stays resizable.
+    readonly property var startGeometry: testerBackend.windowGeometry(Screen.desktopAvailableWidth, Screen.desktopAvailableHeight)
+    width: startGeometry.width
+    height: startGeometry.height
+    minimumWidth: startGeometry.minimumWidth
+    minimumHeight: startGeometry.minimumHeight
     visible: true
     title: "URTC Tester"
     color: "#07111e"
