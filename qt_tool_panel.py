@@ -225,11 +225,11 @@ class ToolPanelController(QObject):
         return found
 
     def _raise_needs_confirmation(self, tool: int, control_id: str, value: Any) -> bool:
-        """True when a command that repeats and is on would take a value above the confirmed one by more than the configured percentage."""
+        """True when a command that repeats and is on would take a value that differs from the confirmed one by more than the configured percentage, up or down."""
         settings = tester_config.power_guard_settings()
         for si in self._repeating_sections_using(tool, control_id):
             confirmed = self._confirmed.get((tool, si), {}).get(control_id)
-            if confirmed is not None and tester_config.power_rise_needs_confirmation(confirmed, value, settings):
+            if confirmed is not None and tester_config.power_change_needs_confirmation(confirmed, value, settings):
                 return True
         return False
 
