@@ -27,7 +27,7 @@
 
 ---
 
-**Ponto de honestidade: o que realmente funciona hoje:** os codificadores de payload CAN para as famílias de controlo Qt Quick migradas (`advanced_protocol.py`) são reais e estão cobertos pelos testes de `tests/` (`python -m pytest -q`). O CI deste repositório (`.github/workflows/ci.yml`) também os executa, juntamente com `ruff check`, `python -m mypy`, `tools/ci_validate.py`, uma compilação de sintaxe de cada ficheiro `.py` e os quatro scripts `verify_qt_*.py`, pelo que uma regressão aí faz falhar a compilação. Os quatro scripts `verify_qt_*.py` na raiz do repositório (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) são verificações end-to-end reais, deliberadamente fora de `tests/`, contra um transporte simulado com entrega real de Signals entre threads - os quatro passam com `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que o CI também executa. Esse é o limite honesto do que é verificado automaticamente: a camada de transporte, o tratamento dos IDs CAN/disposição de bytes e a lógica da ponte Qt Quick são reais e exercitados com tramas simuladas, não com hardware real - como os «limites conhecidos» abaixo já indicam, isto foi construído sem acesso a USB, pelo que nada aqui foi ainda verificado numa placa real. `qt_tester.py` e `assets/qml/TesterDeck.qml` são a implementação real e substancial (milhares de linhas no total), exercitada pelos testes com placas simuladas e pelos scripts de verificação, e nunca por uma placa real.
+**Ponto de honestidade: o que realmente funciona hoje:** os codificadores de carga CAN para as famílias de controlo Qt Quick migradas (`advanced_protocol.py`) são reais e estão cobertos pelos testes de `tests/` (`python -m pytest -q`). O CI deste repositório (`.github/workflows/ci.yml`) também os executa, juntamente com `ruff check`, `python -m mypy`, `tools/ci_validate.py`, uma compilação de sintaxe de cada ficheiro `.py` e os quatro scripts `verify_qt_*.py`, pelo que uma regressão aí faz falhar a compilação. Os quatro scripts `verify_qt_*.py` na raiz do repositório (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) são verificações end-to-end reais, deliberadamente fora de `tests/`, contra um transporte simulado com entrega real de Signals entre threads - os quatro passam com `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que o CI também executa. Esse é o limite honesto do que é verificado automaticamente: a camada de transporte, o tratamento dos IDs CAN/disposição de bytes e a lógica da ponte Qt Quick são reais e exercitados com tramas simuladas, não com hardware real - como os «limites conhecidos» abaixo já indicam, isto foi construído sem acesso a USB, pelo que nada aqui foi ainda verificado numa placa real. `qt_tester.py` e `assets/qml/TesterDeck.qml` são a implementação real e substancial (milhares de linhas no total), exercitada pelos testes com placas simuladas e pelos scripts de verificação, e nunca por uma placa real.
 
 ---
 
@@ -64,9 +64,9 @@
 
 ## 🎯 Visão geral
 
-Um exercitador de barramento CAN em tempo real para a placa URTC. Liga-se através do mesmo
+Um tester de barramento CAN em tempo real para a placa URTC. Liga-se através do mesmo
 adaptador USB-CAN que o flasher utiliza, pergunta à placa para qual dos seus 25 perfis de
-ferramenta está atualmente configurada com jumpers e mostra apenas os controlos e a telemetria
+ferramenta está atualmente configurada com pontes e mostra apenas os controlos e a telemetria
 dessa ferramenta - não uma janela a tentar representar as 25 ao mesmo tempo. Tudo o que faz é
 um comando em tempo de execução ou uma leitura de telemetria sobre a aplicação atualmente em
 execução; nunca toca na flash, pelo que nada aqui pode deixar a placa menos funcional do que
@@ -74,7 +74,7 @@ estava ao início.
 
 ### Relação com o flasher
 
-Esta ferramenta e o [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) partilham a mesma camada de transporte (as classes SLCAN e
+Este tester e o [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) partilham a mesma camada de transporte (as classes SLCAN e
 SocketCAN são idênticas), uma vez que ambas precisam, no fundo, apenas de colocar
 tramas CAN dentro e fora do mesmo tipo de adaptador, mas desempenham
 funções fundamentalmente diferentes:
@@ -91,7 +91,7 @@ o motor roda, o LED acende), precisa desta.
 
 ## 🧩 Papel no URTC
 
-O URTC-TESTER é o programa que verifica o que uma cabeça de ferramenta URTC realmente faz enquanto executa a sua aplicação: liga-se pelo mesmo adaptador USB-CAN do URTC-FLASHER, pergunta à placa para qual dos seus 25 perfis de ferramenta está configurada com jumpers e mostra apenas os controlos e a telemetria dessa ferramenta, nunca uma janela que tente representar as 25. Tudo o que faz é um comando em execução ou uma leitura de telemetria; nunca toca na flash, pelo que não pode deixar uma placa pior do que a encontrou. O protocolo que fala é o do URTC-COMMON, e o URTC-WEB-STUDIO oferece os mesmos fluxos num navegador.
+O URTC-TESTER é o programa que verifica o que uma cabeça de ferramenta URTC realmente faz enquanto executa a sua aplicação: liga-se pelo mesmo adaptador USB-CAN do URTC-FLASHER, pergunta à placa para qual dos seus 25 perfis de ferramenta está configurada com pontes e mostra apenas os controlos e a telemetria dessa ferramenta, nunca uma janela que tente representar as 25. Tudo o que faz é um comando em execução ou uma leitura de telemetria; nunca toca na flash, pelo que não pode deixar uma placa pior do que a encontrou. O protocolo que fala é o do URTC-COMMON, e o URTC-WEB-STUDIO oferece os mesmos fluxos num navegador.
 
 ## 🏛️ Arquitetura
 
@@ -145,136 +145,43 @@ Capturadas numa bancada de testes com dados de exemplo inventados e sem qualquer
 
 ### Como funciona
 
-A janela está organizada em três colunas: a esquerda e o centro contêm as
-secções sempre visíveis abaixo (1-4, depois 6), a direita contém o painel
-por ferramenta da secção 5, que é a única parte da janela que realmente
-muda consoante o que é detetado. Dividir as secções sempre visíveis
-por duas colunas em vez de as empilhar todas numa só evita que a janela
-cresça até deixar de caber num ecrã normal à medida que mais
-destas secções foram sendo acrescentadas ao longo do tempo. O próprio painel de ferramenta da impressora 3D
-(o mais alto dos 25) vai um passo além e divide os seus próprios controlos
-em 2 subcolunas internamente, pela mesma razão. Consulte
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) para a arquitetura ao nível dos módulos
-que esta secção percorre.
+A janela está organizada em três colunas: à esquerda e ao centro ficam as secções sempre visíveis (1-4, depois 6), à direita fica o painel por ferramenta da secção 5, a única parte da janela que muda consoante a ferramenta detetada. Repartir as secções sempre visíveis por duas colunas, em vez de as empilhar todas numa só, evita que a janela cresça até deixar de caber num ecrã normal, apesar de se terem acrescentado mais secções ao longo do tempo. O painel próprio da impressora 3D (o mais alto dos 25) vai um passo além e divide os seus controlos em duas subcolunas, pela mesma razão. Consulte [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) para a arquitetura ao nível dos módulos que esta secção resume.
 
-**Ligar** (secção 1, idêntica à do flasher): escolha Serial/SLCAN ou
-SocketCAN, a porta/interface, opcionalmente deteta automaticamente a velocidade do barramento, depois
-Ligar.
+**Ligar** (secção 1, idêntica à do flasher): escolha Serial/SLCAN ou SocketCAN e a porta ou interface, peça, se quiser, a deteção automática da velocidade do barramento e depois clique em Ligar.
 
-**A deteção acontece automaticamente ao ligar** (ou clique em **Detetar** para
-a repetir): a ferramenta envia `0x110` (consultar ferramenta ativa) e `0x7F8` (consultar
-versão), e usa a resposta para:
-- Mostrar qual dos 25 perfis de ferramenta está ativo, e o estado global da
-  placa (qualquer erro declarado, falha do barramento CAN, ainda no splash de arranque).
-- Mostrar o HardwareID e a versão de firmware reportados, assinalando uma divergência
-  se não corresponderem ao `THIS_HARDWARE_ID` deste projeto.
-- Construir o painel **Controlos da ferramenta** à direita para essa ferramenta específica -
-  e apenas essa ferramenta. Mudar a ferramenta configurada com jumpers e detetar
-  novamente desmonta o painel antigo e constrói o novo de raiz.
+**A deteção acontece automaticamente ao ligar** (ou clique em **Detetar** para a repetir): o tester envia `0x110` (consultar a ferramenta ativa) e `0x7F8` (consultar a versão) e usa a resposta para
+- mostrar qual dos 25 perfis de ferramenta está ativo e o estado global da placa (qualquer erro declarado, falha do barramento CAN, ecrã de arranque ainda visível);
+- mostrar o HardwareID e a versão de firmware comunicados, assinalando uma divergência se não corresponderem ao `THIS_HARDWARE_ID` deste projeto;
+- construir à direita o painel **Controlos da ferramenta** para essa ferramenta em concreto, e só para ela. Se mudar a ferramenta escolhida com as pontes e detetar de novo, o painel antigo é desmontado e o novo é construído de raiz.
 
-**Controlos globais** (secção 2, sempre visível independentemente da ferramenta
-ativa): a substituição da cor do LED de estado, a cor e o
-ligar/desligar do LED em anel, e o modo do ecrã OLED (`0x100`) - estes aplicam-se a todas as ferramentas, pelo que
-não passam para o painel dinâmico. Especificamente no modo Inspeção AOI,
-o ligar/desligar do anel aqui é ignorado em favor do controlo de estroboscópio
-próprio dessa ferramenta (segundo [docs/CANBUS.md](docs/CANBUS.md)) - a cor aplica-se em qualquer caso.
+**Controlos globais** (secção 2, sempre visível, independentemente da ferramenta ativa): a substituição da cor do LED de estado, a cor do LED em anel e o seu ligar/desligar, e o modo do ecrã OLED (`0x100`) - aplicam-se a todas as ferramentas e por isso não passam para o painel dinâmico. Só no modo Inspeção AOI o ligar/desligar do anel é aqui ignorado, a favor do controlo de estroboscópio próprio dessa ferramenta (segundo [docs/CANBUS.md](docs/CANBUS.md)); a cor aplica-se na mesma.
 
-**Placa de expansão** (secção 3, sempre visível): o barramento SPI genérico
-e a linha DIAG0 de `CONN_EXPANSION` - a passagem direta em bruto que todas as variantes
-de placa de expansão com controlador partilham. Os sensores ADS1115 e MLX9064x,
-e o controlador do atuador de crimpagem, não são controlados
-a partir daqui - vivem dentro do painel da sua própria ferramenta (Sonda
-voadora, Inspeção térmica, Atuador de crimpagem - consulte a secção 4
-abaixo), uma vez que qual deles se aplica depende de qual perfil de ferramenta
-está configurado com jumpers.
+**Placa de expansão** (secção 3, sempre visível): o barramento SPI genérico e a linha DIAG0 de `CONN_EXPANSION` - a passagem direta em bruto que todas as variantes de placa de expansão com controlador partilham. Os sensores ADS1115 e MLX9064x e o controlador do atuador de crimpagem não se controlam a partir daqui, mas no painel da respetiva ferramenta (Sonda voadora, Inspeção térmica, Atuador de crimpagem - consulte a secção 4 abaixo), porque o que se aplica depende do perfil de ferramenta escolhido com as pontes.
 
-**F-RAM de persistência** (secção 4, também sempre visível, mas deliberadamente
-separada da Placa de expansão acima): a FM24CL64B partilha o barramento I2C2
-de hardware do OLED - um componente central da placa, não algo ligado
-a `CONN_EXPANSION` de todo. Agrupar as duas implicaria uma ligação entre elas
-que não é real - o próprio conector de expansão não tem F-RAM, nem EEPROM,
-nada não volátil.
-- **Passagem SPI**: escreva bytes hexadecimais separados por espaços (1-7 deles, p. ex.
-  `01 02 03`), prima Enviar e veja exatamente o que voltou em MISO durante
-  essa mesma transferência (`0x180`/`0x181`) - um transporte de bytes em bruto, sem conhecimento
-  dos registos do TMC5160, em linha com a abordagem do próprio firmware. Útil
-  para exercitar o próprio barramento antes de compensar construir um painel dedicado
-  para o protocolo de registos de uma placa de expansão específica.
-- **Nível de DIAG0**: **Consultar DIAG0** lê o estado atual da linha de diagnóstico
-  de stall/falha de um TMC5160 (`0x182`/`0x183`) - HIGH (inativa) ou LOW
-  (ativa). Uma simples leitura por sondagem, não um valor em direto/enviado - prima
-  o botão novamente para a atualizar.
-- **F-RAM de persistência**: **Consultar estado** lê de volta o que a placa
-  guardou pela última vez antes de uma perda de energia (`0x190`/`0x191`) - qual era a ferramenta,
-  o setpoint, se um erro crítico estava ativo nessa altura.
-  **Apagar F-RAM...** apaga-a (`0x192`, com uma caixa de diálogo de confirmação primeiro
-  - isto não pode ser desfeito).
-- **Tipo de placa de expansão**: **Consultar** mostra qual das 7 possíveis
-  configurações de `CONN_EXPANSION` está atualmente definida (`0x1A1` - consulte
-  `EXPANSION.TXT`). Só de leitura aqui - defina-a antes a partir da secção CAN
-  OTA do próprio `URTC Flasher`, uma vez que é um passo de configuração de hardware único,
-  não algo a alterar descuidadamente a partir de uma ferramenta de diagnóstico em direto.
+**F-RAM de persistência** (secção 4, também sempre visível, mas deliberadamente separada da Placa de expansão acima): a FM24CL64B partilha com o OLED o barramento I2C2 de hardware - é um componente central da placa e não está ligada a `CONN_EXPANSION`. Agrupar as duas daria a entender uma ligação que não existe - o próprio conector de expansão não tem F-RAM, nem EEPROM, nada não volátil.
+- **Passagem SPI**: escreva bytes hexadecimais separados por espaços (1-7, p. ex. `01 02 03`), prima Enviar e veja exatamente o que voltou em MISO durante essa mesma transferência (`0x180`/`0x181`) - um transporte de bytes em bruto, que não conhece os registos do TMC5160, como o próprio firmware. Útil para exercitar o barramento antes de compensar construir um painel dedicado ao protocolo de registos de uma placa de expansão específica.
+- **Nível de DIAG0**: **Consultar DIAG0** lê o estado atual da linha de diagnóstico de bloqueio/falha de um TMC5160 (`0x182`/`0x183`) - HIGH (inativa) ou LOW (ativa). Uma simples leitura a pedido, não um valor enviado continuamente - prima o botão novamente para a atualizar.
+- **F-RAM de persistência**: **Consultar estado** lê de volta o que a placa guardou pela última vez antes de uma falha de energia (`0x190`/`0x191`) - qual era a ferramenta, qual o valor pretendido e se havia um erro crítico ativo nessa altura. **Apagar F-RAM...** apaga-a (`0x192`, primeiro com uma caixa de diálogo de confirmação - não se pode desfazer).
+- **Tipo de placa de expansão**: **Consultar** mostra qual das 7 configurações possíveis de `CONN_EXPANSION` está atualmente definida (`0x1A1` - consulte `EXPANSION.TXT`). Só de leitura aqui - defina-a antes na secção CAN OTA do `URTC Flasher`, porque é um passo único de configuração do hardware e não algo que uma ferramenta de diagnóstico em direto deva alterar de passagem.
 - **Variante do sensor MLX9064x**: **Consultar** mostra qual dos 3 membros da família
   MLX9064x (ou nenhum) está atualmente configurado (`0x1A7` -
   consulte `CANBUS.md`) - só tem significado quando o tipo de placa de expansão
   acima é uma variante Advanced ou Basic+MLX9064x. Só de leitura aqui, pela mesma
   razão que o tipo de placa de expansão acima.
-- **Configuração da ferramenta livre**: **Consultar** mostra a leitura em bruto dos jumpers de ID
-  (0-31) juntamente com o que o registo `free_tool_selection` da F-RAM
-  indica atualmente (`0x1A3` - consulte `EEPROM.TXT` secção 5) - só é realmente
-  consultado por uma placa cujos jumpers leiam 0x1F/11111b. Só de leitura aqui,
-  pela mesma razão que o tipo de placa de expansão acima - o `URTC Flasher` é a
-  única ferramenta que o escreve.
-- **Tipo de periférico e número de série**: **Consultar** mostra o tipo de periférico
-  fixo (sempre URTC/0x03) juntamente com o número de série do dispositivo atualmente definido
-  (`0x1A5` - consulte `EEPROM.TXT` secção 6), uma
-  etiqueta atribuída pelo anfitrião para distinguir várias placas de outro modo idênticas no
-  mesmo barramento CAN. Também só de leitura aqui - o `URTC Flasher` escreve o número de
-  série, esta ferramenta limita-se a lê-lo de volta.
+- **Configuração da ferramenta livre**: **Consultar** mostra a leitura em bruto das pontes de ID (0-31) juntamente com o que o registo `free_tool_selection` da F-RAM indica atualmente (`0x1A3` - consulte `EEPROM.TXT` secção 5); só é consultado por uma placa cujas pontes leiam 0x1F/11111b. Também só de leitura aqui, pela mesma razão que o tipo de placa de expansão acima - o `URTC Flasher` é o único programa que o escreve.
+- **Tipo de periférico e número de série**: **Consultar** mostra o tipo de periférico fixo (sempre URTC/0x03) juntamente com o número de série do dispositivo atualmente definido (`0x1A5` - consulte `EEPROM.TXT` secção 6), uma etiqueta atribuída pelo anfitrião para distinguir várias placas de resto idênticas no mesmo barramento CAN. Também só de leitura aqui - o `URTC Flasher` escreve o número de série, o tester limita-se a lê-lo de volta.
 
-**Trama CAN personalizada** (secção 6, também sempre visível): uma entrada de ID em bruto + bytes
-hexadecimais com envio único e periódico - para um comando que ainda não
-tem um controlo próprio aqui, ou para testar algo não (ou ainda não)
-documentado em `docs/CANBUS.md`. Sem validação além do intervalo de ID e DLC≤8;
-o que isto enviar é exatamente o que vai para o barramento. A mesma secção também
-abre o **Monitor de barramento em bruto** (ver abaixo).
+**Trama CAN personalizada** (secção 6, também sempre visível): uma entrada de ID em bruto + bytes hexadecimais com envio único e periódico - para um comando que ainda não tem aqui um controlo próprio, ou para testar algo que não está (ou ainda não está) documentado em `docs/CANBUS.md`. Não há validação além do intervalo de ID e DLC≤8; o que for enviado aqui vai exatamente assim para o barramento. A mesma secção abre também o **Monitor de barramento em bruto** (ver abaixo).
 
-**Executar autoteste** (junto a Detetar): executa um pequeno conjunto de verificações de comunicação
-seguras e em repouso para a ferramenta atualmente detetada - confirma
-que a consulta da ferramenta ativa e a consulta da versão respondem, depois (para ferramentas
-com telemetria) envia um setpoint/velocidade/potência seguro de 0 e verifica se a
-telemetria esperada chega. Deliberadamente nunca envia nada que
-aqueça, dispare ou rode realmente com potência significativa - isto verifica que
-o ciclo de comunicação funciona, não que um atuador responda fisicamente,
-já que confirmar isso exige de qualquer forma uma pessoa a observar. Pede
-confirmação antes de enviar o que quer que seja. Cada verificação termina em aprovado, reprovado ou indeterminado: um aprovado exige uma resposta legível que diga o que diz uma ferramenta saudável em repouso (ferramenta certa, aplicação em execução, nenhum indicador de falha, cada campo dentro do intervalo, uma temperatura abaixo do limite e fria quando o aquecedor recebeu ordem de desligar, uma broca parada); sem resposta ou com uma resposta errada é reprovado; uma resposta ilegível, um aquecedor ainda quente, uma broca ainda a rodar e as ferramentas sem telemetria (movimento simples) ou puramente orientadas a eventos (scan probe) ficam indeterminadas, nunca aprovadas. A execução completa assume o pior resultado (reprovado, depois indeterminado, depois aprovado); os limites estão em config.json em selftest_limits. **A cobertura é parcial**: apenas 7 das
+**Executar autoteste** (junto a Detetar): executa um pequeno conjunto de verificações de comunicação seguras e em repouso para a ferramenta atualmente detetada - confirma que a consulta da ferramenta ativa e a da versão respondem e depois (nas ferramentas com telemetria) envia um valor pretendido, uma velocidade ou uma potência seguros de 0 e verifica se a telemetria esperada chega. Deliberadamente nunca envia nada que aqueça, dispare ou rode realmente com potência significativa: verifica que a comunicação funciona nos dois sentidos, não que um atuador responda fisicamente, porque isso só uma pessoa presente pode confirmar.
+Antes de enviar o que quer que seja, pede confirmação. Cada verificação termina em aprovado, reprovado ou indeterminado: um aprovado exige uma resposta legível que diga o que diz uma ferramenta saudável em repouso (ferramenta certa, aplicação em execução, nenhum indicador de falha, cada campo dentro do intervalo, uma temperatura abaixo do limite e fria quando o aquecedor recebeu ordem de desligar, uma broca parada); sem resposta ou com uma resposta errada é reprovado; uma resposta ilegível, um aquecedor ainda quente, uma broca ainda a rodar e as ferramentas sem telemetria (movimento simples) ou puramente orientadas a eventos (sonda de varrimento) ficam indeterminadas, nunca aprovadas. A execução completa assume o pior resultado (reprovado, depois indeterminado, depois aprovado); os limites estão em config.json em selftest_limits. **A cobertura é parcial**: apenas 7 das
 25 ferramentas têm um passo de autoteste definido (ferro de soldar, broca,
-laser, impressora 3D, AOI, vácuo, scan probe) - as outras 18 ferramentas não
+laser, impressora 3D, AOI, vácuo, sonda de varrimento) - as outras 18 ferramentas não
 executam qualquer verificação quando este botão é premido.
 
-**Gráficos de temperatura em direto**: os painéis do ferro de soldar e do bico da impressora 3D
-mostram ambos um pequeno gráfico de linhas deslizante junto à sua
-leitura de temperatura em direto - um simples Canvas do Qt Quick, não uma nova
-dependência (matplotlib/pyqtgraph quebrariam a política de zero dependências desta ferramenta
-para além de pyserial). Escala fixa do eixo Y (de 0 até ao teto de setpoint
-da própria ferramenta) em vez de escala automática, para que a tendência seja fácil de ler
-de relance, em vez de a escala mudar por baixo dela.
+**Gráficos de temperatura em direto**: os painéis do ferro de soldar e do bico da impressora 3D mostram, cada um, um pequeno gráfico de linhas deslizante junto à leitura da temperatura - um simples Canvas do Qt Quick, sem nova dependência (matplotlib/pyqtgraph quebrariam a política do tester de não ter dependências além de pyserial). O eixo Y tem uma escala fixa (de 0 até ao teto de valor pretendido da própria ferramenta) em vez de escala automática, para que a tendência se leia de relance, sem que a escala se mova por baixo dela.
 
-**Monitor de barramento em bruto** (aberto a partir da secção Trama CAN personalizada): uma
-janela separada que mostra todas as tramas vistas, qualquer ID, independentemente do
-painel da ferramenta ativa - uma tabela com deslocamento em direto (Hora/ID/DLC/Dados/Δt),
-Pausa/Limpar, e uma leitura aproximada da carga do barramento/taxa de tramas (atualizada
-uma vez por segundo; o valor da carga não modela o overhead de bit-stuffing, por isso
-trate-o como um valor de diagnóstico aproximado, não como uma medição certificada).
-**Exportar .trc...**/**Exportar .asc...** guardam a tabela atualmente apresentada como um
-ficheiro de rastreio simplificado ao estilo PEAK PCAN-View / Vector CANalyzer,
-respetivamente - suficientemente próximo para ser legível pela maioria das ferramentas que esperam
-esses formatos, sem garantia de ser idêntico byte a byte ao que as aplicações
-reais produzem. Se `urtc_custom_ids.json` existir junto a este
-script (opcional, não incluído por predefinição - `{"0x199": "My Sensor"}`),
-a coluna de ID mostra esse nome amigável junto ao ID hexadecimal em bruto -
-útil para quem testa o tráfego de uma placa de expansão personalizada
-sem precisar de modificar o código-fonte desta ferramenta.
+**Monitor de barramento em bruto** (aberto a partir da secção Trama CAN personalizada): uma janela separada que mostra todas as tramas vistas, com o seu ID, independentemente do painel da ferramenta ativa - uma tabela com deslocamento em direto (Hora/ID/DLC/Dados/Δt), Pausa/Limpar e uma leitura aproximada da carga do barramento e da cadência de tramas (atualizada uma vez por segundo; a carga não tem em conta o bit-stuffing, por isso trate-a como um valor aproximado, não como uma medição certificada). **Exportar .trc...**/**Exportar .asc...** guardam a tabela apresentada como um ficheiro de rastreio simplificado ao estilo PEAK PCAN-View / Vector CANalyzer, respetivamente - suficientemente próximo para ser lido pela maioria dos programas que esperam esses formatos, sem garantia de ser idêntico byte a byte ao que as aplicações reais produzem. Se `urtc_custom_ids.json` existir junto a este script (opcional, não incluído por predefinição - `{"0x199": "My Sensor"}`), a coluna de ID mostra esse nome legível junto ao ID hexadecimal em bruto - útil para quem testa o tráfego de uma placa de expansão personalizada sem precisar de modificar o código-fonte do tester.
 
 ### Cobertura de ferramentas
 
@@ -283,49 +190,40 @@ Cada um dos 25 perfis tem o seu próprio painel, construído diretamente a parti
 
 | Ferramenta | Controlos | Telemetria em direto |
 |---|---|---|
-| Ferro de soldar | Temperatura de setpoint, ligar/desligar; sentido do alimentador de fio + número de passos (único); consulta da posição do alimentador + reposição a 0 | Temperatura real; posição do alimentador (estimativa em malha aberta) |
+| Ferro de soldar | Temperatura pretendida, ligar/desligar; sentido do alimentador de fio + número de passos (único); consulta da posição do alimentador + reposição a 0 | Temperatura real; posição do alimentador (estimativa em malha aberta) |
 | Doseador de pasta/líquido, chave de parafusos, ambas as pinças, SMT Pick & Place, pinça de vácuo (LG) | Sentido + número de passos (movimento único) | nenhuma (0x120 partilhado, sem telemetria para nenhuma destas 7) |
 | Recolha por vácuo | nenhum | Leitura analógica, peça detetada |
 | Broca | Velocidade + sentido | RPM real, fim de curso |
 | Inspeção AOI | Modo do anel (desligado/estroboscópio/contínuo) + período do estroboscópio | Fim de curso |
 | Gravador a laser | Potência + bloqueio do laser armar/seguro (uma saída do firmware, não um interlock de hardware) | Fim de curso |
-| Impressora 3D | Setpoint do bico, sentido/passos do extrusor, potência da ventoinha de camada, potência da ventoinha do hotend | Temperatura do hotend, RPM da ventoinha de camada, RPM da ventoinha do hotend |
+| Impressora 3D | Valor pretendido do bico, sentido/passos do extrusor, potência da ventoinha de camada, potência da ventoinha do hotend | Temperatura do hotend, RPM da ventoinha de camada, RPM da ventoinha do hotend |
 | Sonda de varrimento | nenhum | Contagem de eventos de impacto + marca temporal (prioridade máxima `0x095`) |
 | Eletroíman | Caixa de seleção energizar/libertar | nenhuma |
 | Soldador por pontos | Duração do pulso + Disparar | nenhuma (só dispara se o sensor de contacto ler primeiro HIGH - consulte o próprio `0x1C0` de `docs/CANBUS.md`) |
-| Revestimento conformal, inseridor por encaixe sob pressão | nenhum - apenas painel informativo | nenhuma - ambos os IDs de ferramenta não têm qualquer handler CAN, o seu próprio atuador e sensor residem na placa principal do robô, consulte `docs/TOOLS.TXT` |
+| Revestimento conformal, inseridor por encaixe sob pressão | nenhum - apenas painel informativo | nenhuma - ambos os IDs de ferramenta não têm qualquer tratador CAN, o seu próprio atuador e sensor residem na placa principal do robô, consulte `docs/TOOLS.TXT` |
 | Sonda voadora | A leitura básica é automática; a leitura avançada precisa de uma palavra de configuração ADS1115 em bruto (hex) + Iniciar conversão + Ler resultado | Leitura básica do ADC integrado (automática, `0x243`) |
 | Cura UV | Cursor de potência (0-255) + Enviar/Desligar | nenhuma |
-| Retrabalho com ar quente | Temperatura de setpoint, potência do soprador, ligar/desligar | Temperatura em direto (partilha a telemetria `0x135` do ferro de soldar e o gráfico em direto - o mesmo ciclo térmico físico) |
+| Retrabalho com ar quente | Temperatura pretendida, potência do soprador, ligar/desligar | Temperatura em direto (partilha a telemetria `0x135` do ferro de soldar e o gráfico em direto - o mesmo ciclo térmico físico) |
 | Atuador de crimpagem | Sentido + número de passos (movimento único, da mesma forma que as ferramentas de movimento partilhadas acima, mas chega ao controlador de uma placa de expansão através de `0x1F0` em vez de `0x120` integrado) | nenhuma |
 | Inspeção térmica | Iniciar captura, Verificar estado, Ler imagem térmica | Canvas de mapa de calor de 32x24 píxeis (gradiente de azul a vermelho), obtido bloco a bloco por CAN a pedido - não é uma transmissão de vídeo em direto, consulte a secção 6 abaixo |
 | Projeção de pasta de soldar | Canal PWM + frequência (Configurar), depois ciclo de trabalho + duração (Disparar pulso) | nenhuma |
 | Soldador ultrassónico | Duração do pulso + Disparar | nenhuma (mesma forma que o Soldador por pontos, mas sem controlo por sensor de contacto) |
 
-**Os watchdogs de comunicação são tratados por si.** O ferro de soldar,
-o Retrabalho com ar quente (partilha o mesmo ciclo térmico e watchdog que o
-ferro de soldar), o laser e o bico da impressora 3D têm cada um um watchdog de 250 ms
-no firmware; a ventoinha de camada tem um de 1000 ms. Marcar a caixa
-«Ativo» relevante não envia o comando apenas uma vez - reenvia-o
-automaticamente (150 ms para as ferramentas com watchdog de 250 ms, 400 ms para a ventoinha
-de camada) enquanto a caixa permanecer marcada, tal como um verdadeiro controlador
-mestre tem de fazer. Desmarcá-la envia uma trama única de zero/desligado e
-pára. A ventoinha do hotend não tem watchdog (tem antes um detetor de bloqueio - consulte
-`docs/CANBUS.md`), pelo que é um simples envio único.
+**O programa trata por si dos cães de guarda de comunicação.** O ferro de soldar, o Retrabalho com ar quente (partilha o mesmo ciclo térmico e cão de guarda que o ferro de soldar), o laser e o bico da impressora 3D têm cada um um cão de guarda de 250 ms no firmware; a ventoinha de camada tem um de 1000 ms. Marcar a caixa «Ativo» correspondente não envia o comando apenas uma vez: reenvia-o automaticamente (150 ms para as ferramentas com cão de guarda de 250 ms, 400 ms para a ventoinha de camada) enquanto a caixa permanecer marcada, como tem de fazer um verdadeiro controlador mestre. Desmarcá-la envia uma única trama de zero/desligado e pára. A ventoinha do hotend não tem cão de guarda (tem antes um detetor de bloqueio - consulte `docs/CANBUS.md`), pelo que é enviada apenas uma vez.
 
 **Notas de conforto (comodidades de software, não funções de segurança).**
 
-- **PARAR TODAS AS SAÍDAS** (em ambas as janelas, disponível com a ligação feita e as verificações ativas armadas) envia todos os comandos de desligar conhecidos - aquecedores, laser, berbequim, lâmpada UV, ventoinha de camada, libertação do eletroíman, motores de passo simples e crimpadora - seja qual for a ferramenta instalada, e pára todos os refrescamentos. A ventoinha do hotend fica ligada de propósito, porque o bico pode ainda estar quente. É um comando de software enviado pelo barramento CAN, não uma paragem de emergência: não pode atuar se o barramento, o adaptador, o PC ou a placa falharem.
-- Os impulsos de soldadura únicos, o impulso de pasta e a crimpagem pedem confirmação também na janela clássica, como o deck Qt Quick faz sempre.
-- O berbequim e a lâmpada UV são refrescados como o laser e os aquecedores. Enquanto o aquecedor da impressora 3D é mantido, o seu refrescamento de 150 ms leva 0 passos de extrusor, que o firmware lê como ordem de paragem: um movimento do extrusor iniciado nesse estado é cancelado em 150 ms, pelo que deve mover o extrusor com o aquecedor desligado até o firmware oferecer um modo que o deixe em paz.
-- A porta e o débito são lembrados para a próxima sessão (`config.json`) e o deck Qt Quick tem o seu próprio seletor de débito. A **autodeteção** começa por apenas escutar a cada débito (nada é transmitido num barramento ativo) e só pergunta a cada débito quando o barramento está completamente silencioso.
+- **PARAR TODAS AS SAÍDAS** (em ambas as janelas, disponível com a ligação feita e as verificações ativas armadas) envia todos os comandos de desligar conhecidos - aquecedores, laser, berbequim, lâmpada UV, ventoinha de camada, libertação do eletroíman, motores de passo simples e crimpadora - seja qual for a ferramenta instalada, e interrompe todos os reenvios periódicos. A ventoinha do hotend fica ligada de propósito, porque o bico pode ainda estar quente. É um comando de software enviado pelo barramento CAN, não uma paragem de emergência: não pode atuar se o barramento, o adaptador, o PC ou a placa falharem.
+- Os impulsos de soldadura únicos, o impulso de pasta e a crimpagem pedem confirmação também na janela clássica, como o painel Qt Quick faz sempre.
+- O berbequim e a lâmpada UV são reenviados periodicamente como o laser e os aquecedores. Enquanto o aquecedor da impressora 3D é mantido, o seu reenvio de 150 ms leva 0 passos de extrusor, que o firmware lê como ordem de paragem: um movimento do extrusor iniciado nesse estado é cancelado em 150 ms, pelo que deve mover o extrusor com o aquecedor desligado até o firmware oferecer um modo que o deixe em paz.
+- A porta e o débito são lembrados para a próxima sessão (`config.json`) e o painel Qt Quick tem o seu próprio seletor de débito. A **autodeteção** começa por apenas escutar a cada débito (nada é transmitido num barramento ativo) e só pergunta a cada débito quando o barramento está completamente silencioso.
 - O Monitor de barramento em bruto pode ser limitado a alguns IDs CAN (**Filtro de ID**) e às tramas cujos dados mudaram (**Só alterações**). Num barramento com várias cabeças de ferramenta (a extensão multinó) cada linha traz o seu nó (`N03`), `n3 n12` no filtro mantém só as tramas desses nós e um resumo por baixo da tabela dá as tramas por segundo e a parte do barramento de cada nó.
 
 #### 🔥 Teste de bancada de descontrolo térmico (firmware URTC 0.3.2+ / 0.3.3+)
 
-O **Detetar** mostra agora *porquê* uma placa travou num erro: o byte 4 de `0x111` (proteção
+O **Detetar** mostra agora *porquê* uma placa ficou bloqueada num erro: o byte 4 de `0x111` (proteção
 contra descontrolo térmico: MAXTEMP, HEATING_NO_RISE ou DROPPED_AT_TARGET) é apresentado no
-estado da placa, e um reset causado pelo watchdog de hardware (byte 5 de `0x111`) é
+estado da placa, e um reinício causado pelo cão de guarda de hardware (byte 5 de `0x111`) é
 registado. **Contadores térmicos** (painel F-RAM em ambas as interfaces) lê `0x1AA`/`0x1AB`:
 falhas térmicas ao longo da vida, total de horas de aquecedor ligado e a última falha. As respostas
 de firmware mais antigo (`0x111` de 4 bytes, sem `0x1AB`) são reportadas como «não
@@ -371,11 +269,11 @@ detetada) para entregar a quem estiver a depurar um problema numa cabeça de fer
 
 ### 🤖 Sem janela: planos de teste
 
-`python urtc_tester.py --headless COMANDO` executa o tester sem janela, para uma linha de produção, um script de bancada ou uma tarefa de CI: `info` (quem responde: ferramenta, firmware, estado rápido), `selftest`, `run-plan FICHEIRO` e `validate-plan FICHEIRO`. Um plano é um pequeno ficheiro JSON de passos guardado em `plans/` (esperar uma ferramenta, sem falhas, uma versão mínima de firmware, o autoteste, uma trama cujo valor esteja num intervalo, uma espera, uma pergunta à pessoa na bancada). O comando escreve um registo de cada trama e um registo de resultado que nomeia o registo pelo seu SHA-256, o mesmo do painel. Um plano só envia consultas, a menos que diga `"actuation": true` e o operador acrescente `--allow-actuation`; as tramas do bootloader, de atualização, de configuração e de apagamento nunca são enviadas, um comando que o firmware abandona se não for refrescado (um aquecedor, um berbequim, um laser) pode ser repetido enquanto o plano espera (`keepalive_ms`), e depois de um plano que ordenou algo todas as saídas são desligadas de novo. `--transport simulate` reproduz uma cabeça simulada e `--transport replay --port FICHEIRO` um traço `.trc` ou `.asc` gravado, para que um plano possa ser experimentado sem placa. Código de saída: 0 passou, 1 uma verificação falhou, 2 o plano ou os argumentos estão errados, 3 o teste não pôde ser realizado, 4 nada falhou mas as provas não chegam para decidir (indeterminado). O texto que imprime está em inglês, como a linha de comandos do flasher. Pormenores em [`docs/HEADLESS.md`](docs/HEADLESS.md). Nada disto foi executado contra uma placa real.
+`python urtc_tester.py --headless COMANDO` executa o tester sem janela, para uma linha de produção, um script de bancada ou uma tarefa de CI: `info` (quem responde: ferramenta, firmware, estado rápido), `selftest`, `run-plan FICHEIRO` e `validate-plan FICHEIRO`. Um plano é um pequeno ficheiro JSON de passos guardado em `plans/` (esperar uma ferramenta, sem falhas, uma versão mínima de firmware, o autoteste, uma trama cujo valor esteja num intervalo, uma espera, uma pergunta à pessoa na bancada). O comando escreve um registo de cada trama e um registo de resultado que nomeia o registo pelo seu SHA-256, o mesmo do painel. Um plano só envia consultas, a menos que diga `"actuation": true` e o operador acrescente `--allow-actuation`; as tramas do bootloader, de atualização, de configuração e de apagamento nunca são enviadas, um comando que o firmware abandona se não for renovado (um aquecedor, um berbequim, um laser) pode ser repetido enquanto o plano espera (`keepalive_ms`), e depois de um plano que ordenou algo todas as saídas são desligadas de novo. `--transport simulate` reproduz uma cabeça simulada e `--transport replay --port FICHEIRO` um traço `.trc` ou `.asc` gravado, para que um plano possa ser experimentado sem placa. Código de saída: 0 passou, 1 uma verificação falhou, 2 o plano ou os argumentos estão errados, 3 o teste não pôde ser realizado, 4 nada falhou mas as provas não chegam para decidir (indeterminado). O texto que imprime está em inglês, como a linha de comandos do flasher. Pormenores em [`docs/HEADLESS.md`](docs/HEADLESS.md). Nada disto foi executado contra uma placa real.
 
-`image-info FICHEIRO` (também sem janela) lê o cabeçalho que uma imagem de firmware leva no seu interior: o hardware a que se destina, a sua versão, o seu comprimento e o seu CRC-32. Diz se o ficheiro é aceite, aceite com um aviso (uma imagem anterior sem cabeçalho) ou recusado (um cabeçalho que não se sustenta, um ficheiro `.urimg` carimbado, outra placa com `--hardware main|slave`), e `--policy accept|warn|require` é o interruptor de compatibilidade para uma imagem sem cabeçalho. Não abre nenhum bus.
+`image-info FICHEIRO` (também sem janela) lê o cabeçalho que uma imagem de firmware leva no seu interior: o hardware a que se destina, a sua versão, o seu comprimento e o seu CRC-32. Diz se o ficheiro é aceite, aceite com um aviso (uma imagem anterior sem cabeçalho) ou recusado (um cabeçalho que não se sustenta, um ficheiro `.urimg` carimbado, outra placa com `--hardware main|slave`), e `--policy accept|warn|require` é o interruptor de compatibilidade para uma imagem sem cabeçalho. Não abre nenhum barramento.
 
-**Planos na janela (novo, verificado só com testes e a cabeça simulada):** a secção PLANOS DE TESTE, no fim da coluna direita do deck, lista os planos de `plans/`, executa o que escolher contra a placa ligada com o mesmo motor (não no modo só escuta e só enquanto nada mais ler o barramento), mostra cada passo assim que termina, faz numa caixa de diálogo as perguntas de um passo de confirmação e guarda o log e o registo do resultado. Um plano que comanda saídas pede antes uma confirmação e no fim todas as saídas são desligadas; Cancelar pára-o depois do passo em curso.
+**Planos na janela (novo, verificado só com testes e a cabeça simulada):** a secção PLANOS DE TESTE, no fim da coluna direita do painel, lista os planos de `plans/`, executa o que escolher contra a placa ligada com o mesmo motor (não no modo só escuta e só enquanto nada mais ler o barramento), mostra cada passo assim que termina, faz numa caixa de diálogo as perguntas de um passo de confirmação e guarda o registo das tramas e o registo do resultado. Um plano que comanda saídas pede antes uma confirmação e no fim todas as saídas são desligadas; Cancelar pára-o depois do passo em curso.
 
 **Procurar atualizações.** O botão «Procurar atualizações» pergunta ao GitHub uma vez pela versão mais recente e só propõe a transferência se esta tiver um pacote para este sistema mais recente do que a versão instalada. O pacote só é aceite se o SHA-256 e a assinatura Ed25519 (a chave das versões, fixada no programa) forem válidos; só é instalado depois de o confirmar, nunca enquanto uma saída estiver ligada, e a versão anterior é guardada para poder voltar atrás (e é reposta sozinha se a nova não arrancar). Nada é verificado nem instalado por si só: a verificação ao abrir é uma opção, desligada por defeito, e a confirmação só se desliga na mesma janela, depois de um aviso.
 
@@ -411,8 +309,8 @@ Utiliza os transportes SLCAN/SocketCAN e inicia em modo apenas de escuta,
 pelo que não pode transmitir até armar deliberadamente as verificações ativas. Cada
 um dos comandos próprios dos 25 perfis de ferramenta tem aqui cobertura real e confirmada
 (movimento, furação, AOI, eletroíman, pulso de soldadura por pontos/ultrassónica, projeção
-de pasta, flying probe, inspeção térmica, os 5 atuadores com watchdog-keepalive,
-telemetria de vácuo/scan-probe), cada um controlado da mesma forma: uma
+de pasta, sonda voadora, inspeção térmica, os 5 atuadores com cão de guarda e reenvio,
+telemetria de vácuo e da sonda de varrimento), cada um controlado da mesma forma: uma
 correspondência de identidade, um modo ativo explicitamente armado e uma confirmação do utilizador em
 QML antes de qualquer transmissão. Nada disto foi ainda verificado numa placa real - consulte os «limites conhecidos» abaixo.
 
@@ -430,7 +328,7 @@ O fluxo de diagnóstico CAN em direto existente utiliza agora uma superfície de
 
 ### Estrutura de ficheiros
 
-Esta ferramenta está organizada em módulos por responsabilidade, puramente para
+Este tester está organizado em módulos por responsabilidade, puramente para
 legibilidade - não há diferença funcional entre tê-los como
 ficheiros separados ou como um único ficheiro grande. Consulte a secção
 «📂 Estrutura do repositório» perto do final deste documento para
@@ -443,7 +341,7 @@ a descrição completa ficheiro a ficheiro.
 **Um barramento que mistura velocidades**: uma cabeça a outra velocidade que a do barramento não se ouve, por isso não pode declarar a sua velocidade; o tester reconhece o barramento pelos seus sintomas e mostra um aviso: os contadores de erros ou um bus-off das cabeças que se ouvem (trama de saúde `0x1B8`), uma pesquisa a todas as velocidades que não encontra ninguém, ou uma cabeça que se sabe feita para 500 kbit/s. `"bus_health"` em `config.json` define os limiares: `"tec_warn"`, `"rec_warn"` e `"bus_off_warn"` (inteiros de 1 a 255; 96, 96 e 1 por omissão) e `"legacy_heads"` (os nomes ou números de série das cabeças feitas para 500 kbit/s). Um valor fora dos limites mantém o valor por omissão. Testado com barramentos simulados; nada correu num barramento real.
 
 **Idioma**: inglês por predefinição. Alterado com o seletor de idioma no cabeçalho da janela - altera a interface (rótulos, botões, caixas de diálogo e mensagens de registo) para qualquer um dos 8 idiomas disponíveis, guardado
-imediatamente em `config.json` junto a esta ferramenta, aplicado no próximo
+imediatamente em `config.json` junto a este tester, aplicado no próximo
 arranque. As traduções residem em ficheiros de texto simples em `language/`
 (`english.lng`, `spanish.lng`, `italian.lng`, `french.lng`,
 `german.lng`, `chinese.lng`, `japanese.lng`, `portuguese.lng`) como simples pares `KEY=Value`,
@@ -472,7 +370,7 @@ As versões dos programas URTC que funcionam em conjunto, e a versão do protoco
 
 ## 🧪 Testes
 
-O conjunto tem 1007 testes (`python -m pytest -q`; com Qt numa máquina sem ecrã, `QT_QPA_PLATFORM=offscreen`; os que precisam do PySide6 são ignorados sem ele): os codificadores e descodificadores de carga CAN de cada família de ferramentas, os transportes SLCAN e SocketCAN contra simulações, a sonda de identidade, o autoteste, os reenvios de vigilância, a verificação de saúde do barramento, os planos de teste e o modo sem janela, a exportação da sessão com o seu hash, os ficheiros de idioma e os painéis Qt Quick. Quatro scripts na raiz (`verify_qt_*.py`) comandam os painéis Qt Quick de ponta a ponta com um ciclo de eventos Qt real. A CI executa também `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Nada disto correu contra uma placa real.
+O conjunto tem 1007 testes (`python -m pytest -q`; com Qt numa máquina sem ecrã, `QT_QPA_PLATFORM=offscreen`; os que precisam do PySide6 são ignorados sem ele): os codificadores e descodificadores de carga CAN de cada família de ferramentas, os transportes SLCAN e SocketCAN contra simulações, a sonda de identidade, o autoteste, os reenvios do cão de guarda, a verificação de saúde do barramento, os planos de teste e o modo sem janela, a exportação da sessão com o seu hash, os ficheiros de idioma e os painéis Qt Quick. Quatro scripts na raiz (`verify_qt_*.py`) comandam os painéis Qt Quick de ponta a ponta com um ciclo de eventos Qt real. A CI executa também `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Nada disto correu contra uma placa real.
 
 ## 🏗️ Compilação e publicação
 
@@ -536,29 +434,17 @@ A lista anotada de cada ficheiro de código, uma linha por ficheiro, está em [d
 
 ## 🗺️ Roteiro e limites conhecidos
 
-O contrato de evidência desta ferramenta - o que conta como aprovado/reprovado/desconhecido, porque
-a ausência de evidência é sempre desconhecido e nunca aprovado, e porque não concede
-qualquer autoridade própria de gravação de firmware - está documentado em
-[docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md).
+O contrato de evidência deste tester - o que conta como aprovado, reprovado ou desconhecido, por que razão a ausência de evidência é sempre desconhecido e nunca aprovado, e por que razão não concede qualquer autoridade própria de gravação de firmware - está documentado em [docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md).
 
-- **Não testada com hardware real.** Cada peça aqui - a camada de
-  transporte, o tratamento dos IDs CAN/disposição de bytes, a temporização do keepalive do watchdog -
-  foi verificada isoladamente (tramas simuladas, um subprocesso real para a temporização
-  quando relevante), mas o ambiente que a construiu não tem acesso a USB.
-  Trate uma primeira sessão real com a mesma cautela que o README do próprio
-  flasher pede.
-- **Um painel de ferramenta de cada vez, por design**, não é uma limitação atual a
-  ser removida mais tarde - consulte a introdução acima para saber porquê.
+- **Não testada com hardware real.** Cada peça - a camada de transporte, o tratamento dos IDs CAN e da disposição dos bytes, a temporização do reenvio do cão de guarda - foi verificada isoladamente (tramas simuladas e, quando relevante, um subprocesso real para a temporização), mas o ambiente que a construiu não tem acesso a USB. Trate uma primeira sessão real com a mesma cautela que o README do próprio flasher pede.
+- **Um painel de ferramenta de cada vez, por conceção**, não é uma limitação atual a remover mais tarde - consulte a introdução acima para saber porquê.
 - **As cores globais dos LEDs são uma substituição direta**, não uma leitura em direto -
   não há telemetria do que os LEDs de estado/anel estão realmente
   a mostrar, apenas do que foi comandado por último.
-- **A imagem térmica da Inspeção térmica é obtida a pedido, não uma
-  transmissão em direto.** Ler uma trama completa implica pedir todos os 48 blocos
-  sequencialmente por CAN (no pior caso, a resolução do MLX90640/MLX90642) -
-  isto pode demorar alguns segundos, e não existe modo de envio contínuo (streaming)
-  no protocolo CAN desta ferramenta que o torne mais rápido. Primeiro é preciso acionar uma captura; Ler imagem térmica espera então até dois segundos que o sensor indique que está pronto e, se não o fizer, não lê nada, porque o firmware não responde aos pedidos de bloco antes disso. Primeiro pergunta-se qual o sensor instalado (48 blocos para o MLX90640/MLX90642, 12 para o MLX90641), e um bloco perdido deixa os seus píxeis em branco em vez de deslocar o resto da imagem.
+- **A imagem térmica da Inspeção térmica é obtida a pedido, não em transmissão em direto.** Ler uma trama completa implica pedir todos os 48 blocos sequencialmente por CAN (no pior caso, a resolução do MLX90640/MLX90642); isto pode demorar alguns segundos, e o protocolo CAN deste tester não tem nenhum modo de envio contínuo
+  que o torne mais rápido. Primeiro é preciso acionar uma captura; Ler imagem térmica espera então até dois segundos que o sensor indique que está pronto e, se não o fizer, não lê nada, porque o firmware não responde aos pedidos de bloco antes disso. Primeiro pergunta-se qual o sensor instalado (48 blocos para o MLX90640/MLX90642, 12 para o MLX90641), e um bloco perdido deixa os seus píxeis em branco em vez de deslocar o resto da imagem.
 - **Executar autoteste só cobre 7 das 25 ferramentas** (ferro de soldar,
-  broca, laser, impressora 3D, AOI, vácuo, scan probe) - consulte "Como
+  broca, laser, impressora 3D, AOI, vácuo, sonda de varrimento) - consulte "Como
   funciona" acima para a explicação completa. As outras 18 ferramentas não recebem qualquer
   verificação automatizada desse botão; verificá-las continua a significar
   observar o hardware real a responder aos controlos do seu próprio painel.
@@ -639,12 +525,12 @@ abrange:
    International (CC BY-SA 4.0)**. Texto completo em
    https://creativecommons.org/licenses/by-sa/4.0/.
 
-Esta ferramenta é o companheiro de diagnóstico CAN em direto do projeto
+Este tester é o companheiro de diagnóstico CAN em direto do projeto
 [URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC)
 - consulte o repositório desse projeto para o firmware da placa,
-os desenhos de hardware e a documentação completa do protocolo contra o qual esta ferramenta
+os desenhos de hardware e a documentação completa do protocolo contra o qual este tester
 é exercitada. O firmware do próprio URTC é GPL-3.0-or-later e os seus desenhos de hardware são
-CERN-OHL-S v2; a licença desta ferramenta aqui não se estende a esse
+CERN-OHL-S v2; a licença deste tester aqui não se estende a esse
 projeto separado, e vice-versa. Existe também uma alternativa baseada na web que cobre
 um âmbito semelhante em
 [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).

@@ -15,7 +15,7 @@
   <a href="README_por.md">🇵🇹 Português</a>
 </p>
 
-### Un exerciseur de bus CAN en direct pour la carte URTC : il n'affiche que les commandes et la télémétrie de la tête d'outil branchée
+### Un tester de bus CAN en direct pour la carte URTC : il n'affiche que les commandes et la télémétrie de la tête d'outil branchée
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
@@ -27,7 +27,7 @@
 
 ---
 
-**Point d'honnêteté : ce qui fonctionne réellement aujourd'hui :** les encodeurs de charge utile CAN pour les familles de contrôle migrées vers Qt Quick (`advanced_protocol.py`) sont réels et couverts par les tests de `tests/` (`python -m pytest -q`). La propre CI de ce dépôt (`.github/workflows/ci.yml`) les exécute aussi, avec `ruff check`, `python -m mypy`, `tools/ci_validate.py`, une compilation de syntaxe de chaque fichier `.py` et les quatre scripts `verify_qt_*.py`, donc une régression là fait échouer le build. Les quatre scripts `verify_qt_*.py` à la racine du dépôt (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) sont de vraies vérifications de bout en bout, délibérément en dehors de `tests/`, contre un faux transport avec une vraie livraison de signaux entre threads - les quatre passent avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que la CI exécute aussi. C'est le plafond honnête de ce qui est vérifié automatiquement : la couche de transport, la gestion ID/disposition des octets CAN, et la logique du pont Qt Quick sont réelles et exercées contre des trames simulées, pas du vrai matériel - comme le disent déjà les « limites connues » ci-dessous, ceci a été construit sans accès USB, donc rien ici n'a encore été vérifié contre une vraie carte. `qt_tester.py` et `assets/qml/TesterDeck.qml` sont l'implémentation réelle et substantielle (des milliers de lignes combinées), exercée par les tests avec des cartes simulées et par les scripts de vérification, jamais par une vraie carte.
+**Point d'honnêteté : ce qui fonctionne réellement aujourd'hui :** les encodeurs de charge utile CAN pour les familles de contrôle migrées vers Qt Quick (`advanced_protocol.py`) sont réels et couverts par les tests de `tests/` (`python -m pytest -q`). La propre CI de ce dépôt (`.github/workflows/ci.yml`) les exécute aussi, avec `ruff check`, `python -m mypy`, `tools/ci_validate.py`, une compilation de syntaxe de chaque fichier `.py` et les quatre scripts `verify_qt_*.py`, donc une régression là fait échouer la compilation. Les quatre scripts `verify_qt_*.py` à la racine du dépôt (`verify_qt_custom_frame.py`, `verify_qt_telemetry_watch.py`, `verify_qt_utility_panels.py`, `verify_qt_selftest.py`) sont de vraies vérifications de bout en bout, délibérément en dehors de `tests/`, contre un faux transport avec une vraie livraison de signaux entre threads - les quatre passent avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, que la CI exécute aussi. C'est le plafond honnête de ce qui est vérifié automatiquement : la couche de transport, la gestion ID/disposition des octets CAN, et la logique du pont Qt Quick sont réelles et exercées contre des trames simulées, pas du vrai matériel - comme le disent déjà les « limites connues » ci-dessous, ceci a été construit sans accès USB, donc rien ici n'a encore été vérifié contre une vraie carte. `qt_tester.py` et `assets/qml/TesterDeck.qml` sont l'implémentation réelle et substantielle (des milliers de lignes combinées), exercée par les tests avec des cartes simulées et par les scripts de vérification, jamais par une vraie carte.
 
 ---
 
@@ -76,7 +76,7 @@ puisse laisser la carte moins fonctionnelle qu'au départ.
 
 ### Relation avec le flasher
 
-Cet outil et [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) partagent la même couche de transport
+Le tester et [URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER) partagent la même couche de transport
 (les classes SLCAN et SocketCAN sont identiques) puisque les deux ont
 finalement juste besoin de faire entrer et sortir des trames CAN du
 même type d'adaptateur, mais ils font des travaux fondamentalement
@@ -143,169 +143,51 @@ Capturées sur un banc d'essai avec des données d'exemple fictives et sans inst
 
 ## ✨ Fonctionnalités
 
-**Enregistreur de défauts, fonctions optionnelles, banc du rack et vue thermique (nouveau, vérifié avec des simulations seulement) :** le tableau lit la boîte noire de la carte (`0x1A8` / `0x1A9`) et l'enregistre en CSV et JSON, automatiquement une fois pour chaque erreur signalée par la carte quand cette option est activée ; il lit les registres que le dernier HardFault a laissés (`0x1BC` / `0x1BD`, seulement d'un firmware compilé avec la capture de plantage) et les enregistre en JSON ; il active les fonctions optionnelles du firmware (`0x1AE` / `0x1AF`, désactivées par défaut, effet au prochain démarrage) ; il propose un rack d'outils simulé avec le protocole série d'URTC-SMART-RACK, l'identité de chaque tête (type et numéro de série) et l'export d'une page d'état ; et il affiche l'image d'inspection thermique en fausses couleurs (une image simulée l'indique). Les noms et types d'outils viennent désormais des profils d'outil partagés d'URTC-COMMON. Rien de cela n'a été utilisé avec une vraie carte.
+**Enregistreur de défauts, fonctions optionnelles, banc du rack et vue thermique (nouveau, vérifié avec des simulations seulement) :** le tableau de commande lit la boîte noire de la carte (`0x1A8` / `0x1A9`) et l'enregistre en CSV et JSON, automatiquement une fois pour chaque erreur signalée par la carte quand cette option est activée ; il lit les registres que le dernier HardFault a laissés (`0x1BC` / `0x1BD`, seulement d'un firmware compilé avec la capture de plantage) et les enregistre en JSON ; il active les fonctions optionnelles du firmware (`0x1AE` / `0x1AF`, désactivées par défaut, effet au prochain démarrage) ; il propose un rack d'outils simulé avec le protocole série d'URTC-SMART-RACK, l'identité de chaque tête (type et numéro de série) et l'export d'une page d'état ; et il affiche l'image d'inspection thermique en fausses couleurs (une image simulée l'indique). Les noms et types d'outils viennent désormais des profils d'outil partagés d'URTC-COMMON. Rien de cela n'a été utilisé avec une vraie carte.
 
-**PID du chauffage (nouveau, vérifié avec des simulations seulement) :** le pupitre lit l'état du PID du chauffage du firmware (`0x1B9` / `0x1BA` : les gains en vigueur, l'état et la sortie du dernier cycle de régulation), enregistre des gains (de 0 à 600) et lance ou annule l'autoréglage par relais, qui chauffe la panne autour de la consigne actuelle du fer à souder (100 à 445 C) et enregistre les gains trouvés. Enregistrer des gains et lancer l'autoréglage demandent la confirmation habituelle ; annuler non. La tête simulée de la ligne de commande (`--transport simulate`) répond aussi à ces trames. La fonction doit d'abord être activée parmi les fonctions optionnelles ; rien de cela n'a été utilisé avec une vraie carte.
+**PID du chauffage (nouveau, vérifié avec des simulations seulement) :** le tableau de commande lit l'état du PID du chauffage du firmware (`0x1B9` / `0x1BA` : les gains en vigueur, l'état et la sortie du dernier cycle de régulation), enregistre des gains (de 0 à 600) et lance ou annule l'autoréglage par relais, qui chauffe la panne autour de la consigne actuelle du fer à souder (100 à 445 C) et enregistre les gains trouvés. Enregistrer des gains et lancer l'autoréglage demandent la confirmation habituelle ; annuler non. La tête simulée de la ligne de commande (`--transport simulate`) répond aussi à ces trames. La fonction doit d'abord être activée parmi les fonctions optionnelles ; rien de cela n'a été utilisé avec une vraie carte.
 
 ### Comment ça fonctionne
 
-La fenêtre est disposée en 3 colonnes : gauche et centre contiennent les
-sections toujours visibles ci-dessous (1-4, puis 6), droite contient le
-panneau par outil de la section 5, qui est la seule partie de la
-fenêtre qui change réellement selon ce qui est détecté. Diviser les
-sections toujours visibles sur 2 colonnes plutôt que de les empiler
-toutes en une seule empêche la fenêtre de devenir assez haute pour ne
-plus tenir sur un écran ordinaire, à mesure que davantage de ces
-sections ont été ajoutées au fil du temps. Le panneau propre de
-l'imprimante 3D (le plus haut des 25) va un pas plus loin et divise ses
-propres contrôles en 2 sous-colonnes en interne, pour la même raison.
-Voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) pour le guide
-d'architecture au niveau des modules que cette section résume.
+La fenêtre est disposée en trois colonnes : à gauche et au centre se trouvent les sections toujours visibles (1-4, puis 6), à droite le panneau par outil de la section 5, seule partie de la fenêtre qui change selon l'outil détecté. Répartir les sections toujours visibles sur deux colonnes, plutôt que de les empiler toutes en une seule, évite que la fenêtre devienne trop haute pour tenir sur un écran ordinaire, alors que de nouvelles sections se sont ajoutées au fil du temps. Le panneau propre de l'imprimante 3D (le plus haut des 25) va un cran plus loin et répartit ses propres contrôles en deux sous-colonnes, pour la même raison. Voir [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) pour le guide d'architecture au niveau des modules que cette section résume.
 
-**Connecter** (section 1, identique au flasher) : choisissez
-Série/SLCAN ou SocketCAN, le port/interface, détectez éventuellement
-automatiquement le débit binaire, puis Connecter.
+**Connecter** (section 1, identique à celle du flasher) : choisissez Série/SLCAN ou SocketCAN et le port ou l'interface, faites détecter si vous le souhaitez le débit du bus automatiquement, puis cliquez sur Connecter.
 
-**La détection se produit automatiquement à la connexion** (ou cliquez
-sur **Détecter** pour la refaire) : l'outil envoie `0x110` (interroger
-l'outil actif) et `0x7F8` (interroger la version), et utilise la
-réponse pour :
-- Montrer lequel des 25 profils d'outil est actif, et l'état général de
-  la carte (toute erreur déclarée, défaut de bus CAN, encore dans
-  l'écran de démarrage).
-- Montrer le HardwareID et la version de firmware rapportés, signalant
-  une discordance si cela ne correspond pas au propre
-  `THIS_HARDWARE_ID` de ce projet.
-- Construire le panneau **Contrôles d'Outil** à droite pour cet outil
-  spécifique - et seulement cet outil. Changer quel outil est
-  cavalié et détecter à nouveau démonte l'ancien panneau et en
-  construit un nouveau depuis zéro.
+**La détection se fait automatiquement à la connexion** (ou cliquez sur **Détecter** pour la refaire) : le tester envoie `0x110` (interroger l'outil actif) et `0x7F8` (interroger la version) et utilise la réponse pour
+- montrer lequel des 25 profils d'outil est actif, ainsi que l'état général de la carte (toute erreur déclarée, défaut du bus CAN, écran de démarrage encore affiché) ;
+- montrer le HardwareID et la version du firmware rapportés, en signalant une discordance s'ils ne correspondent pas au `THIS_HARDWARE_ID` de ce projet ;
+- construire à droite le panneau **Contrôles d'Outil** pour cet outil précis, et seulement pour lui. Si vous changez l'outil choisi par les cavaliers et détectez à nouveau, l'ancien panneau est démonté et un nouveau est construit depuis zéro.
 
-**Contrôles Globaux** (section 2, toujours visible quel que soit l'outil
-actif) : le remplacement de couleur de la LED de statut, la couleur et
-l'allumage/extinction de l'anneau LED, et le mode d'affichage OLED
-(`0x100`) - ceux-ci s'appliquent à chaque outil, donc ils ne se
-déplacent pas vers le panneau dynamique. En mode Inspection AOI
-spécifiquement, l'allumage/extinction de l'anneau ici est ignoré en
-faveur du propre contrôle de stroboscope de cet outil (selon
-[docs/CANBUS.md](docs/CANBUS.md)) - la couleur s'applique quand même dans les deux cas.
+**Contrôles Globaux** (section 2, toujours visible quel que soit l'outil actif) : le remplacement de la couleur de la LED d'état, la couleur de l'anneau LED et son allumage/extinction, et le mode d'affichage OLED (`0x100`) - ils s'appliquent à tous les outils et ne passent donc pas dans le panneau dynamique. Dans le seul mode Inspection AOI, l'allumage/extinction de l'anneau est ignoré ici au profit du contrôle de stroboscope propre à cet outil (selon [docs/CANBUS.md](docs/CANBUS.md)) ; la couleur s'applique quand même.
 
-**Carte d'Extension** (section 3, toujours visible) : le propre bus SPI
-générique et la ligne DIAG0 de `CONN_EXPANSION` - le passage brut
-partagé par toutes les variantes de carte d'extension avec driver.
-L'ADS1115 et les capteurs MLX9064x, ainsi que le driver propre de
-l'actionneur de sertissage, ne se contrôlent pas depuis ici - ils vivent
-dans le panneau de leur propre outil à la place (Sonde Volante,
-Inspection thermique, Actionneur de Sertissage - voir section 4
-ci-dessous), puisque celui qui s'applique réellement dépend du profil
-d'outil configuré par cavaliers.
+**Carte d'Extension** (section 3, toujours visible) : le bus SPI générique et la ligne DIAG0 de `CONN_EXPANSION` - le passage brut partagé par toutes les variantes de carte d'extension avec pilote. L'ADS1115, les capteurs MLX9064x et le pilote propre de l'actionneur de sertissage ne se commandent pas d'ici : ils se trouvent dans le panneau de leur outil (Sonde Volante, Inspection thermique, Actionneur de Sertissage - voir section 4 ci-dessous), car celui qui s'applique dépend du profil d'outil choisi par les cavaliers.
 
-**F-RAM de Persistance** (section 4, également toujours visible, mais
-délibérément séparée de Carte d'Extension ci-dessus) : la FM24CL64B
-partage le propre bus I2C2 matériel de l'OLED - un composant central de
-la carte, pas quelque chose de câblé à `CONN_EXPANSION` du tout.
-Regrouper les deux ensemble impliquerait une connexion entre eux qui
-n'est pas réelle - le connecteur d'extension lui-même n'a pas de F-RAM,
-pas d'EEPROM, rien de non volatile dessus.
-- **Passage direct SPI** : tapez des octets hexadécimaux séparés par des
-  espaces (1 à 7 d'entre eux, p. ex. `01 02 03`), appuyez sur Envoyer,
-  et voyez exactement ce qui est revenu sur MISO pendant ce même
-  transfert (`0x180`/`0x181`) - un transport d'octets brut, pas
-  conscient des registres TMC5160, correspondant à la propre approche
-  du firmware. Utile pour exercer le bus lui-même avant qu'il ne vaille
-  la peine de construire un panneau dédié pour le protocole de
-  registres d'une carte d'extension spécifique.
-- **Niveau DIAG0** : **Interroger DIAG0** lit l'état actuel de la ligne
-  de diagnostic de blocage/défaut d'un TMC5160 (`0x182`/`0x183`) - HIGH
-  (inactif) ou LOW (affirmé). Une simple lecture interrogée, pas une
-  valeur en direct/poussée - appuyez à nouveau sur le bouton pour
-  l'actualiser.
-- **F-RAM de Persistance** : **Interroger l'État** relit ce que la
-  carte a sauvegardé la dernière fois avant une perte d'alimentation
-  (`0x190`/`0x191`) - quel outil c'était, le point de consigne, si une
-  erreur critique était active à ce moment-là. **Effacer la F-RAM...**
-  l'efface (`0x192`, avec une boîte de dialogue de confirmation
-  d'abord - ceci ne peut pas être annulé).
-- **Type de carte d'extension** : **Interroger** montre laquelle des 7
-  configurations possibles de `CONN_EXPANSION` est actuellement définie
-  (`0x1A1` - voir `EXPANSION.TXT`). Lecture seule ici - définissez-la
-  depuis la propre section CAN OTA de `URTC Flasher` à la place,
-  puisque c'est une étape de configuration matérielle ponctuelle, pas
-  quelque chose à changer avec désinvolture depuis un outil de
-  diagnostic en direct.
+**F-RAM de Persistance** (section 4, également toujours visible, mais délibérément séparée de la Carte d'Extension ci-dessus) : la FM24CL64B partage avec l'OLED le bus I2C2 matériel - c'est un composant central de la carte, pas du tout relié à `CONN_EXPANSION`. Les regrouper laisserait croire à un lien qui n'existe pas - le connecteur d'extension lui-même n'a ni F-RAM, ni EEPROM, rien de non volatile.
+- **Passage direct SPI** : tapez des octets hexadécimaux séparés par des espaces (1 à 7, p. ex. `01 02 03`), appuyez sur Envoyer et voyez exactement ce qui est revenu sur MISO pendant ce même transfert (`0x180`/`0x181`) - un transport d'octets brut, qui ne connaît pas les registres du TMC5160, comme le firmware. Utile pour éprouver le bus lui-même avant de construire un panneau dédié au protocole de registres d'une carte d'extension précise.
+- **Niveau DIAG0** : **Interroger DIAG0** lit l'état actuel de la ligne de diagnostic de blocage/défaut d'un TMC5160 (`0x182`/`0x183`) - HIGH (inactif) ou LOW (actif). Une simple lecture à la demande, pas une valeur envoyée en continu - appuyez de nouveau sur le bouton pour l'actualiser.
+- **F-RAM de Persistance** : **Interroger l'État** relit ce que la carte a sauvegardé en dernier avant une coupure d'alimentation (`0x190`/`0x191`) - quel outil c'était, quelle consigne était active, et si une erreur critique l'était à ce moment-là. **Effacer la F-RAM...** l'efface (`0x192`, avec d'abord une boîte de dialogue de confirmation - c'est irréversible).
+- **Type de carte d'extension** : **Interroger** montre laquelle des 7 configurations possibles de `CONN_EXPANSION` est actuellement définie (`0x1A1` - voir `EXPANSION.TXT`). En lecture seule ici - définissez-la plutôt dans la section CAN OTA de `URTC Flasher`, car c'est une étape de configuration matérielle ponctuelle, pas quelque chose qu'un outil de diagnostic en direct doit changer au passage.
 - **Variante de capteur MLX9064x** : **Interroger** montre lequel des 3
   capteurs thermiques de la famille MLX9064x (ou aucun) est
   actuellement configuré (`0x1A7` - voir `CANBUS.md`) - pertinent
   uniquement lorsque le type de carte d'extension ci-dessus est une
   variante Advanced ou Basic+MLX9064x. Lecture seule ici, même
   raisonnement que le type de carte d'extension ci-dessus.
-- **Configuration libre de l'outil** : **Interroger** montre la lecture
-  brute des cavaliers ID (0-31) à côté de ce que dit actuellement le
-  registre `free_tool_selection` de la F-RAM (`0x1A3` - voir
-  `EEPROM.TXT` section 5) - seulement réellement consulté par une carte
-  dont les cavaliers lisent 0x1F/11111b. Lecture seule ici, même
-  raisonnement que le type de carte d'extension ci-dessus - `URTC
-  Flasher` est le seul outil qui l'écrit.
-- **Type de périphérique et numéro de série** : **Interroger** montre le
-  type de périphérique fixe (toujours URTC/0x03) à côté du numéro de
-  série de l'appareil actuellement défini (`0x1A5` - voir `EEPROM.TXT`
-  section 6), une étiquette attribuée par l'hôte pour distinguer
-  plusieurs cartes par ailleurs identiques sur le même bus CAN. Lecture
-  seule ici aussi - `URTC Flasher` écrit le numéro de série, cet outil
-  ne fait que le relire.
+- **Configuration libre de l'outil** : **Interroger** montre la lecture brute des cavaliers ID (0-31) à côté de ce que contient actuellement le registre `free_tool_selection` de la F-RAM (`0x1A3` - voir `EEPROM.TXT` section 5) ; il n'est consulté que par une carte dont les cavaliers lisent 0x1F/11111b. En lecture seule ici aussi, pour la même raison que le type de carte d'extension ci-dessus - `URTC Flasher` est le seul programme qui l'écrit.
+- **Type de périphérique et numéro de série** : **Interroger** montre le type de périphérique fixe (toujours URTC/0x03) à côté du numéro de série de l'appareil actuellement défini (`0x1A5` - voir `EEPROM.TXT` section 6), une étiquette attribuée par l'hôte pour distinguer plusieurs cartes par ailleurs identiques sur le même bus CAN. En lecture seule ici aussi - `URTC Flasher` écrit le numéro de série, le tester ne fait que le relire.
 
-**Trame CAN Personnalisée** (section 6, également toujours visible) :
-une entrée d'ID brut + octets hexadécimaux avec envoi unique et
-périodique - pour une commande qui n'a pas encore son propre contrôle
-ici, ou pour tester quelque chose non (ou pas encore) documenté dans
-`docs/CANBUS.md`. Aucune validation au-delà de la plage d'ID et
-DLC≤8 ; quoi que ceci envoie est exactement ce qui va sur le bus. La
-même section ouvre aussi le **Moniteur de Bus Brut** (voir ci-dessous).
+**Trame CAN Personnalisée** (section 6, également toujours visible) : une saisie d'ID brut + octets hexadécimaux avec envoi unique et périodique - pour une commande qui n'a pas encore son propre contrôle ici, ou pour tester quelque chose qui n'est pas (ou pas encore) documenté dans `docs/CANBUS.md`. Il n'y a aucune validation au-delà de la plage d'ID et de DLC≤8 ; ce qui est envoyé ici part tel quel sur le bus. La même section ouvre aussi le **Moniteur de Bus Brut** (voir ci-dessous).
 
-**Exécuter Auto-test** (à côté de Détecter) : exécute un petit ensemble
-de vérifications de communication sûres et au repos pour l'outil
-actuellement détecté - confirme que l'interrogation de l'outil actif et
-celle de la version répondent toutes les deux, puis (pour les outils
-avec télémétrie) envoie un point de consigne/vitesse/puissance sûr de 0
-et vérifie que la télémétrie attendue arrive. N'envoie délibérément
-jamais rien qui chaufferait, tirerait, ou tournerait réellement à
-puissance significative - ceci vérifie que l'aller-retour de
-communication fonctionne, pas qu'un actionneur répond physiquement,
-puisque confirmer cela nécessite de toute façon un humain qui observe.
-Demande confirmation avant d'envoyer quoi que ce soit. Chaque contrôle se termine par réussi, échoué ou indéterminé : un succès exige une réponse lisible qui dit ce que dit un outil sain au repos (bon outil, application en marche, aucun drapeau de défaut, chaque champ dans sa plage, une température sous sa limite et froide quand le chauffage a reçu l'ordre de s'arrêter, une perceuse arrêtée) ; l'absence de réponse ou une mauvaise réponse échoue ; une réponse illisible, un chauffage encore chaud, une perceuse encore en rotation, ainsi que les outils sans télémétrie (mouvement simple) ou purement pilotés par événements (sonde de balayage) sont indéterminés, jamais un succès. L'ensemble prend le pire résultat (échec, puis indéterminé, puis réussi) ; les limites sont dans config.json sous selftest_limits. **La couverture est
+**Exécuter Auto-test** (à côté de Détecter) : exécute un petit ensemble de vérifications de communication sûres et au repos pour l'outil actuellement détecté - il confirme que l'interrogation de l'outil actif et celle de la version répondent toutes les deux, puis (pour les outils avec télémétrie) envoie une consigne, une vitesse ou une puissance sûre de 0 et vérifie que la télémétrie attendue arrive. Il n'envoie délibérément jamais rien qui chaufferait, tirerait ou tournerait réellement à une puissance significative : il vérifie que la communication fonctionne dans les deux sens, pas qu'un actionneur réagit physiquement, car seul un humain sur place peut de toute façon le constater.
+Il demande une confirmation avant d'envoyer quoi que ce soit. Chaque contrôle se termine par réussi, échoué ou indéterminé : un succès exige une réponse lisible qui dit ce que dit un outil sain au repos (bon outil, application en marche, aucun drapeau de défaut, chaque champ dans sa plage, une température sous sa limite et froide quand le chauffage a reçu l'ordre de s'arrêter, une perceuse arrêtée) ; l'absence de réponse ou une mauvaise réponse échoue ; une réponse illisible, un chauffage encore chaud, une perceuse encore en rotation, ainsi que les outils sans télémétrie (mouvement simple) ou purement pilotés par événements (sonde de balayage) sont indéterminés, jamais un succès. L'ensemble prend le pire résultat (échec, puis indéterminé, puis réussi) ; les limites sont dans config.json sous selftest_limits. **La couverture est
 partielle** : seuls 7 des 25 outils ont une étape d'auto-test définie
 (fer à souder, perceuse, laser, imprimante 3D, AOI, vide, sonde de
 balayage) - les 18 autres outils n'exécutent aucune vérification quand
 ce bouton est actionné.
 
-**Graphiques de température en direct** : les panneaux du fer à souder
-et de la buse de l'imprimante 3D montrent tous deux un petit graphique
-linéaire défilant à côté de leur lecture de température en direct - un
-simple Canvas Qt Quick, pas une nouvelle dépendance
-(matplotlib/pyqtgraph casseraient la politique de zéro dépendance de
-cet outil au-delà de pyserial). Échelle d'axe Y fixe (0 jusqu'au
-plafond de point de consigne propre à cet outil) plutôt qu'auto-échelle,
-donc la tendance est facile à lire d'un coup d'œil plutôt que l'échelle
-se décale en dessous.
+**Courbes de température en direct** : les panneaux du fer à souder et de la buse de l'imprimante 3D montrent chacun une petite courbe défilante à côté de leur mesure de température - un simple Canvas Qt Quick, sans nouvelle dépendance (matplotlib/pyqtgraph casseraient la règle du tester de n'avoir aucune dépendance en dehors de pyserial). L'axe Y a une échelle fixe (de 0 au plafond de consigne propre à l'outil) plutôt qu'une échelle automatique, si bien que la tendance se lit d'un coup d'œil sans que l'échelle ne bouge en dessous.
 
-**Moniteur de Bus Brut** (ouvert depuis la section Trame CAN
-Personnalisée) : une fenêtre séparée montrant chaque trame vue,
-n'importe quel ID, indépendante du panneau d'outil actif - un tableau à
-défilement en direct (Temps/ID/DLC/Données/Δt), Pause/Effacer, et une
-lecture approximative de charge de bus/taux de trames (mise à jour une
-fois par seconde ; le chiffre de charge ne modélise pas la surcharge de
-bit-stuffing, donc traitez-le comme un chiffre diagnostique approximatif,
-pas une mesure certifiée). **Exporter .trc...**/**Exporter .asc...**
-enregistrent le tableau actuellement affiché comme un fichier de trace
-simplifié au style PEAK PCAN-View / Vector CANalyzer respectivement -
-assez proche pour être lisible par la plupart des outils qui attendent
-ces formats, pas garanti identique octet par octet à ce que produisent
-les applications réelles. Si `urtc_custom_ids.json` existe à côté de ce
-script (optionnel, non inclus par défaut - `{"0x199": "My Sensor"}`),
-la colonne ID montre ce nom convivial à côté de l'ID hexadécimal brut -
-utile pour quiconque teste le propre trafic d'une carte d'extension
-personnalisée sans avoir besoin de modifier le code source de cet
-outil.
+**Moniteur de Bus Brut** (ouvert depuis la section Trame CAN Personnalisée) : une fenêtre séparée qui montre chaque trame vue, avec son ID, indépendamment du panneau d'outil actif - un tableau qui défile en direct (Temps/ID/DLC/Données/Δt), Pause/Effacer et une indication approximative de la charge du bus et de la cadence des trames (mise à jour une fois par seconde ; la charge ne tient pas compte du bit-stuffing, considérez-la donc comme un ordre de grandeur, pas comme une mesure certifiée). **Exporter .trc...**/**Exporter .asc...** enregistrent le tableau actuellement affiché sous forme d'un fichier de trace simplifié dans le style de PEAK PCAN-View / Vector CANalyzer respectivement - assez proche pour être lu par la plupart des programmes qui attendent ces formats, mais sans garantie d'être identique octet par octet à ce que produisent les applications réelles. Si `urtc_custom_ids.json` existe à côté de ce script (facultatif, non inclus par défaut - `{"0x199": "My Sensor"}`), la colonne ID montre ce nom lisible à côté de l'ID hexadécimal brut - utile pour quiconque teste le trafic d'une carte d'extension personnalisée sans avoir à modifier le code source du tester.
 
 ### Couverture des outils
 
@@ -328,30 +210,19 @@ partir de `docs/CANBUS.md` :
 | Sonde Volante | La lecture basique est automatique ; la lecture avancée nécessite un mot de config ADS1115 brut (hex) + Déclencher Conversion + Lire Résultat | Lecture basique ADC intégré (automatique, `0x243`) |
 | Durcissement UV | Curseur de puissance (0-255) + Envoyer/Éteindre | aucune |
 | Air Chaud pour Retouche | Température de consigne, puissance ventilateur, marche/arrêt | Température en direct (partage la propre télémétrie `0x135` et le graphique en direct du fer à souder - même boucle thermique physique) |
-| Actionneur de Sertissage | Direction + nombre de pas (mouvement unique, même forme que les outils de mouvement partagés ci-dessus, mais atteint le driver d'une carte d'extension via `0x1F0` au lieu du `0x120` intégré) | aucune |
+| Actionneur de Sertissage | Direction + nombre de pas (mouvement unique, même forme que les outils de mouvement partagés ci-dessus, mais atteint le pilote d'une carte d'extension via `0x1F0` au lieu du `0x120` intégré) | aucune |
 | Inspection thermique | Déclencher Capture, Vérifier Statut, Lire Image Thermique | Toile de carte thermique 32x24 pixels (dégradé bleu-rouge), extraite morceau par morceau via CAN à la demande - pas un flux vidéo en direct, voir section 6 ci-dessous |
 | Jetting de Pâte à Souder | Canal PWM + fréquence (Configurer), puis cycle + durée (Déclencher Impulsion) | aucune |
 | Soudeuse Ultrasonique | Durée d'impulsion + Déclencher | aucune (même forme que la Soudeuse par Points, mais sans verrou du capteur de contact) |
 
-**Les watchdogs de communication sont gérés pour vous.** Le fer à
-souder, l'Air Chaud pour Retouche (partage la même boucle thermique et
-le même watchdog que le fer à souder), le laser, et la buse de
-l'imprimante 3D ont chacun un watchdog de 250ms dans le firmware ; le
-ventilateur de couche en a un de 1000ms. Cocher la case « Actif »
-correspondante n'envoie pas seulement la commande une fois - elle la
-renvoie automatiquement (150ms pour les outils avec watchdog 250ms,
-400ms pour le ventilateur de couche) tant que la case reste cochée, de
-la même manière qu'un vrai contrôleur maître doit le faire. La décocher
-envoie une seule trame zéro/arrêt et s'arrête. Le ventilateur hotend
-n'a pas de watchdog (un détecteur de blocage à la place - voir
-`docs/CANBUS.md`), donc c'est un simple envoi unique.
+**Le programme se charge des watchdogs de communication.** Le fer à souder, l'Air Chaud pour Retouche (qui partage la même boucle thermique et le même watchdog que le fer à souder), le laser et la buse de l'imprimante 3D ont chacun un watchdog de 250 ms dans le firmware ; le ventilateur de couche en a un de 1000 ms. Cocher la case « Actif » correspondante n'envoie pas la commande une seule fois : elle est renvoyée automatiquement (toutes les 150 ms pour les outils à watchdog de 250 ms, 400 ms pour le ventilateur de couche) tant que la case reste cochée, comme doit le faire un vrai contrôleur maître. La décocher envoie une seule trame zéro/arrêt et s'arrête. Le ventilateur hotend n'a pas de watchdog (un détecteur de blocage à la place - voir `docs/CANBUS.md`) : il n'est donc envoyé qu'une fois.
 
 **Notes de confort (commodités logicielles, pas des fonctions de sécurité).**
 
 - **ARRÊTER TOUTES LES SORTIES** (dans les deux fenêtres, disponible une fois connecté avec les vérifications actives armées) envoie toutes les commandes d'arrêt connues - chauffages, laser, perceuse, lampe UV, ventilateur de couche, relâchement de l'électroaimant, moteurs pas à pas simples et sertisseuse - quel que soit l'outil monté, et arrête tous les rafraîchissements. Le ventilateur du hotend est laissé en marche volontairement, car la buse peut être encore chaude. C'est une commande logicielle envoyée sur le bus CAN, pas un arrêt d'urgence : elle ne peut pas agir si le bus, l'adaptateur, le PC ou la carte tombe en panne.
-- Les impulsions de soudure ponctuelles, l'impulsion de pâte et le sertissage demandent aussi une confirmation dans la fenêtre classique, comme le fait toujours le deck Qt Quick.
+- Les impulsions de soudure ponctuelles, l'impulsion de pâte et le sertissage demandent aussi une confirmation dans la fenêtre classique, comme le fait toujours le tableau de commande Qt Quick.
 - La perceuse et la lampe UV sont rafraîchies comme le laser et les chauffages. Tant que le chauffage de l'imprimante 3D est maintenu, son rafraîchissement de 150 ms porte 0 pas d'extrudeur, que le firmware lit comme un ordre d'arrêt : un mouvement d'extrudeur lancé dans cet état est annulé en 150 ms, donc déplacez l'extrudeur chauffage éteint jusqu'à ce que le firmware offre un mode qui le laisse tranquille.
-- Le port et le débit sont mémorisés pour la prochaine session (`config.json`) et le deck Qt Quick a son propre sélecteur de débit. La **détection automatique** commence par écouter à chaque débit (rien n'est émis sur un bus actif) et n'interroge à chaque débit que si le bus est complètement silencieux.
+- Le port et le débit sont mémorisés pour la prochaine session (`config.json`) et le tableau de commande Qt Quick a son propre sélecteur de débit. La **détection automatique** commence par écouter à chaque débit (rien n'est émis sur un bus actif) et n'interroge à chaque débit que si le bus est complètement silencieux.
 - Le Moniteur de bus brut peut être limité à certains ID CAN (**Filtre d'ID**) et aux trames dont les données ont changé (**Changements seulement**). Sur un bus avec plusieurs têtes d'outil (l'extension multinœud), chaque ligne porte son nœud (`N03`), `n3 n12` dans le filtre ne garde que les trames de ces nœuds, et un résumé sous le tableau donne les trames par seconde et la part du bus de chaque nœud.
 
 #### 🔥 Test de banc d'emballement thermique (firmware URTC 0.3.2+ / 0.3.3+)
@@ -407,11 +278,11 @@ remettre à quiconque déboguant un problème de tête d'outil.
 
 ### 🤖 Sans fenêtre : plans de test
 
-`python urtc_tester.py --headless COMMANDE` exécute le tester sans fenêtre, pour une ligne de production, un script de banc ou une tâche de CI : `info` (qui répond : outil, firmware, état rapide), `selftest`, `run-plan FICHIER` et `validate-plan FICHIER`. Un plan est un court fichier JSON d'étapes rangé dans `plans/` (attendre un outil, aucun défaut, une version minimale du firmware, l'autotest, une trame dont la valeur est dans une plage, une attente, une question à la personne au banc). La commande écrit un journal de chaque trame et un enregistrement de résultat qui nomme le journal par son SHA-256, le même que celui du pupitre. Un plan n'envoie que des requêtes, sauf s'il dit `"actuation": true` et que l'opérateur ajoute `--allow-actuation` ; les trames du bootloader, de mise à jour, de configuration et d'effacement ne sont jamais envoyées, une commande que le firmware abandonne si elle n'est pas rafraîchie (un chauffage, une perceuse, un laser) peut être répétée pendant que le plan attend (`keepalive_ms`), et après un plan qui a commandé quelque chose toutes les sorties sont de nouveau coupées. `--transport simulate` joue une tête d'outil simulée et `--transport replay --port FICHIER` une trace `.trc` ou `.asc` enregistrée, de sorte qu'un plan peut être essayé sans carte. Code de sortie : 0 réussi, 1 une vérification a échoué, 2 le plan ou les arguments sont faux, 3 le test n'a pas pu être mené, 4 rien n'a échoué mais les preuves ne permettent pas de trancher (indéterminé). Le texte affiché est en anglais, comme la ligne de commande du flasher. Détails dans [`docs/HEADLESS.md`](docs/HEADLESS.md). Rien de cela n'a tourné contre une vraie carte.
+`python urtc_tester.py --headless COMMANDE` exécute le tester sans fenêtre, pour une ligne de production, un script de banc ou une tâche de CI : `info` (qui répond : outil, firmware, état rapide), `selftest`, `run-plan FICHIER` et `validate-plan FICHIER`. Un plan est un court fichier JSON d'étapes rangé dans `plans/` (attendre un outil, aucun défaut, une version minimale du firmware, l'autotest, une trame dont la valeur est dans une plage, une attente, une question à la personne au banc). La commande écrit un journal de chaque trame et un enregistrement de résultat qui nomme le journal par son SHA-256, le même que celui du tableau de commande. Un plan n'envoie que des requêtes, sauf s'il dit `"actuation": true` et que l'opérateur ajoute `--allow-actuation` ; les trames du bootloader, de mise à jour, de configuration et d'effacement ne sont jamais envoyées, une commande que le firmware abandonne si elle n'est pas rafraîchie (un chauffage, une perceuse, un laser) peut être répétée pendant que le plan attend (`keepalive_ms`), et après un plan qui a commandé quelque chose toutes les sorties sont de nouveau coupées. `--transport simulate` joue une tête d'outil simulée et `--transport replay --port FICHIER` une trace `.trc` ou `.asc` enregistrée, de sorte qu'un plan peut être essayé sans carte. Code de sortie : 0 réussi, 1 une vérification a échoué, 2 le plan ou les arguments sont faux, 3 le test n'a pas pu être mené, 4 rien n'a échoué mais les preuves ne permettent pas de trancher (indéterminé). Le texte affiché est en anglais, comme la ligne de commande du flasher. Détails dans [`docs/HEADLESS.md`](docs/HEADLESS.md). Rien de cela n'a tourné contre une vraie carte.
 
 `image-info FICHIER` (également sans fenêtre) lit l'en-tête qu'une image de firmware porte en elle : le matériel auquel elle est destinée, sa version, sa longueur et son CRC-32. Il dit si le fichier est accepté, accepté avec un avertissement (une image plus ancienne sans en-tête) ou refusé (un en-tête qui ne tient pas, un fichier `.urimg` estampillé, une autre carte avec `--hardware main|slave`), et `--policy accept|warn|require` est l'interrupteur de compatibilité pour une image sans en-tête. Il n'ouvre aucun bus.
 
-**Plans dans la fenêtre (nouveau, vérifié seulement par des tests et la tête simulée) :** la section PLANS DE TEST, en bas de la colonne de droite du deck, liste les plans de `plans/`, exécute celui que vous choisissez contre la carte connectée avec le même moteur (pas en mode écoute seule, et seulement tant que rien d'autre ne lit le bus), affiche chaque étape dès qu'elle se termine, pose dans une boîte de dialogue les questions d'une étape de confirmation et enregistre le journal et l'enregistrement du résultat. Un plan qui commande des sorties demande d'abord une confirmation et toutes les sorties sont coupées à la fin ; Annuler l'arrête après l'étape en cours.
+**Plans dans la fenêtre (nouveau, vérifié seulement par des tests et la tête simulée) :** la section PLANS DE TEST, en bas de la colonne de droite du tableau de commande, liste les plans de `plans/`, exécute celui que vous choisissez contre la carte connectée avec le même moteur (pas en mode écoute seule, et seulement tant que rien d'autre ne lit le bus), affiche chaque étape dès qu'elle se termine, pose dans une boîte de dialogue les questions d'une étape de confirmation et enregistre le journal et l'enregistrement du résultat. Un plan qui commande des sorties demande d'abord une confirmation et toutes les sorties sont coupées à la fin ; Annuler l'arrête après l'étape en cours.
 
 **Rechercher une mise à jour.** Le bouton « Rechercher une mise à jour » interroge GitHub une fois sur la dernière release et ne propose le téléchargement que si elle contient un paquet pour ce système plus récent que la version installée. Le paquet n'est accepté que si son SHA-256 et sa signature Ed25519 (la clé des releases, épinglée dans le programme) sont valides ; il n'est installé qu'après votre confirmation, jamais tant qu'une sortie est active, et la version précédente est conservée pour revenir en arrière (et rétablie d'elle-même si la nouvelle ne démarre pas). Rien n'est jamais vérifié ni installé tout seul : la vérification à l'ouverture est une option, désactivée par défaut, et la confirmation ne se désactive que dans la même fenêtre, après un avertissement.
 
@@ -468,7 +339,7 @@ Le flux de diagnostic CAN en direct existant utilise désormais une surface de c
 
 ### Structure des fichiers
 
-Cet outil est organisé en modules par responsabilité, purement pour la lisibilité - il n'y a aucune différence fonctionnelle entre les avoir comme fichiers séparés ou comme un seul gros fichier. Voir la section « 📂 Structure du dépôt » vers la fin de ce document pour le détail complet fichier par fichier.
+Le tester est organisé en modules par responsabilité, purement pour la lisibilité - il n'y a aucune différence fonctionnelle entre les avoir comme fichiers séparés ou comme un seul gros fichier. Voir la section « 📂 Structure du dépôt » vers la fin de ce document pour le détail complet fichier par fichier.
 
 **Commandes répétées** : une commande que le firmware abandonne si elle n'est pas rafraîchie (un chauffage, une perceuse, un laser, un ventilateur) est répétée toutes les 150 ms par défaut, ou à la période de son outil. `"keepalive"` dans `config.json` la modifie : `"interval_ms"` (un entier de 20 à 200) fixe une période pour toutes, et `"single_io_thread": true` les répète toutes depuis un fil partagé, une trame à la fois, au lieu d'un fil chacune (désactivé par défaut). Une valeur hors de ces limites garde la valeur par défaut.
 
@@ -477,7 +348,7 @@ Cet outil est organisé en modules par responsabilité, purement pour la lisibil
 **Un bus qui mélange les vitesses** : une tête à une autre vitesse que le bus ne s'entend pas, elle ne peut donc pas déclarer sa vitesse ; le tester reconnaît le bus à ses symptômes et affiche un avertissement : les compteurs d'erreurs ou un bus-off des têtes que l'on entend (trame de santé `0x1B8`), une recherche à toutes les vitesses qui ne trouve personne, ou une tête connue pour être prévue pour 500 kbit/s. `"bus_health"` dans `config.json` fixe les seuils : `"tec_warn"`, `"rec_warn"` et `"bus_off_warn"` (entiers de 1 à 255 ; 96, 96 et 1 par défaut) et `"legacy_heads"` (les noms ou numéros de série des têtes prévues pour 500 kbit/s). Une valeur hors des limites garde la valeur par défaut. Testé avec des bus simulés ; rien n'a tourné sur un vrai bus.
 
 **Langue** : anglais par défaut. Se change avec le sélecteur de langue de l'en-tête de la fenêtre - change l'interface (étiquettes, boutons, dialogues, et messages de journal) vers l'une des 8 langues disponibles,
-enregistre immédiatement dans `config.json` à côté de cet outil,
+enregistre immédiatement dans `config.json` à côté du tester,
 appliqué au prochain démarrage. Les traductions vivent dans des fichiers
 texte brut sous `language/` (`english.lng`, `spanish.lng`, `italian.lng`,
 `french.lng`, `german.lng`, `chinese.lng`, `japanese.lng`, `portuguese.lng`) sous forme de
@@ -494,7 +365,7 @@ plutôt que de planter, et un fichier de langue manquant ou illisible
 pour toute l'interface - dans les deux cas l'outil reste utilisable
 pendant que le décalage se règle.
 
-**Configuration SLCAN/SocketCAN sous Linux** (reflash de l'adaptateur,
+**Configuration SLCAN/SocketCAN sous Linux** (reprogrammation de l'adaptateur,
 permissions série, activation avec `ip link`) est exactement la même
 que la section 1 du flasher - voir le
 [README d'URTC Flasher](https://github.com/JuanenRac/URTC-FLASHER)
@@ -573,32 +444,13 @@ La liste annotée de chaque fichier source, une ligne par fichier, est dans [doc
 
 ## 🗺️ Feuille de route et limites connues
 
-Le contrat de preuve de cet outil - ce qui compte comme pass/fail/unknown,
-pourquoi l'absence de preuve est toujours unknown et jamais pass, et
-pourquoi il n'accorde par lui-même aucune autorité de flashage de
-firmware - est documenté dans
-[docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md).
+Le contrat de preuve du tester - ce qui compte comme réussi, échoué ou indéterminé, pourquoi l'absence de preuve est toujours indéterminée et jamais réussie, et pourquoi il n'accorde par lui-même aucune autorisation de flashage de firmware - est documenté dans [docs/INTEGRATION_CONTRACT.md](docs/INTEGRATION_CONTRACT.md).
 
-- **Non testé contre du matériel réel.** Chaque pièce ici - la couche
-  de transport, la gestion ID CAN/disposition d'octets, la
-  synchronisation keepalive du watchdog - a été vérifiée isolément
-  (trames simulées, un vrai sous-processus pour la synchronisation où
-  pertinent) mais l'environnement qui a construit ceci n'a pas d'accès
-  USB. Traitez une première session réelle avec la même prudence que
-  demande le propre README du flasher.
-- **Un panneau d'outil à la fois, par conception**, pas une limitation
-  actuelle à supprimer plus tard - voir l'introduction ci-dessus pour
-  la raison.
-- **Les couleurs LED globales sont un remplacement direct**, pas une
-  relecture en direct - il n'y a pas de télémétrie de ce que les LED
-  de statut/anneau montrent réellement actuellement, seulement ce qui a
-  été commandé en dernier.
-- **La propre image thermique de l'Inspection thermique est basée sur
-  extraction, pas un flux en direct.** Lire une image complète signifie
-  demander les 48 morceaux séquentiellement via CAN (pire cas, la
-  propre résolution de MLX90640/MLX90642) - cela peut prendre plusieurs
-  secondes, et il n'existe aucun mode d'envoi en streaming dans le
-  propre protocole CAN de cet outil pour accélérer cela. Il faut d'abord déclencher une capture ; Lire Image Thermique attend alors jusqu'à deux secondes que le capteur signale qu'il est prêt et, s'il ne le fait pas, ne lit rien, car le firmware ne répond pas aux demandes de morceau avant cela. Le capteur installé est interrogé en premier (48 morceaux pour MLX90640/MLX90642, 12 pour MLX90641), et un morceau perdu laisse ses pixels vides au lieu de décaler le reste de l'image.
+- **Non testé contre du matériel réel.** Chaque élément - la couche de transport, la gestion des ID CAN et de la disposition des octets, la synchronisation du renvoi périodique (keepalive) du watchdog - a été vérifié isolément (trames simulées et, quand c'est pertinent, un vrai sous-processus pour la synchronisation), mais l'environnement qui l'a construit n'a pas d'accès USB. Traitez une première session réelle avec la même prudence que demande le README du flasher.
+- **Un panneau d'outil à la fois, par conception**, et non une limitation actuelle à supprimer plus tard - voir l'introduction ci-dessus pour la raison.
+- **Les couleurs globales des LED sont un remplacement direct**, pas une relecture en direct - il n'y a pas de télémétrie de ce que les LED d'état et de l'anneau affichent réellement, seulement de ce qui a été commandé en dernier.
+- **L'image thermique de l'Inspection thermique est obtenue à la demande, pas en flux direct.** Lire une image complète signifie demander les 48 morceaux l'un après l'autre via CAN (dans le pire des cas, à la résolution du MLX90640/MLX90642) ; cela peut prendre plusieurs secondes, et le protocole CAN du tester n'a aucun mode d'envoi continu pour l'accélérer.
+  Il faut d'abord déclencher une capture ; Lire Image Thermique attend alors jusqu'à deux secondes que le capteur signale qu'il est prêt et, s'il ne le fait pas, ne lit rien, car le firmware ne répond pas aux demandes de morceau avant cela. Le capteur installé est interrogé en premier (48 morceaux pour MLX90640/MLX90642, 12 pour MLX90641), et un morceau perdu laisse ses pixels vides au lieu de décaler le reste de l'image.
 - **Exécuter l'auto-test ne couvre que 7 des 25 outils** (fer à souder,
   perceuse, laser, imprimante 3D, AOI, aspiration, sonde de balayage)
   - voir « Comment ça fonctionne » ci-dessus pour l'explication
@@ -684,16 +536,7 @@ qu'elle couvre réellement :
    International (CC BY-SA 4.0)**. Texte complet sur
    https://creativecommons.org/licenses/by-sa/4.0/.
 
-Cet outil est le compagnon de diagnostic live du bus CAN du projet
-[URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC)
-- voir le propre dépôt de ce projet pour le firmware de la carte, les
-conceptions matérielles, et la documentation complète du protocole que
-cet outil exerce. Le propre firmware d'URTC est GPL-3.0-or-later et ses
-conceptions matérielles sont CERN-OHL-S v2 ; la propre licence de cet
-outil ici ne s'étend pas à ce projet séparé, et vice-versa. Une
-alternative basée sur le web couvrant un périmètre similaire existe aussi
-sur
-[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
+Le tester est le compagnon de diagnostic en direct du bus CAN du projet [URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC) - voir le dépôt de ce projet pour le firmware de la carte, les conceptions matérielles et la documentation complète du protocole contre lequel le tester est éprouvé. Le firmware d'URTC est sous GPL-3.0-or-later et ses conceptions matérielles sous CERN-OHL-S v2 ; la licence du tester ne s'étend pas à ce projet séparé, et inversement. Une alternative basée sur le web, de portée comparable, existe aussi : [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
 
 Si vous construisez sur ce projet, gardez la séparation des licences à
 l'esprit : les modifications de code devraient rester GPL-3.0-or-later, les
