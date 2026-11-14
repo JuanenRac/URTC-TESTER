@@ -31,7 +31,7 @@
 
 ---
 
-> **安全与安防现状：**本生态系统不是经认证的安全系统，目前也不存在已组装的 URTC 板卡。引导程序使用 CRC32 和共享密钥的 HMAC-SHA256 校验固件映像，而非非对称签名（计划中）；已发布的应用映像使用公开的开发密钥签名（`signing_key_kind: dev`），因此任何人都可以生成引导程序接受的映像；尚未向任何真实板卡发送过任何内容。在依赖此处任何说法来保障人身安全之前，请先阅读[安全基线](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)。
+> **安全与安防现状：**本生态系统不是经认证的安全系统，目前也不存在已组装的 URTC 板卡。引导程序使用 CRC32 和共享密钥的 HMAC-SHA256 校验固件镜像，而非非对称签名（计划中）；已发布的应用镜像使用公开的开发密钥签名（`signing_key_kind: dev`），因此任何人都可以生成引导程序接受的镜像；尚未向任何真实板卡发送过任何内容。在依赖此处任何说法来保障人身安全之前，请先阅读[安全基线](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
 ## 📋 速览
 

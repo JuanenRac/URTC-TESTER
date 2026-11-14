@@ -1,13 +1,13 @@
 {
   "format": 1,
-  "urtc_common_version": "0.2.6",
+  "urtc_common_version": "0.2.7",
   "catalog": "spec/i18n/catalog/tester.json",
-  "catalog_sha256": "999a7362ef707ac49803b6ebdc200aa88f6a5c2d38e0b6f7f58d840a27192c5f",
+  "catalog_sha256": "afa820ab8927e66c968c89b6f08e14c129b86d8f2fd2154dcc088ee43307ff3c",
   "files": {
     "language/chinese.lng": "00ba636f6187034f938c69f48a48e4985b791f4a0126ad1709ac71b2449714e1",
     "language/english.lng": "4d971d63d50008e667515b6fb2d8aae437413ba626b2faa30da1c37ae17045c8",
-    "language/french.lng": "d6f2a7f1bea74cd564a0b3c672686042a2b1d3dcddd1582df57bda9e3ca2eeee",
-    "language/german.lng": "8d6a552d74eeb17f31d05f902d21fdcaec14e3bf184b9cf528fc914a8ae8f394",
+    "language/french.lng": "32620fa6b40891165878901492efd31b4f9c2ac5cfdda5a34e25c6b4768a5b34",
+    "language/german.lng": "8b3651cbb959e5e51ee92168aeeb4916916a229ddf8a514634cf6d73e6649799",
     "language/italian.lng": "15940865db9035c3aeb4e336a74752e340b12c5f2da55b4cf41a6605a608f832",
     "language/japanese.lng": "d5afb29b181358d15d8734b1f20f839983beab7b623ec9884ac7f1d13d166762",
     "language/portuguese.lng": "d4931dd8677f9cf352fc4f4e572be3a2015058f2c6d4284eac9d590d90a78d09",
