@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.5.6] - Clear-error button, bus speed shown, closed-loop repeated commands and README readings
 
 - **The Spanish README carries the current wording of the shared sections:** one sentence of the shared block was behind the corrected text of the common repository.
 
@@ -21,6 +21,8 @@ All notable changes to this project are documented here.
 - **The repeated commands are tested in a closed loop with a simulated iron whose watchdog is 250 ms:** every interval the settings accept (20 to 200 ms) is run on a virtual clock with one to eight commands sharing the one thread and a generous bus time per frame; the iron never loses its target and no command is silent for the watchdog time. A period above 200 ms is run as a control and does lose the target, so the green result is not an artefact of the model. The load of the bus at the fastest interval is also checked. Simulation only: a bench run with a real head is still the proof.
 
 - **The long narrative comments of the tester are shortened:** the comment blocks and docstrings that told the history of a decision in ten or twenty lines (the separate waiter table of the bus monitor, the bus-load estimate, the custom frame flag, the telemetry watch, the direction check of the motion command, the built-in names of the identifiers) now say what the code does and why in two or three lines. No behaviour changes.
+
+## [Unreleased]
 
 ## [0.5.5] - The tester opens the bus at 1 Mbit/s, recognises mixed speeds by their symptoms and asks again before a tool that is on goes up too far
 
