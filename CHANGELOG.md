@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The texts of the heater PID and of the board version follow the shared catalog:** German now says "Heizungs-PID" and "Heizungsausgang" (the catalog and the glossary said "Heizer" in four texts and "Heizung" everywhere else), French says "firmware" in the board version line (as in the other 100 texts), and the Chinese README writes the firmware image as "镜像" like the program.
+
 ## [0.5.6] - Clear-error button, bus speed shown, closed-loop repeated commands and README readings
 
 - **The Spanish README carries the current wording of the shared sections:** one sentence of the shared block was behind the corrected text of the common repository.
