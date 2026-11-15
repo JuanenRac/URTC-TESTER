@@ -26,7 +26,8 @@ from urtc_can.virtual_board import VirtualBoard  # noqa: E402
 LANGUAGES = ("english", "spanish", "german", "french", "italian", "japanese", "chinese", "portuguese")
 NEW_KEYS = ("BTN_CLEAR_ERROR", "LBL_CLEAR_ERROR_RESULT", "LBL_ERROR_REASON", "LBL_FEATURE_CLEAR_ERROR", "LBL_FEATURE_COMMS_WATCHDOG", "LBL_FEATURE_MAGNET_RELEASE",
             *(f"LBL_CLEAR_RESULT_{n}" for n in ("CLEARED", "SWITCH_OFF", "NO_ERROR", "NOT_CLEARABLE", "HOT", "ACTUATOR_ON")),
-            *(f"LBL_ERROR_REASON_{n}" for n in ("UNKNOWN", "THERMAL", "SENSOR", "TOOL_ID", "COMMS_WATCHDOG", "FAN_STALL", "STEPPER_SILENCE", "MAGNET_RELEASE")))
+            *(f"LBL_ERROR_REASON_{n}" for n in ("UNKNOWN", "THERMAL", "SENSOR", "TOOL_ID", "COMMS_WATCHDOG", "FAN_STALL", "STEPPER_SILENCE", "MAGNET_RELEASE", "ESTOP", "ESTOP_SILENCE")),
+            "LBL_FEATURE_ESTOP_FOLLOW")
 
 
 # ---- the frame, the answer and the switches ---------------------------------------------------------------------------------------
@@ -34,11 +35,12 @@ def test_the_command_is_the_identifier_with_its_magic_payload():
     assert extras.clear_error_frame() == (0x1B2, b"CLER")
 
 
-def test_the_three_switches_are_named_and_reach_the_seventh_bit():
-    assert extras.FEATURES_SUPPORTED == 0x7F
+def test_the_switches_are_named_and_reach_the_eighth_bit():
+    assert extras.FEATURES_SUPPORTED == 0xFF
     assert extras.features_text(0x70) == "CLEAR_ERROR, COMMS_WATCHDOG, MAGNET_RELEASE"
     assert extras.features_frame(0x7F) == (0x1AE, b"FEAT\x7f")
-    for bad in (-1, 0x80):
+    assert extras.features_frame(0xFF) == (0x1AE, b"FEAT\xff")
+    for bad in (-1, 0x100):
         with pytest.raises(ValueError):
             extras.features_frame(bad)
 
@@ -50,7 +52,7 @@ def test_a_head_that_does_not_send_the_last_byte_gives_no_result():
 
 def test_every_outcome_and_reason_has_a_language_key():
     assert set(extras.CLEAR_RESULT_KEYS) == set(range(1, 7))
-    assert set(extras.ERROR_REASON_KEYS) == set(range(1, 9))
+    assert set(extras.ERROR_REASON_KEYS) == set(range(1, 11))
 
 
 def test_the_new_texts_exist_in_the_eight_languages():
