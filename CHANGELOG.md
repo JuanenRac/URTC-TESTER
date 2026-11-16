@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The security note of the README describes the Ed25519 bootloader:** the main bootloader checks the image against a table of public keys and holds no secret, official releases are signed with the release image-signing key and bench builds trust the public development key; the note no longer speaks of a shared-key HMAC. The eight languages follow.
+
 - **A switch for the head to follow the emergency stop of the stack sits with the other optional functions (off, as every switch):** the panel of optional functions has a check box for `ESTOP_FOLLOW` (bit 128 of the mask written with `0x1AE`; the mask can now reach `0xFF`), it is not ticked on opening, and a head that was never written has it off. With it on, a head stops on the stop frame `0x001` and when the master of the stop falls silent; the two new reasons of an error, `ESTOP` and `ESTOP_SILENCE`, have their text in the eight languages and the clear-error button never lifts them. The copy of URTC-COMMON now brings the stop-following logic of the virtual board, so the simulated head obeys the frame when the switch is on. Tested against the virtual board; not tried on a board.
 - **The texts of the heater PID and of the board version follow the shared catalog:** German now says "Heizungs-PID" and "Heizungsausgang" (the catalog and the glossary said "Heizer" in four texts and "Heizung" everywhere else), French says "firmware" in the board version line (as in the other 100 texts), and the Chinese README writes the firmware image as "镜像" like the program.
 
