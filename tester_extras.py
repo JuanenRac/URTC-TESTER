@@ -33,6 +33,11 @@ FEATURES_MAGIC = b"FEAT"
 FEATURE_NAMES = ((0x01, "MOTION_RAMPS"), (0x02, "HEALTH_PROFILE"), (0x04, "HSI_AUTOTRIM"), (0x08, "THERMAL_PID"), (0x10, "CLEAR_ERROR"), (0x20, "COMMS_WATCHDOG"),
                  (0x40, "MAGNET_RELEASE"), (0x80, "ESTOP_FOLLOW"))
 FEATURES_SUPPORTED = 0xFF
+# The second byte of the switch map: it starts with the switch that makes the communication watchdog count only frames of the host side (off by default).
+FEATURE_EXT_NAMES = ((0x01, "WATCHDOG_HOST_ONLY"),)
+FEATURES_EXT_SUPPORTED = 0x01
+FEATURE_COMMS_WATCHDOG = 0x20
+FEATURES_QUERY_EXTENDED = b"\x02"   # asks for the six-byte answer; any other query is answered with the three bytes of before
 CAN_ID_SET_FEATURES = tester_config.CAN_ID_SET_FEATURES
 CAN_ID_FEATURES_RESP = tester_config.CAN_ID_FEATURES_RESP
 CAN_ID_CLEAR_ERROR = tester_config.CAN_ID_CLEAR_ERROR
@@ -132,17 +137,31 @@ class AutoDownload:
 
 
 # ---- features -----------------------------------------------------------------------------------------------------------------------
-def features_frame(mask: int) -> tuple[int, bytes]:
+def features_frame(mask: int, mask_ext: int | None = None) -> tuple[int, bytes]:
+    """The frame that writes the switches: the five-byte form (the first byte only) or, with ``mask_ext``, the six-byte form.
+
+    A switch of the second byte that needs the communication watchdog is left off when the watchdog is not on in the first byte.
+    """
     if not 0 <= mask <= FEATURES_SUPPORTED:
         raise ValueError("the mask uses bits this firmware does not have")
-    return CAN_ID_SET_FEATURES, FEATURES_MAGIC + bytes([mask])
+    if mask_ext is None:
+        return CAN_ID_SET_FEATURES, FEATURES_MAGIC + bytes([mask])
+    if not 0 <= mask_ext <= FEATURES_EXT_SUPPORTED:
+        raise ValueError("the second mask uses bits this firmware does not have")
+    if not mask & FEATURE_COMMS_WATCHDOG:
+        mask_ext = 0
+    return CAN_ID_SET_FEATURES, FEATURES_MAGIC + bytes([mask, mask_ext])
 
 
 def decode_features(data: bytes) -> dict | None:
-    if len(data) != 3:
-        return None
-    stored, running, supported = data
-    return {"stored": stored, "running": running, "supported": supported}
+    """The answer of 0x1AF: three bytes from a head with one mask byte, six from a head that also has the second one (then ``supported_ext`` is not zero)."""
+    if len(data) == 3:
+        stored, running, supported = data
+        return {"stored": stored, "running": running, "supported": supported, "stored_ext": 0, "running_ext": 0, "supported_ext": 0}
+    if len(data) == 6:
+        stored, running, supported, stored_ext, running_ext, supported_ext = data
+        return {"stored": stored, "running": running, "supported": supported, "stored_ext": stored_ext, "running_ext": running_ext, "supported_ext": supported_ext}
+    return None
 
 
 def clear_error_frame() -> tuple[int, bytes]:
@@ -167,8 +186,8 @@ ERROR_REASON_KEYS = {1: "LBL_ERROR_REASON_UNKNOWN", 2: "LBL_ERROR_REASON_THERMAL
                      9: "LBL_ERROR_REASON_ESTOP", 10: "LBL_ERROR_REASON_ESTOP_SILENCE"}
 
 
-def features_text(mask: int) -> str:
-    names = [name for bit, name in FEATURE_NAMES if mask & bit]
+def features_text(mask: int, mask_ext: int = 0) -> str:
+    names = [name for bit, name in FEATURE_NAMES if mask & bit] + [name for bit, name in FEATURE_EXT_NAMES if mask_ext & bit]
     return ", ".join(names) if names else "none"
 
 

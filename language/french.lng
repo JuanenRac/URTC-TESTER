@@ -414,6 +414,7 @@ LBL_FEATURE_CLEAR_ERROR=Commande d'effacement d'erreur (lève une erreur sans co
 LBL_FEATURE_COMMS_WATCHDOG=Surveillance de communication des moteurs pas à pas et de l'électroaimant
 LBL_FEATURE_MAGNET_RELEASE=L'électroaimant lâche quand l'hôte ne communique plus (désactivé : il tient)
 LBL_FEATURE_ESTOP_FOLLOW=La tête suit l'arrêt d'urgence de la pile (elle s'arrête sur une trame d'arrêt et quand le maître se tait)
+LBL_FEATURE_WATCHDOG_HOST_ONLY=La surveillance de communication ne compte que les trames de l'hôte (les réponses des autres têtes ne la nourrissent pas)
 BTN_CLEAR_ERROR=Effacer l'erreur
 LBL_CLEAR_ERROR_RESULT=Effacer l'erreur : {result}
 LBL_CLEAR_RESULT_CLEARED=l'erreur a été levée

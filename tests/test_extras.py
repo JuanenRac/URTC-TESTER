@@ -91,7 +91,7 @@ def test_the_features_frame_and_its_answer():
     for bad in (-1, 256):
         with pytest.raises(ValueError):
             extras.features_frame(bad)
-    assert extras.decode_features(bytes([2, 0, 15])) == {"stored": 2, "running": 0, "supported": 15}
+    assert extras.decode_features(bytes([2, 0, 15])) == {"stored": 2, "running": 0, "supported": 15, "stored_ext": 0, "running_ext": 0, "supported_ext": 0}
     assert extras.decode_features(b"\x00\x00") is None
     assert extras.features_text(0x0A) == "HEALTH_PROFILE, THERMAL_PID" and extras.features_text(0) == "none"
 
