@@ -241,6 +241,7 @@ class TesterQtBridge(QObject):
         self._monitor_last_seen: dict[int, float] = {}
         self._vacuum_adc = 0
         self._vacuum_detected = False
+        self._features_supported_ext = 0   # the switches of the second byte of the map that the head said it has
         self._scan_probe_impact_count = 0
         self._scan_probe_last_impact = ""
         # Real, tool-independent utility panel state - one string per
@@ -1693,7 +1694,28 @@ class TesterQtBridge(QObject):
     def queryFeatures(self) -> None:
         if not self.canUseUtilityPanels:
             return
-        self._run_query("features", (extras.CAN_ID_FEATURES_RESP, b""), extras.CAN_ID_FEATURES_RESP, extras.decode_features)
+        self._run_query("features", (extras.CAN_ID_FEATURES_RESP, extras.FEATURES_QUERY_EXTENDED), extras.CAN_ID_FEATURES_RESP, extras.decode_features)
+
+    @Property(int, notify=changed)
+    def featuresSupportedExt(self) -> int:
+        """The switches of the second byte the head said it has (0 until a head answered with six bytes: an older head is written with the five-byte form)."""
+        return self._features_supported_ext
+
+    @Slot(int, int)
+    def writeFeaturesExt(self, mask: int, mask_ext: int) -> None:
+        """Like writeFeatures, with the second byte for a head that has one."""
+        if self._features_supported_ext == 0:
+            self.writeFeatures(mask)
+            return
+        if not self.canUseUtilityPanels:
+            self._log("FEATURES_BLOCKED not connected or not in active-check mode")
+            return
+        try:
+            frame = extras.features_frame(int(mask), int(mask_ext) & self._features_supported_ext)
+        except ValueError as exc:
+            self._log(f"FEATURES_BLOCKED {exc}")
+            return
+        self._run_query("features", frame, extras.CAN_ID_FEATURES_RESP, extras.decode_features)
 
     @Slot(int)
     def writeFeatures(self, mask: int) -> None:
@@ -2309,8 +2331,10 @@ class TesterQtBridge(QObject):
             if result is None:
                 text = _("LBL_FEATURES_NO_RESPONSE")
             else:
-                text = _("LBL_FEATURES_TEXT", stored=extras.features_text(result["stored"]), running=extras.features_text(result["running"]),
-                         supported=extras.features_text(result["supported"]))
+                self._features_supported_ext = int(result.get("supported_ext", 0))
+                text = _("LBL_FEATURES_TEXT", stored=extras.features_text(result["stored"], result.get("stored_ext", 0)),
+                         running=extras.features_text(result["running"], result.get("running_ext", 0)),
+                         supported=extras.features_text(result["supported"], result.get("supported_ext", 0)))
             self._log(f"FIRMWARE_FEATURES {result}")
         elif key == "clear_error":
             if result is None:
