@@ -106,3 +106,37 @@ def test_the_two_texts_exist_in_every_language():
     for code in ("english", "spanish", "german", "french", "italian", "japanese", "chinese", "portuguese"):
         words = config.load_language(code)
         assert "{id}" in words["QT_PM_DANGEROUS_REFUSED"] and "{id}" in words["QT_PM_DANGEROUS_ASK"], code
+
+
+# -- the default and the switch of the deck ------------------------------------------------------------------------------------------------
+ROOT = __import__("pathlib").Path(__file__).resolve().parents[1]
+
+
+def test_the_default_is_to_ask_the_operator_first():
+    source = (ROOT / "tester_config.py").read_text(encoding="utf-8")
+    assert '_config.get("plan_dangerous_ids", "confirm")' in source and tester_config.PLAN_DANGEROUS_CHOICES == ("allow", "confirm", "refuse")
+
+
+def test_the_switch_of_the_deck_saves_the_word_and_changes_the_running_value(monkeypatch):
+    pytest.importorskip("PySide6")
+    import qt_tester  # noqa: PLC0415
+
+    saved = {}
+    monkeypatch.setattr(qt_tester, "save_config", lambda updates: saved.update(updates) or True)
+    monkeypatch.setattr(tp, "PLAN_DANGEROUS_IDS", "confirm")
+    bridge = qt_tester.TesterQtBridge()
+    bridge._log = lambda text: None
+    assert bridge.planDangerousIds == "confirm"
+    bridge.setPlanDangerousIds("refuse")
+    assert saved == {"plan_dangerous_ids": "refuse"} and tp.PLAN_DANGEROUS_IDS == "refuse" and bridge.planDangerousIds == "refuse"
+    bridge.setPlanDangerousIds("sometimes")
+    assert saved == {"plan_dangerous_ids": "refuse"} and tp.PLAN_DANGEROUS_IDS == "refuse"
+
+
+def test_the_deck_has_the_choice_bound_to_the_setting_and_the_texts_are_in_eight_languages():
+    qml = (ROOT / "assets" / "qml" / "TesterDeck.qml").read_text(encoding="utf-8")
+    assert 'objectName: "planDangerousIdsCombo"' in qml and "testerBackend.planDangerousIds" in qml and "testerBackend.setPlanDangerousIds(" in qml
+    for name in ("english", "spanish", "german", "french", "italian", "japanese", "chinese", "portuguese"):
+        lines = (ROOT / "language" / f"{name}.lng").read_text(encoding="utf-8").splitlines()
+        for key in ("LBL_PLAN_DANGEROUS_IDS", "LBL_PLAN_DANGEROUS_ALLOW", "LBL_PLAN_DANGEROUS_CONFIRM", "LBL_PLAN_DANGEROUS_REFUSE"):
+            assert any(line.startswith(key + "=") and len(line) > len(key) + 2 for line in lines), (name, key)

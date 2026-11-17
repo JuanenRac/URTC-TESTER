@@ -1634,6 +1634,25 @@ class TesterQtBridge(QObject):
             self._log("SIGN_EVIDENCE_NOT_SAVED")
         self.changed.emit()
 
+    @Property(str, notify=changed)
+    def planDangerousIds(self) -> str:
+        """What a test plan does with an identifier that changes what the board is: ``allow``, ``confirm`` (the default) or ``refuse`` (the ``plan_dangerous_ids`` setting)."""
+        return tester_plan.PLAN_DANGEROUS_IDS
+
+    @Slot(str)
+    def setPlanDangerousIds(self, value: str) -> None:
+        word = str(value).strip().lower()
+        if word not in tester_config.PLAN_DANGEROUS_CHOICES:
+            self._log("PLAN_DANGEROUS_IDS_UNKNOWN")
+            return
+        if save_config({"plan_dangerous_ids": word}):
+            tester_config.PLAN_DANGEROUS_IDS = word
+            tester_plan.PLAN_DANGEROUS_IDS = word
+            self._log(f"PLAN_DANGEROUS_IDS {word}")
+        else:
+            self._log("PLAN_DANGEROUS_IDS_NOT_SAVED")
+        self.changed.emit()
+
     @Property(bool, notify=changed)
     def autoBlackBox(self) -> bool:
         return self._auto_black_box.enabled

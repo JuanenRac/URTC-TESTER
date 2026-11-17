@@ -1672,6 +1672,16 @@ ApplicationWindow {
                     onToggled: testerBackend.setSignEvidence(checked)
                     contentItem: Text { text: signEvidenceBox.text; color: muted; wrapMode: Text.WordWrap; leftPadding: signEvidenceBox.indicator.width + 4; verticalAlignment: Text.AlignVCenter; font.pixelSize: 11 }
                 }
+                Text { text: testerBackend.uiText("LBL_PLAN_DANGEROUS_IDS"); color: muted; wrapMode: Text.WordWrap; Layout.preferredWidth: 260; font.pixelSize: 11 }
+                ComboBox {
+                    id: planDangerousBox
+                    objectName: "planDangerousIdsCombo"
+                    Layout.preferredWidth: 260
+                    readonly property var choices: ["allow", "confirm", "refuse"]
+                    model: [testerBackend.uiText("LBL_PLAN_DANGEROUS_ALLOW"), testerBackend.uiText("LBL_PLAN_DANGEROUS_CONFIRM"), testerBackend.uiText("LBL_PLAN_DANGEROUS_REFUSE")]
+                    currentIndex: Math.max(0, choices.indexOf(testerBackend.planDangerousIds))
+                    onActivated: testerBackend.setPlanDangerousIds(choices[currentIndex])
+                }
                 GameButton { text: testerBackend.updates.t("UPD_BTN_CHECK"); accent: "#24465e"; Layout.preferredWidth: 260; onClicked: updateDialog.open() }
                 GameButton { text: testerBackend.help.title; accent: "#24465e"; Layout.preferredWidth: 260; onClicked: helpDialog.open() }
                 GameButton { text: testerBackend.uiText("TITLE_ABOUT"); accent: "#24465e"; Layout.preferredWidth: 260; onClicked: aboutDialog.open() }

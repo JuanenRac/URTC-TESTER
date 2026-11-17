@@ -714,3 +714,7 @@ PANEL_STOP_WATCH=停止监视
 PANEL_SHOW_PROFILE_PANEL=显示由配置文件生成的面板
 QT_PM_DANGEROUS_REFUSED={id} 是危险标识符（会改变板卡的本质：引导程序、更新、擦除或会保留的设置），且 urtc_config.json 中 "plan_dangerous_ids" 为 "refuse"。
 QT_PM_DANGEROUS_ASK=计划即将发送 {id}，它会改变板卡的本质（引导程序、更新、擦除或会保留的设置）。要发送吗？
+LBL_PLAN_DANGEROUS_IDS=测试计划发送会改变电路板性质的标识符时
+LBL_PLAN_DANGEROUS_ALLOW=直接发送
+LBL_PLAN_DANGEROUS_CONFIRM=先询问我
+LBL_PLAN_DANGEROUS_REFUSE=拒绝
