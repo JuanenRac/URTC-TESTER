@@ -310,9 +310,10 @@ _config = load_config()
 _current_language = _config.get("language", DEFAULT_LANGUAGE)
 
 # What a test plan does with an identifier that changes what the board is (the bootloader, an update of the expansion slave, an erase, a setting that is kept after a
-# restart): "allow" (the default) sends it as plans always have, "confirm" asks the operator before it is sent and "refuse" never sends it. Any other word counts as "refuse".
-PLAN_DANGEROUS_IDS = str(_config.get("plan_dangerous_ids", "allow")).strip().lower() or "allow"
-if PLAN_DANGEROUS_IDS not in ("allow", "confirm", "refuse"):
+# restart): "confirm" (the default) asks the operator before it is sent, "allow" sends it as plans used to and "refuse" never sends it. Any other word counts as "refuse".
+PLAN_DANGEROUS_CHOICES = ("allow", "confirm", "refuse")
+PLAN_DANGEROUS_IDS = str(_config.get("plan_dangerous_ids", "confirm")).strip().lower() or "confirm"
+if PLAN_DANGEROUS_IDS not in PLAN_DANGEROUS_CHOICES:
     PLAN_DANGEROUS_IDS = "refuse"
 _translations = load_language(_current_language)
 if not _translations and _current_language != DEFAULT_LANGUAGE:
