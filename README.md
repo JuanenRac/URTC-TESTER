@@ -476,6 +476,10 @@ Which versions of the URTC programs work together, and which protocol version ea
 
 The suite has 1104 tests (`python -m pytest -q`; with Qt on a machine with no screen, `QT_QPA_PLATFORM=offscreen`; the ones that need PySide6 skip without it): the CAN payload encoders and decoders of every tool family, the SLCAN and SocketCAN transports against fakes, the identity probe, the self-test, the watchdog keepalives, the bus-health check, the test plans and the headless mode, the session export with its hash, the language files and the Qt Quick panels. Four scripts at the root (`verify_qt_*.py`) drive the Qt Quick panels end to end with a real Qt event loop. CI also runs `ruff check`, `python -m mypy` and `tools/ci_validate.py`. None of it has run against a real board.
 
+### Operation and tools
+
+* **First start of an updated program:** The launcher (`urtc_can/launcher.py`) runs the release `current.txt` points to and goes back to the previous release by itself when a first start fails (it ends with an error before the program reported `mark_started`). Setting `URTC_UPDATE_FIRST_START_MIN_S` to a number of seconds above zero also counts as failed a first start that ends with code 0 sooner than that; unset, 0 or a negative value changes nothing, so a command-line program that ends quickly on purpose is not affected.
+
 ## 🏗️ Build & Release
 
 Or build a standalone binary: `build_exe.bat` on Windows, `./build_exe.sh`

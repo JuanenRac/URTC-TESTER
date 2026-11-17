@@ -349,6 +349,10 @@ README](https://github.com/JuanenRac/URTC-FLASHER) 第 1 和第 2 节，此处�
 
 测试套件共有 1104 个测试（`python -m pytest -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；需要 PySide6 的测试在没有它时会被跳过）：每个工具系列的 CAN 载荷编码器和解码器、针对模拟对象的 SLCAN 和 SocketCAN 传输层、身份探测、自检、看门狗保活、总线健康检查、测试计划和无窗口模式、带哈希的会话导出、语言文件以及 Qt Quick 面板。根目录下的四个脚本（`verify_qt_*.py`）用真实的 Qt 事件循环对 Qt Quick 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。这一切都没有针对真实的板卡运行过。
 
+### 运维与工具
+
+* **更新后程序的首次启动：** 启动器（`urtc_can/launcher.py`） 运行 `current.txt` 指向的版本；首次启动失败（在程序报告 `mark_started` 之前以错误结束）时会自动回到上一版本。把 `URTC_UPDATE_FIRST_START_MIN_S` 设为大于零的秒数后，比该时间更早以代码 0 结束的首次启动同样视为失败；未设置、为 0 或为负数时不会有任何变化，因此有意快速结束的命令行程序不受影响。
+
 ## 🏗️ 构建与发布
 
 或构建一个独立的二进制文件：Windows 上使用 `build_exe.bat`，Linux 上使用

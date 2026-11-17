@@ -374,6 +374,10 @@ As versões dos programas URTC que funcionam em conjunto, e a versão do protoco
 
 O conjunto tem 1104 testes (`python -m pytest -q`; com Qt numa máquina sem ecrã, `QT_QPA_PLATFORM=offscreen`; os que precisam do PySide6 são ignorados sem ele): os codificadores e descodificadores de carga CAN de cada família de ferramentas, os transportes SLCAN e SocketCAN contra simulações, a sonda de identidade, o autoteste, os reenvios do cão de guarda, a verificação de saúde do barramento, os planos de teste e o modo sem janela, a exportação da sessão com o seu hash, os ficheiros de idioma e os painéis Qt Quick. Quatro scripts na raiz (`verify_qt_*.py`) comandam os painéis Qt Quick de ponta a ponta com um ciclo de eventos Qt real. A CI executa também `ruff check`, `python -m mypy` e `tools/ci_validate.py`. Nada disto correu contra uma placa real.
 
+### Operação e ferramentas
+
+* **Primeiro arranque de um programa atualizado:** O lançador (`urtc_can/launcher.py`) executa a versão para a qual aponta `current.txt` e volta sozinho à anterior se o primeiro arranque falhar (termina com erro antes de o programa avisar com `mark_started`). Se `URTC_UPDATE_FIRST_START_MIN_S` for definida com um número de segundos maior que zero, também se considera falhado um primeiro arranque que termine com o código 0 antes desse tempo; sem definir, com 0 ou com um valor negativo nada muda, pelo que um programa de linha de comandos que termina depressa de propósito não é afetado.
+
 ## 🏗️ Compilação e publicação
 
 Ou crie um binário autónomo: `build_exe.bat` no Windows, `./build_exe.sh`
