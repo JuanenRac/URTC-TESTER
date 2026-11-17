@@ -33,6 +33,7 @@ class KeepaliveScheduler:
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
         self.sent = 0
+        self.failures: dict[str, int] = {}     # key -> how many times its frame could not be sent (kept after the key is cancelled)
 
     # -- the registry -------------------------------------------------------------------------------------------------------------
     def register(self, key: str, frame: Frame, period_s: float) -> None:
@@ -73,7 +74,8 @@ class KeepaliveScheduler:
             try:
                 self._send(*item[0])
             except Exception as exc:  # the transport went away or refused: this command stops, the rest go on
-                self._log(f"KEEPALIVE_FAILED key={key} error={exc}")
+                self.failures[key] = self.failures.get(key, 0) + 1
+                self._log(f"KEEPALIVE_FAILED key={key} id=0x{item[0][0]:X} count={self.failures[key]} error={exc}")
                 self.cancel(key)
                 self._on_failure(key)
                 continue
