@@ -719,3 +719,6 @@ LBL_PLAN_DANGEROUS_IDS=Cuando un plan de prueba envía un identificador que camb
 LBL_PLAN_DANGEROUS_ALLOW=Enviarlo
 LBL_PLAN_DANGEROUS_CONFIRM=Preguntarme antes
 LBL_PLAN_DANGEROUS_REFUSE=Rechazarlo
+QTLOG_PLAN_DANGEROUS_IDS=Elección para planes que envían un identificador que cambia la placa
+QTLOG_PLAN_DANGEROUS_IDS_NOT_SAVED=No se pudo guardar la elección para identificadores peligrosos
+QTLOG_PLAN_DANGEROUS_IDS_UNKNOWN=La palabra para identificadores peligrosos no es una que el tester conozca

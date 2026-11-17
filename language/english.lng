@@ -718,3 +718,6 @@ LBL_PLAN_DANGEROUS_IDS=When a test plan sends an identifier that changes what th
 LBL_PLAN_DANGEROUS_ALLOW=Send it
 LBL_PLAN_DANGEROUS_CONFIRM=Ask me first
 LBL_PLAN_DANGEROUS_REFUSE=Refuse it
+QTLOG_PLAN_DANGEROUS_IDS=Choice for plans that send an identifier that changes the board
+QTLOG_PLAN_DANGEROUS_IDS_NOT_SAVED=The choice for dangerous identifiers could not be saved
+QTLOG_PLAN_DANGEROUS_IDS_UNKNOWN=The word for dangerous identifiers is not one the tester knows

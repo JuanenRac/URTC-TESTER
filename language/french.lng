@@ -719,3 +719,6 @@ LBL_PLAN_DANGEROUS_IDS=Quand un plan de test envoie un identifiant qui change ce
 LBL_PLAN_DANGEROUS_ALLOW=L'envoyer
 LBL_PLAN_DANGEROUS_CONFIRM=Me demander avant
 LBL_PLAN_DANGEROUS_REFUSE=Le refuser
+QTLOG_PLAN_DANGEROUS_IDS=Choix pour les plans qui envoient un identifiant qui change la carte
+QTLOG_PLAN_DANGEROUS_IDS_NOT_SAVED=Impossible d'enregistrer le choix pour les identifiants dangereux
+QTLOG_PLAN_DANGEROUS_IDS_UNKNOWN=Le mot choisi pour les identifiants dangereux n'est pas connu du testeur
