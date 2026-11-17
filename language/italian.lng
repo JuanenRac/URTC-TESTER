@@ -713,3 +713,5 @@ PANEL_ACTIVE=Attivo
 PANEL_WATCH=Osserva le letture
 PANEL_STOP_WATCH=Smetti di osservare
 PANEL_SHOW_PROFILE_PANEL=Mostra il pannello disegnato dal profilo
+QT_PM_DANGEROUS_REFUSED={id} è un identificatore pericoloso (cambia ciò che la scheda è: il bootloader, un aggiornamento, una cancellazione o un'impostazione che viene conservata) e "plan_dangerous_ids" è "refuse" in urtc_config.json.
+QT_PM_DANGEROUS_ASK=Il piano sta per inviare {id}, che cambia ciò che la scheda è (il bootloader, un aggiornamento, una cancellazione o un'impostazione che viene conservata). Inviarlo?

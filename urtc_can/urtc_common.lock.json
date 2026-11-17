@@ -26,6 +26,10 @@
       "from": "src/urtc_common/crash_dump.py",
       "sha256": "1f748f814a0e040ab8c5e25129a524fd7ef2b027b751118fc10f467eb8d9e123"
     },
+    "dangerous_ids.py": {
+      "from": "src/urtc_common/dangerous_ids.py",
+      "sha256": "6c47008b9a7de40aac52738b2eed1d38b636e38a3e362f42d5f55cf942c427ca"
+    },
     "ed25519.py": {
       "from": "src/urtc_common/ed25519.py",
       "sha256": "c32eae555fee5c8d5061aeffcb44be1c116c628bc28aff3f62897fa925cbda6f"

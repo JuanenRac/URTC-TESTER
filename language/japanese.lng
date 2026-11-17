@@ -712,3 +712,5 @@ PANEL_ACTIVE=有効
 PANEL_WATCH=測定値を監視
 PANEL_STOP_WATCH=監視を停止
 PANEL_SHOW_PROFILE_PANEL=プロファイルから描画したパネルを表示
+QT_PM_DANGEROUS_REFUSED={id} は危険な識別子です（ボードのあり方を変えます：ブートローダー、更新、消去、または保持される設定）。urtc_config.json の "plan_dangerous_ids" が "refuse" です。
+QT_PM_DANGEROUS_ASK=プランは {id} を送信しようとしています。これはボードのあり方（ブートローダー、更新、消去、または保持される設定）を変えます。送信しますか？
