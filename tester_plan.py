@@ -38,7 +38,8 @@ from typing import Any, Callable
 
 import advanced_protocol as protocol
 import tester_selftest
-from tester_config import TOOL_NAMES
+from tester_config import PLAN_DANGEROUS_IDS, TOOL_NAMES
+from urtc_can import dangerous_ids as _dangerous
 from urtc_can import protocol as wire
 from urtc_can.quick_state import decode as decode_quick_state
 from urtc_can.versioning import parse_version_answer
@@ -363,6 +364,8 @@ MESSAGES = {
     "QT_PM_SELFTEST_OK": "self-test of tool {tool} passed",
     "QT_PM_SELFTEST_UNKNOWN": "self-test of tool {tool} could not decide: {unknown} check(s) have no evidence either way",
     "QT_PM_NO_ACTUATION": "{id} is not a query and the operator did not allow actuation (--allow-actuation)",
+    "QT_PM_DANGEROUS_REFUSED": "{id} is a dangerous identifier (it changes what the board is: the bootloader, an update, an erase or a setting that is kept) and \"plan_dangerous_ids\" is \"refuse\" in urtc_config.json.",
+    "QT_PM_DANGEROUS_ASK": "The plan is about to send {id}, which changes what the board is (the bootloader, an update, an erase or a setting that is kept). Send it?",
     "QT_PM_LISTEN_ONLY": "the bus was opened listen-only: nothing can be sent",
     "QT_PM_SENT": "sent {id} {data}",
     "QT_PM_SENT_REPEATED": "sent {id} {data}, repeated every {ms} ms",
@@ -565,6 +568,13 @@ def _run_send(step, bus, state, plan, allow_actuation, confirm, listen_only):
             raise _StepError(Msg("QT_PM_NO_ACTUATION", id=f"0x{can_id:03X}"))
         if listen_only:
             raise _StepError(Msg("QT_PM_LISTEN_ONLY"))
+        # an identifier that changes what the board is (the same rule as the gateway): sent, asked about or refused, as plan_dangerous_ids says
+        if PLAN_DANGEROUS_IDS != "allow" and _dangerous.dangerous_reason(can_id, wire.MESSAGES):
+            if PLAN_DANGEROUS_IDS == "refuse":
+                raise _StepError(Msg("QT_PM_DANGEROUS_REFUSED", id=f"0x{can_id:03X}"))
+            asked, _why = _run_confirm({"text": str(Msg("QT_PM_DANGEROUS_ASK", id=f"0x{can_id:03X}"))}, bus, state, plan, allow_actuation, confirm, listen_only)
+            if asked != PASS:
+                raise _StepError(Msg("QT_PM_NOT_CONFIRMED"))
     bus.send(can_id, data)
     if "keepalive_ms" in step:
         bus.set_keepalive(can_id, data, step["keepalive_ms"] / 1000.0)

@@ -712,3 +712,5 @@ PANEL_ACTIVE=Active
 PANEL_WATCH=Watch readings
 PANEL_STOP_WATCH=Stop watching
 PANEL_SHOW_PROFILE_PANEL=Show the panel drawn from the profile
+QT_PM_DANGEROUS_REFUSED={id} is a dangerous identifier (it changes what the board is: the bootloader, an update, an erase or a setting that is kept) and "plan_dangerous_ids" is "refuse" in urtc_config.json.
+QT_PM_DANGEROUS_ASK=The plan is about to send {id}, which changes what the board is (the bootloader, an update, an erase or a setting that is kept). Send it?

@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A test plan can ask before it sends an identifier that changes what the board is, or refuse it:** the setting `plan_dangerous_ids` in `urtc_config.json` (`allow` by default, as plans have always worked; `confirm` asks the operator first, `refuse` never sends it; any other word counts as `refuse`) applies the same rule as the gateway to the `send` steps of a plan (the bootloader, the update of the expansion slave, the erase of the saved state, the settings that are kept). The two texts are in the eight languages. Tested with the three values, a question that is never judged, the answer of the operator and nobody to ask.
+
 - **The launcher can require a minimum duration of a first start:** the copy of the shared launcher is brought up to date; with `URTC_UPDATE_FIRST_START_MIN_S` set to a number of seconds above zero, a newly installed release that ends with code 0 before that time is not taken as a good first start. Zero (the default) keeps the behaviour as it was.
 
 - **A repeated command that stops being sent is counted and named in the log:** the scheduler keeps a failure count per key and the `KEEPALIVE_FAILED` line carries the identifier and the count, so the error a head latches after its watchdog can be tied to the command that stopped. Tested with a transport that fails.
