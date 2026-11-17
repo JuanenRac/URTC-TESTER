@@ -334,6 +334,8 @@ ficheiros separados ou como um único ficheiro grande. Consulte a secção
 «📂 Estrutura do repositório» perto do final deste documento para
 a descrição completa ficheiro a ficheiro.
 
+**Identificadores perigosos num plano**: um passo de um plano que escreve um identificador que muda o que a placa é (o bootloader, uma atualização do escravo de expansão, um apagamento, uma definição que se mantém após reiniciar) pergunta primeiro ao operador. `"plan_dangerous_ids"` em `config.json` escolhe `"confirm"` (predefinição), `"allow"` (enviá-lo como antes) ou `"refuse"` (nunca o enviar); qualquer outra palavra conta como `"refuse"`, e o painel Qt Quick tem uma lista pendente para isso sob a caixa da assinatura.
+
 **Comandos repetidos**: um comando que o firmware descarta se não for renovado (um aquecedor, um berbequim, um laser, uma ventoinha) é repetido a cada 150 ms por predefinição, ou ao período da sua própria ferramenta. `"keepalive"` em `config.json` altera-o: `"interval_ms"` (um inteiro de 20 a 200) fixa um período para todos, e `"single_io_thread": true` repete-os todos a partir de um fio partilhado, uma trama de cada vez, em vez de um fio cada um (desligado por predefinição). Um valor fora desses limites mantém a predefinição.
 
 **Subir uma ferramenta ligada**: uma ferramenta cujo comando se repete (um aquecedor, um berbequim, o laser) toma o valor que foi confirmado ao ligá-la. Subi-la mais de 20 % acima desse valor pede nova confirmação (baixar nunca pede, e arrastar em passos pequenos não deixa passar o limite). `"power_guard"` em `config.json` altera isto: `"rise_percent"` (um inteiro de 0 a 500) define a percentagem e `"enabled": false` desliga a pergunta (ligada por omissão). Um valor fora desses limites mantém o valor por omissão.
