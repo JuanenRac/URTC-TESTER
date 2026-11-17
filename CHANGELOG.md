@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The copy of URTC-COMMON brings the switch that lets an update of a slave board end while a tool is active (the switch stays off):** the generated protocol now names the extended feature bit `ALLOW_UPDATE_ACTIVE_ACTUATOR` (0x02) and its description. Nothing changes on the bus: the tester never sets the bit.
 - **The vendored copy of the common library is refreshed:** the conformance vectors follow the current catalog again.
 
 - **The choice of what a plan does with a dangerous identifier is in the tester deck and asks first by default:** a list under the signing box changes `plan_dangerous_ids` (send it, ask me first, refuse it) and takes effect at once; the label and the three words are in the eight languages. A plan that sends the persistent PID setting, the clearing of an error or the bootloader selection with nobody to ask now stops with the message that a person has to confirm. Tested with the three words, an unknown word that is ignored, and the texts in the eight languages.
