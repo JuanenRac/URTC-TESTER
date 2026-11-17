@@ -255,3 +255,13 @@ def test_the_deck_keeps_one_thread_per_command_by_default(monkeypatch):
     assert transport.threads == {"urtc-tester-solder-watchdog"}
     assert getattr(bridge, "_keepalive", None) is None
     bridge._stop_all_watchdogs()
+
+
+def test_the_failures_of_a_key_are_counted_and_the_log_names_the_identifier():
+    hub, clock, _sent, failed, logs = make(fail_ids=(0x170,))
+    for _ in range(2):
+        hub.register("heater", (0x170, b"\x01"), 0.1)
+        hub.tick()
+        clock.now += 0.1
+    assert hub.failures == {"heater": 2} and failed == ["heater", "heater"]
+    assert any("id=0x170" in line and "count=2" in line for line in logs)

@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A repeated command that stops being sent is counted and named in the log:** the scheduler keeps a failure count per key and the `KEEPALIVE_FAILED` line carries the identifier and the count, so the error a head latches after its watchdog can be tied to the command that stopped. Tested with a transport that fails.
+
 - **The optional functions have the second byte of the switch map, with the switch that makes the communication watchdog count only frames of the host side (off, as every switch):** the query asks for the six-byte answer; a head that answers with six bytes shows the new box (enabled only with the communication watchdog) and is written with the six-byte form, an older head with three bytes is written with the five-byte form as before. The text of the switch is in the eight languages.
 - **The security note of the README describes the Ed25519 bootloader:** the main bootloader checks the image against a table of public keys and holds no secret, official releases are signed with the release image-signing key and bench builds trust the public development key; the note no longer speaks of a shared-key HMAC. The eight languages follow.
 
