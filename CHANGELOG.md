@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The launcher can require a minimum duration of a first start:** the copy of the shared launcher is brought up to date; with `URTC_UPDATE_FIRST_START_MIN_S` set to a number of seconds above zero, a newly installed release that ends with code 0 before that time is not taken as a good first start. Zero (the default) keeps the behaviour as it was.
+
 - **A repeated command that stops being sent is counted and named in the log:** the scheduler keeps a failure count per key and the `KEEPALIVE_FAILED` line carries the identifier and the count, so the error a head latches after its watchdog can be tied to the command that stopped. Tested with a transport that fails.
 
 - **The optional functions have the second byte of the switch map, with the switch that makes the communication watchdog count only frames of the host side (off, as every switch):** the query asks for the six-byte answer; a head that answers with six bytes shows the new box (enabled only with the communication watchdog) and is written with the six-byte form, an older head with three bytes is written with the five-byte form as before. The text of the switch is in the eight languages.
