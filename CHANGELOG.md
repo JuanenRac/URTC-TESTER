@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The vendored copy of the common library is refreshed:** the conformance vectors follow the current catalog again.
+
 - **The choice of what a plan does with a dangerous identifier is in the tester deck and asks first by default:** a list under the signing box changes `plan_dangerous_ids` (send it, ask me first, refuse it) and takes effect at once; the label and the three words are in the eight languages. A plan that sends the persistent PID setting, the clearing of an error or the bootloader selection with nobody to ask now stops with the message that a person has to confirm. Tested with the three words, an unknown word that is ignored, and the texts in the eight languages.
 
 - **A test plan can ask before it sends an identifier that changes what the board is, or refuse it:** the setting `plan_dangerous_ids` in `urtc_config.json` (`confirm` by default, which asks the operator first; `allow` sends it as plans used to and `refuse` never sends it; any other word counts as `refuse`) applies the same rule as the gateway to the `send` steps of a plan (the bootloader, the update of the expansion slave, the erase of the saved state, the settings that are kept). The two texts are in the eight languages. Tested with the three values, a question that is never judged, the answer of the operator and nobody to ask.
