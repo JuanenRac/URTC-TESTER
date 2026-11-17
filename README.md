@@ -436,6 +436,8 @@ separate files versus one large one. See the
 "📂 Repository Structure" section near the end of this document for
 the full file-by-file breakdown.
 
+**Dangerous identifiers in a plan**: a plan step that writes an identifier which changes what the board is (the bootloader, an update of the expansion slave, an erase, a setting kept after a restart) asks the operator first. `"plan_dangerous_ids"` in `config.json` chooses `"confirm"` (the default), `"allow"` (send it as plans used to) or `"refuse"` (never send it); any other word counts as `"refuse"`, and the Qt Quick deck has a drop-down for it under the signature check box.
+
 **Repeated commands**: a command the firmware drops again if it is not refreshed (a heater, a drill, a laser, a fan) is repeated every 150 ms by default, or at the period of its own tool. `"keepalive"` in `config.json` changes it: `"interval_ms"` (a whole number from 20 to 200) sets one period for all of them, and `"single_io_thread": true` repeats all of them from one shared thread, one frame at a time, instead of one thread each (off by default). A value outside those limits keeps the default.
 
 **Raising a tool that is on**: a tool whose command repeats (a heater, a drill, the laser) takes the value that was confirmed when it was switched on. Raising it by more than 20 % over that value asks for a confirmation again (lowering never asks, and a drag in small steps cannot creep past the limit). `"power_guard"` in `config.json` changes it: `"rise_percent"` (a whole number from 0 to 500) sets the percentage and `"enabled": false` turns the question off (on by default). A value outside those limits keeps the default.
