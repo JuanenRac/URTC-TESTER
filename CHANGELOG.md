@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The deck offers the switch that lets the end of an update of a slave board be accepted while a tool is active:** the box shows only for a head that says it has the bit, starts unticked, goes through the usual confirmation of a write to the board and writes a line to the session log when it is turned on. Unlike the host-only switch it does not need the communication watchdog. Tests cover the frame, the names, the box and the texts in the eight languages.
 - **The copy of the common library moves to 0.2.9 and the texts of the catalog are regenerated:** the shared CAN modules and the language files follow the current URTC-COMMON.
 - **The copy of URTC-COMMON brings the switch that lets an update of a slave board end while a tool is active (the switch stays off):** the generated protocol now names the extended feature bit `ALLOW_UPDATE_ACTIVE_ACTUATOR` (0x02) and its description. Nothing changes on the bus: the tester never sets the bit.
 - **The vendored copy of the common library is refreshed:** the conformance vectors follow the current catalog again.

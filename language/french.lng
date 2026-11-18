@@ -471,6 +471,7 @@ QTLOG_CRASH_DUMP_BLOCKED=Enregistrement du plantage bloqué : se connecter d'abo
 QTLOG_CRASH_DUMP_SAVED=Enregistrement du plantage enregistré
 QTLOG_CRASH_DUMP_FAILED=Échec de l'enregistrement du plantage
 QTLOG_FEATURES_BLOCKED=Fonctions optionnelles bloquées
+QTLOG_FEATURES_UPDATE_ACTIVE_ON=La fin d'une mise à jour d'une carte esclave est autorisée avec un outil actif
 QTLOG_FIRMWARE_FEATURES=Fonctions optionnelles du firmware
 QTLOG_THERMAL_VIEW=Vue thermique
 QTLOG_THERMAL_VIEW_BLOCKED=Vue thermique bloquée : se connecter d'abord en mode actif

@@ -1734,6 +1734,9 @@ class TesterQtBridge(QObject):
         except ValueError as exc:
             self._log(f"FEATURES_BLOCKED {exc}")
             return
+        if frame[1][5] & extras.FEATURE_EXT_ALLOW_UPDATE_ACTIVE_ACTUATOR:
+            # a relaxation of a safety rule of the board: the decision is part of the record of the session
+            self._log("FEATURES_UPDATE_ACTIVE_ON")
         self._run_query("features", frame, extras.CAN_ID_FEATURES_RESP, extras.decode_features)
 
     @Slot(int)

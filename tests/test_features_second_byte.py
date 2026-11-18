@@ -35,7 +35,7 @@ def test_the_host_only_switch_stays_off_unless_the_communication_watchdog_is_on(
     assert extras.features_frame(0x20, 1)[1][5] == 1
 
 
-@pytest.mark.parametrize("bad", [-1, 2, 255, 256])
+@pytest.mark.parametrize("bad", [-1, 4, 255, 256])
 def test_a_switch_of_the_second_byte_that_the_firmware_does_not_have_is_refused(bad):
     with pytest.raises(ValueError):
         extras.features_frame(0x20, bad)
@@ -50,6 +50,8 @@ def test_both_forms_of_the_answer_are_read():
 
 def test_the_name_of_the_switch_is_listed_with_the_others():
     assert extras.features_text(0x20, 1) == "COMMS_WATCHDOG, WATCHDOG_HOST_ONLY"
+    assert extras.features_text(0x20, 3) == "COMMS_WATCHDOG, WATCHDOG_HOST_ONLY, ALLOW_UPDATE_ACTIVE_ACTUATOR"
+    assert extras.features_text(0, 2) == "ALLOW_UPDATE_ACTIVE_ACTUATOR"
     assert extras.features_text(0, 0) == "none"
     assert extras.features_text(0x20) == "COMMS_WATCHDOG"
 
@@ -67,3 +69,32 @@ def test_the_text_of_the_switch_exists_in_the_eight_languages():
     for name in LANGUAGES:
         found = {line.split("=", 1)[0] for line in (ROOT / "language" / f"{name}.lng").read_text(encoding="utf-8").splitlines() if "=" in line}
         assert "LBL_FEATURE_WATCHDOG_HOST_ONLY" in found, name
+
+
+def test_the_switch_for_the_end_of_a_slave_update_is_the_second_bit_and_does_not_need_the_watchdog():
+    assert extras.FEATURE_EXT_ALLOW_UPDATE_ACTIVE_ACTUATOR == 0x02
+    assert extras.features_frame(0x00, 2)[1][5] == 2
+    assert extras.features_frame(0x00, 3)[1][5] == 2
+    assert extras.features_frame(0x20, 3)[1][5] == 3
+    assert extras.features_frame(0x00, 0)[1][5] == 0
+
+
+def test_the_switch_for_the_end_of_a_slave_update_is_off_unless_asked_for():
+    assert extras.features_frame(0x20, 1)[1][5] & 2 == 0
+
+
+def test_the_deck_box_of_the_slave_update_switch_starts_unticked_and_is_shown_only_for_a_head_that_has_it():
+    deck = (ROOT / "assets" / "qml" / "TesterDeck.qml").read_text(encoding="utf-8")
+    box = next(line for line in deck.splitlines() if "id: featAllowUpdate" in line)
+    assert "LBL_FEATURE_ALLOW_UPDATE_ACTIVE_ACTUATOR" in box and "checked: false" in box
+    assert "featuresSupportedExt & 2" in box and "visible:" in box
+    assert "(featAllowUpdate.checked ? 2 : 0)" in deck
+
+
+def test_turning_the_slave_update_switch_on_is_written_to_the_log_and_the_text_exists_in_the_eight_languages():
+    source = (ROOT / "qt_tester.py").read_text(encoding="utf-8")
+    assert 'self._log("FEATURES_UPDATE_ACTIVE_ON")' in source
+    for name in LANGUAGES:
+        found = {line.split("=", 1)[0] for line in (ROOT / "language" / f"{name}.lng").read_text(encoding="utf-8").splitlines() if "=" in line}
+        assert "LBL_FEATURE_ALLOW_UPDATE_ACTIVE_ACTUATOR" in found, name
+        assert "QTLOG_FEATURES_UPDATE_ACTIVE_ON" in found, name

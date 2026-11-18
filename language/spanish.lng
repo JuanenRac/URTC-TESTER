@@ -471,6 +471,7 @@ QTLOG_CRASH_DUMP_BLOCKED=Registro del fallo bloqueado: conecta antes en modo act
 QTLOG_CRASH_DUMP_SAVED=Registro del fallo guardado
 QTLOG_CRASH_DUMP_FAILED=Falló el registro del fallo
 QTLOG_FEATURES_BLOCKED=Funciones opcionales bloqueadas
+QTLOG_FEATURES_UPDATE_ACTIVE_ON=Se permite terminar la actualización de una placa esclava con una herramienta activa
 QTLOG_FIRMWARE_FEATURES=Funciones opcionales del firmware
 QTLOG_THERMAL_VIEW=Vista térmica
 QTLOG_THERMAL_VIEW_BLOCKED=Vista térmica bloqueada: conecta antes en modo activo

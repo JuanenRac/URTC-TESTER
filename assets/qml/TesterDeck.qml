@@ -1362,6 +1362,7 @@ ApplicationWindow {
                     CheckBox { id: featMagnet; text: testerBackend.uiText("LBL_FEATURE_MAGNET_RELEASE"); enabled: featComms.checked; font.pixelSize: 10 }
                     CheckBox { id: featEstop; text: testerBackend.uiText("LBL_FEATURE_ESTOP_FOLLOW"); checked: false; font.pixelSize: 10 }
                     CheckBox { id: featHostOnly; text: testerBackend.uiText("LBL_FEATURE_WATCHDOG_HOST_ONLY"); checked: false; enabled: featComms.checked && (testerBackend.featuresSupportedExt & 1) !== 0; visible: (testerBackend.featuresSupportedExt & 1) !== 0; font.pixelSize: 10 }
+                    CheckBox { id: featAllowUpdate; text: testerBackend.uiText("LBL_FEATURE_ALLOW_UPDATE_ACTIVE_ACTUATOR"); checked: false; enabled: (testerBackend.featuresSupportedExt & 2) !== 0; visible: (testerBackend.featuresSupportedExt & 2) !== 0; font.pixelSize: 10 }
                 }
                 RowLayout {
                     Layout.fillWidth: true
@@ -1372,7 +1373,7 @@ ApplicationWindow {
                         accent: "#b86a35"
                         Layout.preferredWidth: 260
                         enabled: testerBackend.canUseUtilityPanels
-                        onClicked: window.requestUtilityAction(function() { testerBackend.writeFeaturesExt((featRamps.checked ? 1 : 0) + (featHealth.checked ? 2 : 0) + (featHsi.checked ? 4 : 0) + (featPid.checked ? 8 : 0) + (featClear.checked ? 16 : 0) + (featComms.checked ? 32 : 0) + (featMagnet.checked && featComms.checked ? 64 : 0) + (featEstop.checked ? 128 : 0), (featHostOnly.checked && featComms.checked ? 1 : 0)) })
+                        onClicked: window.requestUtilityAction(function() { testerBackend.writeFeaturesExt((featRamps.checked ? 1 : 0) + (featHealth.checked ? 2 : 0) + (featHsi.checked ? 4 : 0) + (featPid.checked ? 8 : 0) + (featClear.checked ? 16 : 0) + (featComms.checked ? 32 : 0) + (featMagnet.checked && featComms.checked ? 64 : 0) + (featEstop.checked ? 128 : 0), (featHostOnly.checked && featComms.checked ? 1 : 0) + (featAllowUpdate.checked ? 2 : 0)) })
                     }
                 }
                 Text { text: testerBackend.featuresText; visible: testerBackend.featuresText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }

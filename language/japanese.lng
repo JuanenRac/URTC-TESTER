@@ -470,6 +470,7 @@ QTLOG_CRASH_DUMP_BLOCKED=クラッシュ記録はブロックされました：�
 QTLOG_CRASH_DUMP_SAVED=クラッシュ記録を保存しました
 QTLOG_CRASH_DUMP_FAILED=クラッシュ記録の読み取りに失敗しました
 QTLOG_FEATURES_BLOCKED=オプション機能はブロックされました
+QTLOG_FEATURES_UPDATE_ACTIVE_ON=ツール動作中でもスレーブ基板の更新の終了を許可します
 QTLOG_FIRMWARE_FEATURES=ファームウェアのオプション機能
 QTLOG_THERMAL_VIEW=熱画像
 QTLOG_THERMAL_VIEW_BLOCKED=熱画像はブロックされました：先にアクティブモードで接続してください

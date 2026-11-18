@@ -470,6 +470,7 @@ QTLOG_CRASH_DUMP_BLOCKED=Crash record blocked: connect in active mode first
 QTLOG_CRASH_DUMP_SAVED=Crash record saved
 QTLOG_CRASH_DUMP_FAILED=Crash record failed
 QTLOG_FEATURES_BLOCKED=Optional functions blocked
+QTLOG_FEATURES_UPDATE_ACTIVE_ON=The end of a slave update is allowed while a tool is active
 QTLOG_FIRMWARE_FEATURES=Optional functions of the firmware
 QTLOG_THERMAL_VIEW=Thermal view
 QTLOG_THERMAL_VIEW_BLOCKED=Thermal view blocked: connect in active mode first
