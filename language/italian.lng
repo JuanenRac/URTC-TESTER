@@ -415,6 +415,7 @@ LBL_FEATURE_COMMS_WATCHDOG=Sorveglianza della comunicazione dei motori passo-pas
 LBL_FEATURE_MAGNET_RELEASE=L'elettromagnete rilascia quando l'host tace (spento: tiene)
 LBL_FEATURE_ESTOP_FOLLOW=La testina segue l'arresto di emergenza della pila (si ferma con un frame di arresto e quando il master tace)
 LBL_FEATURE_WATCHDOG_HOST_ONLY=La sorveglianza della comunicazione conta solo i frame dell'host (le risposte delle altre testine non la alimentano)
+LBL_FEATURE_ALLOW_UPDATE_ACTIVE_ACTUATOR=La fine dell'aggiornamento di una scheda slave viene accettata anche con un utensile della testina attivo (senza questo la fine viene rifiutata)
 BTN_CLEAR_ERROR=Cancella errore
 LBL_CLEAR_ERROR_RESULT=Cancella errore: {result}
 LBL_CLEAR_RESULT_CLEARED=l'errore è stato tolto

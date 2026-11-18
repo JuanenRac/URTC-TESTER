@@ -414,6 +414,7 @@ LBL_FEATURE_COMMS_WATCHDOG=Communication watchdog of the steppers and the electr
 LBL_FEATURE_MAGNET_RELEASE=The electromagnet lets go when the host is silent (off: it holds)
 LBL_FEATURE_ESTOP_FOLLOW=The head follows the emergency stop of the stack (stops on a stop frame and when the master falls silent)
 LBL_FEATURE_WATCHDOG_HOST_ONLY=The communication watchdog counts only frames of the host (the answers of other heads do not feed it)
+LBL_FEATURE_ALLOW_UPDATE_ACTIVE_ACTUATOR=An update of a slave board may end while a tool of the head is active (without it the end is refused)
 BTN_CLEAR_ERROR=Clear error
 LBL_CLEAR_ERROR_RESULT=Clear error: {result}
 LBL_CLEAR_RESULT_CLEARED=the error was lifted

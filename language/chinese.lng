@@ -414,6 +414,7 @@ LBL_FEATURE_COMMS_WATCHDOG=步进电机和电磁铁的通信看门狗
 LBL_FEATURE_MAGNET_RELEASE=主机无通信时电磁铁释放(关闭:保持吸住)
 LBL_FEATURE_ESTOP_FOLLOW=工具头跟随堆栈的紧急停止(收到停止帧或主机沉默时停止)
 LBL_FEATURE_WATCHDOG_HOST_ONLY=通信看门狗仅统计主机的帧(其他工具头的应答不会喂狗)
+LBL_FEATURE_ALLOW_UPDATE_ACTIVE_ACTUATOR=即使工具头的工具处于工作状态,也接受从属板更新的结束(关闭时拒绝结束)
 BTN_CLEAR_ERROR=清除错误
 LBL_CLEAR_ERROR_RESULT=清除错误:{result}
 LBL_CLEAR_RESULT_CLEARED=错误已解除

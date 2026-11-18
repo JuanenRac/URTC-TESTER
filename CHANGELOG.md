@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The copy of the common library moves to 0.2.9 and the texts of the catalog are regenerated:** the shared CAN modules and the language files follow the current URTC-COMMON.
 - **The copy of URTC-COMMON brings the switch that lets an update of a slave board end while a tool is active (the switch stays off):** the generated protocol now names the extended feature bit `ALLOW_UPDATE_ACTIVE_ACTUATOR` (0x02) and its description. Nothing changes on the bus: the tester never sets the bit.
 - **The vendored copy of the common library is refreshed:** the conformance vectors follow the current catalog again.
 

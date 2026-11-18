@@ -415,6 +415,7 @@ LBL_FEATURE_COMMS_WATCHDOG=Surveillance de communication des moteurs pas à pas 
 LBL_FEATURE_MAGNET_RELEASE=L'électroaimant lâche quand l'hôte ne communique plus (désactivé : il tient)
 LBL_FEATURE_ESTOP_FOLLOW=La tête suit l'arrêt d'urgence de la pile (elle s'arrête sur une trame d'arrêt et quand le maître se tait)
 LBL_FEATURE_WATCHDOG_HOST_ONLY=La surveillance de communication ne compte que les trames de l'hôte (les réponses des autres têtes ne la nourrissent pas)
+LBL_FEATURE_ALLOW_UPDATE_ACTIVE_ACTUATOR=La fin d'une mise à jour d'une carte esclave est acceptée même quand un outil de la tête est actif (sans cela, la fin est refusée)
 BTN_CLEAR_ERROR=Effacer l'erreur
 LBL_CLEAR_ERROR_RESULT=Effacer l'erreur : {result}
 LBL_CLEAR_RESULT_CLEARED=l'erreur a été levée
