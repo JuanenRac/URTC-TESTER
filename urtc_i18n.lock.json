@@ -2,16 +2,16 @@
   "format": 1,
   "urtc_common_version": "0.2.9",
   "catalog": "spec/i18n/catalog/tester.json",
-  "catalog_sha256": "4e0180ef14fa69f4c960bdee20b0f3ce904a648a889a3a749685e48ee2033910",
+  "catalog_sha256": "81c97e4478f10042ec6fd22e7b3be1c92bbb4cec77294f566c87ee5d2a21b1d8",
   "files": {
-    "language/chinese.lng": "6b1443dbd77f62efa211b09b9ddd9be03693fd56d05fedf0c3e64f95f0dc24b7",
-    "language/english.lng": "536b9e8bba04409398e308ef2ad97824436f91bd5f70761f4b5031f4b572e781",
-    "language/french.lng": "e656ba5bb995750ffe03427cf10bee2eae0b621f36f1dbcd2ad1b651ad443a09",
-    "language/german.lng": "1bf78e2346b92626412454a06dc42284738e611188141e1718106d911fd57d84",
-    "language/italian.lng": "677cd8b6c1614d954067460ecb51c87bfcf79bc88be63bacd2c27cc48fd91a5b",
-    "language/japanese.lng": "de51e12ed8deba72f18f7de0bff9a10c278df29cbcea76bb044d67d84a923f23",
-    "language/portuguese.lng": "79f67fe05594c4e27a60428b38dcdf40ab26cc446963ee0ffddb492cee1bdeb8",
-    "language/spanish.lng": "feee029490a54a6b663e55b952bdfcd910a4dd15be7a77645d6a8a005202d435",
+    "language/chinese.lng": "efe6da3397d4ff69a4645e6bc62bfb31a1e1fb6f52a93816868a6ad0a3205225",
+    "language/english.lng": "306af91536e74092eaef0568c75c9b6fcc3f31b2e1ce01ee7588ad473d8eaf3e",
+    "language/french.lng": "1598b9e513077cb82a88db805970774d4b30cbc8de5b734369ee8ed8a2a02c0e",
+    "language/german.lng": "a7a9bbd6530e1a34fd85f6e302aec2760eccf010a00f7e40a64df824a0e7ee49",
+    "language/italian.lng": "9f7ac9b9cfd6462b757230d52a206fa7e2a4ea6c2ab08559615111fac0a02e09",
+    "language/japanese.lng": "b7b5f1d33ecb825a3aa036d20d727212f32ceafd758cdf51fd056ac86a4e1a59",
+    "language/portuguese.lng": "85086ccd2b5f9c116341437d56f93bb233f476d9dd833ba3c53b46b797ee5048",
+    "language/spanish.lng": "0a75b0f7590b29489f9278213bccca90cff090c45b8d2e0996b94f92f01909e0",
     "tests/test_i18n_generated.py": "2dbb1740abb41abb5dca047084ac545d4cb403687e599550a73e4e1174c1ce87"
   }
 }

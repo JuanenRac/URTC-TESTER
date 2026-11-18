@@ -471,6 +471,7 @@ QTLOG_CRASH_DUMP_BLOCKED=Absturzdatensatz blockiert: zuerst im aktiven Modus ver
 QTLOG_CRASH_DUMP_SAVED=Absturzdatensatz gespeichert
 QTLOG_CRASH_DUMP_FAILED=Absturzdatensatz fehlgeschlagen
 QTLOG_FEATURES_BLOCKED=Optionale Funktionen blockiert
+QTLOG_FEATURES_UPDATE_ACTIVE_ON=Das Ende einer Slave-Aktualisierung wird bei aktivem Werkzeug zugelassen
 QTLOG_FIRMWARE_FEATURES=Optionale Funktionen der Firmware
 QTLOG_THERMAL_VIEW=Wärmebild
 QTLOG_THERMAL_VIEW_BLOCKED=Wärmebild blockiert: zuerst im aktiven Modus verbinden

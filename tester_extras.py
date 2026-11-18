@@ -33,9 +33,12 @@ FEATURES_MAGIC = b"FEAT"
 FEATURE_NAMES = ((0x01, "MOTION_RAMPS"), (0x02, "HEALTH_PROFILE"), (0x04, "HSI_AUTOTRIM"), (0x08, "THERMAL_PID"), (0x10, "CLEAR_ERROR"), (0x20, "COMMS_WATCHDOG"),
                  (0x40, "MAGNET_RELEASE"), (0x80, "ESTOP_FOLLOW"))
 FEATURES_SUPPORTED = 0xFF
-# The second byte of the switch map: it starts with the switch that makes the communication watchdog count only frames of the host side (off by default).
-FEATURE_EXT_NAMES = ((0x01, "WATCHDOG_HOST_ONLY"),)
-FEATURES_EXT_SUPPORTED = 0x01
+# The second byte of the switch map: the switch that makes the communication watchdog count only frames of the host side (0x01) and the one that lets the end
+# of an update of a slave board be accepted while a tool of the head is active (0x02). Both are off by default.
+FEATURE_EXT_WATCHDOG_HOST_ONLY = 0x01
+FEATURE_EXT_ALLOW_UPDATE_ACTIVE_ACTUATOR = 0x02
+FEATURE_EXT_NAMES = ((FEATURE_EXT_WATCHDOG_HOST_ONLY, "WATCHDOG_HOST_ONLY"), (FEATURE_EXT_ALLOW_UPDATE_ACTIVE_ACTUATOR, "ALLOW_UPDATE_ACTIVE_ACTUATOR"))
+FEATURES_EXT_SUPPORTED = FEATURE_EXT_WATCHDOG_HOST_ONLY | FEATURE_EXT_ALLOW_UPDATE_ACTIVE_ACTUATOR
 FEATURE_COMMS_WATCHDOG = 0x20
 FEATURES_QUERY_EXTENDED = b"\x02"   # asks for the six-byte answer; any other query is answered with the three bytes of before
 CAN_ID_SET_FEATURES = tester_config.CAN_ID_SET_FEATURES
@@ -140,7 +143,8 @@ class AutoDownload:
 def features_frame(mask: int, mask_ext: int | None = None) -> tuple[int, bytes]:
     """The frame that writes the switches: the five-byte form (the first byte only) or, with ``mask_ext``, the six-byte form.
 
-    A switch of the second byte that needs the communication watchdog is left off when the watchdog is not on in the first byte.
+    The host-only switch needs the communication watchdog and is left off when the watchdog is not on in the first byte; the switch for the end of a
+    slave update does not depend on it and goes as asked.
     """
     if not 0 <= mask <= FEATURES_SUPPORTED:
         raise ValueError("the mask uses bits this firmware does not have")
@@ -149,7 +153,7 @@ def features_frame(mask: int, mask_ext: int | None = None) -> tuple[int, bytes]:
     if not 0 <= mask_ext <= FEATURES_EXT_SUPPORTED:
         raise ValueError("the second mask uses bits this firmware does not have")
     if not mask & FEATURE_COMMS_WATCHDOG:
-        mask_ext = 0
+        mask_ext &= ~FEATURE_EXT_WATCHDOG_HOST_ONLY
     return CAN_ID_SET_FEATURES, FEATURES_MAGIC + bytes([mask, mask_ext])
 
 
