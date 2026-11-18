@@ -415,6 +415,7 @@ LBL_FEATURE_COMMS_WATCHDOG=Vigilancia de comunicación de los motores paso a pas
 LBL_FEATURE_MAGNET_RELEASE=El electroimán suelta si el host calla (apagado: mantiene)
 LBL_FEATURE_ESTOP_FOLLOW=La cabeza sigue la parada de emergencia de la pila (se detiene con una trama de parada y cuando el maestro calla)
 LBL_FEATURE_WATCHDOG_HOST_ONLY=La vigilancia de comunicación cuenta solo tramas del anfitrión (las respuestas de otras cabezas no la alimentan)
+LBL_FEATURE_ALLOW_UPDATE_ACTIVE_ACTUATOR=La actualización de una placa esclava puede terminar mientras una herramienta de la cabeza está activa (sin esto se rechaza el final)
 BTN_CLEAR_ERROR=Borrar error
 LBL_CLEAR_ERROR_RESULT=Borrar error: {result}
 LBL_CLEAR_RESULT_CLEARED=se quitó el error

@@ -415,6 +415,7 @@ LBL_FEATURE_COMMS_WATCHDOG=Kommunikationsüberwachung der Schrittmotoren und des
 LBL_FEATURE_MAGNET_RELEASE=Der Elektromagnet lässt los, wenn der Host schweigt (aus: er hält)
 LBL_FEATURE_ESTOP_FOLLOW=Der Kopf folgt dem Not-Halt des Stapels (hält bei einem Stopp-Frame und bei Schweigen des Masters an)
 LBL_FEATURE_WATCHDOG_HOST_ONLY=Die Kommunikationsüberwachung zählt nur Frames des Hosts (Antworten anderer Köpfe zählen nicht)
+LBL_FEATURE_ALLOW_UPDATE_ACTIVE_ACTUATOR=Das Ende einer Aktualisierung einer Slave-Platine wird auch bei aktivem Werkzeug des Kopfes angenommen (ohne dies wird das Ende abgelehnt)
 BTN_CLEAR_ERROR=Fehler löschen
 LBL_CLEAR_ERROR_RESULT=Fehler löschen: {result}
 LBL_CLEAR_RESULT_CLEARED=der Fehler wurde aufgehoben
