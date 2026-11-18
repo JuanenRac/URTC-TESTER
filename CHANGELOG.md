@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The copy of the shared update module refuses a rollback to a damaged release:** going back to the previous version first checks that release (its `app_info.json` and the file it names to run); a missing or unusable one is refused with a clear message, in the eight languages, and nothing is changed.
 - **The stated test count is corrected:** the badge, the table and the testing section of the README in the eight languages give the number the suite has now.
 - **The deck offers the switch that lets the end of an update of a slave board be accepted while a tool is active:** the box shows only for a head that says it has the bit, starts unticked, goes through the usual confirmation of a write to the board and writes a line to the session log when it is turned on. Unlike the host-only switch it does not need the communication watchdog. Tests cover the frame, the names, the box and the texts in the eight languages.
 - **The copy of the common library moves to 0.2.9 and the texts of the catalog are regenerated:** the shared CAN modules and the language files follow the current URTC-COMMON.
