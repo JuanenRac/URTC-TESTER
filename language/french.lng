@@ -724,3 +724,10 @@ LBL_PLAN_DANGEROUS_REFUSE=Le refuser
 QTLOG_PLAN_DANGEROUS_IDS=Choix pour les plans qui envoient un identifiant qui change la carte
 QTLOG_PLAN_DANGEROUS_IDS_NOT_SAVED=Impossible d'enregistrer le choix pour les identifiants dangereux
 QTLOG_PLAN_DANGEROUS_IDS_UNKNOWN=Le mot choisi pour les identifiants dangereux n'est pas connu du testeur
+LBL_ESTOP_TIMEOUT=Silence du maître avant l'arrêt de la tête, en ms (0 = 100 ms par défaut, sinon de 40 à 500) :
+BTN_ESTOP_TIMEOUT_READ=Lire le silence du maître
+BTN_ESTOP_TIMEOUT_WRITE=Écrire le silence du maître
+LOG_ESTOP_TIMEOUT_READ=Silence du maître : en vigueur {running} ms (0 = inactif), enregistré {stored} ms (0 = par défaut)
+LOG_ESTOP_TIMEOUT_INVALID=Le silence doit valoir 0 ou se situer entre {min} et {max} ms : rien n'a été écrit
+LOG_ESTOP_TIMEOUT_MISMATCH=La tête n'a pas conservé le silence demandé (enregistré {stored} ms) : son firmware est peut-être plus ancien ou a refusé la valeur
+LOG_ESTOP_TIMEOUT_UNSUPPORTED=La tête ne répond pas à la demande du silence : son firmware est peut-être plus ancien

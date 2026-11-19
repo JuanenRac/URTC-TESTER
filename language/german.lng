@@ -724,3 +724,10 @@ LBL_PLAN_DANGEROUS_REFUSE=Ablehnen
 QTLOG_PLAN_DANGEROUS_IDS=Auswahl für Pläne, die eine Kennung senden, die die Platine ändert
 QTLOG_PLAN_DANGEROUS_IDS_NOT_SAVED=Die Auswahl für gefährliche Kennungen konnte nicht gespeichert werden
 QTLOG_PLAN_DANGEROUS_IDS_UNKNOWN=Das Wort für gefährliche Kennungen ist dem Tester unbekannt
+LBL_ESTOP_TIMEOUT=Schweigen des Masters, bevor der Kopf stoppt, in ms (0 = Standard 100 ms, sonst 40 bis 500):
+BTN_ESTOP_TIMEOUT_READ=Schweigen des Masters lesen
+BTN_ESTOP_TIMEOUT_WRITE=Schweigen des Masters schreiben
+LOG_ESTOP_TIMEOUT_READ=Schweigen des Masters: wirksam {running} ms (0 = läuft nicht), gespeichert {stored} ms (0 = Standard)
+LOG_ESTOP_TIMEOUT_INVALID=Das Schweigen muss 0 sein oder zwischen {min} und {max} ms liegen: es wurde nichts geschrieben
+LOG_ESTOP_TIMEOUT_MISMATCH=Der Kopf hat das gewünschte Schweigen nicht übernommen (gespeichert {stored} ms): Seine Firmware ist möglicherweise älter oder hat den Wert abgelehnt
+LOG_ESTOP_TIMEOUT_UNSUPPORTED=Der Kopf beantwortet die Abfrage des Schweigens nicht: Seine Firmware ist möglicherweise älter

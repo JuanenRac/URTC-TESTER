@@ -723,3 +723,10 @@ LBL_PLAN_DANGEROUS_REFUSE=拒绝
 QTLOG_PLAN_DANGEROUS_IDS=发送会改变电路板的标识符的计划的选择
 QTLOG_PLAN_DANGEROUS_IDS_NOT_SAVED=无法保存对危险标识符的选择
 QTLOG_PLAN_DANGEROUS_IDS_UNKNOWN=为危险标识符选择的词测试器无法识别
+LBL_ESTOP_TIMEOUT=主控静默多久后工具头停止，单位毫秒（0 = 默认 100 毫秒，否则 40 至 500）：
+BTN_ESTOP_TIMEOUT_READ=读取主控静默时间
+BTN_ESTOP_TIMEOUT_WRITE=写入主控静默时间
+LOG_ESTOP_TIMEOUT_READ=主控静默时间：当前生效 {running} 毫秒（0 = 未运行），已保存 {stored} 毫秒（0 = 默认）
+LOG_ESTOP_TIMEOUT_INVALID=静默时间必须为 0 或介于 {min} 与 {max} 毫秒之间：未写入任何内容
+LOG_ESTOP_TIMEOUT_MISMATCH=工具头未保留所请求的静默时间（已保存 {stored} 毫秒）：其固件可能较旧，或已拒绝该值
+LOG_ESTOP_TIMEOUT_UNSUPPORTED=工具头未响应静默时间查询：其固件可能较旧

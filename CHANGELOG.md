@@ -4,7 +4,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
-- **The copy of the stop following knows the configurable silence of the master:** `estop_follow.Node(alive_timeout_ms)`, `resolve_timeout` and `effective_timeout` and the limits 20 and 500 ms come with the refreshed copy of the shared library; the default stays 100 ms, a value outside the limits is rejected and the master can only lower the timeout. The virtual board takes `estop_alive_timeout_ms`.
+- **The optional functions panel reads and writes the silence of the master of the emergency stop:** a field for the milliseconds (0 for the default of 100 ms, otherwise 40 to 500) with a button that reads the silence in force and the stored one (it writes nothing) and a button that writes it after the usual confirmation. The write uses the eight-byte form of `0x1AE`, asks the head for its stored state first and carries over the switches of both bytes; a value outside the limits is refused before anything is sent, a head that does not keep the value is reported, and a head with an older firmware is told so and left alone. The texts are in the eight languages and the copy of the shared library follows the current one. Nothing of it has run on a real board.
+
+- **The copy of the stop following knows the configurable silence of the master:** `estop_follow.Node(alive_timeout_ms)`, `resolve_timeout` and `effective_timeout` and the limits 40 and 500 ms come with the refreshed copy of the shared library; the default stays 100 ms, a value outside the limits is rejected and the master can only lower the timeout. The virtual board takes `estop_alive_timeout_ms`.
 
 ## [0.5.7] - Plan safety choice, optional-function switches, repeated-command failures and shared update fixes
 

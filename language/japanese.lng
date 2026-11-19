@@ -723,3 +723,10 @@ LBL_PLAN_DANGEROUS_REFUSE=拒否する
 QTLOG_PLAN_DANGEROUS_IDS=基板を変える識別子を送るプランの選択
 QTLOG_PLAN_DANGEROUS_IDS_NOT_SAVED=危険な識別子の選択を保存できませんでした
 QTLOG_PLAN_DANGEROUS_IDS_UNKNOWN=危険な識別子に指定された語はテスターが認識できないものです
+LBL_ESTOP_TIMEOUT=ヘッドが停止するまでのマスターの無通信時間（ms）（0 = 既定の100 ms、それ以外は40～500）：
+BTN_ESTOP_TIMEOUT_READ=マスターの無通信時間を読み取る
+BTN_ESTOP_TIMEOUT_WRITE=マスターの無通信時間を書き込む
+LOG_ESTOP_TIMEOUT_READ=マスターの無通信時間：有効 {running} ms（0 = 動作していない）、保存値 {stored} ms（0 = 既定）
+LOG_ESTOP_TIMEOUT_INVALID=無通信時間は0、または{min}～{max} msでなければなりません：何も書き込まれませんでした
+LOG_ESTOP_TIMEOUT_MISMATCH=ヘッドは要求された無通信時間を保持しませんでした（保存値 {stored} ms）：ファームウェアが古いか、値が拒否された可能性があります
+LOG_ESTOP_TIMEOUT_UNSUPPORTED=ヘッドは無通信時間の問い合わせに応答しません：ファームウェアが古い可能性があります
