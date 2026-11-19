@@ -31,9 +31,9 @@ def test_the_bit_is_the_one_of_the_protocol_and_has_its_name():
     assert extras.features_text(0x01 | ESTOP_BIT) == "MOTION_RAMPS, ESTOP_FOLLOW"
     # the silence of the master is configurable inside hard limits, and a head nobody configured keeps 100 ms
     from urtc_can import estop_follow
-    assert protocol.ESTOP_ALIVE_TIMEOUT_MS == 100 and (protocol.ESTOP_ALIVE_TIMEOUT_MIN_MS, protocol.ESTOP_ALIVE_TIMEOUT_MAX_MS) == (20, 500)
+    assert protocol.ESTOP_ALIVE_TIMEOUT_MS == 100 and (protocol.ESTOP_ALIVE_TIMEOUT_MIN_MS, protocol.ESTOP_ALIVE_TIMEOUT_MAX_MS) == (40, 500)
     assert estop_follow.Node().alive_timeout_ms == 100 and estop_follow.Node(250).alive_timeout_ms == 250
-    assert estop_follow.resolve_timeout(19) == (100, estop_follow.TIMEOUT_REJECTED) and estop_follow.resolve_timeout(501) == (100, estop_follow.TIMEOUT_REJECTED)
+    assert estop_follow.resolve_timeout(39) == (100, estop_follow.TIMEOUT_REJECTED) and estop_follow.resolve_timeout(501) == (100, estop_follow.TIMEOUT_REJECTED)
     assert estop_follow.effective_timeout(100, 300) == (100, estop_follow.TIMEOUT_MASTER_DIFFERS)
     assert extras.features_frame(ESTOP_BIT) == (0x1AE, b"FEAT\x80")
 

@@ -724,3 +724,10 @@ LBL_PLAN_DANGEROUS_REFUSE=Rifiutarlo
 QTLOG_PLAN_DANGEROUS_IDS=Scelta per i piani che inviano un identificatore che cambia la scheda
 QTLOG_PLAN_DANGEROUS_IDS_NOT_SAVED=Impossibile salvare la scelta per gli identificatori pericolosi
 QTLOG_PLAN_DANGEROUS_IDS_UNKNOWN=La parola scelta per gli identificatori pericolosi non è nota al tester
+LBL_ESTOP_TIMEOUT=Silenzio del master prima che la testa si fermi, in ms (0 = predefinito 100 ms, altrimenti da 40 a 500):
+BTN_ESTOP_TIMEOUT_READ=Leggi il silenzio del master
+BTN_ESTOP_TIMEOUT_WRITE=Scrivi il silenzio del master
+LOG_ESTOP_TIMEOUT_READ=Silenzio del master: in vigore {running} ms (0 = non attivo), memorizzato {stored} ms (0 = predefinito)
+LOG_ESTOP_TIMEOUT_INVALID=Il silenzio deve essere 0 o compreso tra {min} e {max} ms: non è stato scritto nulla
+LOG_ESTOP_TIMEOUT_MISMATCH=La testa non ha mantenuto il silenzio richiesto (memorizzato {stored} ms): il suo firmware potrebbe essere più vecchio o aver rifiutato il valore
+LOG_ESTOP_TIMEOUT_UNSUPPORTED=La testa non risponde alla richiesta del silenzio: il suo firmware potrebbe essere più vecchio

@@ -261,6 +261,7 @@ class TesterQtBridge(QObject):
             "black_box": "",
             "crash_dump": "",
             "features": "",
+            "estop_timeout": "",
             "clear_error": "",
             "pid": "",
             "thermal_view": "",
@@ -1715,6 +1716,84 @@ class TesterQtBridge(QObject):
             return
         self._run_query("features", (extras.CAN_ID_FEATURES_RESP, extras.FEATURES_QUERY_EXTENDED), extras.CAN_ID_FEATURES_RESP, extras.decode_features)
 
+    @Property(str, notify=changed)
+    def estopTimeoutText(self) -> str:
+        return self._query_texts["estop_timeout"]
+
+    @Property(int, constant=True)
+    def estopTimeoutMin(self) -> int:
+        return extras.ESTOP_TIMEOUT_MIN_MS
+
+    @Property(int, constant=True)
+    def estopTimeoutMax(self) -> int:
+        return extras.ESTOP_TIMEOUT_MAX_MS
+
+    @Slot()
+    def readEstopTimeout(self) -> None:
+        """Read the silence of the master of the emergency stop in force and stored in the head. It only reads: it writes nothing."""
+        if not self.canUseUtilityPanels:
+            self._log("FEATURES_BLOCKED not connected or not in active-check mode")
+            return
+        self._run_estop_timeout(None)
+
+    @Slot(int)
+    def writeEstopTimeout(self, timeout_ms: int) -> None:
+        """Write the silence (0 = the default, otherwise inside the limits). QML asks for the usual confirmation first: this is a persistent setting of the
+        board (it acts after the next power-up). A value outside the limits is refused here, before anything is sent; the switches the head holds are kept."""
+        if not self.canUseUtilityPanels:
+            self._log("FEATURES_BLOCKED not connected or not in active-check mode")
+            return
+        if not extras.estop_timeout_valid(int(timeout_ms)):
+            self._queryResult.emit("estop_timeout", ("invalid", int(timeout_ms)))
+            return
+        self._run_estop_timeout(int(timeout_ms))
+
+    def _run_estop_timeout(self, write_ms: int | None) -> None:
+        transport = self._transport
+        if transport is None:
+            return
+        if self._busy:
+            self._log("QUERY_BLOCKED key=estop_timeout another read is in progress")
+            return
+
+        def _ask(frame: tuple[int, bytes]) -> dict | None:
+            transport.send_frame(*frame)
+            deadline = time.monotonic() + 1.0
+            while time.monotonic() < deadline:
+                answer = transport.read_frame(timeout=0.1)
+                if answer is not None and answer[0] == extras.CAN_ID_FEATURES_RESP:
+                    return extras.decode_estop_timeout(answer[1])
+            return None
+
+        def _worker() -> None:
+            with self._io_lock:   # one exchange at a time: two readers on the same transport would eat each other's answers
+                try:
+                    stored = _ask(extras.estop_timeout_query(True))
+                    if stored is None:
+                        self._queryResult.emit("estop_timeout", ("unsupported",))
+                        return
+                    if write_ms is None:
+                        running = _ask(extras.estop_timeout_query(False))
+                        self._queryResult.emit("estop_timeout", ("read", None if running is None else running["timeout_ms"], stored["timeout_ms"]))
+                        return
+                    transport.send_frame(*extras.estop_timeout_write_frame(stored["stored"], stored["stored_ext"], write_ms))
+                    deadline = time.monotonic() + 1.0
+                    after = None
+                    while after is None and time.monotonic() < deadline:
+                        answer = transport.read_frame(timeout=0.1)
+                        if answer is not None and answer[0] == extras.CAN_ID_FEATURES_RESP:
+                            after = extras.decode_estop_timeout(answer[1])
+                    if after is not None and after["timeout_ms"] == write_ms:   # kept: show what is stored and what runs (the write acts after the next power-up)
+                        running = _ask(extras.estop_timeout_query(False))
+                        self._queryResult.emit("estop_timeout", ("read", None if running is None else running["timeout_ms"], after["timeout_ms"]))
+                    else:
+                        self._queryResult.emit("estop_timeout", ("written", None if after is None else after["timeout_ms"]))
+                except Exception as exc:
+                    self._log(f"QUERY_FAILED key=estop_timeout error={exc}")
+                    self._queryResult.emit("estop_timeout", ("unsupported",))
+
+        threading.Thread(target=_worker, daemon=True, name="urtc-tester-estop-timeout").start()
+
     @Property(int, notify=changed)
     def featuresSupportedExt(self) -> int:
         """The switches of the second byte the head said it has (0 until a head answered with six bytes: an older head is written with the five-byte form)."""
@@ -2358,6 +2437,20 @@ class TesterQtBridge(QObject):
                          running=extras.features_text(result["running"], result.get("running_ext", 0)),
                          supported=extras.features_text(result["supported"], result.get("supported_ext", 0)))
             self._log(f"FIRMWARE_FEATURES {result}")
+        elif key == "estop_timeout":
+            kind = result[0] if result else "unsupported"
+            if kind == "invalid":
+                text = _("LOG_ESTOP_TIMEOUT_INVALID", min=extras.ESTOP_TIMEOUT_MIN_MS, max=extras.ESTOP_TIMEOUT_MAX_MS)
+            elif kind == "read":
+                text = _("LOG_ESTOP_TIMEOUT_READ", running="?" if result[1] is None else result[1], stored=result[2])
+            elif kind == "written":
+                if result[1] is None:
+                    text = _("LBL_FEATURES_NO_RESPONSE")
+                else:
+                    text = _("LOG_ESTOP_TIMEOUT_MISMATCH", stored=result[1])
+            else:
+                text = _("LOG_ESTOP_TIMEOUT_UNSUPPORTED")
+            self._log(f"FIRMWARE_FEATURES estop_timeout {result}")
         elif key == "clear_error":
             if result is None:
                 text = _("LBL_FEATURES_NO_RESPONSE")

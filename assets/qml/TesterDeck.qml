@@ -1377,6 +1377,22 @@ ApplicationWindow {
                     }
                 }
                 Text { text: testerBackend.featuresText; visible: testerBackend.featuresText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                Text { text: testerBackend.uiText("LBL_ESTOP_TIMEOUT"); color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    SpinBox { id: estopTimeoutMs; objectName: "estopTimeoutSpin"; from: 0; to: testerBackend.estopTimeoutMax; value: 0; editable: true; enabled: testerBackend.canUseUtilityPanels }
+                    GameButton { objectName: "estopTimeoutReadButton"; text: testerBackend.uiText("BTN_ESTOP_TIMEOUT_READ"); accent: "#24465e"; Layout.preferredWidth: 260; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.readEstopTimeout() }
+                    GameButton {
+                        objectName: "estopTimeoutWriteButton"
+                        text: testerBackend.uiText("BTN_ESTOP_TIMEOUT_WRITE")
+                        accent: "#b86a35"
+                        Layout.preferredWidth: 260
+                        enabled: testerBackend.canUseUtilityPanels
+                        onClicked: window.requestUtilityAction(function() { testerBackend.writeEstopTimeout(estopTimeoutMs.value) })
+                    }
+                }
+                Text { text: testerBackend.estopTimeoutText; visible: testerBackend.estopTimeoutText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8

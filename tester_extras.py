@@ -27,7 +27,7 @@ import zlib
 from collections.abc import Callable
 
 import tester_config
-from urtc_can import blackbox, crash_dump, protocol, quick_state, rack_sim, rack_status, thermal_view
+from urtc_can import blackbox, crash_dump, estop_follow, protocol, quick_state, rack_sim, rack_status, thermal_view
 
 FEATURES_MAGIC = b"FEAT"
 FEATURE_NAMES = ((0x01, "MOTION_RAMPS"), (0x02, "HEALTH_PROFILE"), (0x04, "HSI_AUTOTRIM"), (0x08, "THERMAL_PID"), (0x10, "CLEAR_ERROR"), (0x20, "COMMS_WATCHDOG"),
@@ -166,6 +166,34 @@ def decode_features(data: bytes) -> dict | None:
         stored, running, supported, stored_ext, running_ext, supported_ext = data
         return {"stored": stored, "running": running, "supported": supported, "stored_ext": stored_ext, "running_ext": running_ext, "supported_ext": supported_ext}
     return None
+
+
+# ---- the silence of the master of the emergency stop (ESTOP_FOLLOW) ---------------------------------------------------------------------------
+# Read with the queries 3 (in force) and 4 (stored) of 0x1AF, written with the eight-byte form of 0x1AE. A value outside 0 and the limits never leaves the PC.
+ESTOP_TIMEOUT_MIN_MS = estop_follow.TIMEOUT_MIN_MS
+ESTOP_TIMEOUT_MAX_MS = estop_follow.TIMEOUT_MAX_MS
+
+
+def estop_timeout_valid(timeout_ms: object) -> bool:
+    """True for 0 (the default) and for a whole number of milliseconds inside the limits; text, a float or a bool is not guessed at."""
+    return isinstance(timeout_ms, int) and not isinstance(timeout_ms, bool) and estop_follow.write_timeout_valid(timeout_ms)
+
+
+def estop_timeout_query(stored: bool) -> tuple[int, bytes]:
+    """The query of 0x1AF: the silence stored in the record (byte 4) or the one in force now (byte 3)."""
+    return protocol.encode_features_resp_request_estop_timeout(4 if stored else 3)
+
+
+def estop_timeout_write_frame(mask: int, mask_ext: int, timeout_ms: int) -> tuple[int, bytes]:
+    """The eight-byte write: the switches as they are (both bytes) and the silence. Raises ``ValueError`` for a silence outside 0 and the limits."""
+    if not estop_timeout_valid(timeout_ms):
+        raise ValueError("the silence must be 0 or inside the limits")
+    return protocol.encode_set_features_request_estop_timeout(mask, mask_ext, timeout_ms)
+
+
+def decode_estop_timeout(data: bytes) -> dict | None:
+    """The eight-byte answer of 0x1AF (None for any other length, as from a head with an older firmware)."""
+    return estop_follow.decode_timeout_answer(data)
 
 
 def clear_error_frame() -> tuple[int, bytes]:
