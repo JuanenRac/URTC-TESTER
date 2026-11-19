@@ -181,7 +181,7 @@ def estop_timeout_valid(timeout_ms: object) -> bool:
 
 def estop_timeout_query(stored: bool) -> tuple[int, bytes]:
     """The query of 0x1AF: the silence stored in the record (byte 4) or the one in force now (byte 3)."""
-    return protocol.encode_features_resp_request_estop_timeout(4 if stored else 3)
+    return protocol.encode_features_resp_request_estop_timeout_stored() if stored else protocol.encode_features_resp_request_estop_timeout()
 
 
 def estop_timeout_write_frame(mask: int, mask_ext: int, timeout_ms: int) -> tuple[int, bytes]:
