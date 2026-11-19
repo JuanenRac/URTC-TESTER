@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The copy of the stop following knows the configurable silence of the master:** `estop_follow.Node(alive_timeout_ms)`, `resolve_timeout` and `effective_timeout` and the limits 20 and 500 ms come with the refreshed copy of the shared library; the default stays 100 ms, a value outside the limits is rejected and the master can only lower the timeout. The virtual board takes `estop_alive_timeout_ms`.
+
 ## [0.5.7] - Plan safety choice, optional-function switches, repeated-command failures and shared update fixes
 
 - **The copy of the shared update module refuses a rollback to a damaged release:** going back to the previous version first checks that release (its `app_info.json` and the file it names to run); a missing or unusable one is refused with a clear message, in the eight languages, and nothing is changed.
