@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "urtc_common_version": "0.2.9",
+  "urtc_common_version": "0.3.0",
   "catalog": "spec/i18n/catalog/tester.json",
   "catalog_sha256": "81c97e4478f10042ec6fd22e7b3be1c92bbb4cec77294f566c87ee5d2a21b1d8",
   "files": {

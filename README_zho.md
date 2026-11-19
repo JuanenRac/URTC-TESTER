@@ -37,7 +37,7 @@
 
 | | |
 |---|---|
-| 版本 | `0.5.6` |
+| 版本 | `0.5.7` |
 | 成熟度 | 可用 |
 | 测试 | 1133 (`python -m pytest -q`) |
 | 技术栈 | Python / PySide6 / Qt Quick / live CAN bus diagnostics |

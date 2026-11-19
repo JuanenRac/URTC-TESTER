@@ -4,12 +4,13 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.5.7] - Plan safety choice, optional-function switches, repeated-command failures and shared update fixes
+
 - **The copy of the shared update module refuses a rollback to a damaged release:** going back to the previous version first checks that release (its `app_info.json` and the file it names to run); a missing or unusable one is refused with a clear message, in the eight languages, and nothing is changed.
 - **The stated test count is corrected:** the badge, the table and the testing section of the README in the eight languages give the number the suite has now.
 - **The deck offers the switch that lets the end of an update of a slave board be accepted while a tool is active:** the box shows only for a head that says it has the bit, starts unticked, goes through the usual confirmation of a write to the board and writes a line to the session log when it is turned on. Unlike the host-only switch it does not need the communication watchdog. Tests cover the frame, the names, the box and the texts in the eight languages.
 - **The copy of the common library moves to 0.2.9 and the texts of the catalog are regenerated:** the shared CAN modules and the language files follow the current URTC-COMMON.
 - **The copy of URTC-COMMON brings the switch that lets an update of a slave board end while a tool is active (the switch stays off):** the generated protocol now names the extended feature bit `ALLOW_UPDATE_ACTIVE_ACTUATOR` (0x02) and its description. Nothing changes on the bus: the tester never sets the bit.
-- **The vendored copy of the common library is refreshed:** the conformance vectors follow the current catalog again.
 
 - **The choice of what a plan does with a dangerous identifier is in the tester deck and asks first by default:** a list under the signing box changes `plan_dangerous_ids` (send it, ask me first, refuse it) and takes effect at once; the label and the three words are in the eight languages. A plan that sends the persistent PID setting, the clearing of an error or the bootloader selection with nobody to ask now stops with the message that a person has to confirm. Tested with the three words, an unknown word that is ignored, and the texts in the eight languages.
 
@@ -45,8 +46,6 @@ All notable changes to this project are documented here.
 
 - **The long narrative comments of the tester are shortened:** the comment blocks and docstrings that told the history of a decision in ten or twenty lines (the separate waiter table of the bus monitor, the bus-load estimate, the custom frame flag, the telemetry watch, the direction check of the motion command, the built-in names of the identifiers) now say what the code does and why in two or three lines. No behaviour changes.
 
-## [Unreleased]
-
 ## [0.5.5] - The tester opens the bus at 1 Mbit/s, recognises mixed speeds by their symptoms and asks again before a tool that is on goes up too far
 
 - **The black box record is tested over generated inputs with a fixed seed:** what the firmware builds is read back with every count and write index, a flipped bit anywhere in a record is refused, random bytes are never a record, a saved JSON or CSV file reads back exactly, and a damaged or cut file is refused with the error of the module and never another.
@@ -64,8 +63,6 @@ All notable changes to this project are documented here.
 - **The package tool signs the package the Windows build makes:** `tools/make_update_package.py sign PACKAGE` (the copy of URTC-COMMON's tool, refreshed) signs the very bytes of the `.zip` that the manual Windows build in Actions packs without a key, after checking that the `app_info.json` inside agrees with the name of the file, and writes `PACKAGE.sha256` and `PACKAGE.sig` next to it; it then runs the same check the program runs. The package is never rewritten, so the attestation of the build still describes the bytes that are signed. A test checks that the companions are byte for byte the ones a signed build writes.
 
 - **`--headless image-info FILE` reads the header inside a firmware image:** it prints the hardware, version, length and CRC-32 the image states and what the compatibility switch decides (`--policy accept|warn|require`, default `warn`; `--hardware` names the board it must be for; `--json`); a header that does not hold, an unsealed slot and a stamped `.urimg` file are refused whatever the switch says. It opens no bus.
-
-## [Unreleased]
 
 - **The coverage of the continuous check is the coverage of the own code:** the copies of the shared module (`urtc_can` and `urtc_ui`, whose locks list every file) are measured where they come from and no longer here, and the floor goes from 73 to the value that is measured, 85.
 - **The search for the bit rate of a bus is tested against modelled buses:** the order of the rates, a live bus found while listening, a live bus that does not answer (nothing is transmitted at any other rate), an idle bus found by asking, an adapter that fails to open or to close, rates that are not known, and the callbacks.
