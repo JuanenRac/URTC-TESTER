@@ -72,7 +72,7 @@ def record_from_rows(rows: list[dict]) -> blackbox.Record:
 def record_from_json(text: str) -> blackbox.Record:
     try:
         doc = json.loads(text)
-    except ValueError:
+    except (ValueError, RecursionError):
         raise ViewError("not_json", "not a JSON file") from None
     if not isinstance(doc, dict) or doc.get("format") != FORMAT:
         raise ViewError("wrong_format", f"not a {FORMAT} file")
@@ -84,7 +84,10 @@ def record_from_json(text: str) -> blackbox.Record:
 
 def record_from_csv(text: str) -> blackbox.Record:
     reader = csv.reader(io.StringIO(text))
-    lines = [row for row in reader if any(cell.strip() for cell in row)]
+    try:
+        lines = [row for row in reader if any(cell.strip() for cell in row)]
+    except csv.Error:   # a field longer than the reader takes, a quote that is never closed
+        raise ViewError("wrong_format", "the file is not a readable CSV record") from None
     if len(lines) < 2:
         raise ViewError("no_samples", "the file has no samples")
     header = [cell.strip() for cell in lines[0]]

@@ -121,9 +121,9 @@ class PlanReport:
 # ---------------------------------------------------------------------------------------------------------------------
 def load_plan(path: str | Path) -> dict:
     try:
-        text = Path(path).read_text(encoding="utf-8")
+        text = Path(path).read_text(encoding="utf-8-sig")   # an editor on Windows may add a byte-order mark
         plan = json.loads(text)
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
         raise PlanError(f"cannot read the plan {path}: {exc}") from exc
     problems = validate_plan(plan)
     if problems:
@@ -136,8 +136,9 @@ def _parse_id(value: object) -> int | None:
         return None
     if isinstance(value, int):
         number = value
-    elif isinstance(value, str) and re.fullmatch(r"(0[xX][0-9A-Fa-f]{1,3}|\d{1,4})", value.strip()):
-        number = int(value.strip(), 0)
+    elif isinstance(value, str) and re.fullmatch(r"(0[xX][0-9A-Fa-f]{1,3}|[0-9]{1,4})", value.strip()):
+        text = value.strip()
+        number = int(text, 16) if text[:2].lower() == "0x" else int(text, 10)   # "010" is ten: base 0 would raise on it
     else:
         return None
     return number if 0 <= number <= 0x7FF else None
@@ -184,7 +185,7 @@ def validate_plan(plan: object) -> list[str]:
             problems.append(f"{where}: must be an object")
             continue
         kind = step.get("do")
-        if kind not in STEP_FIELDS:
+        if not isinstance(kind, str) or kind not in STEP_FIELDS:
             problems.append(f"{where}: unknown 'do' {kind!r}")
             continue
         required, optional = STEP_FIELDS[kind]
@@ -202,7 +203,8 @@ def validate_plan(plan: object) -> list[str]:
 
 def _validate_step(where: str, kind: str, step: dict, plan_actuates: bool) -> list[str]:
     problems: list[str] = []
-    if kind == "expect_tool" and step.get("tool") not in TOOL_NAMES:
+    tool = step.get("tool")
+    if kind == "expect_tool" and (isinstance(tool, bool) or not isinstance(tool, int) or tool not in TOOL_NAMES):
         problems.append(f"{where}: tool must be one of the tool ids 0 to {max(TOOL_NAMES)}")
     if kind == "query_version":
         if "min_version" in step and not (isinstance(step["min_version"], str) and VERSION_PATTERN.fullmatch(step["min_version"])):

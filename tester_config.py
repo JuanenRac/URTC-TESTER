@@ -67,7 +67,7 @@ def load_config():
     if not os.path.isfile(CONFIG_PATH):
         return {}
     try:
-        with open(CONFIG_PATH, encoding="utf-8") as f:
+        with open(CONFIG_PATH, encoding="utf-8-sig") as f:
             data = json.load(f)
         return data if isinstance(data, dict) else {}
     except (OSError, json.JSONDecodeError, UnicodeDecodeError):
@@ -294,7 +294,7 @@ def load_language(name):
         return {}
     result = {}
     try:
-        with open(path, encoding="utf-8") as f:
+        with open(path, encoding="utf-8-sig") as f:
             for line in f:
                 line = line.rstrip("\n").rstrip("\r")
                 if not line or line.startswith("#") or "=" not in line:
@@ -406,7 +406,7 @@ def _load_custom_id_names():
     if not os.path.isfile(CUSTOM_IDS_PATH):
         return {}
     try:
-        with open(CUSTOM_IDS_PATH, encoding="utf-8") as f:
+        with open(CUSTOM_IDS_PATH, encoding="utf-8-sig") as f:
             raw = json.load(f)
         if not isinstance(raw, dict):
             print(f"WARNING: {CUSTOM_IDS_PATH} must hold a JSON object of IDs and names - ignoring it.", file=sys.stderr)
