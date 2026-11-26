@@ -37,7 +37,7 @@
 
 | | |
 |---|---|
-| Version | `0.5.7` |
+| Version | `0.5.8` |
 | Reifegrad | Funktionsfähig |
 | Tests | 1159 (`python -m pytest -q`) |
 | Technik | Python / PySide6 / Qt Quick / live CAN bus diagnostics |
