@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The pictures of the window are taken again** for the README and for the window guide in the eight languages, on the current window.
+
 - **No control of the window ends beyond its right edge:** rows that could not wrap (the optional functions of a tool head and the silence of the master of the emergency stop) made the whole column wider than the window even on a full screen, so buttons such as STOP were partly or wholly out of sight. They wrap now, and a headless test loads the window in the eight languages and fails when a control is cut off.
 
 - **The picture tool writes where it is told:** a relative `--out` of `tools/capture_screens.py` was read inside the temporary folder of the run, so the run passed and the folder of the caller stayed empty.
