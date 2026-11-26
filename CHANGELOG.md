@@ -4,6 +4,10 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **No control of the window ends beyond its right edge:** rows that could not wrap (the optional functions of a tool head and the silence of the master of the emergency stop) made the whole column wider than the window even on a full screen, so buttons such as STOP were partly or wholly out of sight. They wrap now, and a headless test loads the window in the eight languages and fails when a control is cut off.
+
+- **The picture tool writes where it is told:** a relative `--out` of `tools/capture_screens.py` was read inside the temporary folder of the run, so the run passed and the folder of the caller stayed empty.
+
 - **A headless command reads and changes the stored version rule of a main bootloader:** `--headless version-rule` asks how an image without a patch number is read; `version-rule FILE` sends a signed command made elsewhere (the tester holds no key). A bootloader without the feature, the default of the firmware, answers nothing and the command says so. Nothing else of the tester changes. Not tried on a board.
 
 - **The optional functions panel reads and writes the silence of the master of the emergency stop:** a field for the milliseconds (0 for the default of 100 ms, otherwise 40 to 500) with a button that reads the silence in force and the stored one (it writes nothing) and a button that writes it after the usual confirmation. The write uses the eight-byte form of `0x1AE`, asks the head for its stored state first and carries over the switches of both bytes; a value outside the limits is refused before anything is sent, a head that does not keep the value is reported, and a head with an older firmware is told so and left alone. The texts are in the eight languages and the copy of the shared library follows the current one. Nothing of it has run on a real board.
