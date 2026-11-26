@@ -17,6 +17,9 @@ For a production line, a bench script or a CI job that has no display. Commands:
     report               write a report of the evidence records of --evidence-dir as one HTML page or a PDF (--out FILE, --format html|pdf);
                          every record is listed, one that fails its check as NOT VALID (exit 1, the report is written all the same); touches no bus
 
+    version-rule [FILE]  how a main bootloader reads an image without a patch number (it must be in its bootloader); with FILE, a signed 84-byte command made
+                         elsewhere is sent first. A bootloader without the feature (the default of the firmware) answers nothing: exit 4
+
 With ``--transport simulate`` a bus scenario (``--scenario FILE``, urtc-scenario/1, see urtc_can/bus_scenario.py) makes the simulated bus lose, repeat, reorder,
 delay or cut frames, or the head stay silent or refuse, the same way for the same seed; the records then say they come from a simulation with that scenario.
 
@@ -37,6 +40,7 @@ import time
 from pathlib import Path
 
 import tester_plan
+import tester_version_rule
 from tester_config import TESTER_VERSION, evidence_signing_settings, trusted_keys_store
 from tester_result_record import make_record, save_evidence, save_record
 from urtc_can import image_header, protocol
@@ -52,8 +56,8 @@ def _say(message: str) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="urtc_tester.py --headless", description="URTC Tester without a window: identify, self-test and run test plans against a tool head.")
-    parser.add_argument("command", choices=("info", "selftest", "run-plan", "validate-plan", "history", "report", "image-info"))
-    parser.add_argument("plan", nargs="?", help="the plan file, for run-plan and validate-plan; the folder of the records, for history; the firmware image, for image-info")
+    parser.add_argument("command", choices=("info", "selftest", "run-plan", "validate-plan", "history", "report", "image-info", "version-rule"))
+    parser.add_argument("plan", nargs="?", help="the plan file, for run-plan and validate-plan; the folder of the records, for history; the firmware image, for image-info; the signed command, for version-rule")
     parser.add_argument("--transport", choices=TRANSPORTS, default="serial",
                         help="serial (SLCAN adapter, default), socketcan (Linux), python-can (PCAN, Kvaser, gs_usb ...), simulate (an in-memory tool head, "
                              "nothing real is touched) or replay (the frames of a .trc/.asc trace)")
@@ -301,6 +305,45 @@ def _image_info(args) -> int:
     return EXIT_PASS if check.accepted else EXIT_FAIL
 
 
+def _version_rule(args) -> int:
+    """version-rule [FILE]: ask the bootloader for its version rule, or send it the signed command in FILE. No key is read or made here."""
+    command = None
+    if args.plan:
+        try:
+            command = tester_version_rule.read_command(args.plan)
+        except (OSError, ValueError) as exc:
+            _say(f"ERROR: {exc}")
+            return EXIT_USAGE
+    if args.scenario:
+        _say("ERROR: version-rule takes no scenario.")
+        return EXIT_USAGE
+    try:
+        transport = _open_transport(args)
+    except ValueError as exc:
+        _say(f"ERROR: {exc}")
+        return EXIT_USAGE
+    except Exception as exc:
+        _say(f"ERROR: cannot open the transport: {exc}")
+        return EXIT_ERROR
+    try:
+        transport.open_channel()
+        timeout = tester_version_rule.ANSWER_TIMEOUT_S
+        answer = tester_version_rule.query(transport, timeout=timeout) if command is None else tester_version_rule.send(transport, command, timeout=timeout)
+    except Exception as exc:
+        _say(f"ERROR: {type(exc).__name__}: {exc}")
+        return EXIT_ERROR
+    finally:
+        try:
+            transport.close()
+        except Exception:
+            pass
+    if answer is None:
+        _say(tester_version_rule.NO_ANSWER)
+        return EXIT_UNKNOWN
+    _say(json.dumps(tester_version_rule.describe(answer), indent=2) if args.json else tester_version_rule.text(answer))
+    return EXIT_PASS if answer.status == 0 else EXIT_FAIL
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -312,6 +355,8 @@ def main(argv: list[str] | None = None) -> int:
         return _history(args)
     if args.command == "image-info":
         return _image_info(args)
+    if args.command == "version-rule":
+        return _version_rule(args)
     if args.command in ("run-plan", "validate-plan"):
         if not args.plan:
             _say(f"ERROR: {args.command} needs the plan file.")
