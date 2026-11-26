@@ -1346,7 +1346,7 @@ ApplicationWindow {
                         delegate: Text { width: ListView.view.width; text: modelData; color: textPrimary; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideRight }
                     }
                 }
-                RowLayout {
+                Flow {
                     Layout.fillWidth: true
                     spacing: 8
                     CheckBox { id: featRamps; text: testerBackend.uiText("LBL_FEATURE_MOTION_RAMPS"); font.pixelSize: 10 }
@@ -1354,7 +1354,7 @@ ApplicationWindow {
                     CheckBox { id: featHsi; text: testerBackend.uiText("LBL_FEATURE_HSI_AUTOTRIM"); font.pixelSize: 10 }
                     CheckBox { id: featPid; text: testerBackend.uiText("LBL_FEATURE_THERMAL_PID"); font.pixelSize: 10 }
                 }
-                RowLayout {
+                Flow {
                     Layout.fillWidth: true
                     spacing: 8
                     CheckBox { id: featClear; text: testerBackend.uiText("LBL_FEATURE_CLEAR_ERROR"); font.pixelSize: 10 }
@@ -1378,16 +1378,16 @@ ApplicationWindow {
                 }
                 Text { text: testerBackend.featuresText; visible: testerBackend.featuresText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
                 Text { text: testerBackend.uiText("LBL_ESTOP_TIMEOUT"); color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
-                RowLayout {
+                Flow {
                     Layout.fillWidth: true
                     spacing: 8
                     SpinBox { id: estopTimeoutMs; objectName: "estopTimeoutSpin"; from: 0; to: testerBackend.estopTimeoutMax; value: 0; editable: true; enabled: testerBackend.canUseUtilityPanels }
-                    GameButton { objectName: "estopTimeoutReadButton"; text: testerBackend.uiText("BTN_ESTOP_TIMEOUT_READ"); accent: "#24465e"; Layout.preferredWidth: 260; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.readEstopTimeout() }
+                    GameButton { objectName: "estopTimeoutReadButton"; text: testerBackend.uiText("BTN_ESTOP_TIMEOUT_READ"); accent: "#24465e"; width: 260; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.readEstopTimeout() }
                     GameButton {
                         objectName: "estopTimeoutWriteButton"
                         text: testerBackend.uiText("BTN_ESTOP_TIMEOUT_WRITE")
                         accent: "#b86a35"
-                        Layout.preferredWidth: 260
+                        width: 260
                         enabled: testerBackend.canUseUtilityPanels
                         onClicked: window.requestUtilityAction(function() { testerBackend.writeEstopTimeout(estopTimeoutMs.value) })
                     }
