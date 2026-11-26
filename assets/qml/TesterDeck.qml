@@ -37,6 +37,21 @@ ApplicationWindow {
         border.color: window.panelBorder
     }
 
+    // a check box that is never wider than the row that holds it: a long label goes to a second line
+    component WrappingCheckBox: CheckBox {
+        id: wrapping
+        width: Math.min(implicitWidth, parent ? parent.width : implicitWidth)
+        contentItem: Text {
+            text: wrapping.text
+            font: wrapping.font
+            color: wrapping.palette.windowText
+            opacity: wrapping.enabled ? 1.0 : 0.45
+            wrapMode: Text.WordWrap
+            verticalAlignment: Text.AlignVCenter
+            leftPadding: wrapping.indicator.width + wrapping.spacing
+        }
+    }
+
     component GameButton: Button {
         id: control
         property color accent: window.cyan
@@ -50,6 +65,11 @@ ApplicationWindow {
             font: control.font
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
+            // a label wider than its button is drawn smaller, never past its edge (fonts differ from one system to another)
+            fontSizeMode: Text.HorizontalFit
+            minimumPixelSize: 8
+            minimumPointSize: 6
+            elide: Text.ElideRight
         }
         background: Rectangle {
             radius: 10
@@ -1357,12 +1377,12 @@ ApplicationWindow {
                 Flow {
                     Layout.fillWidth: true
                     spacing: 8
-                    CheckBox { id: featClear; text: testerBackend.uiText("LBL_FEATURE_CLEAR_ERROR"); font.pixelSize: 10 }
-                    CheckBox { id: featComms; text: testerBackend.uiText("LBL_FEATURE_COMMS_WATCHDOG"); font.pixelSize: 10 }
-                    CheckBox { id: featMagnet; text: testerBackend.uiText("LBL_FEATURE_MAGNET_RELEASE"); enabled: featComms.checked; font.pixelSize: 10 }
-                    CheckBox { id: featEstop; text: testerBackend.uiText("LBL_FEATURE_ESTOP_FOLLOW"); checked: false; font.pixelSize: 10 }
-                    CheckBox { id: featHostOnly; text: testerBackend.uiText("LBL_FEATURE_WATCHDOG_HOST_ONLY"); checked: false; enabled: featComms.checked && (testerBackend.featuresSupportedExt & 1) !== 0; visible: (testerBackend.featuresSupportedExt & 1) !== 0; font.pixelSize: 10 }
-                    CheckBox { id: featAllowUpdate; text: testerBackend.uiText("LBL_FEATURE_ALLOW_UPDATE_ACTIVE_ACTUATOR"); checked: false; enabled: (testerBackend.featuresSupportedExt & 2) !== 0; visible: (testerBackend.featuresSupportedExt & 2) !== 0; font.pixelSize: 10 }
+                    WrappingCheckBox { id: featClear; text: testerBackend.uiText("LBL_FEATURE_CLEAR_ERROR"); font.pixelSize: 10 }
+                    WrappingCheckBox { id: featComms; text: testerBackend.uiText("LBL_FEATURE_COMMS_WATCHDOG"); font.pixelSize: 10 }
+                    WrappingCheckBox { id: featMagnet; text: testerBackend.uiText("LBL_FEATURE_MAGNET_RELEASE"); enabled: featComms.checked; font.pixelSize: 10 }
+                    WrappingCheckBox { id: featEstop; text: testerBackend.uiText("LBL_FEATURE_ESTOP_FOLLOW"); checked: false; font.pixelSize: 10 }
+                    WrappingCheckBox { id: featHostOnly; text: testerBackend.uiText("LBL_FEATURE_WATCHDOG_HOST_ONLY"); checked: false; enabled: featComms.checked && (testerBackend.featuresSupportedExt & 1) !== 0; visible: (testerBackend.featuresSupportedExt & 1) !== 0; font.pixelSize: 10 }
+                    WrappingCheckBox { id: featAllowUpdate; text: testerBackend.uiText("LBL_FEATURE_ALLOW_UPDATE_ACTIVE_ACTUATOR"); checked: false; enabled: (testerBackend.featuresSupportedExt & 2) !== 0; visible: (testerBackend.featuresSupportedExt & 2) !== 0; font.pixelSize: 10 }
                 }
                 RowLayout {
                     Layout.fillWidth: true
