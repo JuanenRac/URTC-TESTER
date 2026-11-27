@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A check or a download of an update cut in the middle is reported:** an incomplete answer ended the worker with an error nobody handled and the window stayed busy. A damaged `current.txt` or history of the updates no longer raises (the copy of the common library follows).
 - **The list of tool profiles gives way in a short window:** at the smallest height it ran out of its panel and the note under it could not be seen.
 - **The labels of the safety switch and of many check boxes are readable again:** the style of the window wrote them in black on the dark panels, so the listen-only switch, the laser interlock, the optional functions of a head, the replay and monitor options and the check boxes of the generic tool panel could barely be seen. A test loads the window and refuses a dark label.
 
