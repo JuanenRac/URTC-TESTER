@@ -4,6 +4,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The list of tool profiles gives way in a short window:** at the smallest height it ran out of its panel and the note under it could not be seen.
+- **The labels of the safety switch and of many check boxes are readable again:** the style of the window wrote them in black on the dark panels, so the listen-only switch, the laser interlock, the optional functions of a head, the replay and monitor options and the check boxes of the generic tool panel could barely be seen. A test loads the window and refuses a dark label.
+
 - **A hand-edited or damaged file is a message and not a crash:** a test plan whose step has a list where a word or a tool number is expected, or an identifier written with a leading zero such as `010`, used to end in a traceback; so did a saved safety record whose CSV cannot be read. A tool number that is not a whole number is now refused.
 - **Files saved with a byte-order mark are read:** test plans, `config.json`, the custom identifier names and the language files, as some Windows editors write them. Before, a plan was refused and the settings were silently ignored.
 
