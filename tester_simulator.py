@@ -193,17 +193,20 @@ def parse_trace(text: str) -> list[tuple[float, int, bytes]]:
     for line in text.splitlines():
         if line.startswith(";"):
             continue
-        m = _TRC_ROW.match(line)
-        if m:
-            if m.group(2) != "Rx":
-                continue  # what the monitor itself transmitted did not arrive from the bus
-            offset, ident, dlc, data = float(m.group(1)) / 1000.0, m.group(3), int(m.group(4)), m.group(5)
-        else:
-            m = _ASC_ROW.match(line)
-            if not m or m.group(3) != "Rx":
-                continue
-            offset, ident, dlc, data = float(m.group(1)), m.group(2), int(m.group(4)), m.group(5)
-        raw = bytes.fromhex(data.replace(" ", ""))
+        try:
+            m = _TRC_ROW.match(line)
+            if m:
+                if m.group(2) != "Rx":
+                    continue  # what the monitor itself transmitted did not arrive from the bus
+                offset, ident, dlc, data = float(m.group(1)) / 1000.0, m.group(3), int(m.group(4)), m.group(5)
+            else:
+                m = _ASC_ROW.match(line)
+                if not m or m.group(3) != "Rx":
+                    continue
+                offset, ident, dlc, data = float(m.group(1)), m.group(2), int(m.group(4)), m.group(5)
+            raw = bytes.fromhex(data.replace(" ", ""))
+        except ValueError:
+            continue  # a time that is not a number, or a line cut in the middle of a byte: that line is not a frame
         if len(raw) != dlc or dlc > 8:
             continue
         frames.append((offset, int(ident, 16), raw))
@@ -219,7 +222,7 @@ class ReplayCAN:
 
     def __init__(self, path: str | Path, realtime: bool = False, max_wait: float = 1.0) -> None:
         self.path = Path(path)
-        self.frames = parse_trace(self.path.read_text(encoding="utf-8", errors="replace"))
+        self.frames = parse_trace(self.path.read_text(encoding="utf-8-sig", errors="replace"))
         if not self.frames:
             raise ValueError(f"{self.path} holds no frames that can be read")
         self.realtime = realtime

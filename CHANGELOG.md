@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A trace with a damaged line is still replayed:** a time that is not a number, or a last line cut in the middle of a byte, ended the load with an error (the command line with `--transport replay` stopped, the replay of the window did not handle a bad time). The line is now left out, and a trace saved with a byte-order mark keeps its first frame. Checked by host tests.
+
 ## [0.5.9] - Readable safety labels and clear messages for cut downloads and damaged files
 
 - **A check or a download of an update cut in the middle is reported:** an incomplete answer ended the worker with an error nobody handled and the window stayed busy. A damaged `current.txt` or history of the updates no longer raises (the copy of the common library follows).
