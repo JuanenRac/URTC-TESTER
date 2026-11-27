@@ -62,17 +62,20 @@ def parse_trace(text: str) -> ParsedTrace:
         match = _TRC_ROW.match(line)
         if match:
             fmt = "trc" if fmt == "unknown" else fmt
-            time_ms, direction, ident, dlc, data = float(match.group(1)), match.group(2), match.group(3), match.group(4), match.group(5)
+            written, scale = match.group(1), 1.0
+            direction, ident, dlc, data = match.group(2), match.group(3), match.group(4), match.group(5)
         else:
             match = _ASC_ROW.match(line)
             if not match:
                 continue
             fmt = "asc" if fmt == "unknown" else fmt
-            time_ms, ident, direction, dlc, data = float(match.group(1)) * 1000.0, match.group(2), match.group(3), match.group(4), match.group(5)
+            written, scale = match.group(1), 1000.0
+            ident, direction, dlc, data = match.group(2), match.group(3), match.group(4), match.group(5)
         if direction != "Rx":
             continue
         compact = data.replace(" ", "")
         try:
+            time_ms = float(written) * scale
             payload = bytes.fromhex(compact)
             can_id = int(ident, 16)
         except ValueError:
@@ -96,7 +99,7 @@ def load_trace(path: str | Path) -> ParsedTrace:
     try:
         if target.stat().st_size > MAX_TRACE_BYTES:
             raise ReplayError("too_big", f"{target.name} is larger than {MAX_TRACE_BYTES // (1024 * 1024)} MB")
-        text = target.read_text(encoding="utf-8", errors="replace")
+        text = target.read_text(encoding="utf-8-sig", errors="replace")
     except OSError as error:
         raise ReplayError("unreadable", str(error)) from error
     parsed = parse_trace(text)

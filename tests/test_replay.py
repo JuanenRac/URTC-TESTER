@@ -9,6 +9,7 @@ from __future__ import annotations
 import pytest
 
 import tester_replay as replay
+import tester_simulator
 import tester_trace_export as export
 
 ROWS = [
@@ -155,3 +156,26 @@ def test_an_empty_player_does_nothing_and_the_speed_is_checked():
         assert replay.checked_speed(bad) == 1.0
     assert replay.checked_speed(1000) == 100.0
     assert replay.checked_speed(2) == 2.0
+
+
+# a trace is a file a person keeps: the monitor can be stopped in the middle of a line, and an editor can add a byte-order mark
+CUT_AND_DAMAGED = (
+    "   1)        0.0  Rx    0111  2   01 00\n"
+    "   2)      1.2.3  Rx    0111  1   01\n"      # a time that is not a number
+    "   0.010000 1 111             Rx   d 2 01 00\n"
+    "   . 1 111             Rx   d 1 01\n"
+    "   0.020000 1 111             Rx   d 3 01 02 0"   # cut in the middle of the last byte
+)
+
+
+def test_a_time_that_is_not_a_number_and_a_line_cut_in_the_middle_do_not_end_the_load():
+    parsed = replay.parse_trace(CUT_AND_DAMAGED)
+    assert [entry.data for entry in parsed.entries] == [b"\x01\x00", b"\x01\x00"] and parsed.rejected == 3
+    assert [data for _offset, _ident, data in tester_simulator.parse_trace(CUT_AND_DAMAGED)] == [b"\x01\x00", b"\x01\x00"]
+
+
+def test_a_trace_saved_with_a_byte_order_mark_keeps_its_first_frame(tmp_path):
+    path = tmp_path / "marked.trc"
+    path.write_text("   1)        0.0  Rx    0111  2   01 00\n", encoding="utf-8-sig")
+    assert len(replay.load_trace(path).entries) == 1
+    assert len(tester_simulator.ReplayCAN(path).frames) == 1
