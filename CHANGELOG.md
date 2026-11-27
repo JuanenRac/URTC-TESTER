@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The compatibility table is current:** `docs/COMPATIBILITY.md` is the current copy of URTC-COMMON; the old one named versions of long ago.
+
 - **A trace with a damaged line is still replayed:** a time that is not a number, or a last line cut in the middle of a byte, ended the load with an error (the command line with `--transport replay` stopped, the replay of the window did not handle a bad time). The line is now left out, and a trace saved with a byte-order mark keeps its first frame. Checked by host tests.
 
 ## [0.5.9] - Readable safety labels and clear messages for cut downloads and damaged files
