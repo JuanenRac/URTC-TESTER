@@ -65,6 +65,7 @@ ColumnLayout {
                             spacing: 3
                             Text { text: field.modelData.label; color: view.mutedColor; font.pixelSize: 10 }
                             CheckBox {
+                                palette.windowText: view.textColor
                                 visible: field.modelData.type === "checkbox"
                                 checked: field.modelData.value === true
                                 onToggled: view.model.setValue(field.modelData.id, checked)
@@ -118,6 +119,7 @@ ColumnLayout {
                             spacing: 8
                             // a command that repeats while it is on, and a latched output: a check box
                             CheckBox {
+                                palette.windowText: view.textColor
                                 visible: act.modelData.kind === "keepalive" || act.modelData.kind === "latched"
                                 objectName: "panelToggle"
                                 enabled: view.canAct

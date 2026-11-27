@@ -40,6 +40,7 @@ ApplicationWindow {
     // a check box that is never wider than the row that holds it: a long label goes to a second line
     component WrappingCheckBox: CheckBox {
         id: wrapping
+        palette.windowText: window.textPrimary
         width: Math.min(implicitWidth, parent ? parent.width : implicitWidth)
         contentItem: Text {
             text: wrapping.text
@@ -525,6 +526,7 @@ ApplicationWindow {
                 Text { text: testerBackend.uiText("QT_SAFETY_MODE"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
                 Switch {
                     id: listenOnly
+                    palette.windowText: window.textPrimary   // the style would write it in black on the dark panel
                     text: checked ? testerBackend.uiText("QT_LISTEN_ONLY") : testerBackend.uiText("QT_ACTIVE_CHECKS_ARMED")
                     checked: testerBackend.listenOnly
                     enabled: !testerBackend.connected && !testerBackend.busy
@@ -545,6 +547,9 @@ ApplicationWindow {
                     id: profiles
                     Layout.fillWidth: true
                     Layout.preferredHeight: 210
+                    Layout.fillHeight: true      // in a short window the list gives way, so it and the note under it stay inside the panel
+                    Layout.maximumHeight: 210
+                    Layout.minimumHeight: 37
                     clip: true
                     model: testerBackend.toolProfiles
                     spacing: 3
@@ -946,7 +951,7 @@ ApplicationWindow {
                     RowLayout {
                         Layout.fillWidth: true
                         TextField { id: laserPower; text: "0"; inputMethodHints: Qt.ImhDigitsOnly; color: textPrimary; placeholderText: testerBackend.uiText("QT_LASER_POWER"); Layout.fillWidth: true; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
-                        CheckBox { id: laserInterlock; text: testerBackend.uiText("QT_INTERLOCK_ARMED"); checked: false }
+                        CheckBox { palette.windowText: window.textPrimary; id: laserInterlock; text: testerBackend.uiText("QT_INTERLOCK_ARMED"); checked: false }
                         GameButton { text: testerBackend.uiText("QT_WATCHDOG_ENABLE"); accent: "#b86a35"; Layout.preferredWidth: 200; enabled: testerBackend.canActuateSelectedProfile && laserInterlock.checked; onClicked: window.requestAdvanced(function() { testerBackend.setWatchdogOutput("laser", true, laserPower.text, laserInterlock.checked ? "1" : "0") }) }
                         GameButton { text: testerBackend.uiText("QT_WATCHDOG_DISABLE"); accent: "#24465e"; Layout.preferredWidth: 200; enabled: testerBackend.canActuateSelectedProfile; onClicked: testerBackend.setWatchdogOutput("laser", false, laserPower.text, "0") }
                     }
@@ -1282,7 +1287,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     spacing: 8
                     GameButton { text: testerBackend.uiText("BTN_READ_BLACK_BOX"); accent: "#24465e"; Layout.preferredWidth: 190; enabled: testerBackend.canUseUtilityPanels; onClicked: testerBackend.readBlackBox() }
-                    CheckBox { text: testerBackend.uiText("LBL_AUTO_BLACK_BOX"); checked: testerBackend.autoBlackBox; font.pixelSize: 11; onToggled: testerBackend.setAutoBlackBox(checked) }
+                    CheckBox { palette.windowText: window.textPrimary; text: testerBackend.uiText("LBL_AUTO_BLACK_BOX"); checked: testerBackend.autoBlackBox; font.pixelSize: 11; onToggled: testerBackend.setAutoBlackBox(checked) }
                 }
                 Text { text: testerBackend.blackBoxText; visible: testerBackend.blackBoxText !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 10 }
                 RowLayout {
@@ -1369,10 +1374,10 @@ ApplicationWindow {
                 Flow {
                     Layout.fillWidth: true
                     spacing: 8
-                    CheckBox { id: featRamps; text: testerBackend.uiText("LBL_FEATURE_MOTION_RAMPS"); font.pixelSize: 10 }
-                    CheckBox { id: featHealth; text: testerBackend.uiText("LBL_FEATURE_HEALTH_PROFILE"); font.pixelSize: 10 }
-                    CheckBox { id: featHsi; text: testerBackend.uiText("LBL_FEATURE_HSI_AUTOTRIM"); font.pixelSize: 10 }
-                    CheckBox { id: featPid; text: testerBackend.uiText("LBL_FEATURE_THERMAL_PID"); font.pixelSize: 10 }
+                    CheckBox { palette.windowText: window.textPrimary; id: featRamps; text: testerBackend.uiText("LBL_FEATURE_MOTION_RAMPS"); font.pixelSize: 10 }
+                    CheckBox { palette.windowText: window.textPrimary; id: featHealth; text: testerBackend.uiText("LBL_FEATURE_HEALTH_PROFILE"); font.pixelSize: 10 }
+                    CheckBox { palette.windowText: window.textPrimary; id: featHsi; text: testerBackend.uiText("LBL_FEATURE_HSI_AUTOTRIM"); font.pixelSize: 10 }
+                    CheckBox { palette.windowText: window.textPrimary; id: featPid; text: testerBackend.uiText("LBL_FEATURE_THERMAL_PID"); font.pixelSize: 10 }
                 }
                 Flow {
                     Layout.fillWidth: true
@@ -1583,7 +1588,7 @@ ApplicationWindow {
                     spacing: 8
                     Text { text: testerBackend.uiText("LBL_FILTER_IDS"); color: muted; font.pixelSize: 11 }
                     TextField { id: monitorIds; Layout.fillWidth: true; placeholderText: "1A0 110 7F8 n3"; font.pixelSize: 11; onTextEdited: testerBackend.setMonitorIds(text) }
-                    CheckBox { text: testerBackend.uiText("BTN_ONLY_CHANGES"); font.pixelSize: 11; onToggled: testerBackend.setMonitorOnlyChanges(checked) }
+                    CheckBox { palette.windowText: window.textPrimary; text: testerBackend.uiText("BTN_ONLY_CHANGES"); font.pixelSize: 11; onToggled: testerBackend.setMonitorOnlyChanges(checked) }
                 }
                 Rectangle {
                     Layout.fillWidth: true
@@ -1647,7 +1652,7 @@ ApplicationWindow {
                         currentIndex: Math.max(0, testerBackend.replaySpeeds.indexOf(testerBackend.replaySpeed))
                         onActivated: testerBackend.setReplaySpeed(currentValue)
                     }
-                    CheckBox { text: testerBackend.uiText("LBL_REPLAY_LOOP"); checked: testerBackend.replayLoop; font.pixelSize: 11; onToggled: testerBackend.setReplayLoop(checked) }
+                    CheckBox { palette.windowText: window.textPrimary; text: testerBackend.uiText("LBL_REPLAY_LOOP"); checked: testerBackend.replayLoop; font.pixelSize: 11; onToggled: testerBackend.setReplayLoop(checked) }
                     Text { text: testerBackend.replayProgressText; color: muted; font.pixelSize: 10; Layout.fillWidth: true; horizontalAlignment: Text.AlignRight }
                 }
                 ProgressBar { visible: testerBackend.replayLoaded; Layout.fillWidth: true; from: 0; to: 100; value: testerBackend.replayPercent }
