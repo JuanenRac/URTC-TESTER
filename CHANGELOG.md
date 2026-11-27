@@ -4,6 +4,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A hand-edited or damaged file is a message and not a crash:** a test plan whose step has a list where a word or a tool number is expected, or an identifier written with a leading zero such as `010`, used to end in a traceback; so did a saved safety record whose CSV cannot be read. A tool number that is not a whole number is now refused.
+- **Files saved with a byte-order mark are read:** test plans, `config.json`, the custom identifier names and the language files, as some Windows editors write them. Before, a plan was refused and the settings were silently ignored.
+
 ## [0.5.8] - Version rule command, configurable master silence and window layout fixes
 
 - **The pictures of the window are taken again** for the README and for the window guide in the eight languages, on the current window.
