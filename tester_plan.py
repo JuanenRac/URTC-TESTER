@@ -61,9 +61,10 @@ READ_ONLY_IDS = frozenset({
     0x1A1, 0x1A3, 0x1A5, 0x1A7, 0x1A8, 0x1AD, 0x1AF, 0x1BA, 0x242, 0x251,
 })
 # Frames a plan never sends: the boot-loader and update protocol, the writes that change what the board is or stores, the
-# slave link, and the two magic-payload commands that erase or reset something.
+# slave link, the two magic-payload commands that erase or reset something, the PID settings of the heater (0x1B9) and the
+# bootloader frames 0x7E9-0x7EF.
 FORBIDDEN_IDS = frozenset(
-    set(range(0x7F0, 0x800)) | set(range(0x210, 0x230)) | {0x131, 0x192, 0x1A0, 0x1A2, 0x1A4, 0x1A6, 0x1AC, 0x1AE}
+    set(range(0x7F0, 0x800)) | set(range(0x210, 0x230)) | {0x131, 0x192, 0x1A0, 0x1A2, 0x1A4, 0x1A6, 0x1AC, 0x1AE, 0x1B9} | set(range(0x7E9, 0x7F0))
 )
 
 STEP_FIELDS = {
