@@ -436,7 +436,7 @@ separate files versus one large one. See the
 "📂 Repository Structure" section near the end of this document for
 the full file-by-file breakdown.
 
-**Dangerous identifiers in a plan**: a plan step that writes an identifier which changes what the board is and that the plan does not already refuse (clearing the error, the PID settings, `0x7E9`-`0x7EF` of the bootloader) asks the operator first. `"plan_dangerous_ids"` in `config.json` chooses `"confirm"` (the default), `"allow"` (send it as plans used to) or `"refuse"` (never send it); any other word counts as `"refuse"`, and the Qt Quick deck has a drop-down for it under the signature check box, which does not change a signature.
+**Dangerous identifiers in a plan**: a plan step that writes an identifier which changes what the board is and that the plan does not already refuse (clearing the error) asks the operator first. `"plan_dangerous_ids"` in `config.json` chooses `"confirm"` (the default), `"allow"` (send it as plans used to) or `"refuse"` (never send it); any other word counts as `"refuse"`, and the Qt Quick deck has a drop-down for it under the signature check box, which does not change a signature. The PID settings (`0x1B9`) and the bootloader frames `0x7E9`-`0x7EF` are never sent by a plan.
 
 **Repeated commands**: a command the firmware drops again if it is not refreshed (a heater, a drill, a laser, a fan) is repeated every 150 ms by default, or at the period of its own tool. `"keepalive"` in `config.json` changes it: `"interval_ms"` (a whole number from 20 to 200) sets one period for all of them, and `"single_io_thread": true` repeats all of them from one shared thread, one frame at a time, instead of one thread each (off by default). A value outside those limits keeps the default.
 

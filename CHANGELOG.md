@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- A test plan never sends the heater PID settings (0x1B9) or the bootloader frames 0x7E9-0x7EF, whatever `plan_dangerous_ids` says.
+
 - **The README says which identifiers a plan never sends and which it asks about:** it said both that bootloader and configuration frames are never sent and that the operator is asked before them.
 
 - **The compatibility table is current:** `docs/COMPATIBILITY.md` is the current copy of URTC-COMMON; the old one named versions of long ago.

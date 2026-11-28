@@ -47,23 +47,23 @@ def test_the_list_of_forbidden_identifiers_leaves_only_a_few_dangerous_ones_to_t
 
     host_sent = {i for i, info in wire.MESSAGES.items() if info["direction"] in ("host_to_board", "both")}
     left = {i for i in host_sent if dangerous_ids.dangerous_reason(i, wire.MESSAGES) and i not in tp.FORBIDDEN_IDS}
-    assert left == {0x1B2, 0x1B9, 0x7EA, 0x7EC, 0x7EE}
+    assert left == {0x1B2}
 
 
 def test_allow_sends_a_dangerous_identifier_without_asking(monkeypatch):
     monkeypatch.setattr(tp, "PLAN_DANGEROUS_IDS", "allow")
     asked: list[str] = []
-    report, board = run(plan_sending("0x1B9", "A5A5"), allow_actuation=True, confirm=lambda text: asked.append(text) or True)
+    report, board = run(plan_sending("0x1B2", "A5A5"), allow_actuation=True, confirm=lambda text: asked.append(text) or True)
     assert report.steps[0].outcome == tp.PASS and asked == []
-    assert any(frame[0] == 0x1B9 for frame in board.sent)
+    assert any(frame[0] == 0x1B2 for frame in board.sent)
 
 
 def test_refuse_never_sends_it_and_names_the_setting(monkeypatch):
     monkeypatch.setattr(tp, "PLAN_DANGEROUS_IDS", "refuse")
-    report, board = run(plan_sending("0x1B9", "A5A5"), allow_actuation=True, confirm=lambda text: True)
+    report, board = run(plan_sending("0x1B2", "A5A5"), allow_actuation=True, confirm=lambda text: True)
     assert report.steps[0].outcome == tp.ERROR
-    assert "plan_dangerous_ids" in report.steps[0].message and "0x1B9" in report.steps[0].message
-    assert not any(frame[0] == 0x1B9 for frame in board.sent)
+    assert "plan_dangerous_ids" in report.steps[0].message and "0x1B2" in report.steps[0].message
+    assert not any(frame[0] == 0x1B2 for frame in board.sent)
 
 
 def test_confirm_asks_the_operator_and_sends_only_when_the_answer_is_yes(monkeypatch):
@@ -79,9 +79,9 @@ def test_confirm_asks_the_operator_and_sends_only_when_the_answer_is_yes(monkeyp
 
 def test_confirm_with_nobody_to_ask_ends_the_step_and_sends_nothing(monkeypatch):
     monkeypatch.setattr(tp, "PLAN_DANGEROUS_IDS", "confirm")
-    report, board = run(plan_sending("0x1B9", "A5A5"), allow_actuation=True)
+    report, board = run(plan_sending("0x1B2", "A5A5"), allow_actuation=True)
     assert report.steps[0].outcome == tp.ERROR and "person" in report.steps[0].message
-    assert not any(frame[0] == 0x1B9 for frame in board.sent)
+    assert not any(frame[0] == 0x1B2 for frame in board.sent)
 
 
 @pytest.mark.parametrize("policy", ["confirm", "refuse"])
@@ -96,7 +96,7 @@ def test_an_identifier_that_is_not_dangerous_is_sent_in_every_mode(monkeypatch, 
 def test_the_actuation_switch_still_comes_first(monkeypatch):
     monkeypatch.setattr(tp, "PLAN_DANGEROUS_IDS", "confirm")
     asked: list[str] = []
-    report, _board = run(plan_sending("0x1B9", "A5A5"), allow_actuation=False, confirm=lambda text: asked.append(text) or True)
+    report, _board = run(plan_sending("0x1B2", "A5A5"), allow_actuation=False, confirm=lambda text: asked.append(text) or True)
     assert report.steps[0].outcome == tp.ERROR and "allow actuation" in report.steps[0].message and asked == []
 
 
@@ -140,3 +140,16 @@ def test_the_deck_has_the_choice_bound_to_the_setting_and_the_texts_are_in_eight
         lines = (ROOT / "language" / f"{name}.lng").read_text(encoding="utf-8").splitlines()
         for key in ("LBL_PLAN_DANGEROUS_IDS", "LBL_PLAN_DANGEROUS_ALLOW", "LBL_PLAN_DANGEROUS_CONFIRM", "LBL_PLAN_DANGEROUS_REFUSE"):
             assert any(line.startswith(key + "=") and len(line) > len(key) + 2 for line in lines), (name, key)
+
+
+@pytest.mark.parametrize("policy", ["allow", "confirm", "refuse"])
+@pytest.mark.parametrize("identifier", ["0x1B9", "0x7EA", "0x7EC", "0x7EE"])
+def test_a_plan_never_sends_the_heater_settings_or_the_bootloader_frames(monkeypatch, policy, identifier):
+    monkeypatch.setattr(tp, "PLAN_DANGEROUS_IDS", policy)
+    asked: list[str] = []
+    try:
+        report, board = run(plan_sending(identifier, "A5A5"), allow_actuation=True, confirm=lambda text: asked.append(text) or True)
+    except tp.PlanError:
+        return
+    assert report.steps[0].outcome == tp.ERROR and asked == []
+    assert not any(frame[0] == int(identifier, 16) for frame in board.sent)
